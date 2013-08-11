@@ -1,10 +1,8 @@
 package org.renjin.repo.model;
 
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 public class Test {
@@ -16,6 +14,9 @@ public class Test {
 
 	@ManyToOne
 	private RPackageVersion packageVersion;
+
+  @OneToMany(mappedBy = "test")
+  private Set<TestResult> results;
 
 
 	public int getId() {

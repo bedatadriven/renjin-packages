@@ -7,11 +7,7 @@ import javax.persistence.*;
 public class RPackageBuildResult {
 
 	@Id
-<<<<<<< HEAD
-  @GeneratedValue(strategy = GenerationType.AUTO)
-=======
-        @GeneratedValue(strategy = GenerationType.AUTO)
->>>>>>> fd0a5e157685cf791af9d239b31cd8576823602d
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 
 	@Lob

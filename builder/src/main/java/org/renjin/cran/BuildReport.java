@@ -25,6 +25,7 @@ import javax.persistence.Persistence;
 
 public class BuildReport {
 
+  private final File buildJsonFile;
   private File reportDir;
   private File packageReportsDir;
   private Map<String, PackageReport> packages = Maps.newHashMap();
@@ -34,6 +35,7 @@ public class BuildReport {
 
   private Multimap<PackageReport, PackageReport> downstream = HashMultimap.create();
   private List<TestResultParser> failedTests = Lists.newArrayList();
+  private EntityManagerFactory emf;
 
   public BuildReport(File outputDir, File reportDir) throws Exception {
 
@@ -49,7 +51,8 @@ public class BuildReport {
     // read build results
     System.out.println("Reading build results...");
     ObjectMapper mapper = new ObjectMapper();
-    BuildResults results = mapper.readValue(new File(outputDir, "build.json"), BuildResults.class);
+    buildJsonFile = new File(outputDir, "build.json");
+    BuildResults results = mapper.readValue(buildJsonFile, BuildResults.class);
     for(BuildResult result : results.getResults()) {
       PackageNode node = new PackageNode(new File(outputDir, result.getPackageName()));
       packages.put(node.getName(), new PackageReport(node, result.getOutcome()));
@@ -107,92 +110,126 @@ public class BuildReport {
 //      pkg.writeHtml();
 //    }
 
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("renjin-repo");
+    int buildId = addBuildRecord();
+
+    for(PackageReport pkg : packages.values()) {
+      writeBuildResults(buildId, pkg);
+    }
+
+
+  }
+
+  private void writeBuildResults(int buildId, PackageReport pkg) throws IOException {
+    String packageId = "org.renjin.cran:" + pkg.getName();
+    String versionId = packageId + ":" + pkg.getDescription().getVersion();
+
+    EntityManager em = emf.createEntityManager();
+    em.getTransaction().begin();
+
+    List<RPackageBuildResult> results = em.createQuery("from RPackageBuildResult r where " +
+      "r.build = :build and r.packageVersion = :version", RPackageBuildResult.class)
+      .setParameter("build", em.getReference(Build.class, buildId))
+      .setParameter("version", versionId)
+      .getResultList();
+
+    if(!results.isEmpty()) {
+      em.close();
+      return;
+    }
+
+    RPackageVersion version = em.find(RPackageVersion.class, versionId);
+
+    if(version == null) {
+      RPackage pkgEntity = em.find(RPackage.class, packageId);
+      if(pkgEntity == null) {
+        pkgEntity = new RPackage();
+        pkgEntity.setId(packageId);
+        pkgEntity.setTitle(pkg.getDescription().getTitle());
+        pkgEntity.setDescription(pkg.getDescription().getDescription());
+        em.persist(pkgEntity);
+      }
+
+      version = new RPackageVersion();
+      version.setId(versionId);
+      version.setRPackage(pkgEntity);
+      version.setVersion(pkg.getDescription().getVersion());
+      version.setLoc(new LocAnalyzer(pkg.getBaseDir()).count());
+      try {
+        version.setPublicationDate(pkg.getDescription().getPublicationDate());
+      } catch (ParseException e) {
+
+      }
+      em.persist(version);
+    }
+
+    System.out.println("Version: versionId = " + versionId + " = " + version.getId());
+
+
+    RPackageBuildResult buildResult = new RPackageBuildResult();
+    buildResult.setBuild(em.getReference(Build.class, buildId));
+    buildResult.setPackageVersion(version);
+
+    //buildResult.setLog(pkg.getBuildOutput());
+    buildResult.setOutcome(pkg.getBuildOutcome());
+    em.persist(buildResult);
+    em.flush();
+
+
+    for(TestResultParser testResult : pkg.getTestResults()) {
+
+      // find the test id
+      Test test;
+      List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage = :package", Test.class)
+        .setParameter("name", testResult.getName())
+        .setParameter("package", em.getReference(RPackage.class, packageId))
+        .getResultList();
+      if(tests.isEmpty()) {
+        test = new Test();
+        test.setRPackage(em.getReference(RPackage.class, packageId));
+        test.setName(testResult.getName());
+        em.persist(test);
+      } else {
+        test = tests.get(0);
+      }
+
+      System.out.println("test id = " + test.getId());
+
+      TestResult result = new TestResult();
+      result.setBuildResult(buildResult);
+      result.setTest(test);
+      result.setOutput(testResult.getOutput());
+      result.setErrorMessage(testResult.getErrorMessage());
+      result.setPassed(testResult.isPassed());
+
+      em.persist(result);
+      em.flush();
+    }
+
+    em.getTransaction().commit();
+    em.close();
+  }
+
+  private int addBuildRecord() {
     EntityManager em = emf.createEntityManager();
 
     em.getTransaction().begin();
 
-    Build build = new Build();
-    em.persist(build);
+    List<Build> resultList = em.createQuery("from Build b where b.started = :startTime", Build.class)
+      .setParameter("startTime", new Date(buildJsonFile.lastModified()))
+      .getResultList();
 
-    int count = 0;
-
-
-    for(PackageReport pkg : packages.values()) {
-      String packageId = "org.renjin.cran:" + pkg.getName();
-      String versionId = packageId + ":" + pkg.getDescription().getVersion();
-      RPackageVersion version = em.find(RPackageVersion.class, versionId);
-
-      if(version == null) {
-        RPackage pkgEntity = em.find(RPackage.class, packageId);
-        if(pkgEntity == null) {
-          pkgEntity = new RPackage();
-          pkgEntity.setId(packageId);
-          pkgEntity.setTitle(pkg.getDescription().getTitle());
-          pkgEntity.setDescription(pkg.getDescription().getDescription());
-          em.persist(pkgEntity);
-        }
-
-        version = new RPackageVersion();
-        version.setId(versionId);
-        version.setRPackage(pkgEntity);
-        version.setVersion(pkg.getDescription().getVersion());
-        version.setLoc(new LocAnalyzer(pkg.getBaseDir()).count());
-        try {
-          version.setPublicationDate(pkg.getDescription().getPublicationDate());
-        } catch (ParseException e) {
-
-        }
-        em.persist(version);
-      }
-
-      System.out.println("Version: versionId = " + versionId + " = " + version.getId());
-
-
-      RPackageBuildResult buildResult = new RPackageBuildResult();
-      buildResult.setBuild(build);
-      buildResult.setPackageVersion(version);
-
-      //buildResult.setLog(pkg.getBuildOutput());
-      buildResult.setOutcome(pkg.getBuildOutcome());
-      em.persist(buildResult);
-      em.flush();
-
-
-      for(TestResultParser testResult : pkg.getTestResults()) {
-
-        // find the test id
-        Test test;
-        List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage = :package", Test.class)
-          .setParameter("name", testResult.getName())
-          .setParameter("package", em.getReference(RPackage.class, packageId))
-          .getResultList();
-        if(tests.isEmpty()) {
-          test = new Test();
-          test.setRPackage(em.getReference(RPackage.class, packageId));
-          test.setName(testResult.getName());
-          em.persist(test);
-        } else {
-          test = tests.get(0);
-        }
-
-        System.out.println("test id = " + test.getId());
-
-        TestResult result = new TestResult();
-        result.setBuildResult(buildResult);
-        result.setTest(test);
-        result.setOutput(testResult.getOutput());
-        result.setErrorMessage(testResult.getErrorMessage());
-        result.setPassed(testResult.isPassed());
-
-        em.persist(result);
-        em.flush();
-      }
-
+    Build build;
+    if(resultList.isEmpty()) {
+      build = new Build();
+      em.persist(build);
+    } else {
+      build = resultList.get(0);
     }
 
     em.getTransaction().commit();
+    em.close();
 
+    return build.getId();
   }
 
   private void writeIndex(final String name) throws IOException, TemplateException {

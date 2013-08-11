@@ -131,7 +131,7 @@ public class BuildReport {
 
         // find the test id
         Test test;
-        List<Test> tests = em.createQuery("from t Test where t.name = :name and t.packageVersion = :version", Test.class)
+        List<Test> tests = em.createQuery("from Test t where t.name = :name and t.packageVersion = :version", Test.class)
           .setParameter("name", testResult.getName())
           .setParameter("packageVersion", version)
           .getResultList();

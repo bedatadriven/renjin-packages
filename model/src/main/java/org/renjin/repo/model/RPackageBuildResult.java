@@ -1,15 +1,13 @@
 package org.renjin.repo.model;
 
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 @Entity
 public class RPackageBuildResult {
 
 	@Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 
 	@Lob

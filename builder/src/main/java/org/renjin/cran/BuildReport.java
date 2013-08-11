@@ -1,12 +1,14 @@
 package org.renjin.cran;
 
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.*;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.renjin.repo.LocAnalyzer;
 import org.renjin.repo.model.*;
 import org.renjin.repo.model.PackageDescription.PackageDependency;
 
@@ -114,8 +116,31 @@ public class BuildReport {
     em.persist(build);
 
     for(PackageReport pkg : packages.values()) {
-      String versionId = "org.renjin.cran:" + pkg.getName() + ":" + pkg.getDescription().getVersion();
-      RPackageVersion version = em.getReference(RPackageVersion.class, versionId);
+      String packageId = "org.renjin.cran:" + pkg.getName();
+      String versionId = packageId + ":" + pkg.getDescription().getVersion();
+      RPackageVersion version = em.find(RPackageVersion.class, versionId);
+
+      if(version == null) {
+        RPackage pkgEntity = em.find(RPackage.class, packageId);
+        if(pkgEntity == null) {
+          pkgEntity = new RPackage();
+          pkgEntity.setTitle(pkg.getDescription().getTitle());
+          pkgEntity.setDescription(pkg.getDescription().getDescription());
+          em.persist(pkgEntity);
+        }
+
+        version = new RPackageVersion();
+        version.setId(versionId);
+        version.setRPackage(pkgEntity);
+        version.setVersion(pkg.getDescription().getVersion());
+        version.setLoc(new LocAnalyzer(pkg.getBaseDir()).count());
+        try {
+          version.setPublicationDate(pkg.getDescription().getPublicationDate());
+        } catch (ParseException e) {
+
+        }
+        em.persist(version);
+      }
 
       RPackageBuildResult buildResult = new RPackageBuildResult();
       buildResult.setBuild(build);
@@ -151,6 +176,7 @@ public class BuildReport {
         result.setErrorMessage(testResult.getErrorMessage());
         result.setPassed(testResult.isPassed());
         em.persist(result);
+
 
         if(count ++ > 20) {
           break;
@@ -222,6 +248,10 @@ public class BuildReport {
 
       parseBuildLog();
       parseTestResults();
+    }
+
+    public File getBaseDir() {
+      return pkg.getBaseDir();
     }
 
     private void parseBuildLog() throws IOException {

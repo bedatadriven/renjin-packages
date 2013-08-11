@@ -14,7 +14,7 @@ public class Test {
 	private String name;
 
 	@ManyToOne
-	private RPackageVersion packageVersion;
+	private RPackage rPackage;
 
   @OneToMany(mappedBy = "test")
   private Set<TestResult> results;
@@ -28,16 +28,16 @@ public class Test {
 		this.id = id;
 	}
 
-	public RPackageVersion getPackageVersion() {
-		return packageVersion;
-	}
-
-	public void setPackageVersion(RPackageVersion packageVersion) {
-		this.packageVersion = packageVersion;
-	}
-
 	public String getName() {
 		return name;
+	}
+
+	public RPackage getRPackage() {
+		return rPackage;
+	}
+
+	public void setRPackage(RPackage pkg) {
+		this.rPackage = pkg;
 	}
 
 	public void setName(String name) {

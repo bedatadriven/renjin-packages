@@ -127,6 +127,7 @@ public class BuildReport {
         RPackage pkgEntity = em.find(RPackage.class, packageId);
         if(pkgEntity == null) {
           pkgEntity = new RPackage();
+          pkgEntity.setId(packageId);
           pkgEntity.setTitle(pkg.getDescription().getTitle());
           pkgEntity.setDescription(pkg.getDescription().getDescription());
           em.persist(pkgEntity);
@@ -152,27 +153,30 @@ public class BuildReport {
       buildResult.setBuild(build);
       buildResult.setPackageVersion(version);
 
-      buildResult.setLog(pkg.getBuildOutput());
+      //buildResult.setLog(pkg.getBuildOutput());
       buildResult.setOutcome(pkg.getBuildOutcome());
       em.persist(buildResult);
+      em.flush();
 
-/*
+
       for(TestResultParser testResult : pkg.getTestResults()) {
 
         // find the test id
         Test test;
-        List<Test> tests = em.createQuery("from Test t where t.name = :name and t.packageVersion = :version", Test.class)
+        List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage = :package", Test.class)
           .setParameter("name", testResult.getName())
-          .setParameter("version", version)
+          .setParameter("package", em.getReference(RPackage.class, packageId))
           .getResultList();
         if(tests.isEmpty()) {
           test = new Test();
-          test.setPackageVersion(version);
+          test.setRPackage(em.getReference(RPackage.class, packageId));
           test.setName(testResult.getName());
           em.persist(test);
         } else {
           test = tests.get(0);
         }
+
+        System.out.println("test id = " + test.getId());
 
         TestResult result = new TestResult();
         result.setBuildResult(buildResult);
@@ -180,13 +184,11 @@ public class BuildReport {
         result.setOutput(testResult.getOutput());
         result.setErrorMessage(testResult.getErrorMessage());
         result.setPassed(testResult.isPassed());
+
         em.persist(result);
-
-      } */
-
-      if(count++ > 10) {
-         break;
+        em.flush();
       }
+
     }
 
     em.getTransaction().commit();

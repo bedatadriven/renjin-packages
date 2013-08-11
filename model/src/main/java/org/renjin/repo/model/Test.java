@@ -4,6 +4,7 @@ package org.renjin.repo.model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Test {
@@ -13,7 +14,7 @@ public class Test {
 
 	private String name;
 
-	@ManyToMany
+	@ManyToOne
 	private RPackageVersion packageVersion;
 
 

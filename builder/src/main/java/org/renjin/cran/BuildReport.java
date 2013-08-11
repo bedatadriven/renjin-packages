@@ -122,7 +122,7 @@ public class BuildReport {
       buildResult.setPackageVersion(version);
 
       buildResult.setLog(pkg.getBuildOutput());
-      buildResult.setOutcome(BuildOutcome.valueOf(pkg.getOutcome()));
+      buildResult.setOutcome(pkg.getBuildOutcome());
       em.persist(buildResult);
 
       int count = 0;
@@ -340,6 +340,10 @@ public class BuildReport {
 
     public String getOutcome() {
       return outcome.name().toLowerCase();
+    }
+
+    public BuildOutcome getBuildOutcome() {
+      return outcome;
     }
 
     public boolean getWasBuilt() {

@@ -117,6 +117,9 @@ public class BuildReport {
       String versionId = "org.renjin.cran:" + pkg.getName() + ":" + pkg.getDescription().getVersion();
       RPackageVersion version = em.getReference(RPackageVersion.class, versionId);
 
+      System.out.println("Version: versionId = " + versionId + " = " + version.getId());
+
+
       RPackageBuildResult buildResult = new RPackageBuildResult();
       buildResult.setBuild(build);
       buildResult.setPackageVersion(version);
@@ -126,7 +129,7 @@ public class BuildReport {
       em.persist(buildResult);
 
       int count = 0;
-
+/*
       for(TestResultParser testResult : pkg.getTestResults()) {
 
         // find the test id
@@ -152,9 +155,10 @@ public class BuildReport {
         result.setPassed(testResult.isPassed());
         em.persist(result);
 
-        if(count ++ > 20) {
-          break;
-        }
+      } */
+
+      if(count++ > 10) {
+         break;
       }
     }
 

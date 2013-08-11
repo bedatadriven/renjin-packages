@@ -3,6 +3,7 @@ package org.renjin.repo.model;
 
 import javax.persistence.*;
 
+@Entity
 public class TestResult {
 
   @Id

@@ -115,6 +115,9 @@ public class BuildReport {
     Build build = new Build();
     em.persist(build);
 
+    int count = 0;
+
+
     for(PackageReport pkg : packages.values()) {
       String packageId = "org.renjin.cran:" + pkg.getName();
       String versionId = packageId + ":" + pkg.getDescription().getVersion();
@@ -142,6 +145,9 @@ public class BuildReport {
         em.persist(version);
       }
 
+      System.out.println("Version: versionId = " + versionId + " = " + version.getId());
+
+
       RPackageBuildResult buildResult = new RPackageBuildResult();
       buildResult.setBuild(build);
       buildResult.setPackageVersion(version);
@@ -150,8 +156,7 @@ public class BuildReport {
       buildResult.setOutcome(pkg.getBuildOutcome());
       em.persist(buildResult);
 
-      int count = 0;
-
+/*
       for(TestResultParser testResult : pkg.getTestResults()) {
 
         // find the test id
@@ -177,10 +182,10 @@ public class BuildReport {
         result.setPassed(testResult.isPassed());
         em.persist(result);
 
+      } */
 
-        if(count ++ > 20) {
-          break;
-        }
+      if(count++ > 10) {
+         break;
       }
     }
 

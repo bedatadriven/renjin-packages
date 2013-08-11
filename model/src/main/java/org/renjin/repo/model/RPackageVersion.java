@@ -27,9 +27,6 @@ public class RPackageVersion {
 	@Embedded
 	private LOC loc = new LOC();
 
-  @OneToMany(mappedBy = "packageVersion")
-  private Set<Test> tests;
-
 	public String getId() {
 		return id;
 	}
@@ -78,11 +75,4 @@ public class RPackageVersion {
 		this.loc = loc;
 	}
 
-  public Set<Test> getTests() {
-    return tests;
-  }
-
-  public void setTests(Set<Test> tests) {
-    this.tests = tests;
-  }
 }

@@ -26,6 +26,9 @@ public class RPackage {
 	@OneToMany(mappedBy="rPackage")
 	private Set<RPackageVersion> versions;
 
+	@OneToMany(mappedBy="rPackage")
+	private Set<Test> tests;
+
 	public String getId() {
 		return id;
 	}
@@ -72,5 +75,13 @@ public class RPackage {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public Set<Test> getTests() {
+		return this.tests;
+	}
+
+	public void setTests(Set<Test> tests) {
+		this.tests = tests;
 	}
 }

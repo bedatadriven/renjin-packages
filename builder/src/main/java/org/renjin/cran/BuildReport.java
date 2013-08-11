@@ -133,7 +133,7 @@ public class BuildReport {
         Test test;
         List<Test> tests = em.createQuery("from Test t where t.name = :name and t.packageVersion = :version", Test.class)
           .setParameter("name", testResult.getName())
-          .setParameter("packageVersion", version)
+          .setParameter("version", version)
           .getResultList();
         if(tests.isEmpty()) {
           test = new Test();

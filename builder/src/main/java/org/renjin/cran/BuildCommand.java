@@ -2,15 +2,15 @@ package org.renjin.cran;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import io.airlift.command.Command;
+import io.airlift.command.Option;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.renjin.repo.model.Build;
 import org.renjin.repo.model.BuildOutcome;
 import org.renjin.repo.model.PackageDescription.PackageDependency;
 
@@ -18,16 +18,33 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
+
+import javax.persistence.EntityManager;
 
 /**
  * Program that will retrieve package sources from CRAN,
  * build, and report results.
  */
-public class Builder {
+@Command(name = "build", description = "Build packages in workspace")
+public class BuildCommand implements Runnable {
 
-  private File outputDir;
+  @Option(name="-d", description = "location of workspace")
+  private File workspaceDir = new File(".");
+
+  @Option(name="-j", description = "number of concurrent builds")
+  private int numConcurrentBuilds = 1;
+
+  @Option(name="-o", description = "do not update snapshots")
+  private boolean offlineMode;
+
+  @Option(name="--renjin-version", description = "Renjin version to build/test against")
+  private String renjinVersion;
+
+
+  private int buildId;
+
   private Map<String, PackageNode> nodes = Maps.newHashMap();
+
 
   /**
    * List of projects that still need to be built
@@ -47,23 +64,28 @@ public class Builder {
   private int maxNumberToBuild = Integer.MAX_VALUE;
 
   private Map<String, Integer> retryCount = Maps.newHashMap();
+
   private ExecutorCompletionService<BuildResult> service;
 
   public static void main(String[] args) throws Exception {
 
-    Builder builder = new Builder();
-    builder.outputDir = new File(System.getProperty("cran.dir"));
-    builder.outputDir.mkdirs();
+    BuildCommand builder = new BuildCommand();
+    builder.workspaceDir = new File(System.getProperty("cran.dir"));
+    builder.workspaceDir.mkdirs();
 
-    if(args.length > 1 && args[1].equals("unpack")) {
-      builder.unpack();
-    }
     builder.scanForProjects();
     builder.buildPackages();
 
   }
   
-  public Builder() {
+  public void run() {
+
+    if(offlineMode) {
+      PackageBuilder.updateSnapshots = false;
+    }
+
+    recordBuild();
+
     String maxBuilds = System.getProperty("package.limit");
     if(Strings.isNullOrEmpty(maxBuilds)) {
       maxNumberToBuild = Integer.MAX_VALUE; 
@@ -71,27 +93,28 @@ public class Builder {
       maxNumberToBuild = Integer.parseInt(maxBuilds);
       System.out.println(" ");
     }
-    
+    try {
+      scanForProjects();
+      buildPackages();
+
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
   }
 
-  private void unpack() throws IOException {
 
-    // download package index
-    File packageIndex = new File(outputDir, "index.html");
-    if(!packageIndex.exists()) {
-      CRAN.fetchPackageIndex(packageIndex);
-    }
-    List<CranPackage> cranPackages = CRAN.parsePackageList(
-        Files.newInputStreamSupplier(packageIndex));
 
-    for(CranPackage pkg : cranPackages) {
-      System.out.println(pkg.getName());
-      String pkgName = pkg.getName().trim();
-      if(!Strings.isNullOrEmpty(pkgName)) {
-        File pkgRoot = new File(outputDir, pkgName);
-        CRAN.unpackSources(pkg, pkgRoot);
-      }
-    }
+  private void recordBuild() {
+    EntityManager em = PersistenceUtil.createEntityManager();
+    em.getTransaction().begin();
+    Build build = new Build();
+    build.setStarted(new Date());
+    build.setRenjinVersion(renjinVersion);
+    em.persist(build);
+    em.getTransaction().commit();
+    em.close();
+
+    buildId = build.getId();
   }
 
   /**
@@ -102,11 +125,11 @@ public class Builder {
 
     System.out.println("Scanning for packages...");
 
-    for(File dir : outputDir.listFiles()) {
+    for(File dir : workspaceDir.listFiles()) {
       if(dir.isDirectory() && !dir.getName().equals("00buildlogs")) {
         try {
           PackageNode node = new PackageNode(dir);
-          node.writePom();
+          node.writePom(renjinVersion);
           nodes.put(node.getName(), node);
         } catch(Exception e) {
           System.err.println("Error building POM for " + dir.getName());
@@ -127,10 +150,10 @@ public class Builder {
     Map<String, BuildResult> results = Maps.newHashMap();
     
     toBuild = Lists.newArrayList(nodes.values());
-    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(getThreadPoolSize());
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numConcurrentBuilds);
     service = new ExecutorCompletionService<BuildResult>(executor);
 
-    System.out.println("Thread pool created with " + getThreadPoolSize() + " threads");
+    System.out.println("Thread pool created with " + numConcurrentBuilds + " threads");
 
     int scheduledCount = 0;
     
@@ -170,7 +193,7 @@ public class Builder {
 
         // Once a few builds have succeeded, we don't have
         // to force maven to look for the latest snapshots
-        if(built.size() > (getThreadPoolSize()*2)) {
+        if(!offlineMode && built.size() > (numConcurrentBuilds*2)) {
           PackageBuilder.updateSnapshots = false;
         }
 
@@ -214,9 +237,9 @@ public class Builder {
     // for the first few packages, force checking for snapshots so we get
     // the latest versions, after that we should have the latest copies
     // in the local repository
-    boolean updateSnapshots = (scheduled.size() < (getThreadPoolSize()*3));
+    boolean updateSnapshots = !offlineMode && (scheduled.size() < (numConcurrentBuilds*3));
 
-    this.service.submit(new PackageBuilder(pkg));
+    this.service.submit(new PackageBuilder(buildId, pkg));
     scheduled.add(pkg);
   }
 
@@ -228,16 +251,7 @@ public class Builder {
    */
   private void writeResults(BuildResults results) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
-    mapper.writeValue(new File(outputDir, "build.json"), results);
-  }
-
-  private int getThreadPoolSize() {
-    String property = System.getProperty("cran.thread.pool.size");
-    if(!Strings.isNullOrEmpty(property)) {
-      return Integer.parseInt(property);
-    } else {
-     return Runtime.getRuntime().availableProcessors();
-    }
+    mapper.writeValue(new File(workspaceDir, "build.json"), results);
   }
 
   private boolean dependenciesAreResolved(PackageNode pkg) {

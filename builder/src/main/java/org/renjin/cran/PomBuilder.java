@@ -16,19 +16,20 @@ import org.renjin.repo.model.PackageDescription.Person;
 import com.google.common.base.Strings;
 
 /**
- * Constructs a Maven Projct Object Model (POM) from a GNU-R style
+ * Constructs a Maven Project Object Model (POM) from a GNU-R style
  * package folder and DESCRIPTION file.
  *
  */
 public class PomBuilder {
-  private static final String RENJIN_VERSION = "0.7.0-RC6-SNAPSHOT";
 
   private File baseDir;
 
   private boolean successful = true;
   private final PackageDescription description;
+  private String renjinVersion;
 
-  public PomBuilder(File baseDir) throws IOException {
+  public PomBuilder(String renjinVersion, File baseDir) throws IOException {
+    this.renjinVersion = renjinVersion;
     this.baseDir = baseDir;
     description = readDescription();
   }
@@ -73,7 +74,7 @@ public class PomBuilder {
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
     renjinPlugin.setArtifactId("renjin-maven-plugin");
-    renjinPlugin.setVersion(RENJIN_VERSION);
+    renjinPlugin.setVersion(renjinVersion);
 
     PluginExecution compileExecution = compileExecution();
     renjinPlugin.addExecution(compileExecution);
@@ -178,7 +179,7 @@ public class PomBuilder {
     mavenDep.setArtifactId(pkgName);
     if(CorePackages.isCorePackage(pkgName)) {
       mavenDep.setGroupId("org.renjin");
-      mavenDep.setVersion(RENJIN_VERSION);
+      mavenDep.setVersion(renjinVersion);
     } else {
       mavenDep.setGroupId("org.renjin.cran");
       mavenDep.setVersion("[0,)");
@@ -190,7 +191,7 @@ public class PomBuilder {
     Dependency mavenDep = new Dependency();
     mavenDep.setGroupId("org.renjin");
     mavenDep.setArtifactId(name);
-    mavenDep.setVersion(RENJIN_VERSION);
+    mavenDep.setVersion(renjinVersion);
     model.addDependency(mavenDep);
   }
 

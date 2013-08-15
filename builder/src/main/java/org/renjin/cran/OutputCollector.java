@@ -10,6 +10,10 @@ import java.io.PrintStream;
 
 import com.google.common.io.Closeables;
 
+/**
+ * Thread which collects the output of the
+ * maven build process.
+ */
 public class OutputCollector extends Thread {
   private InputStream is;
   private File logFile;

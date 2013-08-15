@@ -8,9 +8,18 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ * Callable (concurrent) task that builds a package.
+ */
 public class PackageBuilder implements Callable<BuildResult> {
-  
+
+  private static final Logger LOGGER = Logger.getLogger(PackageBuilder.class.getName());
+
+  private int buildId;
+
   private PackageNode pkg;
   private File logFile;
 
@@ -20,14 +29,15 @@ public class PackageBuilder implements Callable<BuildResult> {
    * updates. This is important during the first few builds to make
    * sure that we have the latest version of renjin.
    *
-   * <p>After the first few builds succeed, {@link Builder} sets this
+   * <p>After the first few builds succeed, {@link BuildCommand} sets this
    * flag to false</p>
    */
   public static boolean updateSnapshots = true;
 
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
-  public PackageBuilder(PackageNode pkg) {
+  public PackageBuilder(int buildId, PackageNode pkg) {
+    this.buildId = buildId;
     this.pkg = pkg;
     this.logFile = new File(pkg.getBaseDir(), "build.log");
   }
@@ -38,10 +48,6 @@ public class PackageBuilder implements Callable<BuildResult> {
     // set the name of this thread to the package
     // name for debugging
     Thread.currentThread().setName(pkg.getName());
-    
-    // write the POM to the base dir
-    pkg.writePom();
-
 
     BuildResult result = new BuildResult();
     result.setPackageName(pkg.getName());
@@ -50,7 +56,10 @@ public class PackageBuilder implements Callable<BuildResult> {
     command.add(getMavenPath());
     if(updateSnapshots) {
       command.add("-U");
+    } else {
+      command.add("-o");
     }
+    command.add("-X");
     // hot fix for tests that exceed memory
     if(pkg.getName().equals("MASS")) {
       command.add("-DskipTests");
@@ -60,7 +69,7 @@ public class PackageBuilder implements Callable<BuildResult> {
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");
     command.add("clean");
-    command.add("deploy");
+    command.add("install");
 
     ProcessBuilder builder = new ProcessBuilder(command);
     
@@ -110,9 +119,16 @@ public class PackageBuilder implements Callable<BuildResult> {
       result.setOutcome(BuildOutcome.ERROR);
       e.printStackTrace();
     }
+
+    try {
+      new BuildResultRecorder(buildId, pkg, result.getOutcome()).record();
+    } catch(Exception e) {
+      LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getPackageVersionId(), e);
+    }
+
     return result; 
   }
-  
+
   private String getMavenPath() {
     if(System.getProperty("os.name").toLowerCase().contains("windows")) {
       return "mvn.bat";

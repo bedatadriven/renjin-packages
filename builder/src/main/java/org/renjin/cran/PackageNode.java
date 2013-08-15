@@ -22,8 +22,17 @@ public class PackageNode {
 		    new File(baseDir, "DESCRIPTION"), Charsets.UTF_8));
 		
 	}
-	
-	public String getName() {
+
+
+  public String getPackageVersionId() {
+    return getPackageId() + ":" + description.getVersion();
+  }
+
+  public String getPackageId() {
+    return "org.renjin.cran:" + description.getPackage();
+  }
+
+  public String getName() {
 	  return description.getPackage();
 	}
 
@@ -44,8 +53,8 @@ public class PackageNode {
     return getName();
   }
 
-  public void writePom() throws IOException {
-    PomBuilder pom = new PomBuilder(baseDir);
+  public void writePom(String renjinVersion) throws IOException {
+    PomBuilder pom = new PomBuilder(renjinVersion, baseDir);
     pom.writePom();
   }
 

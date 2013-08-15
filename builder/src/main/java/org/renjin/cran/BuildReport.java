@@ -21,7 +21,6 @@ import freemarker.template.TemplateException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 public class BuildReport {
 
@@ -180,13 +179,13 @@ public class BuildReport {
       // find the test id
       Test test;
       List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage = :package", Test.class)
-        .setParameter("name", testResult.getName())
+        .setParameter("name", testResult.getTestName())
         .setParameter("package", em.getReference(RPackage.class, packageId))
         .getResultList();
       if(tests.isEmpty()) {
         test = new Test();
         test.setRPackage(em.getReference(RPackage.class, packageId));
-        test.setName(testResult.getName());
+        test.setName(testResult.getTestName());
         em.persist(test);
       } else {
         test = tests.get(0);
@@ -320,7 +319,7 @@ public class BuildReport {
         if(testReportDir.exists() && testReportDir.listFiles() != null) {
           for(File file : testReportDir.listFiles()) {
             if(file.getName().endsWith(".xml")) {
-              TestResultParser testResult = new TestResultParser(this, file);
+              TestResultParser testResult = new TestResultParser(file);
               if(!testResult.getOutput().isEmpty()) {
                 tests.add(testResult);
               }

@@ -21,6 +21,10 @@ public class RPackageBuildResult {
 	@ManyToOne
 	private RPackageVersion packageVersion;
 
+  private boolean nativeSourceCompilationFailure;
+
+  private boolean testFailures;
+
 	public int getId() {
 		return id;
 	}
@@ -60,4 +64,20 @@ public class RPackageBuildResult {
 	public void setPackageVersion(RPackageVersion packageVersion) {
 		this.packageVersion = packageVersion;
 	}
+
+  public boolean isNativeSourceCompilationFailure() {
+    return nativeSourceCompilationFailure;
+  }
+
+  public void setNativeSourceCompilationFailure(boolean nativeSourceCompilationFailure) {
+    this.nativeSourceCompilationFailure = nativeSourceCompilationFailure;
+  }
+
+  public boolean isTestFailures() {
+    return testFailures;
+  }
+
+  public void setTestFailures(boolean testFailures) {
+    this.testFailures = testFailures;
+  }
 }

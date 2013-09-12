@@ -21,7 +21,6 @@ import freemarker.template.TemplateException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 public class BuildReport {
 
@@ -320,7 +319,7 @@ public class BuildReport {
         if(testReportDir.exists() && testReportDir.listFiles() != null) {
           for(File file : testReportDir.listFiles()) {
             if(file.getName().endsWith(".xml")) {
-              TestResultParser testResult = new TestResultParser(this, file);
+              TestResultParser testResult = new TestResultParser(file);
               if(!testResult.getOutput().isEmpty()) {
                 tests.add(testResult);
               }

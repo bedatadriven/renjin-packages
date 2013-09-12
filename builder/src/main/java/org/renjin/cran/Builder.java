@@ -2,15 +2,14 @@ package org.renjin.cran;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.renjin.repo.PersistenceUtil;
+import org.renjin.repo.model.Build;
 import org.renjin.repo.model.BuildOutcome;
 import org.renjin.repo.model.PackageDescription.PackageDependency;
 
@@ -19,6 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+
+import javax.persistence.EntityManager;
 
 /**
  * Program that will retrieve package sources from CRAN,
@@ -49,6 +50,8 @@ public class Builder {
   private Map<String, Integer> retryCount = Maps.newHashMap();
   private ExecutorCompletionService<BuildResult> service;
 
+  private int buildId;
+
   public static void main(String[] args) throws Exception {
 
     Builder builder = new Builder();
@@ -71,7 +74,22 @@ public class Builder {
       maxNumberToBuild = Integer.parseInt(maxBuilds);
       System.out.println(" ");
     }
-    
+    buildId = newBuildId();
+  }
+
+  /**
+   * Create a new build record, and return the the new id of the
+   *  record.
+   */
+  private int newBuildId() {
+    EntityManager em = PersistenceUtil.createEntityManager();
+    em.getTransaction().begin();
+    Build build = new Build();
+    build.setStarted(new Date());
+    em.persist(build);
+    em.getTransaction().commit();
+    em.close();
+    return build.getId();
   }
 
   private void unpack() throws IOException {
@@ -216,7 +234,7 @@ public class Builder {
     // in the local repository
     boolean updateSnapshots = (scheduled.size() < (getThreadPoolSize()*3));
 
-    this.service.submit(new PackageBuilder(pkg));
+    this.service.submit(new PackageBuilder(buildId, pkg));
     scheduled.add(pkg);
   }
 

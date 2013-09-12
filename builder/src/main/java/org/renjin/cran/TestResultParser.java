@@ -9,7 +9,6 @@ import java.io.IOException;
 
 public class TestResultParser {
 
-  private final BuildReport.PackageReport pkg;
   private final String errorMessage;
   private boolean passed;
   private String output;
@@ -20,8 +19,7 @@ public class TestResultParser {
    * @param xmlFile the junit-style XML file describing the test outcome.
    *               
    */
-  public TestResultParser(BuildReport.PackageReport pkg, File xmlFile) throws IOException {
-    this.pkg = pkg;
+  public TestResultParser(File xmlFile) throws IOException {
 
     if(!xmlFile.getName().startsWith("TEST-") || !xmlFile.getName().endsWith(".xml")) {
       throw new IllegalArgumentException("Expected XML file named TEST-testname.xml");
@@ -64,7 +62,7 @@ public class TestResultParser {
   }
 
   public BuildReport.PackageReport getPackage() {
-    return pkg;
+    throw new UnsupportedOperationException();
   }
 
   public String parseError() {

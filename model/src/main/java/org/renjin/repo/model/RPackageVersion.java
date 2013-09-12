@@ -23,6 +23,8 @@ public class RPackageVersion {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date publicationDate;
+  
+  private boolean sourceDownloaded;
 
 	@Embedded
 	private LOC loc = new LOC();
@@ -34,6 +36,12 @@ public class RPackageVersion {
 	public void setId(String id) {
 		this.id = id;
 	}
+  
+  @Transient
+  public String getPackageName() {
+    String gav[] = id.split(":");
+    return gav[1];
+  }
 
 	public RPackage getRPackage() {
 		return rPackage;
@@ -75,4 +83,11 @@ public class RPackageVersion {
 		this.loc = loc;
 	}
 
+  public boolean isSourceDownloaded() {
+    return sourceDownloaded;
+  }
+
+  public void setSourceDownloaded(boolean sourceDownloaded) {
+    this.sourceDownloaded = sourceDownloaded;
+  }
 }

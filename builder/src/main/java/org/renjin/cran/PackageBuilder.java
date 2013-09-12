@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 public class PackageBuilder implements Callable<BuildResult> {
-  
+
+  private int buildId;
   private PackageNode pkg;
   private File logFile;
 
@@ -27,7 +28,8 @@ public class PackageBuilder implements Callable<BuildResult> {
 
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
-  public PackageBuilder(PackageNode pkg) {
+  public PackageBuilder(int buildId, PackageNode pkg) {
+    this.buildId = buildId;
     this.pkg = pkg;
     this.logFile = new File(pkg.getBaseDir(), "build.log");
   }
@@ -48,9 +50,8 @@ public class PackageBuilder implements Callable<BuildResult> {
 
     List<String> command = Lists.newArrayList();
     command.add(getMavenPath());
-    if(updateSnapshots) {
-      command.add("-U");
-    }
+    command.add("-o");
+
     // hot fix for tests that exceed memory
     if(pkg.getName().equals("MASS")) {
       command.add("-DskipTests");

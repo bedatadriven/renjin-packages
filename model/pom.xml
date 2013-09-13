@@ -10,6 +10,14 @@
   <artifactId>renjin-repo-model</artifactId>
 
 
+  <parent>
+    <groupId>org.renjin.repo</groupId>
+    <artifactId>renjin-repo-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+
   <dependencies>
     <dependency>
       <groupId>org.hibernate</groupId>

@@ -17,10 +17,15 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.renjin.repo</groupId>
+  <parent>
+    <groupId>org.renjin.repo</groupId>
+    <artifactId>renjin-repo-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
   <artifactId>renjin-repo-webapp</artifactId>
   <packaging>war</packaging>
-  <version>1.0-SNAPSHOT</version>
   <name>Renjin Repo WebApp</name>
 
   <properties>
@@ -28,14 +33,6 @@
     <gae.version>1.7.4</gae.version>
     <jersey.version>1.17</jersey.version>
   </properties>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>bedatadriven-oss</id>
-      <name>Renjin Latest Builds</name>
-      <url>http://nexus.bedatadriven.com/content/repositories/oss-snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <dependencies>
     <dependency>

@@ -64,7 +64,7 @@ public class BuildResultRecorder {
       String line;
       while((line=reader.readLine())!=null) {
         if(line.contains("Compilation of GNU R sources failed")) {
-          buildResult.setNativeSourceCompilationFailure(true);
+          buildResult.setNativeSourceCompilationFailures(true);
         } else if(line.contains("There were R test failures")) {
           buildResult.setTestFailures(true);
         }

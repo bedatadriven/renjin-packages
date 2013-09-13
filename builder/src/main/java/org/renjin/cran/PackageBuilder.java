@@ -60,6 +60,7 @@ public class PackageBuilder implements Callable<BuildResult> {
       command.add("-o");
     }
     command.add("-X");
+
     // hot fix for tests that exceed memory
     if(pkg.getName().equals("MASS")) {
       command.add("-DskipTests");

@@ -51,7 +51,25 @@
   </distributionManagement>
 
 
+
   <repositories>
+
+    <!-- We go to mvnsearch.org after latest GAE SDK artifacts -->
+    <repository>
+      <id>mvnsearch.org</id>
+      <name>MVN Search</name>
+      <url>
+        http://www.mvnsearch.org/maven2
+      </url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>maven2-repository.dev.java.net</id>
       <name>Java.net Repository for Maven</name>
@@ -118,6 +136,12 @@
     </pluginManagement>
   </build>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>mvnsearch</id>
+      <url>http://www.mvnsearch.org/maven2</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <dependencies>
     <dependency>
@@ -149,5 +173,4 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
 </project>

@@ -21,6 +21,8 @@ import com.google.common.collect.Sets;
 
 import javax.persistence.EntityManager;
 
+import javax.persistence.EntityManager;
+
 /**
  * Program that will retrieve package sources from CRAN,
  * build, and report results.
@@ -39,9 +41,6 @@ public class BuildCommand implements Runnable {
 
   @Option(name="--renjin-version", description = "Renjin version to build/test against")
   private String renjinVersion;
-
-
-  private int buildId;
 
   private Map<String, PackageNode> nodes = Maps.newHashMap();
 
@@ -66,6 +65,8 @@ public class BuildCommand implements Runnable {
   private Map<String, Integer> retryCount = Maps.newHashMap();
 
   private ExecutorCompletionService<BuildResult> service;
+
+  private int buildId;
 
   public static void main(String[] args) throws Exception {
 
@@ -100,6 +101,22 @@ public class BuildCommand implements Runnable {
     } catch(Exception e) {
       e.printStackTrace();
     }
+    buildId = newBuildId();
+  }
+
+  /**
+   * Create a new build record, and return the the new id of the
+   *  record.
+   */
+  private int newBuildId() {
+    EntityManager em = PersistenceUtil.createEntityManager();
+    em.getTransaction().begin();
+    Build build = new Build();
+    build.setStarted(new Date());
+    em.persist(build);
+    em.getTransaction().commit();
+    em.close();
+    return build.getId();
   }
 
 

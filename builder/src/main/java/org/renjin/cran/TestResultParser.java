@@ -61,6 +61,10 @@ public class TestResultParser {
     return name;
   }
 
+  public BuildReport.PackageReport getPackage() {
+    throw new UnsupportedOperationException();
+  }
+
   public String parseError() {
     String[] lines = getOutput().split("\n");
     for(String line : lines) {

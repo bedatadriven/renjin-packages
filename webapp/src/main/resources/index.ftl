@@ -8,8 +8,9 @@
 
   <table class="table table-condensed">
   	<thead>
-  		<th>Package</th>
+        <th>Status</th>
   		<th>Downstream</th>
+  		<th>Package</th>
   		<th>Languages</th>
   		<th>Problems</th>
   		<th>Description</th>

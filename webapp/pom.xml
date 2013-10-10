@@ -157,7 +157,8 @@
             <jvmFlag>-Xmx256m</jvmFlag>
             <jvmFlag>-Drdbms.server=hosted</jvmFlag>
           </jvmFlags>
-          <serverId>appengine.google.com</serverId>
+            <serverId>appengine.google.com</serverId>
+
         </configuration>
       </plugin>
     </plugins>

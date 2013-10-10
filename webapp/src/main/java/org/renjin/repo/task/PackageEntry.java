@@ -54,4 +54,8 @@ public class PackageEntry {
   public URL getUrl() throws MalformedURLException {
     return new URL(url);
   }
+
+  public String getPackageVersionId() {
+    return CRAN.packageVersionId(name, version);
+  }
 }

@@ -11,7 +11,7 @@ public class CRANTest {
   @Ignore
   public void test() {
 
-    UpdateCranPackagesTask task = new UpdateCranPackagesTask();
+    CranTasks task = new CranTasks();
     task.updateIndex();
   }
 
@@ -19,7 +19,7 @@ public class CRANTest {
   public void fetch() throws IOException {
 
 
-    UpdateCranPackagesTask task = new UpdateCranPackagesTask();
+    CranTasks task = new CranTasks();
     task.fetchPackage("survey", "3.29-5");
 
   }

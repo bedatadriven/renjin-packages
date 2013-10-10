@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+  <cron>
+    <url>/tasks/cran/updateIndex</url>
+    <description>Fetch new packages nightly</description>
+    <schedule>every day 02:00</schedule>
+  </cron>
+</cronentries>

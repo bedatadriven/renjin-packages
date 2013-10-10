@@ -34,13 +34,14 @@ import java.util.zip.GZIPInputStream;
 /**
  * Fetch the latest list of package versions from a CRAN mirror
  */
-public class UpdateCranPackagesTask {
+public class CranTasks {
 
-  private final static Logger LOGGER = Logger.getLogger(UpdateCranPackagesTask.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(CranTasks.class.getName());
 
 
   private final GcsService gcsService =
           GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
+
 
   @POST
   @Path("updateIndex")
@@ -56,9 +57,7 @@ public class UpdateCranPackagesTask {
       }
   
       for(PackageEntry cranPackage : CRAN.fetchPackageList()) {
-        String pkgId = "org.renjin.cran:" + cranPackage.getName();
-        String pkgVersionId = pkgId + ":" + cranPackage.getVersion();
-        if(!knownSet.contains(pkgVersionId)) {
+        if(!knownSet.contains(cranPackage.getPackageVersionId())) {
           enqueueFetch(cranPackage.getName(), cranPackage.getVersion());
         }
       }
@@ -66,7 +65,6 @@ public class UpdateCranPackagesTask {
       closeQuietly(em);
     }
   }
-
 
   @GET
   @Path("refetch")

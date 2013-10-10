@@ -3,7 +3,7 @@ package org.renjin.repo;
 
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.view.Viewable;
-import org.renjin.repo.task.UpdateCranPackagesTask;
+import org.renjin.repo.task.CranTasks;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
@@ -12,7 +12,6 @@ import java.util.Map;
 
 @Path("/")
 public class PackageResources {
-
 
 
   @GET
@@ -30,8 +29,8 @@ public class PackageResources {
   }
 
   @Path("tasks/cran")
-  public UpdateCranPackagesTask getTasks() {
-    return new UpdateCranPackagesTask();
+  public CranTasks getTasks() {
+    return new CranTasks();
   }
 
 }

@@ -25,6 +25,10 @@ public class RPackageVersion {
 	private Date publicationDate;
   
   private boolean sourceDownloaded;
+  
+  
+  @Lob
+  private String description;
 
 	@Embedded
 	private LOC loc = new LOC();
@@ -75,7 +79,15 @@ public class RPackageVersion {
 		this.publicationDate = publicationDate;
 	}
 
-	public LOC getLoc() {
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public LOC getLoc() {
 		return loc;
 	}
 

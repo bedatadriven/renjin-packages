@@ -14,7 +14,11 @@ public class HibernateUtil {
   
   private static final Logger LOGGER = Logger.getLogger(HibernateUtil.class.getName());
   
-  public static EntityManager getEntityManager() {
+  public static EntityManager createEntityManager() {
+    return EMF.createEntityManager();
+  }
+  
+  public static EntityManager getActiveEntityManager() {
 
     EntityManager em = EM.get();
     if(em == null) {

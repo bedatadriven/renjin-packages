@@ -1,0 +1,11 @@
+<queue-entries>
+  <queue>
+    <name>cran-fetch</name>
+    <rate>1/s</rate>
+    <max-concurrent-requests>4</max-concurrent-requests>
+    <retry-parameters>
+      <task-retry-limit>3</task-retry-limit>
+      <task-age-limit>2d</task-age-limit>
+    </retry-parameters>
+  </queue>
+</queue-entries>

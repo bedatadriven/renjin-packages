@@ -1,9 +1,12 @@
 package org.renjin.repo.model;
 
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
+import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -60,6 +63,21 @@ public class RPackage {
 	public void setVersions(Set<RPackageVersion> versions) {
 		this.versions = versions;
 	}
+  
+  public RPackageVersion getLatestVersion() {
+
+    RPackageVersion latestVersion = null;
+    DefaultArtifactVersion maxVersion = null;
+
+    for(RPackageVersion packageVersion : versions) {
+      DefaultArtifactVersion version = new DefaultArtifactVersion(packageVersion.getVersion());
+      if(maxVersion == null || version.compareTo(maxVersion) > 0) {
+        latestVersion = packageVersion;
+        maxVersion = version;
+      }
+    }
+    return latestVersion;
+  }
 
 	public String getTitle() {
 		return title;

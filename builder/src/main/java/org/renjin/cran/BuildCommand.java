@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import io.airlift.command.Arguments;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -18,6 +19,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.renjin.repo.model.RPackage;
+import org.renjin.repo.model.RPackageVersion;
 
 import javax.persistence.EntityManager;
 
@@ -44,6 +47,8 @@ public class BuildCommand implements Runnable {
 
   private Map<String, PackageNode> nodes = Maps.newHashMap();
 
+  @Arguments
+  private List<String> packagesToBuild;
 
   /**
    * List of projects that still need to be built
@@ -65,43 +70,22 @@ public class BuildCommand implements Runnable {
   private Map<String, Integer> retryCount = Maps.newHashMap();
 
   private ExecutorCompletionService<BuildResult> service;
+  
+  private List<RPackageVersion> versionsToBuild = Lists.newArrayList();
 
   private int buildId;
 
-  public static void main(String[] args) throws Exception {
-
-    BuildCommand builder = new BuildCommand();
-    builder.workspaceDir = new File(System.getProperty("cran.dir"));
-    builder.workspaceDir.mkdirs();
-
-    builder.scanForProjects();
-    builder.buildPackages();
-
-  }
-  
+  @Override
   public void run() {
 
-    if(offlineMode) {
-      PackageBuilder.updateSnapshots = false;
-    }
-
-    recordBuild();
-
-    String maxBuilds = System.getProperty("package.limit");
-    if(Strings.isNullOrEmpty(maxBuilds)) {
-      maxNumberToBuild = Integer.MAX_VALUE; 
-    } else {
-      maxNumberToBuild = Integer.parseInt(maxBuilds);
-      System.out.println(" ");
-    }
-    try {
-      scanForProjects();
-      buildPackages();
-
-    } catch(Exception e) {
-      e.printStackTrace();
-    }
     buildId = newBuildId();
+    try {
+      fetchVersions();
+      
+    } catch (IOException e) {
+      e.printStackTrace();
+      
+    }
   }
 
   /**
@@ -119,40 +103,28 @@ public class BuildCommand implements Runnable {
     return build.getId();
   }
 
-
-
-  private void recordBuild() {
-    EntityManager em = PersistenceUtil.createEntityManager();
-    em.getTransaction().begin();
-    Build build = new Build();
-    build.setStarted(new Date());
-    build.setRenjinVersion(renjinVersion);
-    em.persist(build);
-    em.getTransaction().commit();
-    em.close();
-
-    buildId = build.getId();
-  }
-
   /**
    * Build the list of package nodes from the package
    * directories present.
    */
-  private void scanForProjects() throws IOException {
+  private void fetchVersions() throws IOException {
 
-    System.out.println("Scanning for packages...");
+    // retrieve the list of packages / versions to build
 
-    for(File dir : workspaceDir.listFiles()) {
-      if(dir.isDirectory() && !dir.getName().equals("00buildlogs")) {
-        try {
-          PackageNode node = new PackageNode(dir);
-          node.writePom(renjinVersion);
-          nodes.put(node.getName(), node);
-        } catch(Exception e) {
-          System.err.println("Error building POM for " + dir.getName());
-          e.printStackTrace(System.err);
-        }
+    EntityManager em = PersistenceUtil.createEntityManager();
+    em.getTransaction().begin();
+
+    for(String packageName : packagesToBuild) {
+      String qualifiedName = "org.renjin.cran:" + packageName;
+      RPackage rPackage = em.find(RPackage.class, qualifiedName);
+      if(rPackage == null) {
+        throw new RuntimeException("Cannot find package " + qualifiedName);
       }
+      RPackageVersion latestVersion = rPackage.getLatestVersion();
+      versionsToBuild.add(latestVersion);
+
+      System.out.println("Building " + latestVersion.getPackageName() + " " + latestVersion.getVersion());
+
     }
   }
 

@@ -3,6 +3,8 @@ package org.renjin.repo.task;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class CRANTest {
 
   @Test
@@ -10,7 +12,16 @@ public class CRANTest {
   public void test() {
 
     UpdateCranPackagesTask task = new UpdateCranPackagesTask();
-    task.fetchList();
+    task.updateIndex();
+  }
+
+  @Test
+  public void fetch() throws IOException {
+
+
+    UpdateCranPackagesTask task = new UpdateCranPackagesTask();
+    task.fetchPackage("survey", "3.29-5");
+
   }
 
 }

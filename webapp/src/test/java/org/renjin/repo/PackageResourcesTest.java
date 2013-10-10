@@ -23,7 +23,6 @@ public class PackageResourcesTest {
     em = PersistenceUtil.createEntityManager();
   }
 
-
   @Test
   public void testIndex() throws IOException, TemplateException {
 
@@ -37,10 +36,5 @@ public class PackageResourcesTest {
     
     Template template = config.getTemplate("/index.ftl");
     template.process(model, new PrintWriter(System.out));
-
-
   }
-  
-  
-  
 }

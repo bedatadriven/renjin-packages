@@ -1,5 +1,6 @@
 package org.renjin.repo.task;
 
+import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.InputSupplier;
@@ -11,7 +12,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -19,7 +25,7 @@ import java.util.zip.GZIPInputStream;
 
 public class CRAN {
 
-  public static final String CRAN_MIRROR = "http://cran.xl-mirror.nl/";
+  public static final String CRAN_MIRROR = "http://ftp.heanet.ie/mirrors/cran.r-project.org/";
 
   public static List<PackageEntry> fetchPackageList() {
 
@@ -98,6 +104,27 @@ public class CRAN {
     downloadSrc(pkg, sourcesDir);
 
     return archiveFile;
+  }
+
+  public static URL sourceUrl(String packageName, String version) throws MalformedURLException {
+    return new URL(CRAN.CRAN_MIRROR + "src/contrib/" + packageName + "_" + version + ".tar.gz");
+  }
+  
+  public static URL archivedSourceUrl(String packageName, String version) throws MalformedURLException {
+    return new URL(CRAN.CRAN_MIRROR + "src/contrib/Archive/" + packageName + "/" + packageName + "_" + version + ".tar.gz");
+  }
+
+
+  public static GcsFilename gcsFileName(String packageName, String version) {
+    return new GcsFilename("package-sources", "cran/" + packageName + "_" + version + ".tar.gz");
+  }
+  
+  public static String packageId(String packageName) {
+    return  "org.renjin.cran:" + packageName;
+  }
+
+  public static String packageVersionId(String packageName, String version) {
+    return packageId(packageName) + ":" + version;
   }
 
   public static void unpackSources(PackageEntry pkg, File baseDir) throws IOException {

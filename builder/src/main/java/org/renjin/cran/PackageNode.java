@@ -23,7 +23,6 @@ public class PackageNode {
 		
 	}
 
-
   public String getPackageVersionId() {
     return getPackageId() + ":" + description.getVersion();
   }
@@ -51,11 +50,6 @@ public class PackageNode {
   @Override
   public String toString() {
     return getName();
-  }
-
-  public void writePom(String renjinVersion) throws IOException {
-    PomBuilder pom = new PomBuilder(renjinVersion, baseDir);
-    pom.writePom();
   }
 
   public Map<String, Integer> countLoc() throws IOException {

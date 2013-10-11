@@ -17,27 +17,17 @@ import java.util.logging.Logger;
 public class PackageBuilder implements Callable<BuildResult> {
 
   private static final Logger LOGGER = Logger.getLogger(PackageBuilder.class.getName());
-
-  private int buildId;
+  private final Workspace workspace;
+  private final BuildReporter reporter;
 
   private PackageNode pkg;
   private File logFile;
 
-
-  /**
-   * When this is true, we force maven to check for snapshot
-   * updates. This is important during the first few builds to make
-   * sure that we have the latest version of renjin.
-   *
-   * <p>After the first few builds succeed, {@link BuildCommand} sets this
-   * flag to false</p>
-   */
-  public static boolean updateSnapshots = true;
-
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
-  public PackageBuilder(int buildId, PackageNode pkg) {
-    this.buildId = buildId;
+  public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg) {
+    this.workspace = workspace;
+    this.reporter = reporter;
     this.pkg = pkg;
     this.logFile = new File(pkg.getBaseDir(), "build.log");
   }
@@ -49,26 +39,26 @@ public class PackageBuilder implements Callable<BuildResult> {
     // name for debugging
     Thread.currentThread().setName(pkg.getName());
 
+    // write out the POM file for this package
+    PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), pkg.getBaseDir());
+    pomBuilder.writePom();
+
     BuildResult result = new BuildResult();
     result.setPackageName(pkg.getName());
 
     List<String> command = Lists.newArrayList();
     command.add(getMavenPath());
-    if(updateSnapshots) {
-      command.add("-U");
-    } else {
-      command.add("-o");
-    }
     command.add("-X");
 
-    // hot fix for tests that exceed memory
-    if(pkg.getName().equals("MASS")) {
-      command.add("-DskipTests");
-    } else {
-      command.add("-Dmaven.test.failure.ignore=true");
-    }
+    // configure maven to use ONLY our local repo to which we deployed
+    // our specific versions of Renjin that we're testing against
+    command.add("-o");
+    command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
+
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");
+    command.add("-Dmaven.test.failure.ignore=true");
+
     command.add("clean");
     command.add("install");
 
@@ -122,7 +112,7 @@ public class PackageBuilder implements Callable<BuildResult> {
     }
 
     try {
-      new BuildResultRecorder(buildId, pkg, result.getOutcome()).record();
+      reporter.reportResult(pkg, result.getOutcome());
     } catch(Exception e) {
       LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getPackageVersionId(), e);
     }

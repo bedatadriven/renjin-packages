@@ -68,7 +68,7 @@ public class BuildCommand implements Runnable {
       em.getTransaction().begin();
 
       if(packages.contains("ALL")) {
-        List<RPackageVersion> all = em.createQuery("select v from RPackageVersion", RPackageVersion.class).getResultList();
+        List<RPackageVersion> all = em.createQuery("select v from RPackageVersion v", RPackageVersion.class).getResultList();
         System.out.println("Building " + all.size() + " packages");
         for(RPackageVersion version : all) {
           try {

@@ -26,48 +26,47 @@ public class GitHistoryLoader {
   public static final String FIRST_COMMIT = "bfb3f4dbf6766d80705834beaa618c5fe115a491";
   private Repository repo;
   private EntityManager em;
-  private Set<String> missingDataIds;
-
-  public static void main(String[] args) throws Exception {
-
-    new GitHistoryLoader().run();
-
-  }
+  private Set<String> knownCommitIds;
+  private Set<String> newCommitIds = Sets.newHashSet();
 
 
-  private void run() throws Exception {
+  public void run(Workspace workspace) throws Exception {
 
     em = PersistenceUtil.createEntityManager();
     em.getTransaction().begin();
 
     // make a list of all the commits we know about
-    missingDataIds = Sets.newHashSet(
-      em.createQuery("select c.id from RenjinCommit c where c.commitTime is null", String.class).getResultList());
+    knownCommitIds = Sets.newHashSet(
+      em.createQuery("select c.id from RenjinCommit c", String.class).getResultList());
 
 
     FileRepositoryBuilder builder = new FileRepositoryBuilder();
     repo = builder
       .readEnvironment()
-      .findGitDir(new File(new File("."), "renjin"))
+      .findGitDir(workspace.getRenjinDir())
       .build();
 
+    // now add all the commits that are not present in db
     Git git = new Git(repo);
-    Iterable<RevCommit> logs = git.log().call();
-    for(RevCommit commit : logs) {
-      RenjinCommit entity = em.find(RenjinCommit.class, commit.getName());
-      for(int i=0;i!=commit.getParentCount();++i) {
-        RenjinCommit parentEntity = em.find(RenjinCommit.class, commit.getParent(i).getName());
-        if(parentEntity != null) {
-          entity.getParents().add(parentEntity);
+    for(RevCommit commit : git.log().call()) {
+      if(!knownCommitIds.contains(commit.getName())) {
+        addCommit(commit);
+      }
+    }
+
+    // now add parents of our new commits
+    for(RevCommit commit : git.log().call()) {
+      if(newCommitIds.contains(commit.getName())) {
+        RenjinCommit entity = em.find(RenjinCommit.class, commit.getName());
+        for(int i=0;i!=commit.getParentCount();++i) {
+          RenjinCommit parentEntity = em.find(RenjinCommit.class, commit.getParent(i).getName());
+          if(parentEntity != null) {
+            entity.getParents().add(parentEntity);
+          }
         }
       }
     }
     em.getTransaction().commit();
-  }
-
-
-  private boolean isStored(RevCommit commit) {
-    return missingDataIds.contains(commit.getName());
   }
 
   private void addCommit(RevCommit commit) throws Exception {
@@ -79,17 +78,6 @@ public class GitHistoryLoader {
     entity.setCommitTime(commit.getCommitterIdent().getWhen());
     entity.setVersion(parseVersion(commit));
     em.persist(entity);
-
-//    for(int i=0;i!=commit.getParentCount();++i) {
-//      RevCommit parent = commit.getParent(i);
-//      if(!isStored(parent)) {
-//        addCommit(parent);
-//      }
-//      entity.getParents().add(em.getReference(RenjinCommit.class, parent.getName()));
-//    }
-
-    missingDataIds.add(commit.getName());
-
   }
 
   private String parseVersion(RevCommit commit) throws Exception {
@@ -101,7 +89,7 @@ public class GitHistoryLoader {
     treeWalk.setFilter(PathFilter.create("pom.xml"));
 
     if(!treeWalk.next()) {
-      throw new IllegalStateException("Renjin commit does not include pom.xml");
+      return "0.0.0";
     }
 
     ObjectId objectId = treeWalk.getObjectId(0);

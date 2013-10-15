@@ -35,13 +35,8 @@ public class BuildCommand implements Runnable {
   @Option(name="-j", description = "number of concurrent builds")
   private int numConcurrentBuilds = 1;
 
-  @Option(name="-o", description = "do not update snapshots")
-  private boolean offlineMode;
-
   @Option(name="-t", description = "Renjin target version to build/test against")
   private String renjinVersion;
-
-  @Option(name="--build-renjin")
 
   @Arguments
   private List<String> packages;
@@ -72,15 +67,29 @@ public class BuildCommand implements Runnable {
       EntityManager em = PersistenceUtil.createEntityManager();
       em.getTransaction().begin();
 
-      for(String packageName : packages) {
-        RPackageVersion latestVersion = queryPackageVersion(em, packageName);
+      if(packages.contains("ALL")) {
+        List<RPackageVersion> all = em.createQuery("select v from RPackageVersion", RPackageVersion.class).getResultList();
+        System.out.println("Building " + all.size() + " packages");
+        for(RPackageVersion version : all) {
+          try {
+            File packageDir = ensureUnpacked(version);
+            packageBuilder.addPackage(new PackageNode(packageDir));
+          } catch(Exception e) {
+            System.err.println("...Exception unpacking " + version.getPackageName() + " " +
+              version.getVersion() + ": " + e.getMessage());
+          }
+        }
+      } else {
+        for(String packageName : packages) {
+          RPackageVersion latestVersion = queryPackageVersion(em, packageName);
 
-        System.out.println("Building " + latestVersion.getPackageName() + " " + latestVersion.getVersion());
+          System.out.println("Building " + latestVersion.getPackageName() + " " + latestVersion.getVersion());
 
-        File packageDir = ensureUnpacked(latestVersion);
+          File packageDir = ensureUnpacked(latestVersion);
 
-        packageBuilder.addPackage(new PackageNode(packageDir));
+          packageBuilder.addPackage(new PackageNode(packageDir));
 
+        }
       }
       em.close();
 

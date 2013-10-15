@@ -8,7 +8,7 @@ import java.util.Set;
 public class RPackageVersion {
 
 	/**
-	 * Package id in the form groupId:artifactId (e.g. org.renjin.cran:lattice)
+	 * Package id in the form groupId:artifactId:version (e.g. org.renjin.cran:lattice:0.16)
 	 */
 	@Id
 	private String id;
@@ -45,6 +45,17 @@ public class RPackageVersion {
   public String getPackageName() {
     String gav[] = id.split(":");
     return gav[1];
+  }
+
+  @Transient
+  public String getGroupId() {
+    String gav[] = id.split(":");
+    return gav[0];
+  }
+
+  @Transient
+  public RPackage getPackage() {
+    return rPackage;
   }
 
 	public RPackage getRPackage() {

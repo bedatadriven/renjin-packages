@@ -2,12 +2,12 @@ package org.renjin.cran;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import org.renjin.cran.proxy.MavenProxyServer;
 import org.renjin.repo.model.BuildOutcome;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * Builds a specific commit of Renjin itself and installs it
@@ -37,6 +37,9 @@ public class RenjinBuilder {
     command.add("-X");
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
+    command.add("-DproxySet=true");
+    command.add("-DproxyHost=localhost");
+    command.add("-DproxyPort=" + MavenProxyServer.PORT);
     command.add("clean");
     command.add("install");
 

@@ -1,6 +1,10 @@
 package org.renjin.repo.model;
 
 
+import com.google.common.collect.Maps;
+
+import java.util.Map;
+
 public class LOC {
 	private int r;
 	private int c;
@@ -38,4 +42,13 @@ public class LOC {
 	public void setCpp(int cpp) {
 		this.cpp = cpp;
 	}
+  
+  public Map<String, Integer> asMap() {
+    Map<String, Integer> map = Maps.newHashMap();
+    map.put("R", r);
+    map.put("C", c);
+    map.put("C++", cpp);
+    map.put("Fortran", fortran);
+    return map;
+  }
 }

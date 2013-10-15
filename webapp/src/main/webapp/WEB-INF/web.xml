@@ -2,6 +2,17 @@
 
   <display-name>Renjin</display-name>
 
+
+  <filter>
+    <filter-name>HibernateFilter</filter-name>
+    <filter-class>org.renjin.repo.HibernateFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>HibernateFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+
   <init-param>
     <!-- speed up initial Jersey loading by deactivating WADL -->
     <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>

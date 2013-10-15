@@ -3,6 +3,7 @@ package org.renjin.cran;
 
 import io.airlift.command.Cli;
 import io.airlift.command.Help;
+import org.renjin.cran.proxy.ProxyCommand;
 
 public class Main {
 
@@ -11,7 +12,7 @@ public class Main {
     Cli.CliBuilder<Runnable> builder = Cli.<Runnable>builder("renjin-repo")
       .withDescription("Renjin Repo Build Tool")
       .withDefaultCommand(Help.class)
-      .withCommands(Help.class, BuildCommand.class);
+      .withCommands(Help.class, BuildCommand.class, ProxyCommand.class);
 
     Cli<Runnable> gitParser = builder.build();
 

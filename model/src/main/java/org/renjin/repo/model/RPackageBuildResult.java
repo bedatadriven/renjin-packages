@@ -2,6 +2,7 @@ package org.renjin.repo.model;
 
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 public class RPackageBuildResult {
@@ -20,6 +21,9 @@ public class RPackageBuildResult {
 
 	@ManyToOne
 	private RPackageVersion packageVersion;
+
+  @OneToMany(mappedBy = "buildResult")
+  private Set<TestResult> testResults;
 
   private boolean testFailures;
 
@@ -80,5 +84,13 @@ public class RPackageBuildResult {
 
   public void setNativeSourceCompilationFailures(boolean nativeSourceCompilationFailures) {
     this.nativeSourceCompilationFailures = nativeSourceCompilationFailures;
+  }
+
+  public Set<TestResult> getTestResults() {
+    return testResults;
+  }
+
+  public void setTestResults(Set<TestResult> testResults) {
+    this.testResults = testResults;
   }
 }

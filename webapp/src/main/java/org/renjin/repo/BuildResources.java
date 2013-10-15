@@ -3,6 +3,7 @@ package org.renjin.repo;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.repo.model.Build;
+import org.renjin.repo.model.RPackageBuildResult;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
@@ -36,7 +37,25 @@ public class BuildResources {
     model.put("build", em.find(Build.class, buildId));
 
     return new Viewable("/buildSummary.ftl", model);
-
   }
 
+  @GET
+  @Path("{buildId}/{groupId}/{artifactId}/{version}")
+  public Viewable getBuildResult(@PathParam("buildId") int buildId,
+                                  @PathParam("groupId") String groupId,
+                                  @PathParam("artifactId") String artifactId,
+                                  @PathParam("version") String version) {
+
+
+    EntityManager em = HibernateUtil.getActiveEntityManager();
+    RPackageBuildResult result = em.createQuery("select r from RPackageBuildResult r " +
+            "where r.build.id=:buildId and " +
+            "packageVersion.id = :gav", RPackageBuildResult.class)
+            .setParameter("buildId", buildId)
+            .setParameter("gav", groupId + ":" + artifactId + ":" + version)
+            .getSingleResult();
+
+    return new Viewable("/buildResult.ftl", result);
+  }
+  
 }

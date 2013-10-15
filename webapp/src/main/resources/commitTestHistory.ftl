@@ -11,26 +11,29 @@
 
   <div class="row">
       <div class="span1">
-        <span class="label label-${event.passing?string('success', 'inverse')}">
-            ${event.abbreviatedCommitId}</span>
+        <a href="https://github.com/bedatadriven/renjin/commit/${event.commitId}" target="github"
+            class="label label-${event.passing?string('success', 'inverse')}">
+            ${event.abbreviatedCommitId}</a>
       </div>
       <div class="span5">
             <#if event.release??>
-                <p><strong>Release ${event.release}></strong></p>
+                <p><strong>Release ${event.release}</strong></p>
             <#else>
                 <p>${event.changeSummary}</p>
             </#if>
       </div>
       <div class="span6">
-            <#if event.latestTestResult??>
-                <h4>Build #${event.latestTestResult.buildResult.build.id}:
-                     ${event.latestTestResult.passed?string('OK', 'ERROR')}</h4>
-                <pre>
-${event.latestTestResult.output?html}
-                </pre>
-            </#if>
-            <#list event.oldTestResults as result>
-                <h4>Build #${result.buildResult.build.id}: ${result.passed?string('OK', 'ERROR')}</h4>
+            <#list event.testResults as result>
+                <p>
+                <span class="label label-${result.passed?string('success', 'inverse')}">b${result.buildResult.build.id}</span>
+                     <a href="/builds/${result.buildResult.build.id}/${result.buildResult.packageVersion.groupId}/${result.buildResult.packageVersion.packageName}/${result.buildResult.packageVersion.version}#test-${result.test.name}">
+                     <#if result.passed>
+                      OK
+                     <#else>
+                      ${result.errorMessage}
+                     </#if>
+                     </a>
+                </p>
             </#list>
       </div>
   </div>

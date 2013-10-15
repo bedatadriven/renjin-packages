@@ -33,4 +33,14 @@ public class PackageResources {
     return new CranTasks();
   }
 
+  @Path("builds")
+  public BuildResources getBuilds() {
+    return new BuildResources();
+  }
+
+  @Path("commits")
+  public CommitResources getVersions() {
+    return new CommitResources();
+  }
+
 }

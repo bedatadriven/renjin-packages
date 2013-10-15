@@ -19,6 +19,14 @@ public class TestResult {
   @Lob
   private String output;
 
+
+  /**
+   * The change compared to (Renjin's) parent revision
+   * +1 if it now passes, -1 if now fails, or 0 if no change
+   *
+   */
+  private int delta;
+
   private boolean passed;
 
   @Lob
@@ -70,5 +78,13 @@ public class TestResult {
 
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
+  }
+
+  public int getDelta() {
+    return delta;
+  }
+
+  public void setDelta(int delta) {
+    this.delta = delta;
   }
 }

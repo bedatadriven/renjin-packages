@@ -13,6 +13,7 @@
       <property name="javax.persistence.jdbc.url" value="jdbc:google:rdbms://bdd-renjin:renjin-repo/repo"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
 
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
     </properties>
   </persistence-unit>
 
@@ -21,13 +22,13 @@
     <class>org.renjin.repo.model.RPackage</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-
       <property name="javax.persistence.jdbc.driver" value="com.google.appengine.api.rdbms.AppEngineDriver" />
-
       <property name="javax.persistence.jdbc.url" value="jdbc:google:rdbms://bdd-renjin:renjin-repo/repo"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
 
       <property name="hibernate.connection.pool_size" value="0" />
+
+
     </properties>
   </persistence-unit>
 </persistence>

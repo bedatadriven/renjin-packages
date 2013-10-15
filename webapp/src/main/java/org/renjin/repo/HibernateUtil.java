@@ -1,5 +1,7 @@
 package org.renjin.repo;
 
+import com.google.appengine.repackaged.com.google.common.base.Strings;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -8,8 +10,19 @@ import java.util.logging.Logger;
 public class HibernateUtil {
 
   private static final EntityManagerFactory EMF =
-          Persistence.createEntityManagerFactory("renjin-repo-gae"); 
-  
+          Persistence.createEntityManagerFactory(getPersistenceUnitName());
+
+  private static String getPersistenceUnitName() {
+
+    if(Strings.isNullOrEmpty(System.getProperty("com.google.appengine.runtime.environment"))) {
+      // unit tests
+      return "renjin-repo";
+    } else {
+      // appengine dev or production
+      return "renjin-repo-gae";
+    }
+  }
+
   private static final ThreadLocal<EntityManager> EM = new ThreadLocal<EntityManager>();
   
   private static final Logger LOGGER = Logger.getLogger(HibernateUtil.class.getName());
@@ -19,6 +32,7 @@ public class HibernateUtil {
   }
   
   public static EntityManager getActiveEntityManager() {
+
 
     EntityManager em = EM.get();
     if(em == null) {

@@ -124,4 +124,8 @@ public class Workspace {
     File statusFile = new File(getLocalMavenRepository(), "renjin.status");
     Files.write(outcome.name(), statusFile, Charsets.UTF_8);
   }
+
+  public boolean isSnapshot() {
+    return getRenjinVersion().endsWith("-SNAPSHOT");
+  }
 }

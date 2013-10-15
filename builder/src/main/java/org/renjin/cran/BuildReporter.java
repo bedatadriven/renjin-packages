@@ -3,6 +3,7 @@ package org.renjin.cran;
 
 import org.renjin.repo.model.Build;
 import org.renjin.repo.model.BuildOutcome;
+import org.renjin.repo.model.RenjinCommit;
 
 import javax.persistence.EntityManager;
 import java.util.Date;
@@ -14,10 +15,18 @@ public class BuildReporter {
   public BuildReporter(Workspace workspace) {
     EntityManager em = PersistenceUtil.createEntityManager();
     em.getTransaction().begin();
+
+    RenjinCommit commit = em.find(RenjinCommit.class, workspace.getRenjinCommitId());
+    if(commit == null) {
+      commit = new RenjinCommit();
+      commit.setId(workspace.getRenjinCommitId());
+      commit.setVersion(workspace.getRenjinVersion());
+      em.persist(commit);
+    }
+
     Build build = new Build();
     build.setStarted(new Date());
-    build.setRenjinCommitId(workspace.getRenjinCommitId());
-    build.setRenjinVersion(workspace.getRenjinVersion());
+    build.setRenjinCommit(commit);
     em.persist(build);
     em.getTransaction().commit();
     em.close();

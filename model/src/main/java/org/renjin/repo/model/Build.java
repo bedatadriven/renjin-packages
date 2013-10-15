@@ -15,13 +15,12 @@ public class Build {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date started;
 
-	private String renjinVersion;
-
-	private String renjinCommitId;
+  @ManyToOne
+  @JoinColumn(name = "renjinCommitId")
+	private RenjinCommit renjinCommit;
 
 	@OneToMany(mappedBy = "build")
 	private Set<RPackageBuildResult> packageResults;
-
 
 	public int getId() {
 		return id;
@@ -39,23 +38,15 @@ public class Build {
 		this.started = started;
 	}
 
-	public String getRenjinVersion() {
-		return renjinVersion;
-	}
+  public RenjinCommit getRenjinCommit() {
+    return renjinCommit;
+  }
 
-	public void setRenjinVersion(String renjinVersion) {
-		this.renjinVersion = renjinVersion;
-	}
+  public void setRenjinCommit(RenjinCommit renjinCommit) {
+    this.renjinCommit = renjinCommit;
+  }
 
-	public String getRenjinCommitId() {
-		return renjinCommitId;
-	}
-
-	public void setRenjinCommitId(String renjinCommitId) {
-		this.renjinCommitId = renjinCommitId;
-	}
-
-	public Set<RPackageBuildResult> getPackageResults() {
+  public Set<RPackageBuildResult> getPackageResults() {
 		return packageResults;
 	}
 

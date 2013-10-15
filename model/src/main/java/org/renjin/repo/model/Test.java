@@ -43,4 +43,12 @@ public class Test {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+  public Set<TestResult> getResults() {
+    return results;
+  }
+
+  public void setResults(Set<TestResult> results) {
+    this.results = results;
+  }
 }

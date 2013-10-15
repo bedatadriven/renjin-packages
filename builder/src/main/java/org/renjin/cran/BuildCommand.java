@@ -37,8 +37,10 @@ public class BuildCommand implements Runnable {
   @Option(name="-o", description = "do not update snapshots")
   private boolean offlineMode;
 
-  @Option(name="--renjin-version", description = "Renjin version to build/test against")
+  @Option(name="-t", description = "Renjin target version to build/test against")
   private String renjinVersion;
+
+  @Option(name="--build-renjin")
 
   @Arguments
   private List<String> packages;
@@ -50,7 +52,13 @@ public class BuildCommand implements Runnable {
 
     try {
 
-      Workspace workspace = new Workspace(workspaceDir);
+      WorkspaceBuilder workspaceBuilder = new WorkspaceBuilder(workspaceDir);
+
+      if(renjinVersion != null) {
+        workspaceBuilder.setRenjinVersion(renjinVersion);
+      }
+
+      Workspace workspace = workspaceBuilder.build();
 
       System.out.println("Testing against " + workspace.getRenjinVersion());
 
@@ -81,7 +89,7 @@ public class BuildCommand implements Runnable {
   }
 
   private void buildRenjin(Workspace workspace) throws Exception {
-    if(workspace.getRenjinBuildOutcome() != BuildOutcome.SUCCESS) {
+    if(workspace.isSnapshot() && workspace.getRenjinBuildOutcome() != BuildOutcome.SUCCESS) {
       System.out.println("Building Renjin...");
 
       RenjinBuilder renjinBuilder = new RenjinBuilder(workspace);

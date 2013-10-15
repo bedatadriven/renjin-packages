@@ -50,10 +50,13 @@ public class PackageBuilder implements Callable<BuildResult> {
     command.add(getMavenPath());
     command.add("-X");
 
+    // for snapshots,
     // configure maven to use ONLY our local repo to which we deployed
     // our specific versions of Renjin that we're testing against
-    command.add("-o");
-    command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
+    if(workspace.isSnapshot()) {
+      command.add("-o");
+      command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
+    }
 
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");

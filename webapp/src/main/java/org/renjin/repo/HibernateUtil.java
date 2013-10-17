@@ -1,6 +1,7 @@
 package org.renjin.repo;
 
 import com.google.appengine.repackaged.com.google.common.base.Strings;
+import com.google.cloud.sql.jdbc.Driver;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

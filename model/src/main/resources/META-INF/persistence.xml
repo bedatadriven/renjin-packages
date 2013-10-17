@@ -13,7 +13,8 @@
       <property name="javax.persistence.jdbc.url" value="jdbc:google:rdbms://bdd-renjin:renjin-repo/repo"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
 
-      <property name="hibernate.hbm2ddl.auto" value="update"/>
+      <property name="hibernate.connection.oauth2Clientid" value="32555940559.apps.googleusercontent.com"/>
+      <property name="hibernate.connection.oauth2ClientSecret" value="ZmssLNjJy2998hD4CTg2ejr2"/>
     </properties>
   </persistence-unit>
 
@@ -25,7 +26,7 @@
       <property name="javax.persistence.jdbc.driver" value="com.google.appengine.api.rdbms.AppEngineDriver" />
       <property name="javax.persistence.jdbc.url" value="jdbc:google:rdbms://bdd-renjin:renjin-repo/repo"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
-
+      
       <property name="hibernate.connection.pool_size" value="0" />
 
 

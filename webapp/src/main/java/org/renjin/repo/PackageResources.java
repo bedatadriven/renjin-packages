@@ -25,7 +25,6 @@ public class PackageResources {
     model.put("buildResults", dao.queryResults(13));
 
     return new Viewable("/index.ftl", model);
-
   }
 
   @Path("tasks/cran")

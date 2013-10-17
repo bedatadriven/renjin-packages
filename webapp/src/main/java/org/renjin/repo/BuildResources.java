@@ -39,12 +39,12 @@ public class BuildResources {
     return new Viewable("/buildSummary.ftl", model);
   }
 
-  @GET
   @Path("{buildId}/{groupId}/{artifactId}/{version}")
-  public Viewable getBuildResult(@PathParam("buildId") int buildId,
-                                  @PathParam("groupId") String groupId,
-                                  @PathParam("artifactId") String artifactId,
-                                  @PathParam("version") String version) {
+  public ResultResource getBuildResult(@PathParam("buildId") int buildId,
+                                       @PathParam("groupId") String groupId,
+                                       @PathParam("artifactId") String artifactId,
+                                       @PathParam("version") String version) {
+
 
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
@@ -55,7 +55,7 @@ public class BuildResources {
             .setParameter("gav", groupId + ":" + artifactId + ":" + version)
             .getSingleResult();
 
-    return new Viewable("/buildResult.ftl", result);
+    return new ResultResource(result);
   }
   
 }

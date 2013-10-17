@@ -25,7 +25,9 @@ public class PackageDescription {
 
 	public static class PackageDependency {
 		private String name;
+    private String version;
 		private String versionRange;
+    private String versionSpec;
 
 		public PackageDependency(String spec) {
 			int versionSpecStart = spec.indexOf('(');
@@ -39,13 +41,14 @@ public class PackageDescription {
 				if(versionSpecEnd == -1) {
 					throw new IllegalArgumentException("Unterminated version specification: " + spec);
 				}
-				String versionSpec = spec.substring(versionSpecStart+1, versionSpecEnd).trim();
+				versionSpec = spec.substring(versionSpecStart+1, versionSpecEnd).trim();
 				if(versionSpec.startsWith(">=")) {
 					versionRange = "[" + versionSpec.substring(">=".length()).trim() + ",)";
 				} else if(versionSpec.startsWith(">")){
 					versionRange = "(" + versionSpec.substring(">".length()).trim() + ",)";
 				} else {
 					versionRange = versionSpec;
+          version = versionSpec;
 				}
 			}
 			if(Strings.isNullOrEmpty(name)) {
@@ -61,15 +64,33 @@ public class PackageDescription {
 			this.name = name;
 		}
 
-		public String getVersionRange() {
+    /**
+     *
+     * @return the original version specification, or null if none
+     * was provided
+     */
+    public String getVersionSpec() {
+      return versionSpec;
+    }
+
+    /**
+     * @return Maven-style version range. If none was provided in the description file,
+     * it will be [0,)
+     */
+    public String getVersionRange() {
 			return versionRange;
 		}
 
-		public void setVersionRange(String versionRange) {
-			this.versionRange = versionRange;
-		}
+    /**
+     *
+     * @return the precise version specified in the description file, or null if no single
+     * version was specified
+     */
+    public String getVersion() {
+      return version;
+    }
 
-		@Override
+    @Override
 		public String toString() {
 			return (name + "  " + versionRange).trim();
 		}

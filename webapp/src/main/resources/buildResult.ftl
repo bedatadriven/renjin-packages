@@ -50,5 +50,11 @@ ${testResult.output?html}
   </#list>
   </#if>
 
+  <h2>Build Log</h2>
+
+  <pre>
+${log?html}
+  </pre>
+
 
 </@scaffolding>

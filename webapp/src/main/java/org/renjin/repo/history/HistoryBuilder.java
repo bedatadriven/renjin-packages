@@ -1,19 +1,16 @@
 package org.renjin.repo.history;
 
-import com.google.appengine.repackaged.com.google.common.collect.Lists;
-import com.google.appengine.repackaged.com.google.common.collect.Maps;
-import com.google.appengine.repackaged.com.google.common.collect.Sets;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import org.renjin.repo.HibernateUtil;
 import org.renjin.repo.model.RenjinCommit;
 import org.renjin.repo.model.TestResult;
 
 import javax.persistence.EntityManager;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class HistoryBuilder {
 

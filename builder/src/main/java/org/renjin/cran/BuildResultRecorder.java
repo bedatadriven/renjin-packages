@@ -1,6 +1,8 @@
 package org.renjin.cran;
 
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.renjin.repo.model.*;
 
 import javax.persistence.EntityManager;
@@ -37,6 +39,11 @@ public class BuildResultRecorder {
     buildResult.setBuild(em.getReference(Build.class, buildId));
     buildResult.setPackageVersion(em.getReference(RPackageVersion.class, pkg.getPackageVersionId()));
     buildResult.setOutcome(outcome);
+    try {
+      buildResult.setLog(Files.toString(pkg.getLogFile(), Charsets.UTF_8));
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Failed to open log file for " + pkg.getName(), e);
+    }
 
     try {
       parseBuildLog();

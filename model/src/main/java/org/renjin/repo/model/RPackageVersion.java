@@ -18,22 +18,32 @@ public class RPackageVersion {
 
 	private String version;
 
-	@OneToMany(mappedBy = "rPackage")
-	private Set<RPackageVersion> dependencies;
-
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date publicationDate;
   
   private boolean sourceDownloaded;
-  
-  
+
   @Lob
   private String description;
 
 	@Embedded
 	private LOC loc = new LOC();
 
-	public String getId() {
+  @Column(nullable = false)
+  private boolean latest;
+
+  @OneToMany(mappedBy = "packageVersion", cascade = CascadeType.ALL)
+  private Set<RPackageDependency> dependencies;
+
+  @OneToMany(mappedBy = "dependency")
+  private Set<RPackageDependency> reverseDependencies;
+
+  /**
+   * The version of GNU R on which this package depends
+   */
+  private String gnuRDependency;
+
+  public String getId() {
 		return id;
 	}
 
@@ -74,14 +84,6 @@ public class RPackageVersion {
 		this.version = version;
 	}
 
-	public Set<RPackageVersion> getDependencies() {
-		return dependencies;
-	}
-
-	public void setDependencies(Set<RPackageVersion> dependencies) {
-		this.dependencies = dependencies;
-	}
-
 	public Date getPublicationDate() {
 		return publicationDate;
 	}
@@ -112,5 +114,37 @@ public class RPackageVersion {
 
   public void setSourceDownloaded(boolean sourceDownloaded) {
     this.sourceDownloaded = sourceDownloaded;
+  }
+
+  public void setLatest(boolean latest) {
+    this.latest = latest;
+  }
+
+  public boolean isLatest() {
+    return latest;
+  }
+
+  public Set<RPackageDependency> getReverseDependencies() {
+    return reverseDependencies;
+  }
+
+  public void setReverseDependencies(Set<RPackageDependency> reverseDependencies) {
+    this.reverseDependencies = reverseDependencies;
+  }
+
+  public void setDependencies(Set<RPackageDependency> dependencies) {
+    this.dependencies = dependencies;
+  }
+
+  public Set<RPackageDependency> getDependencies() {
+    return dependencies;
+  }
+
+  public String getGnuRDependency() {
+    return gnuRDependency;
+  }
+
+  public void setGnuRDependency(String gnuRDependency) {
+    this.gnuRDependency = gnuRDependency;
   }
 }

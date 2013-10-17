@@ -1,7 +1,7 @@
 package org.renjin.repo;
 
 
-import com.google.appengine.repackaged.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.repo.history.HistoryBuilder;
 import org.renjin.repo.model.RenjinCommit;

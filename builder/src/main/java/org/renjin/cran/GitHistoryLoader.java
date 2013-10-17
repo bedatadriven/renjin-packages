@@ -1,7 +1,7 @@
 package org.renjin.cran;
 
 
-import com.google.appengine.repackaged.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.eclipse.jgit.api.Git;

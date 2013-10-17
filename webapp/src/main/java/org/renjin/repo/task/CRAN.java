@@ -116,7 +116,7 @@ public class CRAN {
 
 
   public static GcsFilename gcsFileName(String packageName, String version) {
-    return new GcsFilename("package-sources", "cran/" + packageName + "_" + version + ".tar.gz");
+    return new GcsFilename("renjin-package-sources", "org.renjin.cran/" + packageName + "_" + version + ".tar.gz");
   }
   
   public static String packageId(String packageName) {

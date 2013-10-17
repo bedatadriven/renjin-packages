@@ -74,6 +74,11 @@ public class CranTasks {
     return Response.ok().build();
   }
 
+  @Path("calculateDependencies")
+  public CalculateDependenciesTask calculateDependencies() {
+    return new CalculateDependenciesTask();
+  }
+
   private void enqueueFetch(String packageName, String version) {
     Queue queue = QueueFactory.getQueue("cran-fetch");
     queue.add(TaskOptions.Builder.withUrl("/tasks/cran/fetch")

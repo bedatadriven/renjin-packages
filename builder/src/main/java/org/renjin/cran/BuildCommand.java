@@ -63,6 +63,7 @@ public class BuildCommand implements Runnable {
       buildRenjin(workspace);
 
       packageBuilder = new PackageGraphBuilder(workspace);
+      packageBuilder.setNumConcurrentBuilds(numConcurrentBuilds);
 
       EntityManager em = PersistenceUtil.createEntityManager();
       em.getTransaction().begin();

@@ -54,6 +54,10 @@ public class PackageGraphBuilder {
     nodes.put(packageNode.getName(), packageNode);
   }
 
+  public void setNumConcurrentBuilds(int numConcurrentBuilds) {
+    this.numConcurrentBuilds = numConcurrentBuilds;
+  }
+
   public void build() throws InterruptedException, ExecutionException {
 
     Map<String, BuildResult> results = Maps.newHashMap();

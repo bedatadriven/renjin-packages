@@ -43,7 +43,7 @@ public class CranTasks {
           GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
 
-  @POST
+  @GET
   @Path("updateIndex")
   public void updateIndex() {
 
@@ -87,6 +87,13 @@ public class CranTasks {
   }
 
   @GET
+  @Path("enqueueRefetchAll")
+  public Response enqueueRefetchAll() {
+    QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/tasks/cran/refetchAll"));
+    return Response.ok().build();
+  }
+
+  @POST
   @Path("refetchAll")
   public Response refetchAllPackages() {
 

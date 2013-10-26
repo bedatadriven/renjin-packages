@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,25 +53,25 @@ public class CalculateDependenciesTask {
 
   @GET
   public Response recalculateAll() {
-    List<RPackage> packages = HibernateUtil.getActiveEntityManager()
-      .createQuery("select p from RPackage", RPackage.class).getResultList();
+    List<String> ids = HibernateUtil.getActiveEntityManager()
+      .createQuery("select p.id from RPackage p", String.class).getResultList();
     Queue queue = QueueFactory.getDefaultQueue();
 
-    for(RPackage pkg : packages) {
+    for(String packageId : ids) {
 
       queue.add(TaskOptions.Builder.withUrl("/tasks/cran/calculateDependencies")
-        .param("packageName", pkg.getName()));
+        .param("packageId", packageId));
     }
     return Response.ok().build();
   }
 
   @POST
-  public void calculate(@FormParam("packageName") String packageName) {
+  public void calculate(@FormParam("packageId") String packageId) {
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
     em.getTransaction().begin();
 
-    RPackage pkg = em.find(RPackage.class, packageName);
+    RPackage pkg = em.find(RPackage.class, packageId);
     tagLatestVersion(pkg);
     calculateDependencies(pkg);
 
@@ -194,7 +196,18 @@ public class CalculateDependenciesTask {
       return true;
     }
     // we don't want a package to depend on a package that was published in the future
-    return !packageVersion.getPublicationDate().before(potentialDependencyVersion.getPublicationDate());
+    return sameDay(packageVersion.getPublicationDate(), potentialDependencyVersion.getPublicationDate()) ||
+        packageVersion.getPublicationDate().after(potentialDependencyVersion.getPublicationDate());
+  }
+
+  private boolean sameDay(Date date1, Date date2) {
+    Calendar calendar1 = Calendar.getInstance();
+    calendar1.setTime(date1);
+    Calendar calendar2 = Calendar.getInstance();
+    calendar2.setTime(date2);
+    return calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR) &&
+           calendar1.get(Calendar.MONTH) == calendar2.get(Calendar.MONTH) &&
+           calendar1.get(Calendar.DAY_OF_MONTH) == calendar2.get(Calendar.DAY_OF_MONTH);
   }
 
   private RPackageDependency findOrCreate(RPackageVersion version, String dependencyPackageName) {
@@ -235,15 +248,25 @@ public class CalculateDependenciesTask {
     // parse out the text of the examples from the R Document syntax
     ExamplesParser examples = new ExamplesParser();
     rd.accept(examples);
-    String exampleSource = examples.getResult();
+    String exampleSource;
+    try {
+      exampleSource = examples.getResult();
+    } catch(Exception e) {
+      LOGGER.log(Level.WARNING, "Exception caught while parsing " + fileName + " in " + version, e);
+      return;
+    }
 
     // now parse the R code to find library dependencies
     if(!Strings.isNullOrEmpty(exampleSource)) {
-      SEXP exampleExp = RParser.parseAllSource(new StringReader(examples.getResult()));
-      DependencyFinder finder = new DependencyFinder();
-      exampleExp.accept(finder);
+      try {
+        SEXP exampleExp = RParser.parseAllSource(new StringReader(examples.getResult()));
+        DependencyFinder finder = new DependencyFinder();
+        exampleExp.accept(finder);
 
-      resolveDependencies(version, finder.getResult(), "examples", "test");
+        resolveDependencies(version, finder.getResult(), "examples", "test");
+      } catch(Exception e) {
+        LOGGER.log(Level.WARNING, "Exception caught while parsing " + fileName + " in " + version + ":\n " + exampleSource, e);
+      }
     }
   }
 }

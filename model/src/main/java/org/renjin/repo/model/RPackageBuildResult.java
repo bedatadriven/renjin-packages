@@ -29,6 +29,8 @@ public class RPackageBuildResult {
 
   private boolean nativeSourceCompilationFailures;
 
+  private int delta;
+
 
 	public int getId() {
 		return id;
@@ -92,5 +94,13 @@ public class RPackageBuildResult {
 
   public void setTestResults(Set<TestResult> testResults) {
     this.testResults = testResults;
+  }
+
+  public int getDelta() {
+    return delta;
+  }
+
+  public void setDelta(int   delta) {
+    this.delta = delta;
   }
 }

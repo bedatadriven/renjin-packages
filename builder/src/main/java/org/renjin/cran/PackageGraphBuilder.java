@@ -27,6 +27,7 @@ public class PackageGraphBuilder {
   private ExecutorCompletionService<BuildResult> service;
 
   private Map<String, PackageNode> nodes = Maps.newHashMap();
+  private Map<String, PackageNode> nodeBySimpleName = Maps.newHashMap();
 
   /**
    * List of projects that still need to be built
@@ -51,7 +52,8 @@ public class PackageGraphBuilder {
   }
 
   public void addPackage(PackageNode packageNode) {
-    nodes.put(packageNode.getName(), packageNode);
+    nodes.put(packageNode.getPackageVersionId(), packageNode);
+    nodeBySimpleName.put(packageNode.getName(), packageNode);
   }
 
   public void setNumConcurrentBuilds(int numConcurrentBuilds) {
@@ -89,12 +91,12 @@ public class PackageGraphBuilder {
 
       // wait for the next package to complete
       BuildResult result = service.take().get();
-      PackageNode completed = nodes.get(result.getPackageName());
+      PackageNode completed = nodes.get(result.getPackageVersionId());
       scheduled.remove(completed);
 
-      results.put(result.getPackageName(), result);
+      results.put(result.getPackageVersionId(), result);
 
-      System.out.println(result.getPackageName() + ": " + result.getOutcome());
+      System.out.println(result.getPackageVersionId() + ": " + result.getOutcome());
 
       // if it's succeeded, add to list of packages that
       // are now available as dependencies
@@ -105,14 +107,14 @@ public class PackageGraphBuilder {
         result.getOutcome() == BuildOutcome.TIMEOUT) {
         // otherwise reschedule a few times
         // it's possible to encounter OutOfMemory Errors
-        Integer retries = retryCount.get(result.getPackageName());
+        Integer retries = retryCount.get(result.getPackageVersionId());
         if(retries == null) {
           retries = 0;
         }
         if(retries < 3) {
           // reschedule
-          scheduleForBuild(nodes.get(result.getPackageName()));
-          retryCount.put(result.getPackageName(), retries+1);
+          scheduleForBuild(nodes.get(result.getPackageVersionId()));
+          retryCount.put(result.getPackageVersionId(), retries+1);
         }
       }
 
@@ -128,21 +130,28 @@ public class PackageGraphBuilder {
     System.out.println("Build complete; " + toBuild.size() + " package(s) with unmet dependencies");
 
     for(PackageNode node : toBuild) {
-      results.put(node.getName(), new BuildResult(node.getName(), BuildOutcome.NOT_BUILT));
+      results.put(node.getName(), new BuildResult(node.getPackageVersionId(), BuildOutcome.NOT_BUILT));
     }
   }
 
   private void scheduleForBuild(PackageNode pkg) {
-    System.out.println("Scheduling " + pkg + "...");
 
-    this.service.submit(new PackageBuilder(workspace, reporter, pkg));
-    scheduled.add(pkg);
+    // check if we've already succeeded in building this package node
+    if(reporter.packageAlreadySucceeded(pkg.getPackageVersionId())) {
+      System.out.println(pkg + " already successfully built for this commit");
+      built.add(pkg);
+    } else {
+      System.out.println("Scheduling " + pkg + "...");
+
+      this.service.submit(new PackageBuilder(workspace, reporter, pkg));
+      scheduled.add(pkg);
+    }
   }
 
   private boolean dependenciesAreResolved(PackageNode pkg) {
     for(PackageDescription.PackageDependency node : pkg.getDescription().getDepends()) {
       if(!node.getName().equals("R") && !CorePackages.isCorePackage(node.getName())) {
-        PackageNode depNode = nodes.get(node.getName());
+        PackageNode depNode = nodeBySimpleName.get(node.getName());
         if(depNode == null) {
           return false;
         }

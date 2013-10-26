@@ -4,24 +4,24 @@ import org.renjin.repo.model.BuildOutcome;
 
 public class BuildResult {
 
-  private String packageName;
+  private String packageVersionId;
   private BuildOutcome outcome;
 
   public BuildResult() {
     
   }
   
-  public BuildResult(String name, BuildOutcome outcome) {
-    this.packageName = name;
+  public BuildResult(String packageVersionId, BuildOutcome outcome) {
+    this.packageVersionId = name;
     this.outcome = outcome;
   }
 
-  public String getPackageName() {
-    return packageName;
+  public String getPackageVersionId() {
+    return packageVersionId;
   }
 
-  public void setPackageName(String packageName) {
-    this.packageName = packageName;
+  public void setPackageVersionId(String packageVersionId) {
+    this.packageVersionId = packageVersionId;
   }
 
   public BuildOutcome getOutcome() {

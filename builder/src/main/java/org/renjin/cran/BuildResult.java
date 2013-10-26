@@ -12,7 +12,7 @@ public class BuildResult {
   }
   
   public BuildResult(String packageVersionId, BuildOutcome outcome) {
-    this.packageVersionId = name;
+    this.packageVersionId = packageVersionId;
     this.outcome = outcome;
   }
 

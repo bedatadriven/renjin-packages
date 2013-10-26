@@ -100,7 +100,7 @@ public class RPackageBuildResult {
     return delta;
   }
 
-  public void setDelta(int   delta) {
+  public void setDelta(int delta) {
     this.delta = delta;
   }
 }

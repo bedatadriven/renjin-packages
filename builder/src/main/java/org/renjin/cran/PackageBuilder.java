@@ -44,7 +44,7 @@ public class PackageBuilder implements Callable<BuildResult> {
     pomBuilder.writePom();
 
     BuildResult result = new BuildResult();
-    result.setPackageName(pkg.getName());
+    result.setPackageVersionId(pkg.getName());
 
     List<String> command = Lists.newArrayList();
     command.add(getMavenPath());

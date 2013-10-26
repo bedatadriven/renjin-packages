@@ -105,6 +105,11 @@ public class CalculateDependenciesTask {
 
   private void calculateDependencies(RPackageVersion version) {
 
+    // bail out if we are missing the description file for this package
+    if(Strings.isNullOrEmpty(version.getDescription())) {
+      return;
+    }
+
     PackageDescription description;
     try {
       description = PackageDescription.fromString(version.getDescription());

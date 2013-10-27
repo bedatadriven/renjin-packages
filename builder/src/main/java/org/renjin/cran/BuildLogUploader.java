@@ -69,7 +69,6 @@ public class BuildLogUploader {
     try {
       httpTransport =  new NetHttpTransport();
 
-
       KeyStore keystore = KeyStore.getInstance("PKCS12");
       keystore.load(BuildLogUploader.class.getResourceAsStream("/key.p12"), "notasecret".toCharArray());
       PrivateKey key = (PrivateKey)keystore.getKey("privatekey", "notasecret".toCharArray());
@@ -85,7 +84,6 @@ public class BuildLogUploader {
     } catch(Exception e) {
       throw new RuntimeException("Could not initialize BuildLogUploader", e);
     }
-
   }
 
   public void put(String packageVersionId, InputSupplier<? extends InputStream> input) throws IOException {
@@ -100,7 +98,10 @@ public class BuildLogUploader {
 
     HttpResponse response = request.execute();
 
-    System.out.println(response.getStatusCode());
+    if(response.getStatusCode() < 200 || response.getStatusCode() >= 300) {
+      System.out.println("Failed to upload build log for " + packageVersionId + ": " +
+        response.getStatusCode());
+    }
   }
 
   private String uriFor(String packageVersionId) {
@@ -132,17 +133,5 @@ public class BuildLogUploader {
     public String getEncoding() {
       return "gzip";
     }
-  }
-
-  public static void main(String[] args) throws IOException {
-
-    PersistenceUtil.createEntityManager().unwrap(HibernateEntityManager.class).getSession().doWork(new AbstractWork() {
-      @Override
-      public void execute(Connection connection) throws SQLException {
-        Statement stmt = connection.createStatement();
-        stmt.executeUpdate("alter table RPackageBuildResult drop column log");
-      }
-    });
-
   }
 }

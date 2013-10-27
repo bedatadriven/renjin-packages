@@ -146,7 +146,7 @@ public class PackageGraphBuilder {
   }
 
   private boolean dependenciesAreResolved(PackageNode pkg) {
-    for(PackageDescription.PackageDependency node : pkg.getDescription().getDepends()) {
+    for(PackageDescription.PackageDependency node : pkg.getDependencies()) {
       if(!node.getName().equals("R") && !CorePackages.isCorePackage(node.getName())) {
         PackageNode depNode = nodeBySimpleName.get(node.getName());
         if(depNode == null) {

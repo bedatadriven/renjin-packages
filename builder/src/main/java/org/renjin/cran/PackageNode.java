@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import org.renjin.repo.model.PackageDescription;
@@ -101,4 +102,8 @@ public class PackageNode {
     }
   }
 
+
+  public Iterable<PackageDescription.PackageDependency> getDependencies() {
+    return Iterables.concat(description.getDepends(), description.getImports());
+  }
 }

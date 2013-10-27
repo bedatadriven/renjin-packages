@@ -30,11 +30,6 @@ public class PackageGraphBuilder {
   private Map<String, PackageNode> nodeBySimpleName = Maps.newHashMap();
 
   /**
-   * List of projects that still need to be built
-   */
-  private List<PackageNode> toBuild;
-
-  /**
    * Set of packages scheduled to build
    */
   private Set<PackageNode> scheduled = Sets.newHashSet();
@@ -45,6 +40,7 @@ public class PackageGraphBuilder {
   private Set<PackageNode> built = Sets.newHashSet();
 
   private int numConcurrentBuilds = 4;
+  private int builtCount = 0;
 
   public PackageGraphBuilder(Workspace workspace) {
     this.workspace = workspace;
@@ -62,9 +58,7 @@ public class PackageGraphBuilder {
 
   public void build() throws InterruptedException, ExecutionException {
 
-    Map<String, BuildResult> results = Maps.newHashMap();
-
-    toBuild = Lists.newArrayList(nodes.values());
+    List<PackageNode> toBuild = Lists.newArrayList(nodes.values());
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numConcurrentBuilds);
     service = new ExecutorCompletionService<BuildResult>(executor);
 
@@ -77,11 +71,13 @@ public class PackageGraphBuilder {
       while(it.hasNext()) {
         PackageNode pkg = it.next();
         if(dependenciesAreResolved(pkg)) {
-          scheduleForBuild(pkg);
+          scheduleForBuild(pkg, 0);
 
           it.remove();
         }
       }
+
+      System.out.println("Scheduled queue length: " + scheduled.size());
 
       // Is our queue empty? In that case any remaining items
       // to build have unresolvable dependencies
@@ -94,7 +90,7 @@ public class PackageGraphBuilder {
       PackageNode completed = nodes.get(result.getPackageVersionId());
       scheduled.remove(completed);
 
-      results.put(result.getPackageVersionId(), result);
+      builtCount ++;
 
       System.out.println(result.getPackageVersionId() + ": " + result.getOutcome());
 
@@ -107,20 +103,20 @@ public class PackageGraphBuilder {
         result.getOutcome() == BuildOutcome.TIMEOUT) {
         // otherwise reschedule a few times
         // it's possible to encounter OutOfMemory Errors
-        Integer retries = retryCount.get(result.getPackageVersionId());
-        if(retries == null) {
-          retries = 0;
+        Integer attemptCount = retryCount.get(result.getPackageVersionId());
+        if(attemptCount == null) {
+          attemptCount = 1;
         }
-        if(retries < 3) {
+        if(attemptCount < 3) {
           // reschedule
-          scheduleForBuild(nodes.get(result.getPackageVersionId()));
-          retryCount.put(result.getPackageVersionId(), retries+1);
+          scheduleForBuild(nodes.get(result.getPackageVersionId()), attemptCount+1);
+          retryCount.put(result.getPackageVersionId(), attemptCount+1);
         }
       }
 
       // report status periodically
-      if(results.size() % 50 == 0) {
-        System.out.println(results.size() + "/" + nodes.size() + " builds completed; " + built.size() + " successful.");
+      if(builtCount % 50 == 0) {
+        System.out.println(builtCount + "/" + nodes.size() + " builds completed; " + built.size() + " successful.");
       }
     }
 
@@ -128,20 +124,16 @@ public class PackageGraphBuilder {
     executor.shutdown();
 
     System.out.println("Build complete; " + toBuild.size() + " package(s) with unmet dependencies");
-
-    for(PackageNode node : toBuild) {
-      results.put(node.getName(), new BuildResult(node.getPackageVersionId(), BuildOutcome.NOT_BUILT));
-    }
   }
 
-  private void scheduleForBuild(PackageNode pkg) {
+  private void scheduleForBuild(PackageNode pkg, int previousAttempts) {
 
     // check if we've already succeeded in building this package node
     if(reporter.packageAlreadySucceeded(pkg.getPackageVersionId())) {
       System.out.println(pkg + " already successfully built for this commit");
       built.add(pkg);
     } else {
-      System.out.println("Scheduling " + pkg + "...");
+      System.out.println("Scheduling " + pkg + "... [previous attempts: " + previousAttempts + "]");
 
       this.service.submit(new PackageBuilder(workspace, reporter, pkg));
       scheduled.add(pkg);

@@ -21,14 +21,16 @@ public class PackageBuilder implements Callable<BuildResult> {
   private final BuildReporter reporter;
 
   private PackageNode pkg;
+  private int previousAttempts;
   private File logFile;
 
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
-  public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg) {
+  public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg, int previousAttempts) {
     this.workspace = workspace;
     this.reporter = reporter;
     this.pkg = pkg;
+    this.previousAttempts = previousAttempts;
     this.logFile = new File(pkg.getBaseDir(), "build.log");
   }
 
@@ -60,7 +62,12 @@ public class PackageBuilder implements Callable<BuildResult> {
 
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");
-    command.add("-Dmaven.test.failure.ignore=true");
+
+    if(previousAttempts > 0) {
+      command.add("-DskipTests");
+    } else {
+      command.add("-Dmaven.test.failure.ignore=true");
+    }
 
     command.add("clean");
     command.add("install");

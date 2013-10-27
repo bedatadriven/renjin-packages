@@ -109,8 +109,13 @@ public class PackageGraphBuilder {
         }
         if(attemptCount < 3) {
           // reschedule
-          scheduleForBuild(nodes.get(result.getPackageVersionId()), attemptCount+1);
-          retryCount.put(result.getPackageVersionId(), attemptCount+1);
+          PackageNode node = nodes.get(result.getPackageVersionId());
+          if(node == null) {
+            System.out.println("SEVERE: node lookup on " + result.getPackageVersionId() + " failed");
+          } else {
+            scheduleForBuild(node, attemptCount+1);
+            retryCount.put(result.getPackageVersionId(), attemptCount+1);
+          }
         }
       }
 

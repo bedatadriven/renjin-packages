@@ -13,11 +13,10 @@ import java.util.List;
 public class BuildReporter {
 
   private final int id;
-  private final Workspace workspace;
+
+  private List<String> successfullyBuiltPackageVersions;
 
   public BuildReporter(Workspace workspace) {
-    this.workspace = workspace;
-
     EntityManager em = PersistenceUtil.createEntityManager();
     em.getTransaction().begin();
 
@@ -33,6 +32,13 @@ public class BuildReporter {
     build.setStarted(new Date());
     build.setRenjinCommit(commit);
     em.persist(build);
+
+    // get list of packages which have already succeeded in this commit
+    successfullyBuiltPackageVersions = em.createQuery(
+      "select r.packageVersion.id from RPackageBuildResult r where r.build.renjinCommit.id = :commit", String.class)
+      .setParameter("commit", workspace.getRenjinCommitId())
+      .getResultList();
+
     em.getTransaction().commit();
     em.close();
     this.id = build.getId();
@@ -43,24 +49,6 @@ public class BuildReporter {
   }
 
   public boolean packageAlreadySucceeded(String packageVersion) {
-
-    EntityManager em = PersistenceUtil.createEntityManager();
-    List<RPackageBuildResult> results = em.createQuery("select r from RPackageBuildResult r where r.packageVersion.id = :packageVersion and " +
-      "r.build.renjinCommit.id = :commit", RPackageBuildResult.class)
-      .setParameter("packageVersion", packageVersion)
-      .setParameter("commit", workspace.getRenjinCommitId())
-      .getResultList();
-
-    boolean succeeded = false;
-    for(RPackageBuildResult result : results) {
-      if(result.getOutcome() == BuildOutcome.SUCCESS) {
-        succeeded = true;
-        break;
-      }
-    }
-
-    em.close();
-
-    return succeeded;
+    return successfullyBuiltPackageVersions.contains(packageVersion);
   }
 }

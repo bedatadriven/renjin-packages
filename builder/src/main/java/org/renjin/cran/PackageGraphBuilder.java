@@ -135,7 +135,7 @@ public class PackageGraphBuilder {
     } else {
       System.out.println("Scheduling " + pkg + "... [previous attempts: " + previousAttempts + "]");
 
-      this.service.submit(new PackageBuilder(workspace, reporter, pkg));
+      this.service.submit(new PackageBuilder(workspace, reporter, pkg, previousAttempts));
       scheduled.add(pkg);
     }
   }

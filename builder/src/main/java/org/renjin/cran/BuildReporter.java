@@ -37,8 +37,10 @@ public class BuildReporter {
 
     // get list of packages which have already succeeded in this commit
     successfullyBuiltPackageVersions = em.createQuery(
-      "select r.packageVersion.id from RPackageBuildResult r where r.build.renjinCommit.id = :commit", String.class)
+      "select r.packageVersion.id from RPackageBuildResult r " +
+        "where r.build.renjinCommit.id = :commit and r.outcome=:outcome", String.class)
       .setParameter("commit", workspace.getRenjinCommitId())
+      .setParameter("outcome", BuildOutcome.SUCCESS)
       .getResultList();
 
     em.getTransaction().commit();

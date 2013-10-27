@@ -1,9 +1,9 @@
 package org.renjin.cran;
 
 
+import com.google.common.io.Files;
 import org.renjin.repo.model.Build;
 import org.renjin.repo.model.BuildOutcome;
-import org.renjin.repo.model.RPackageBuildResult;
 import org.renjin.repo.model.RenjinCommit;
 
 import javax.persistence.EntityManager;
@@ -12,7 +12,9 @@ import java.util.List;
 
 public class BuildReporter {
 
-  private final int id;
+  private final int buildId;
+
+  private BuildLogUploader logUploader;
 
   private List<String> successfullyBuiltPackageVersions;
 
@@ -41,11 +43,20 @@ public class BuildReporter {
 
     em.getTransaction().commit();
     em.close();
-    this.id = build.getId();
+    this.buildId = build.getId();
+
+    logUploader = new BuildLogUploader(buildId);
   }
 
   public void reportResult(PackageNode pkg, BuildOutcome outcome) {
-    new BuildResultRecorder(id, pkg, outcome).record();
+    new BuildResultRecorder(buildId, pkg, outcome).record();
+
+    try {
+      logUploader.put(pkg.getPackageVersionId(), Files.newInputStreamSupplier(pkg.getLogFile()));
+    } catch(Exception e) {
+      System.err.println("Failed to post build log: " + e.getMessage());
+      e.printStackTrace();
+    }
   }
 
   public boolean packageAlreadySucceeded(String packageVersion) {

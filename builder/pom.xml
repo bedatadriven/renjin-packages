@@ -31,6 +31,10 @@
     <aetherVersion>0.9.0.M2</aetherVersion>
     <mavenVersion>3.1.0</mavenVersion>
     <wagonVersion>1.0</wagonVersion>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.http.version>1.17.0-rc</project.http.version>
+    <project.oauth.version>1.17.0-rc</project.oauth.version>
+    <project.api.version>1.17.0-rc</project.api.version>
   </properties>
 
   <dependencies>
@@ -104,6 +108,7 @@
       <artifactId>plexus-digest</artifactId>
       <version>1.0</version>
     </dependency>
+
   </dependencies>
 
   <build>

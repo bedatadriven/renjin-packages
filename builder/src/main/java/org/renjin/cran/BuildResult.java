@@ -8,7 +8,6 @@ public class BuildResult {
   private BuildOutcome outcome;
 
   public BuildResult() {
-    
   }
 
   public String getPackageVersionId() {

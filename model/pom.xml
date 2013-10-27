@@ -36,7 +36,7 @@
     <dependency>
       <groupId>com.bedatadriven.com.google.cloud.sql</groupId>
       <artifactId>google-sql</artifactId>
-      <version>0.9.9</version>
+      <version>0.9.10</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

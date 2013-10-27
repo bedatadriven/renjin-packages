@@ -11,9 +11,6 @@ public class RPackageBuildResult {
   @GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 
-	@Lob
-	private String log;
-
 	private BuildOutcome outcome;
 
 	@ManyToOne
@@ -38,14 +35,6 @@ public class RPackageBuildResult {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public String getLog() {
-		return log;
-	}
-
-	public void setLog(String log) {
-		this.log = log;
 	}
 
 	public BuildOutcome getOutcome() {

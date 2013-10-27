@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class Predecessors {
+public class DeltaCalculator {
 
   private final EntityManager em;
   private Map<String, Boolean> ancestorsHaveBuilds = Maps.newHashMap();
@@ -23,7 +23,7 @@ public class Predecessors {
 
   private List<Integer> predecessors = Lists.newArrayList();
 
-  public Predecessors(EntityManager em, String commitId) {
+  public DeltaCalculator(EntityManager em, String commitId) {
 
     this.em = em;
 

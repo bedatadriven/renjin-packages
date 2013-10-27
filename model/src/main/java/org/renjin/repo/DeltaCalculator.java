@@ -4,6 +4,7 @@ package org.renjin.repo;
 import com.google.common.base.Function;
 import com.google.common.collect.*;
 import org.renjin.repo.model.Build;
+import org.renjin.repo.model.RPackageBuildResult;
 import org.renjin.repo.model.RenjinCommit;
 
 import javax.persistence.EntityManager;
@@ -88,6 +89,25 @@ public class DeltaCalculator {
     }
     ancestorsHaveBuilds.put(commit.getId(), false);
     return false;
+  }
+
+
+
+  private List<RPackageBuildResult> queryChangeType(List<Integer> parentBuilds, int buildId) {
+
+    String jpql = "SELECT r FROM RPackageBuildResult r WHERE r.build.id = :buildId and " +
+      buildSucceeded("r.outcome", true) + " and " +
+      "r.packageVersion in (SELECT pr.packageVersion FROM RPackageBuildResult pr WHERE pr.build.id = :parentBuildId and " +
+      buildSucceeded("pr.outcome", true) + ")";
+
+    return em.createQuery(jpql, RPackageBuildResult.class)
+      .setParameter("buildId", buildId)
+      .setParameter("parentBuildId", parentBuilds.get(0))
+      .getResultList();
+  }
+
+  private String buildSucceeded(String field, boolean succeeded) {
+    return field + (succeeded ? " = " : "!=") + "org.renjin.repo.model.BuildOutcome.SUCCESS";
   }
 
 }

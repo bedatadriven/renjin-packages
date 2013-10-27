@@ -11,7 +11,7 @@ import javax.ws.rs.Path;
 import java.util.Map;
 
 @Path("/")
-public class PackageResources {
+public class RootResources {
 
 
   @GET

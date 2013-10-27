@@ -1,16 +1,18 @@
 package org.renjin.repo;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.repo.model.Build;
 import org.renjin.repo.model.RPackageBuildResult;
 
 import javax.persistence.EntityManager;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class BuildResources {
@@ -45,17 +47,27 @@ public class BuildResources {
                                        @PathParam("artifactId") String artifactId,
                                        @PathParam("version") String version) {
 
-
-
     EntityManager em = HibernateUtil.getActiveEntityManager();
-    RPackageBuildResult result = em.createQuery("select r from RPackageBuildResult r " +
+    List<RPackageBuildResult> results = em.createQuery("select r from RPackageBuildResult r " +
             "where r.build.id=:buildId and " +
             "packageVersion.id = :gav", RPackageBuildResult.class)
             .setParameter("buildId", buildId)
             .setParameter("gav", groupId + ":" + artifactId + ":" + version)
-            .getSingleResult();
+            .getResultList();
 
-    return new ResultResource(result);
+    if(results.isEmpty()) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    if(results.size() > 1) {
+      Collections.sort(results, Ordering.natural().onResultOf(new Function<RPackageBuildResult, Comparable>() {
+        @Override
+        public Comparable apply(RPackageBuildResult result) {
+          return result.getId();
+        }
+      }).reverse());
+    }
+
+    return new ResultResource(results.get(0));
   }
   
 }

@@ -1,10 +1,8 @@
 package org.renjin.repo;
 
 
-import com.google.common.base.Function;
 import com.google.common.collect.*;
 import org.renjin.repo.model.Build;
-import org.renjin.repo.model.RPackageBuildResult;
 import org.renjin.repo.model.RenjinCommit;
 
 import javax.persistence.EntityManager;
@@ -15,6 +13,8 @@ import java.util.Map;
 public class DeltaCalculator {
 
   private final EntityManager em;
+  private final int buildId;
+
   private Map<String, Boolean> ancestorsHaveBuilds = Maps.newHashMap();
 
   /**
@@ -22,11 +22,20 @@ public class DeltaCalculator {
    */
   private Multimap<String, Build> commitResults = HashMultimap.create();
 
-  private List<Integer> predecessors = Lists.newArrayList();
+  private List<Integer> parentBuildIds = Lists.newArrayList();
 
-  public DeltaCalculator(EntityManager em, String commitId) {
+  public DeltaCalculator(EntityManager em, int buildId) {
 
     this.em = em;
+    this.buildId = buildId;
+  }
+
+  public void calculate() {
+    makeParentBuildList();
+    updateDeltaFlags();
+  }
+
+  private void makeParentBuildList() {
 
     buildCommitToBuildMap();
 
@@ -36,7 +45,7 @@ public class DeltaCalculator {
       "left join fetch c.parents").getResultList();
 
 
-    RenjinCommit head = em.find(RenjinCommit.class, commitId);
+    RenjinCommit head = em.find(RenjinCommit.class, em.find(Build.class, buildId).getRenjinCommit().getId());
     while(head != null) {
       List<Integer> buildIds = Lists.newArrayList();
       for(Build build : commitResults.get(head.getId())) {
@@ -44,7 +53,7 @@ public class DeltaCalculator {
       }
       if(!buildIds.isEmpty()) {
         Collections.sort(buildIds, Ordering.natural().reverse());
-        predecessors.addAll(buildIds);
+        parentBuildIds.addAll(buildIds);
       }
 
       head = chooseParent(head);
@@ -58,10 +67,6 @@ public class DeltaCalculator {
     for(Build build : builds) {
       commitResults.put(build.getRenjinCommit().getId(), build);
     }
-  }
-
-  public List<Integer> getPredecessors() {
-    return predecessors;
   }
 
   private RenjinCommit chooseParent(RenjinCommit head) {
@@ -91,18 +96,50 @@ public class DeltaCalculator {
     return false;
   }
 
+  private void updateDeltaFlags() {
 
-
-  private List<RPackageBuildResult> queryChangeType(List<Integer> parentBuilds, int buildId) {
-
-    String jpql = "SELECT r FROM RPackageBuildResult r WHERE r.build.id = :buildId and " +
-      buildSucceeded("r.outcome", true) + " and " +
-      "r.packageVersion in (SELECT pr.packageVersion FROM RPackageBuildResult pr WHERE pr.build.id = :parentBuildId and " +
-      buildSucceeded("pr.outcome", true) + ")";
-
-    return em.createQuery(jpql, RPackageBuildResult.class)
+    em.getTransaction().begin();
+    em.createQuery("UPDATE RPackageBuildResult r SET r.delta = NULL where r.build.id = :buildId")
       .setParameter("buildId", buildId)
-      .setParameter("parentBuildId", parentBuilds.get(0))
+      .executeUpdate();
+
+    for(int parentBuildId : parentBuildIds) {
+      setDelta(-1, parentBuildId, false, true);
+      setDelta(+1, parentBuildId, true, false);
+      setDelta( 0, parentBuildId, false, false);
+      setDelta( 0, parentBuildId, true, true);
+    }
+
+    em.getTransaction().commit();
+
+
+  }
+
+  private void setDelta(int sign, int parentBuildId, boolean buildSucceeded, boolean parentSucceeded) {
+
+    List<Integer> buildResultIds = queryChangeType(parentBuildId, buildSucceeded, parentSucceeded);
+
+    if(!buildResultIds.isEmpty()) {
+
+      em.createQuery("UPDATE RPackageBuildResult r SET r.delta = :deltaValue " +
+                        "WHERE r.id in (:resultIds) and r.delta IS NULL")
+          .setParameter("deltaValue", sign)
+          .setParameter("resultIds", buildResultIds)
+          .executeUpdate();
+    }
+
+  }
+
+  private List<Integer> queryChangeType(int parentBuildId, boolean childSucceeded, boolean parentSucceeded) {
+
+    String jpql = "SELECT r.id FROM RPackageBuildResult r WHERE r.build.id = :buildId and " +
+      buildSucceeded("r.outcome", childSucceeded) + " and " +
+      "r.packageVersion in (SELECT pr.packageVersion FROM RPackageBuildResult pr WHERE pr.build.id = :parentBuildId and " +
+      buildSucceeded("pr.outcome", parentSucceeded) + ")";
+
+    return em.createQuery(jpql, Integer.class)
+      .setParameter("buildId", buildId)
+      .setParameter("parentBuildId", parentBuildId)
       .getResultList();
   }
 

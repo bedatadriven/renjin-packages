@@ -23,6 +23,7 @@ public class Workspace {
   private final Repository renjinRepo;
   private String renjinCommitId;
   private final String renjinVersion;
+  private boolean devMode;
 
   public Workspace(File root) throws IOException, GitAPIException {
     this.root = root.getAbsoluteFile().getCanonicalFile();
@@ -36,6 +37,14 @@ public class Workspace {
 
     renjinCommitId = renjinRepo.resolve("HEAD").getName();
     renjinVersion = readRenjinVersion();
+  }
+
+  public void setDevMode(boolean devMode) {
+    this.devMode = devMode;
+  }
+
+  public boolean isDevMode() {
+    return devMode;
   }
 
   /**
@@ -77,9 +86,13 @@ public class Workspace {
   }
 
   public File getLocalMavenRepository() {
-    File repoRoot = getMavenRepositoryRoot();
-    File localRepo = new File(repoRoot, getRenjinCommitId());
-    return localRepo;
+    if(devMode) {
+      return new File(System.getProperty("user.home") + "/.m2/repository");
+    } else {
+      File repoRoot = getMavenRepositoryRoot();
+      File localRepo = new File(repoRoot, getRenjinCommitId());
+      return localRepo;
+    }
   }
 
   public File getMavenRepositoryRoot() {

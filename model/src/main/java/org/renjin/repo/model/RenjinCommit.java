@@ -54,6 +54,11 @@ public class RenjinCommit {
     return getId().substring(0, 7);
   }
 
+  @Transient
+  public boolean isRelease() {
+    return !getVersion().contains("SNAPSHOT");
+  }
+
   public void setMessage(String message) {
     this.message = message;
   }

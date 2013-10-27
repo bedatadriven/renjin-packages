@@ -37,6 +37,11 @@ public class RPackageBuildResult {
 		this.id = id;
 	}
 
+  @Transient
+  public String getPath() {
+    return getBuild().getId() + "/" + getPackageVersion().getPath();
+  }
+
 	public BuildOutcome getOutcome() {
 		return outcome;
 	}

@@ -17,6 +17,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 
 import org.renjin.cran.proxy.MavenProxyServer;
 import org.renjin.repo.model.BuildOutcome;
+import org.renjin.repo.model.PackageDescription;
 import org.renjin.repo.model.RPackage;
 import org.renjin.repo.model.RPackageVersion;
 
@@ -35,6 +36,9 @@ public class BuildCommand implements Runnable {
   @Option(name="-j", description = "number of concurrent builds")
   private int numConcurrentBuilds = 1;
 
+  @Option(name="-dev")
+  private boolean devMode;
+
   @Option(name="-t", description = "Renjin target version to build/test against")
   private String renjinVersion;
 
@@ -50,10 +54,12 @@ public class BuildCommand implements Runnable {
 
       WorkspaceBuilder workspaceBuilder = new WorkspaceBuilder(workspaceDir);
 
-      if(renjinVersion != null) {
-        workspaceBuilder.setRenjinVersion(renjinVersion);
-      } else {
-        workspaceBuilder.setRenjinVersion("master");
+      if(!devMode) {
+        if(renjinVersion != null) {
+          workspaceBuilder.setRenjinVersion(renjinVersion);
+        } else {
+          workspaceBuilder.setRenjinVersion("master");
+        }
       }
 
       Workspace workspace = workspaceBuilder.build();
@@ -82,14 +88,7 @@ public class BuildCommand implements Runnable {
         }
       } else {
         for(String packageName : packages) {
-          RPackageVersion latestVersion = queryPackageVersion(em, packageName);
-
-          System.out.println("Building " + latestVersion.getPackageName() + " " + latestVersion.getVersion());
-
-          File packageDir = ensureUnpacked(latestVersion);
-
-          packageBuilder.addPackage(new PackageNode(packageDir));
-
+          addNode(em, packageName);
         }
       }
       em.close();
@@ -101,8 +100,25 @@ public class BuildCommand implements Runnable {
     }
   }
 
+  private void addNode(EntityManager em, String packageName) throws IOException {
+    RPackageVersion latestVersion = queryPackageVersion(em, packageName);
+
+    System.out.println("Building " + latestVersion.getPackageName() + " " + latestVersion.getVersion());
+
+    File packageDir = ensureUnpacked(latestVersion);
+
+    PackageNode node = new PackageNode(packageDir);
+    packageBuilder.addPackage(node);
+
+    for(PackageDescription.PackageDependency dep : node.getDependencies()) {
+      if(!dep.getName().equals("R")) {
+        addNode(em, dep.getName());
+      }
+    }
+  }
+
   private void buildRenjin(Workspace workspace) throws Exception {
-    if(workspace.isSnapshot() && workspace.getRenjinBuildOutcome() != BuildOutcome.SUCCESS) {
+    if(!devMode && workspace.isSnapshot() && workspace.getRenjinBuildOutcome() != BuildOutcome.SUCCESS) {
       
       System.out.println("Starting proxy server...");
       Thread thread = new Thread(new MavenProxyServer(workspace));

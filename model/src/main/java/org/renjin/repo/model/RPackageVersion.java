@@ -32,6 +32,9 @@ public class RPackageVersion {
   @Column(nullable = false)
   private boolean latest;
 
+  @OneToMany(mappedBy = "packageVersion")
+  private Set<RPackageBuildResult> buildResults;
+
   @OneToMany(mappedBy = "packageVersion", cascade = CascadeType.ALL)
   private Set<RPackageDependency> dependencies;
 
@@ -68,6 +71,11 @@ public class RPackageVersion {
     return rPackage;
   }
 
+  @Transient
+  public String getPath() {
+    return getGroupId() + "/" + getPackageName() + "/" + getVersion();
+  }
+
 	public RPackage getRPackage() {
 		return rPackage;
 	}
@@ -91,6 +99,14 @@ public class RPackageVersion {
 	public void setPublicationDate(Date publicationDate) {
 		this.publicationDate = publicationDate;
 	}
+
+  public Set<RPackageBuildResult> getBuildResults() {
+    return buildResults;
+  }
+
+  public void setBuildResults(Set<RPackageBuildResult> buildResults) {
+    this.buildResults = buildResults;
+  }
 
   public String getDescription() {
     return description;

@@ -22,6 +22,8 @@ import com.google.common.base.Strings;
  */
 public class PomBuilder {
 
+  public static final String[] DEFAULT_PACKAGES = new String[]{
+    "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
   private File baseDir;
 
   private boolean successful = true;
@@ -102,10 +104,6 @@ public class PomBuilder {
     model.setRepositories(Lists.newArrayList(repository));
     model.setPluginRepositories(Lists.newArrayList(repository));
     
-
-
-
-
     return model;
   }
 
@@ -120,9 +118,24 @@ public class PomBuilder {
     Xpp3Dom dataDirectory = new Xpp3Dom("dataDirectory");
     dataDirectory.setValue("${basedir}/data");
 
+    Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");
+
+    for(String name : DEFAULT_PACKAGES) {
+      Xpp3Dom pkg = new Xpp3Dom("package");
+      pkg.setValue(name);
+      defaultPackages.addChild(pkg);
+    }
+
+    for(PackageDescription.PackageDependency dep : description.getDepends()) {
+      Xpp3Dom pkg = new Xpp3Dom("pkg");
+      pkg.setValue(dep.getName());
+      defaultPackages.addChild(pkg);
+    }
+
     Xpp3Dom configuration = new Xpp3Dom("configuration");
     configuration.addChild(sourceDirectory);
     configuration.addChild(dataDirectory);
+    configuration.addChild(defaultPackages);
     compileExecution.setConfiguration(configuration);
 
     return compileExecution;
@@ -156,8 +169,7 @@ public class PomBuilder {
     testSourceDirectory.setValue("${basedir}/tests");
 
     Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");
-    for(String defaultPackage : new String[] {
-        "methods" , "stats", "utils", "grDevices", "graphics", "datasets" }) {
+    for(String defaultPackage : DEFAULT_PACKAGES) {
       Xpp3Dom pkg = new Xpp3Dom("package");
       pkg.setValue(defaultPackage);
       defaultPackages.addChild(pkg);

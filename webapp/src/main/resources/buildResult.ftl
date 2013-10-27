@@ -2,10 +2,12 @@
 
 <@scaffolding>
 
-  <h1>${packageVersion.packageName} ${packageVersion.version}</h1>
+  <h1>Build #${build.id}</h1>
+  <h2>${packageVersion.packageName} ${packageVersion.version} </h2>
 
   <p class="lead">${packageVersion.package.title}</p>
 
+  <p>Built on ${build.started} against Renjin ${build.renjinCommit.version} (${build.renjinCommit.abbreviatedId})</p>
 
   <#if outcome == "NOT_BUILT">
   <div class="alert alert-error">This package was not built due to an unresolved dependency</div>
@@ -47,14 +49,48 @@
   <pre>
 ${testResult.output?html}
   </pre>
+  <p><a href="/${testResult.buildResult.build.renjinCommit.id}/tests/${testResult.test.id?c}">History</a>:
+    <#list testResult.test.results as prevResult>
+        <#if prevResult.id != testResult.id>
+            <#if prevResult.buildResult.build.renjinCommit.release>
+                <span class="label label-${prevResult.passed?string('success', 'inverse')}">
+                    ${prevResult.buildResult.build.renjinCommit.version}
+                </span>
+            </#if>
+        </#if>
+    </#list>
+  </p>
   </#list>
   </#if>
 
   <h2>Build Log</h2>
 
-  <pre>
-${log?html}
-  </pre>
+    <iframe src="//storage.googleapis.com/renjin-build-logs/${path}.log" width="100%" height="350px">
+    </iframe>
+
+   <p><a href="//storage.googleapis.com/renjin-build-logs/${path}.log" target="_blank">Open in new window</a></p>
+
+
+  <h2>Previous Builds</h2>
+
+  <table>
+    <thead>
+        <tr>
+            <th>Build#</th>
+            <th>Renjin Version</th>
+            <th>Outcome</th>
+        </tr>
+    </thead>
+    <tbody>
+        <#list packageVersion.buildResults?sort_by(["build", "renjinCommit", "commitTime"], ["build", "id"])?reverse as result>
+        <tr>
+            <td>#<a href="/builds/${result.path}">${result.build.id}</a></td>
+            <td>${result.build.renjinCommit.version}</td>
+            <td>${result.outcome}</td>
+        </tr>
+        </#list>
+    </tbody>
+  </table>
 
 
 </@scaffolding>

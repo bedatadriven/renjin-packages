@@ -41,5 +41,4 @@ public class RootResources {
   public CommitResources getVersions() {
     return new CommitResources();
   }
-
 }

@@ -1,8 +1,6 @@
 package org.renjin.cran;
 
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.renjin.repo.model.*;
 
 import javax.persistence.EntityManager;
@@ -20,14 +18,18 @@ public class BuildResultRecorder {
 
   private int buildId;
   private PackageNode pkg;
+  private File baseDir;
   private BuildOutcome outcome;
+  private File logFile;
   private EntityManager em;
   private RPackageBuildResult buildResult;
 
-  public BuildResultRecorder(int buildId, PackageNode pkg, BuildOutcome outcome) {
+  public BuildResultRecorder(int buildId, PackageNode pkg, File baseDir, BuildOutcome outcome, File logFile) {
     this.buildId = buildId;
     this.pkg = pkg;
+    this.baseDir = baseDir;
     this.outcome = outcome;
+    this.logFile = logFile;
   }
 
   public void record() {
@@ -37,13 +39,13 @@ public class BuildResultRecorder {
 
     buildResult = new RPackageBuildResult();
     buildResult.setBuild(em.getReference(Build.class, buildId));
-    buildResult.setPackageVersion(em.getReference(RPackageVersion.class, pkg.getPackageVersionId()));
+    buildResult.setPackageVersion(em.getReference(RPackageVersion.class, pkg.getId()));
     buildResult.setOutcome(outcome);
 
     try {
       parseBuildLog();
     } catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception parsing build logs for package " + pkg.getPackageVersionId(), e);
+      LOGGER.log(Level.WARNING, "Exception parsing build logs for package " + pkg.getId(), e);
     }
 
     em.persist(buildResult);
@@ -52,7 +54,7 @@ public class BuildResultRecorder {
       try {
         recordTestResults();
       } catch(Exception e) {
-        LOGGER.log(Level.WARNING, "Exception reading test results for package " + pkg.getPackageVersionId(), e);
+        LOGGER.log(Level.WARNING, "Exception reading test results for package " + pkg.getId(), e);
       }
     }
 
@@ -60,7 +62,6 @@ public class BuildResultRecorder {
   }
 
   private void parseBuildLog() throws IOException {
-    File logFile = new File(pkg.getBaseDir(), "build.log");
     if(logFile.exists()) {
       BufferedReader reader = new BufferedReader(new FileReader(logFile));
       String line;
@@ -76,7 +77,7 @@ public class BuildResultRecorder {
 
   private void recordTestResults() throws IOException {
 
-    File targetDir = new File(pkg.getBaseDir(), "target");
+    File targetDir = new File(baseDir, "target");
     File testReportDir = new File(targetDir, "renjin-test-reports");
     if(testReportDir.exists() && testReportDir.listFiles() != null) {
       for(File file : testReportDir.listFiles()) {

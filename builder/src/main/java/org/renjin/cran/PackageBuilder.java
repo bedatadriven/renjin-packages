@@ -1,15 +1,21 @@
 package org.renjin.cran;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
+import com.google.common.io.Files;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.repo.model.BuildOutcome;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Callable (concurrent) task that builds a package.
@@ -19,6 +25,7 @@ public class PackageBuilder implements Callable<BuildResult> {
   private static final Logger LOGGER = Logger.getLogger(PackageBuilder.class.getName());
   private final Workspace workspace;
   private final BuildReporter reporter;
+  private final File baseDir;
 
   private PackageNode pkg;
   private int previousAttempts;
@@ -26,12 +33,14 @@ public class PackageBuilder implements Callable<BuildResult> {
 
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
-  public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg, int previousAttempts) {
+  public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg,
+                        int previousAttempts) {
     this.workspace = workspace;
     this.reporter = reporter;
     this.pkg = pkg;
     this.previousAttempts = previousAttempts;
-    this.logFile = new File(pkg.getBaseDir(), "build.log");
+    this.baseDir = new File(workspace.getPackagesDir(), pkg.getName() + "_" + pkg.getVersion());
+    this.logFile = new File(baseDir, "build.log." + reporter.getBuildId() + "." + previousAttempts);
   }
 
   @Override
@@ -41,12 +50,15 @@ public class PackageBuilder implements Callable<BuildResult> {
     // name for debugging
     Thread.currentThread().setName(pkg.getName());
 
+    // ensure that the sources have been unpacked
+    ensureUnpacked();
+
     // write out the POM file for this package
-    PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), pkg.getBaseDir());
+    PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), baseDir, pkg.getEdges());
     pomBuilder.writePom();
 
     BuildResult result = new BuildResult();
-    result.setPackageVersionId(pkg.getPackageVersionId());
+    result.setPackageVersionId(pkg.getId());
 
     List<String> command = Lists.newArrayList();
     command.add(getMavenPath());
@@ -74,7 +86,7 @@ public class PackageBuilder implements Callable<BuildResult> {
 
     ProcessBuilder builder = new ProcessBuilder(command);
     
-    builder.directory(pkg.getBaseDir());
+    builder.directory(baseDir);
     builder.redirectErrorStream(true);
     try {
       long startTime = System.currentTimeMillis();
@@ -122,12 +134,45 @@ public class PackageBuilder implements Callable<BuildResult> {
     }
 
     try {
-      reporter.reportResult(pkg, result.getOutcome());
+      reporter.reportResult(pkg, result.getOutcome(), baseDir, logFile);
     } catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getPackageVersionId(), e);
+      LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getId(), e);
     }
 
     return result; 
+  }
+
+
+  /**
+   * Check whether the source is already unpacked in our workspace,
+   * otherwise download and unpack
+   */
+  private void ensureUnpacked() throws IOException {
+
+    if(!baseDir.exists()) {
+
+      InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(pkg.getGroupId(),
+        pkg.getName(), pkg.getVersion());
+
+      TarArchiveInputStream tarIn = new TarArchiveInputStream(
+        new GZIPInputStream(in));
+
+      String packagePrefix = pkg.getName() + "/";
+
+      TarArchiveEntry entry;
+      while((entry=tarIn.getNextTarEntry())!=null) {
+        if(entry.isFile() && entry.getName().startsWith(packagePrefix)) {
+
+          String name = entry.getName().substring(packagePrefix.length());
+
+          File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
+          outFile.getParentFile().mkdirs();
+
+          ByteStreams.copy(tarIn, Files.newOutputStreamSupplier(outFile));
+        }
+      }
+      tarIn.close();
+    }
   }
 
   private String getMavenPath() {

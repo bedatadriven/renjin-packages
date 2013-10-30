@@ -3,8 +3,7 @@ package org.renjin.cran;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.renjin.repo.model.BuildOutcome;
-import org.renjin.repo.model.PackageDescription;
+import org.renjin.repo.model.*;
 
 import java.util.List;
 import java.util.ListIterator;
@@ -16,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 
-public class PackageGraphBuilder {
+public class Reactor {
 
   private Workspace workspace;
 
@@ -27,7 +26,6 @@ public class PackageGraphBuilder {
   private ExecutorCompletionService<BuildResult> service;
 
   private Map<String, PackageNode> nodes = Maps.newHashMap();
-  private Map<String, PackageNode> nodeBySimpleName = Maps.newHashMap();
 
   /**
    * Set of packages scheduled to build
@@ -42,15 +40,12 @@ public class PackageGraphBuilder {
   private int numConcurrentBuilds = 4;
   private int builtCount = 0;
 
-  public PackageGraphBuilder(Workspace workspace) {
+  public Reactor(Workspace workspace, Map<String, PackageNode> nodes) {
     this.workspace = workspace;
     this.reporter = new BuildReporter(workspace);
+    this.nodes = nodes;
   }
 
-  public void addPackage(PackageNode packageNode) {
-    nodes.put(packageNode.getPackageVersionId(), packageNode);
-    nodeBySimpleName.put(packageNode.getName(), packageNode);
-  }
 
   public void setNumConcurrentBuilds(int numConcurrentBuilds) {
     this.numConcurrentBuilds = numConcurrentBuilds;
@@ -134,7 +129,7 @@ public class PackageGraphBuilder {
   private void scheduleForBuild(PackageNode pkg, int previousAttempts) {
 
     // check if we've already succeeded in building this package node
-    if(reporter.packageAlreadySucceeded(pkg.getPackageVersionId())) {
+    if(reporter.packageAlreadySucceeded(pkg.getId())) {
       System.out.println(pkg + " already successfully built for this commit");
       built.add(pkg);
     } else {
@@ -146,15 +141,9 @@ public class PackageGraphBuilder {
   }
 
   private boolean dependenciesAreResolved(PackageNode pkg) {
-    for(PackageDescription.PackageDependency node : pkg.getDependencies()) {
-      if(!node.getName().equals("R") && !CorePackages.isCorePackage(node.getName())) {
-        PackageNode depNode = nodeBySimpleName.get(node.getName());
-        if(depNode == null) {
-          return false;
-        }
-        if(!built.contains(depNode)) {
-          return false;
-        }
+    for(PackageEdge dep : pkg.getEdges()) {
+      if(!built.contains(dep.getDependency())) {
+        return false;
       }
     }
     return true;

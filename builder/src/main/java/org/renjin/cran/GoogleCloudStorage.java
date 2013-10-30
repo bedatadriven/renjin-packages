@@ -19,40 +19,29 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson.JacksonFactory;
-import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.InputSupplier;
-import org.hibernate.ejb.HibernateEntityManager;
-import org.hibernate.jdbc.AbstractWork;
-import org.renjin.repo.model.RPackageBuildResult;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
-import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-public class BuildLogUploader {
+public class GoogleCloudStorage {
+
+  public static final GoogleCloudStorage INSTANCE = new GoogleCloudStorage();
 
   /** E-mail address of the service account. */
   private static final String SERVICE_ACCOUNT_EMAIL = "213809300358@developer.gserviceaccount.com";
 
   /** Bucket to list. */
-  private static final String BUCKET_NAME = "renjin-build-logs";
+  private static final String BUILD_LOG_BUCKET_NAME = "renjin-build-logs";
 
   /** Global configuration of Google Cloud Storage OAuth 2.0 scope. */
   private static final String STORAGE_SCOPE =
     "https://www.googleapis.com/auth/devstorage.read_write";
-
 
   /** Global instance of the HTTP transport. */
   private HttpTransport httpTransport;
@@ -61,16 +50,13 @@ public class BuildLogUploader {
   private final JsonFactory JSON_FACTORY = new JacksonFactory();
   private final GoogleCredential credential;
 
-  private int buildId;
-
-  public BuildLogUploader(int buildId) {
-    this.buildId = buildId;
+  public GoogleCloudStorage() {
 
     try {
       httpTransport =  new NetHttpTransport();
 
       KeyStore keystore = KeyStore.getInstance("PKCS12");
-      keystore.load(BuildLogUploader.class.getResourceAsStream("/key.p12"), "notasecret".toCharArray());
+      keystore.load(GoogleCloudStorage.class.getResourceAsStream("/key.p12"), "notasecret".toCharArray());
       PrivateKey key = (PrivateKey)keystore.getKey("privatekey", "notasecret".toCharArray());
 
       // Build service account credential.
@@ -82,14 +68,32 @@ public class BuildLogUploader {
         .build();
 
     } catch(Exception e) {
-      throw new RuntimeException("Could not initialize BuildLogUploader", e);
+      throw new RuntimeException("Could not initialize GoogleCloudStorage", e);
     }
   }
 
-  public void put(String packageVersionId, InputSupplier<? extends InputStream> input) throws IOException {
-    String URI = "https://storage.googleapis.com/" + BUCKET_NAME + "/" + uriFor( packageVersionId);
+  public InputStream openSourceArchive(String groupId, String packageName, String version) throws IOException {
+    String uri = "https://storage.googleapis.com/renjin-package-sources/" + groupId + "/" +
+      packageName + "_" + version + ".tar.gz";
+
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory(credential);
-    GenericUrl url = new GenericUrl(URI);
+    GenericUrl url = new GenericUrl(uri);
+    HttpRequest request = requestFactory.buildGetRequest(url);
+    HttpResponse response = request.execute();
+
+    if(!response.isSuccessStatusCode()) {
+      throw new IOException("Could not open source archive at " + uri);
+    }
+
+    return response.getContent();
+  }
+
+  public void putBuildLog(int buildId, String packageVersionId, InputSupplier<? extends InputStream> input) throws IOException {
+    String uri = "https://storage.googleapis.com/" + BUILD_LOG_BUCKET_NAME + "/" + buildId + "/" +
+      packageVersionId.replace(':', '/') + ".log";
+
+    HttpRequestFactory requestFactory = httpTransport.createRequestFactory(credential);
+    GenericUrl url = new GenericUrl(uri);
     HttpRequest request = requestFactory.buildPutRequest(url, new LogFileContent(input));
 
     HttpHeaders headers = new HttpHeaders();
@@ -103,11 +107,6 @@ public class BuildLogUploader {
         response.getStatusCode());
     }
   }
-
-  private String uriFor(String packageVersionId) {
-    return buildId + "/" + packageVersionId.replace(':', '/') + ".log";
-  }
-
 
   public static class LogFileContent extends AbstractHttpContent {
 

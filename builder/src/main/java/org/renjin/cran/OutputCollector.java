@@ -13,7 +13,7 @@ public class OutputCollector extends Thread {
   private InputStream is;
   private File logFile;
 
-  public static final int MAX_LOG_FILE_SIZE = 500 * 1024;
+  public static final int MAX_LOG_FILE_SIZE =  5 * 1024 * 1024;
 
   
   public OutputCollector(InputStream is, File logFile) {

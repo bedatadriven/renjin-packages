@@ -13,10 +13,7 @@ import org.apache.maven.artifact.versioning.VersionRange;
 import org.renjin.parser.RParser;
 import org.renjin.parser.RdParser;
 import org.renjin.repo.HibernateUtil;
-import org.renjin.repo.model.PackageDescription;
-import org.renjin.repo.model.RPackage;
-import org.renjin.repo.model.RPackageDependency;
-import org.renjin.repo.model.RPackageVersion;
+import org.renjin.repo.model.*;
 import org.renjin.sexp.SEXP;
 import org.renjin.sexp.StringVector;
 
@@ -40,6 +37,8 @@ import java.util.logging.Logger;
 public class CalculateDependenciesTask {
 
   private static final Logger LOGGER = Logger.getLogger(CalculateDependenciesTask.class.getName());
+
+  private static final boolean STRICT_VERSIONING = false;
 
   private SourceArchiveProvider sourceArchiveProvider;
 
@@ -139,7 +138,7 @@ public class CalculateDependenciesTask {
   private void resolveDependencies(RPackageVersion version,
                                    Iterable<PackageDescription.PackageDependency> depends, String type, String buildScope) {
     for(PackageDescription.PackageDependency dep : depends) {
-      if(!dep.getName().equals("R")) {
+      if(!partOfRenjin(dep)) {
         RPackageDependency entity = findOrCreate(version, dep.getName());
         entity.setType(type);
         entity.setBuildScope(buildScope);
@@ -147,6 +146,10 @@ public class CalculateDependenciesTask {
         entity.setDependency(resolveDependency(version, dep));
       }
     }
+  }
+
+  private boolean partOfRenjin(PackageDescription.PackageDependency dep) {
+    return dep.getName().equals("R") || CorePackages.isCorePackage(dep.getName());
   }
 
   private RPackageVersion resolveDependency(RPackageVersion version, PackageDescription.PackageDependency description) {
@@ -197,6 +200,9 @@ public class CalculateDependenciesTask {
 
 
   private boolean publicationDateMatches(RPackageVersion packageVersion, RPackageVersion potentialDependencyVersion) {
+    if(!STRICT_VERSIONING) {
+      return true;
+    }
     if(packageVersion.getPublicationDate() == null || potentialDependencyVersion.getPublicationDate() == null) {
       return true;
     }

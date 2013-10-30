@@ -4,11 +4,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.renjin.repo.model.CorePackages;
 import org.renjin.repo.model.PackageDescription;
 import org.renjin.repo.model.PackageDescription.PackageDependency;
 import org.renjin.repo.model.PackageDescription.Person;
@@ -25,14 +30,22 @@ public class PomBuilder {
   public static final String[] DEFAULT_PACKAGES = new String[]{
     "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
   private File baseDir;
+  private List<PackageEdge> edges;
+  private Map<String, PackageEdge> edgeNameMap;
 
   private boolean successful = true;
   private final PackageDescription description;
   private String renjinVersion;
 
-  public PomBuilder(String renjinVersion, File baseDir) throws IOException {
+  public PomBuilder(String renjinVersion, File baseDir, List<PackageEdge> edges) throws IOException {
     this.renjinVersion = renjinVersion;
     this.baseDir = baseDir;
+    this.edges = edges;
+    this.edgeNameMap = Maps.newHashMap();
+    for(PackageEdge edge : edges) {
+      edgeNameMap.put(edge.getDependency().getName(), edge);
+    }
+
     description = readDescription();
   }
 
@@ -63,13 +76,44 @@ public class PomBuilder {
       developer.setEmail(author.getEmail());
       model.addDeveloper(developer);
     }
-    
-    addCoreModule(model, "graphics");
-    addCoreModule(model, "methods");
-    
-    for(PackageDependency packageDep : description.getDepends()) {
-      if(!packageDep.getName().equals("R")) {
-        model.addDependency(toMavenDependency(packageDep.getName()));
+
+    // We assume that all CRAN packages require the
+    // default packages
+    for(String packageName : CorePackages.DEFAULT_PACKAGES) {
+      addCoreModule(model, packageName);
+    }
+
+    // Make a list of the DEPENDS and IMPORTS package
+    // These will form the compile-scope dependencies
+    for(PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
+      if(packageDep.getName().equals("R")) {
+        // ignore
+      } else if(CorePackages.DEFAULT_PACKAGES.contains(packageDep.getName())) {
+        // already added above
+      } else if(CorePackages.isCorePackage(packageDep.getName())) {
+        Dependency mavenDep = new Dependency();
+        mavenDep.setGroupId("org.renjin");
+        mavenDep.setArtifactId(packageDep.getName());
+        mavenDep.setVersion(renjinVersion);
+        model.addDependency(mavenDep);
+      } else {
+        PackageEdge edge = edgeNameMap.get(packageDep.getName());
+        if(edge == null) {
+          throw new IllegalStateException("No RPackageDependency record for dependency " +
+            description.getPackage() + " => " + packageDep.getName());
+        }
+        model.addDependency(dependencyFromEdge(edge));
+      }
+    }
+
+    // Now add other types of dependencies as test scope deps
+    for(PackageEdge edge : edges) {
+      if(!edge.getType().equals("imports") && !edge.getType().equals("depends")) {
+        if(!description.getPackage().equals(edge.getDependency().getName())) {
+          Dependency mavenDep = dependencyFromEdge(edge);
+          mavenDep.setScope("test");
+          model.addDependency(mavenDep);
+        }
       }
     }
 
@@ -82,7 +126,7 @@ public class PomBuilder {
     renjinPlugin.addExecution(compileExecution);
     renjinPlugin.addExecution(legacyCompileExecution());
     renjinPlugin.addExecution(testExecution());
-    
+
     Build build = new Build();
     build.addPlugin(renjinPlugin);
 
@@ -107,6 +151,14 @@ public class PomBuilder {
     return model;
   }
 
+  private Dependency dependencyFromEdge(PackageEdge edge) {
+    Dependency mavenDep = new Dependency();
+    mavenDep.setGroupId(edge.getDependency().getGroupId());
+    mavenDep.setArtifactId(edge.getDependency().getName());
+    mavenDep.setVersion(edge.getDependency().getVersion() + "-SNAPSHOT");
+    return mavenDep;
+  }
+
   private PluginExecution compileExecution() {
     PluginExecution compileExecution = new PluginExecution();
     compileExecution.setId("renjin-compile");
@@ -127,9 +179,11 @@ public class PomBuilder {
     }
 
     for(PackageDescription.PackageDependency dep : description.getDepends()) {
-      Xpp3Dom pkg = new Xpp3Dom("pkg");
-      pkg.setValue(dep.getName());
-      defaultPackages.addChild(pkg);
+      if(!dep.getName().equals("R") && !CorePackages.DEFAULT_PACKAGES.contains(dep.getName())) {
+        Xpp3Dom pkg = new Xpp3Dom("pkg");
+        pkg.setValue(dep.getName());
+        defaultPackages.addChild(pkg);
+      }
     }
 
     Xpp3Dom configuration = new Xpp3Dom("configuration");
@@ -183,20 +237,6 @@ public class PomBuilder {
     testExecution.setConfiguration(configuration);
 
     return testExecution;
-  }
-
-  private Dependency toMavenDependency(String pkgName)
-      throws IOException {
-    Dependency mavenDep = new Dependency();
-    mavenDep.setArtifactId(pkgName);
-    if(CorePackages.isCorePackage(pkgName)) {
-      mavenDep.setGroupId("org.renjin");
-      mavenDep.setVersion(renjinVersion);
-    } else {
-      mavenDep.setGroupId("org.renjin.cran");
-      mavenDep.setVersion("[0,)");
-    }
-    return mavenDep;
   }
 
   private void addCoreModule(Model model, String name) {

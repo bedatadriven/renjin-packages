@@ -65,7 +65,12 @@ public class BuildCommand implements Runnable {
         graphBuilder.addAllLatestVersions();
       } else {
         for(String packageName : packages) {
-          graphBuilder.addPackage(packageName);
+          try {
+            graphBuilder.addPackage(packageName);
+          } catch(UnresolvedDependencyException ude) {
+            System.out.println("Could not add " + packageName + " because of unresolved dependency: " +
+              ude.getPackageName());
+          }
         }
       }
       packageBuilder = new Reactor(workspace, graphBuilder.build());

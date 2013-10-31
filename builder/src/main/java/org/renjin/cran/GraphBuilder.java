@@ -34,7 +34,7 @@ public class GraphBuilder {
    * @return
    * @throws IOException
    */
-  public PackageNode addPackage(String name) throws IOException {
+  public PackageNode addPackage(String name) throws IOException, UnresolvedDependencyException {
     EntityManager em = PersistenceUtil.createEntityManager();
     List<RPackageVersion> results = em.createQuery("select v from RPackageVersion v where v.rPackage.name = :name and v.latest=true",
       RPackageVersion.class)
@@ -56,24 +56,31 @@ public class GraphBuilder {
     return addPackageVersion(results.get(0));
   }
 
-  private PackageNode addPackageVersion(RPackageVersion packageVersion) throws IOException {
+  private PackageNode addPackageVersion(RPackageVersion packageVersion) throws IOException, UnresolvedDependencyException {
     if(nodes.containsKey(packageVersion.getId())) {
       return nodes.get(packageVersion.getId());
     } else {
 
       System.out.println("Adding node " + packageVersion.getId());
 
-      PackageNode node = new PackageNode(packageVersion.getGroupId(), packageVersion.getPackageName(),
-        packageVersion.getVersion());
-      nodes.put(node.getId(), node);
-
       // make sure we have all dependencies
+      List<PackageEdge> edges = Lists.newArrayList();
       for(RPackageDependency dep : packageVersion.getDependencies()) {
         System.out.println("...linking " + dep.getDependencyName());
+        if(dep.getDependency() == null) {
+          throw new UnresolvedDependencyException(dep.getDependencyName());
+        }
         if(dep.getBuildScope().equals("compile") && !selfReferencing(dep)) {
-          node.getEdges().add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
+          edges.add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
         }
       }
+
+      // add the node
+      PackageNode node = new PackageNode(packageVersion.getGroupId(),
+        packageVersion.getPackageName(),
+        packageVersion.getVersion());
+      node.getEdges().addAll(edges);
+      nodes.put(node.getId(), node);
 
       return node;
     }
@@ -97,7 +104,11 @@ public class GraphBuilder {
       .getResultList();
 
     for(RPackageVersion packageVersion : results) {
-      addPackageVersion(packageVersion);
+      try {
+        addPackageVersion(packageVersion);
+      } catch(UnresolvedDependencyException ude) {
+        System.out.println(packageVersion + " not added because of unresolved dependency: " + ude.getPackageName());
+      }
     }
   }
 

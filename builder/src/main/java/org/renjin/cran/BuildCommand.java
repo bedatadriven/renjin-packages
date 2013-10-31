@@ -96,6 +96,7 @@ public class BuildCommand implements Runnable {
 //      thread.interrupt();
 //
       if(result != BuildOutcome.SUCCESS) {
+        System.out.println("Renjin build failed! Abandoning ship...");
         System.exit(-1);
       }
     }

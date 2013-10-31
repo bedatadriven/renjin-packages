@@ -47,20 +47,34 @@ public class PackageBuilder implements Callable<BuildResult> {
     // name for debugging
     Thread.currentThread().setName(pkg.getName());
 
-    // ensure that the sources have been unpacked
+    BuildResult result = new BuildResult();
+    result.setPackageVersionId(pkg.getId());
+
     try {
-      ensureUnpacked();
+      executeMaven(result);
+
     } catch(Exception e) {
-      System.out.println("Exception unpacking " + pkg.getId() + ": " + e.getMessage());
-      return new BuildResult(pkg.getId(), BuildOutcome.NOT_BUILT);
+      System.out.println("Exception building " + pkg.getId() + ": " + e.getMessage());
+      result.setOutcome(BuildOutcome.ERROR);
     }
+
+    try {
+      reporter.reportResult(pkg, result.getOutcome(), baseDir, logFile);
+    } catch(Exception e) {
+      LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getId(), e);
+    }
+
+    return result; 
+  }
+
+  private void executeMaven(BuildResult result) throws IOException, InterruptedException {
+
+    ensureUnpacked();
 
     // write out the POM file for this package
     PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), baseDir, pkg.getEdges());
     pomBuilder.writePom();
 
-    BuildResult result = new BuildResult();
-    result.setPackageVersionId(pkg.getId());
 
     List<String> command = Lists.newArrayList();
     command.add(getMavenPath());
@@ -83,61 +97,48 @@ public class PackageBuilder implements Callable<BuildResult> {
     command.add("install");
 
     ProcessBuilder builder = new ProcessBuilder(command);
-    
+
     builder.directory(baseDir);
     builder.redirectErrorStream(true);
+
+    long startTime = System.currentTimeMillis();
+    Process process = builder.start();
+
+    InputStream processOutput = process.getInputStream();
+    OutputCollector collector = new OutputCollector(processOutput, logFile);
+    collector.setName(pkg + " - output collector");
+    collector.start();
+
     try {
-      long startTime = System.currentTimeMillis();
-      Process process = builder.start();
+      ProcessMonitor monitor = new ProcessMonitor(process);
+      monitor.setName(pkg + " - monitor");
+      monitor.start();
 
-      InputStream processOutput = process.getInputStream();
-      OutputCollector collector = new OutputCollector(processOutput, logFile);
-      collector.setName(pkg + " - output collector");
-      collector.start();
+      while(!monitor.isFinished()) {
 
-      try {
-        ProcessMonitor monitor = new ProcessMonitor(process);
-        monitor.setName(pkg + " - monitor");
-        monitor.start();
-
-        while(!monitor.isFinished()) {
-
-          if(System.currentTimeMillis() > (startTime + TIMEOUT_SECONDS * 1000)) {
-            System.out.println(pkg + " build timed out after " + TIMEOUT_SECONDS + " seconds.");
-            process.destroy();
-            result.setOutcome(BuildOutcome.TIMEOUT);
-            break;
-          }
-          Thread.sleep(1000);
+        if(System.currentTimeMillis() > (startTime + TIMEOUT_SECONDS * 1000)) {
+          System.out.println(pkg + " build timed out after " + TIMEOUT_SECONDS + " seconds.");
+          process.destroy();
+          result.setOutcome(BuildOutcome.TIMEOUT);
+          break;
         }
-
-        collector.join();
-        if(result.getOutcome() != BuildOutcome.TIMEOUT) {
-          if(monitor.getExitCode() == 0) {
-            result.setOutcome(BuildOutcome.SUCCESS);
-          } else if(monitor.getExitCode() == 1) {
-            result.setOutcome(BuildOutcome.FAILED);
-          } else {
-            System.out.println(pkg.getName() + " exited with code " + monitor.getExitCode());
-            result.setOutcome(BuildOutcome.ERROR);
-          }
-        }
-      } finally {
-        Closeables.closeQuietly(processOutput);
+        Thread.sleep(1000);
       }
-      
-    } catch (Exception e) {
-      result.setOutcome(BuildOutcome.ERROR);
-      e.printStackTrace();
-    }
 
-    try {
-      reporter.reportResult(pkg, result.getOutcome(), baseDir, logFile);
-    } catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getId(), e);
+      collector.join();
+      if(result.getOutcome() != BuildOutcome.TIMEOUT) {
+        if(monitor.getExitCode() == 0) {
+          result.setOutcome(BuildOutcome.SUCCESS);
+        } else if(monitor.getExitCode() == 1) {
+          result.setOutcome(BuildOutcome.FAILED);
+        } else {
+          System.out.println(pkg.getName() + " exited with code " + monitor.getExitCode());
+          result.setOutcome(BuildOutcome.ERROR);
+        }
+      }
+    } finally {
+      Closeables.closeQuietly(processOutput);
     }
-
-    return result; 
   }
 
 

@@ -69,14 +69,24 @@ public class GraphBuilder {
 
       // make sure we have all dependencies
       for(RPackageDependency dep : packageVersion.getDependencies()) {
-        if(dep != null && !dep.getDependency().getPackageName().equals(packageVersion.getPackageName()) &&
-            dep.getBuildScope().equals("compile")) {
+        System.out.println("...linking " + dep.getDependencyName());
+        if(dep.getBuildScope().equals("compile") && !selfReferencing(dep)) {
           node.getEdges().add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
         }
       }
 
       return node;
     }
+  }
+
+  private boolean selfReferencing(RPackageDependency dep) {
+    if(dep == null) {
+      return false;
+    }
+    if(dep.getDependency() == null) {
+      return false;
+    }
+    return dep.getDependencyName().equals(dep.getDependencyVersion());
   }
 
   public void addAllLatestVersions() throws IOException {

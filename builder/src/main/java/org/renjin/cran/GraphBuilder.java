@@ -69,7 +69,7 @@ public class GraphBuilder {
 
       // make sure we have all dependencies
       for(RPackageDependency dep : packageVersion.getDependencies()) {
-        if(!dep.getDependency().getPackageName().equals(packageVersion.getPackageName()) &&
+        if(dep != null && !dep.getDependency().getPackageName().equals(packageVersion.getPackageName()) &&
             dep.getBuildScope().equals("compile")) {
           node.getEdges().add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
         }
@@ -95,4 +95,5 @@ public class GraphBuilder {
     em.close();
     return nodes;
   }
+
 }

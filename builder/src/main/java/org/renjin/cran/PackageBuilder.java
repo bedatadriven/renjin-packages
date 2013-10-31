@@ -48,7 +48,12 @@ public class PackageBuilder implements Callable<BuildResult> {
     Thread.currentThread().setName(pkg.getName());
 
     // ensure that the sources have been unpacked
-    ensureUnpacked();
+    try {
+      ensureUnpacked();
+    } catch(Exception e) {
+      System.out.println("Exception unpacking " + pkg.getId() + ": " + e.getMessage());
+      return new BuildResult(pkg.getId(), BuildOutcome.NOT_BUILT);
+    }
 
     // write out the POM file for this package
     PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), baseDir, pkg.getEdges());

@@ -10,6 +10,11 @@ public class BuildResult {
   public BuildResult() {
   }
 
+  public BuildResult(String packageVersionId, BuildOutcome outcome) {
+    this.packageVersionId = packageVersionId;
+    this.outcome = outcome;
+  }
+
   public String getPackageVersionId() {
     return packageVersionId;
   }

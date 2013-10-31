@@ -45,9 +45,9 @@ public class RenjinBuilder {
     command.add("-X");
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
-    command.add("-DproxySet=true");
-    command.add("-DproxyHost=localhost");
-    command.add("-DproxyPort=" + MavenProxyServer.PORT);
+//    command.add("-DproxySet=true");
+//    command.add("-DproxyHost=localhost");
+//    command.add("-DproxyPort=" + MavenProxyServer.PORT);
     command.add("clean");
     command.add("install");
 

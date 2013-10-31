@@ -81,20 +81,20 @@ public class BuildCommand implements Runnable {
   private void buildRenjin(Workspace workspace) throws Exception {
     if(!devMode && workspace.isSnapshot() && workspace.getRenjinBuildOutcome() != BuildOutcome.SUCCESS) {
       
-      System.out.println("Starting proxy server...");
-      Thread thread = new Thread(new MavenProxyServer(workspace));
-      thread.start();
-      Thread.sleep(1000);
-      
+//      System.out.println("Starting proxy server...");
+//      Thread thread = new Thread(new MavenProxyServer(workspace));
+//      thread.start();
+//      Thread.sleep(1000);
+//
       System.out.println("Building Renjin...");
 
       RenjinBuilder renjinBuilder = new RenjinBuilder(workspace);
       BuildOutcome result = renjinBuilder.call();
       System.out.println("Renjin build complete: " + result);
 
-      System.out.println("Shutting down proxy server...");
-      thread.interrupt();
-      
+//      System.out.println("Shutting down proxy server...");
+//      thread.interrupt();
+//
       if(result != BuildOutcome.SUCCESS) {
         System.exit(-1);
       }

@@ -43,7 +43,7 @@ public class PomBuilder {
     this.edges = edges;
     this.edgeNameMap = Maps.newHashMap();
     for(PackageEdge edge : edges) {
-      edgeNameMap.put(edge.getDependency().getName(), edge);
+     edgeNameMap.put(edge.getDependency().getName(), edge);
     }
 
     description = readDescription();
@@ -107,15 +107,15 @@ public class PomBuilder {
     }
 
     // Now add other types of dependencies as test scope deps
-    for(PackageEdge edge : edges) {
-      if(!edge.getType().equals("imports") && !edge.getType().equals("depends")) {
-        if(!description.getPackage().equals(edge.getDependency().getName())) {
-          Dependency mavenDep = dependencyFromEdge(edge);
-          mavenDep.setScope("test");
-          model.addDependency(mavenDep);
-        }
-      }
-    }
+//    for(PackageEdge edge : edges) {
+//      if(!edge.getType().equals("imports") && !edge.getType().equals("depends")) {
+//        if(!description.getPackage().equals(edge.getDependency().getName())) {
+//          Dependency mavenDep = dependencyFromEdge(edge);
+//          mavenDep.setScope("test");
+//          model.addDependency(mavenDep);
+//        }
+//      }
+//    }
 
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
@@ -125,7 +125,7 @@ public class PomBuilder {
     PluginExecution compileExecution = compileExecution();
     renjinPlugin.addExecution(compileExecution);
     renjinPlugin.addExecution(legacyCompileExecution());
-    renjinPlugin.addExecution(testExecution());
+//    renjinPlugin.addExecution(testExecution());
 
     Build build = new Build();
     build.addPlugin(renjinPlugin);
@@ -219,7 +219,8 @@ public class PomBuilder {
     testExecution.setId("renjin-test");
     testExecution.addGoal("test");
 
-    Xpp3Dom testSourceDirectory = new Xpp3Dom("testSourceDirectory");
+    Xpp3Dom testSourceDirectory = new Xpp3Dom
+      ("testSourceDirectory");
     testSourceDirectory.setValue("${basedir}/tests");
 
     Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");

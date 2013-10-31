@@ -135,7 +135,7 @@ public class Reactor {
     } else {
       System.out.println("Scheduling " + pkg + "... [previous attempts: " + previousAttempts + "]");
 
-      this.service.submit(new PackageBuilder(workspace, reporter, pkg, previousAttempts));
+      this.service.submit(new PackageBuilder(workspace, reporter, pkg));
       scheduled.add(pkg);
     }
   }

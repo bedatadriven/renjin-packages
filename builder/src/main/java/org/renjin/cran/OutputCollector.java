@@ -13,6 +13,8 @@ public class OutputCollector extends Thread {
   private InputStream is;
   private File logFile;
 
+  public static final boolean LIMIT_LOG_FILE_SIZE = false;
+
   public static final int MAX_LOG_FILE_SIZE =  5 * 1024 * 1024;
 
   
@@ -41,11 +43,11 @@ public class OutputCollector extends Thread {
       while ( (line = br.readLine()) != null) {
         out.write(line.getBytes());
         out.write((byte)'\n');
-
-        if(out.getCount() > MAX_LOG_FILE_SIZE) {
-          out.write("MAXIMUM LOGFILE SIZE REACHED - OUTPUT STOPPING\n".getBytes());
-          break;
-        }
+//
+//        if(LIMIT_LOG_FILE_SIZE && out.getCount() > MAX_LOG_FILE_SIZE) {
+//          out.write("MAXIMUM LOGFILE SIZE REACHED - OUTPUT STOPPING\n".getBytes());
+//          break;
+//        }
       }
 
     } catch (IOException ioe) {

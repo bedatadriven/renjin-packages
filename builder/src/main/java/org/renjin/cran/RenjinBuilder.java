@@ -43,7 +43,7 @@ public class RenjinBuilder {
 
     List<String> command = Lists.newArrayList();
     command.add("mvn");
-    command.add("-X");
+  //  command.add("-X");
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
 //    command.add("-DproxySet=true");
@@ -57,7 +57,6 @@ public class RenjinBuilder {
     builder.directory(workspace.getRenjinDir());
     builder.redirectErrorStream(true);
     try {
-      long startTime = System.currentTimeMillis();
       Process process = builder.start();
 
       InputStream processOutput = process.getInputStream();
@@ -73,6 +72,8 @@ public class RenjinBuilder {
         Stopwatch stopwatch = new Stopwatch().start();
 
         while(!monitor.isFinished()) {
+
+          System.out.println(stopwatch);
 
           if(stopwatch.elapsedTime(TimeUnit.MINUTES) > TIMEOUT_MINUTES) {
             System.out.println("Renjin build timed out after " + TIMEOUT_MINUTES + " minutes.");
@@ -103,9 +104,7 @@ public class RenjinBuilder {
       e.printStackTrace();
     }
 
-
     workspace.setRenjinBuildOutcome(outcome);
-
     return outcome;
   }
 }

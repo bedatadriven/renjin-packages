@@ -1,13 +1,14 @@
 package org.renjin.cran;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
-import org.renjin.cran.proxy.MavenProxyServer;
 import org.renjin.repo.model.BuildOutcome;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Builds a specific commit of Renjin itself and installs it
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public class RenjinBuilder {
 
-  private static final int TIMEOUT_SECONDS = 30 * 60;
+  private static final int TIMEOUT_MINUTES = 30;
   private final Workspace workspace;
   private final File logFile;
 
@@ -69,10 +70,12 @@ public class RenjinBuilder {
         monitor.setName("Renjin build monitor");
         monitor.start();
 
+        Stopwatch stopwatch = new Stopwatch().start();
+
         while(!monitor.isFinished()) {
 
-          if(System.currentTimeMillis() > (startTime + TIMEOUT_SECONDS * 1000)) {
-            System.out.println("Renjin build timed out after " + TIMEOUT_SECONDS + " seconds.");
+          if(stopwatch.elapsedTime(TimeUnit.MINUTES) > TIMEOUT_MINUTES) {
+            System.out.println("Renjin build timed out after " + TIMEOUT_MINUTES + " minutes.");
             process.destroy();
             outcome = BuildOutcome.TIMEOUT;
             break;

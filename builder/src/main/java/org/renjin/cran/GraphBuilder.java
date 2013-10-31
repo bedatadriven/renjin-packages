@@ -3,6 +3,7 @@ package org.renjin.cran;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -57,6 +58,8 @@ public class GraphBuilder {
   }
 
   private PackageNode addPackageVersion(RPackageVersion packageVersion) throws IOException, UnresolvedDependencyException {
+    Preconditions.checkNotNull(packageVersion, "packageVersion");
+
     if(nodes.containsKey(packageVersion.getId())) {
       return nodes.get(packageVersion.getId());
     } else {
@@ -70,6 +73,7 @@ public class GraphBuilder {
         if(dep.getDependency() == null) {
           throw new UnresolvedDependencyException(dep.getDependencyName());
         }
+        Preconditions.checkNotNull(dep.getDependency(), "dep.getDependency()");
         if(dep.getBuildScope().equals("compile") && !selfReferencing(dep)) {
           edges.add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
         }

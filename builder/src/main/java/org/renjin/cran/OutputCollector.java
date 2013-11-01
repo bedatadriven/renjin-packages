@@ -10,17 +10,15 @@ import com.google.common.io.CountingOutputStream;
  * maven build process.
  */
 public class OutputCollector extends Thread {
+  private final int maxSize;
   private InputStream is;
   private File logFile;
 
-  public static final boolean LIMIT_LOG_FILE_SIZE = false;
-
-  public static final int MAX_LOG_FILE_SIZE =  5 * 1024 * 1024;
-
   
-  public OutputCollector(InputStream is, File logFile) {
+  public OutputCollector(InputStream is, File logFile, int maxSize) {
     this.is = is;
     this.logFile = logFile;
+    this.maxSize = maxSize;
   }
 
   public void run() {
@@ -43,11 +41,11 @@ public class OutputCollector extends Thread {
       while ( (line = br.readLine()) != null) {
         out.write(line.getBytes());
         out.write((byte)'\n');
-//
-//        if(LIMIT_LOG_FILE_SIZE && out.getCount() > MAX_LOG_FILE_SIZE) {
-//          out.write("MAXIMUM LOGFILE SIZE REACHED - OUTPUT STOPPING\n".getBytes());
-//          break;
-//        }
+
+        if(out.getCount() > maxSize) {
+          out.write("MAXIMUM LOGFILE SIZE REACHED - OUTPUT STOPPING\n".getBytes());
+          break;
+        }
       }
 
     } catch (IOException ioe) {

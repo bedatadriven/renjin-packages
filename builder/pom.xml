@@ -92,7 +92,11 @@
       <artifactId>jsch</artifactId>
       <version>0.1.50</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor</artifactId>
+      <version>2.0.2</version>
+    </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
@@ -145,6 +149,11 @@
       <id>bedatadriven</id>
       <name>bedatadriven public repo</name>
       <url>http://nexus.bedatadriven.com/content/groups/public/</url>
+    </repository>
+    <repository>
+      <id>typesafe</id>
+      <name>Typesafe Repository</name>
+      <url>http://repo.typesafe.com/typesafe/releases/</url>
     </repository>
   </repositories>
 

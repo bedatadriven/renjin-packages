@@ -17,8 +17,6 @@ public class PersistenceUtilTest {
   @Test
   public void test() {
 
-
-
     EntityManager em = PersistenceUtil.createEntityManager();
     em.createQuery("select p from RPackage p").getResultList();
 

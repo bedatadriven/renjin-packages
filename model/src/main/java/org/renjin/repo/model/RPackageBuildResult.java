@@ -28,7 +28,6 @@ public class RPackageBuildResult {
 
   private int delta;
 
-
 	public int getId() {
 		return id;
 	}

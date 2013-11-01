@@ -60,7 +60,7 @@ public class RenjinBuilder {
       Process process = builder.start();
 
       InputStream processOutput = process.getInputStream();
-      OutputCollector collector = new OutputCollector(processOutput, logFile);
+      OutputCollector collector = new OutputCollector(processOutput, logFile, Integer.MAX_VALUE);
       collector.setName("Renjin build - output collector");
       collector.start();
 

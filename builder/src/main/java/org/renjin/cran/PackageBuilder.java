@@ -32,6 +32,8 @@ public class PackageBuilder implements Callable<BuildResult> {
 
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
+  public static final int MAX_LOG_SIZE = 1024 * 200;
+
   public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg) {
     this.workspace = workspace;
     this.reporter = reporter;
@@ -75,7 +77,6 @@ public class PackageBuilder implements Callable<BuildResult> {
     PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), baseDir, pkg.getEdges());
     pomBuilder.writePom();
 
-
     List<String> command = Lists.newArrayList();
     command.add(getMavenPath());
     command.add("-X");
@@ -105,7 +106,7 @@ public class PackageBuilder implements Callable<BuildResult> {
     Process process = builder.start();
 
     InputStream processOutput = process.getInputStream();
-    OutputCollector collector = new OutputCollector(processOutput, logFile);
+    OutputCollector collector = new OutputCollector(processOutput, logFile, MAX_LOG_SIZE);
     collector.setName(pkg + " - output collector");
     collector.start();
 

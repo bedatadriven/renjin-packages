@@ -10,7 +10,7 @@ public class DeltaTest {
   @Test
   public void test() {
 
-    new DeltaCalculator(PersistenceUtil.createEntityManager(), 52).calculate();
+    new DeltaCalculator(PersistenceUtil.createEntityManager(), 84).calculate();
 
   }
 }

@@ -21,8 +21,6 @@ public class Reactor {
 
   private BuildReporter reporter;
 
-  private Map<String, Integer> retryCount = Maps.newHashMap();
-
   private ExecutorCompletionService<BuildResult> service;
 
   private Map<String, PackageNode> nodes = Maps.newHashMap();
@@ -66,7 +64,7 @@ public class Reactor {
       while(it.hasNext()) {
         PackageNode pkg = it.next();
         if(dependenciesAreResolved(pkg)) {
-          scheduleForBuild(pkg, 0);
+          scheduleForBuild(pkg);
 
           it.remove();
         }
@@ -96,22 +94,7 @@ public class Reactor {
 
       } else if(result.getOutcome() == BuildOutcome.ERROR ||
         result.getOutcome() == BuildOutcome.TIMEOUT) {
-        // otherwise reschedule a few times
-        // it's possible to encounter OutOfMemory Errors
-        Integer attemptCount = retryCount.get(result.getPackageVersionId());
-        if(attemptCount == null) {
-          attemptCount = 1;
-        }
-        if(attemptCount < 3) {
-          // reschedule
-          PackageNode node = nodes.get(result.getPackageVersionId());
-          if(node == null) {
-            System.out.println("SEVERE: node lookup on " + result.getPackageVersionId() + " failed");
-          } else {
-            scheduleForBuild(node, attemptCount+1);
-            retryCount.put(result.getPackageVersionId(), attemptCount+1);
-          }
-        }
+
       }
 
       // report status periodically
@@ -126,14 +109,14 @@ public class Reactor {
     System.out.println("Build complete; " + toBuild.size() + " package(s) with unmet dependencies");
   }
 
-  private void scheduleForBuild(PackageNode pkg, int previousAttempts) {
+  private void scheduleForBuild(PackageNode pkg) {
 
     // check if we've already succeeded in building this package node
     if(reporter.packageAlreadySucceeded(pkg.getId())) {
       System.out.println(pkg + " already successfully built for this commit");
       built.add(pkg);
     } else {
-      System.out.println("Scheduling " + pkg + "... [previous attempts: " + previousAttempts + "]");
+      System.out.println("Scheduling " + pkg + "...");
 
       this.service.submit(new PackageBuilder(workspace, reporter, pkg));
       scheduled.add(pkg);

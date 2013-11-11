@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 import java.io.File;
 import java.util.*;
@@ -7,12 +7,9 @@ import io.airlift.command.Arguments;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 
-import org.renjin.cran.proxy.MavenProxyServer;
+import org.renjin.infra.agent.workspace.Workspace;
+import org.renjin.infra.agent.workspace.WorkspaceBuilder;
 import org.renjin.repo.model.BuildOutcome;
-import org.renjin.repo.model.RPackage;
-import org.renjin.repo.model.RPackageVersion;
-
-import javax.persistence.EntityManager;
 
 /**
  * Program that will retrieve package sources from CRAN,

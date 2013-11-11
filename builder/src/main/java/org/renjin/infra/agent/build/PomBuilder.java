@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 import java.io.File;
 import java.io.FileReader;
@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.renjin.infra.agent.build.PackageEdge;
 import org.renjin.repo.model.CorePackages;
 import org.renjin.repo.model.PackageDescription;
 import org.renjin.repo.model.PackageDescription.PackageDependency;

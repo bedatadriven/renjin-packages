@@ -1,8 +1,11 @@
 package org.renjin.cran;
 
 
+import org.renjin.infra.agent.build.BuildReporter;
+import org.renjin.infra.agent.build.PackageNode;
+import org.renjin.infra.agent.workspace.Workspace;
+
 import java.io.File;
-import java.util.concurrent.Callable;
 
 public class PackageTester implements Runnable {
 

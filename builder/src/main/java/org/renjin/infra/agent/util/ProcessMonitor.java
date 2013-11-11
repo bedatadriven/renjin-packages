@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.util;
 
 public class ProcessMonitor extends Thread {
 

@@ -1,8 +1,9 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.renjin.infra.agent.workspace.Workspace;
 import org.renjin.repo.model.*;
 
 import java.util.List;

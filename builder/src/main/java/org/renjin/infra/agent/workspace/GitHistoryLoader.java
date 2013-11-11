@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.workspace;
 
 
 import com.google.common.collect.Sets;
@@ -13,10 +13,10 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.renjin.infra.agent.util.PersistenceUtil;
 import org.renjin.repo.model.RenjinCommit;
 
 import javax.persistence.EntityManager;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;

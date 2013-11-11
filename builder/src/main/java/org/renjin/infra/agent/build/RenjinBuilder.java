@@ -1,8 +1,12 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import org.renjin.infra.agent.workspace.GitHistoryLoader;
+import org.renjin.infra.agent.util.OutputCollector;
+import org.renjin.infra.agent.util.ProcessMonitor;
+import org.renjin.infra.agent.workspace.Workspace;
 import org.renjin.repo.model.BuildOutcome;
 
 import java.io.File;

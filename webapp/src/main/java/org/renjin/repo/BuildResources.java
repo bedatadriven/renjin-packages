@@ -69,5 +69,4 @@ public class BuildResources {
 
     return new ResultResource(results.get(0));
   }
-  
 }

@@ -15,8 +15,7 @@
  */
 package org.renjin.cran.proxy;
 
-import org.apache.commons.lang.SystemUtils;
-import org.renjin.cran.Workspace;
+import org.renjin.infra.agent.workspace.Workspace;
 
 import java.io.File;
 import java.net.MalformedURLException;

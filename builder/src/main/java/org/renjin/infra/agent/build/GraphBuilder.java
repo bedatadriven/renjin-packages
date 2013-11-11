@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 
 import com.google.common.base.Function;
@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.renjin.infra.agent.util.PersistenceUtil;
 import org.renjin.repo.model.RPackageDependency;
 import org.renjin.repo.model.RPackageVersion;
 

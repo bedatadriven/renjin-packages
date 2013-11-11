@@ -1,6 +1,8 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 
+import org.renjin.infra.agent.util.PersistenceUtil;
+import org.renjin.cran.TestResultParser;
 import org.renjin.repo.model.*;
 
 import javax.persistence.EntityManager;

@@ -22,6 +22,9 @@ public class RPackageBuildResult {
   @OneToMany(mappedBy = "buildResult")
   private Set<TestResult> testResults;
 
+  @Column(nullable = false)
+  private boolean latest;
+
   private boolean testFailures;
 
   private boolean nativeSourceCompilationFailures;

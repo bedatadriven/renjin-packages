@@ -2,7 +2,7 @@ package org.renjin.cran.proxy;
 
 
 import io.airlift.command.Command;
-import org.renjin.cran.Workspace;
+import org.renjin.infra.agent.workspace.Workspace;
 
 import java.io.File;
 

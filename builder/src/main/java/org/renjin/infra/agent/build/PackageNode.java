@@ -1,18 +1,9 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import org.renjin.repo.model.PackageDescription;
+import org.renjin.infra.agent.build.PackageEdge;
 
 public class PackageNode {
 

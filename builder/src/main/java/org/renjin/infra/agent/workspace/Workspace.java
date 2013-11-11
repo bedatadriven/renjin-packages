@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.workspace;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -24,6 +24,7 @@ public class Workspace {
   private String renjinCommitId;
   private final String renjinVersion;
   private boolean devMode;
+  private DependencyResolver dependencyResolver;
 
   public Workspace(File root) throws IOException, GitAPIException {
     this.root = root.getAbsoluteFile().getCanonicalFile();
@@ -116,5 +117,12 @@ public class Workspace {
 
   public boolean isSnapshot() {
     return getRenjinVersion().endsWith("-SNAPSHOT");
+  }
+
+  public DependencyResolver getDependencyResolver() {
+    if(dependencyResolver == null) {
+      dependencyResolver = new DependencyResolver(getLocalMavenRepository());
+    }
+    return dependencyResolver;
   }
 }

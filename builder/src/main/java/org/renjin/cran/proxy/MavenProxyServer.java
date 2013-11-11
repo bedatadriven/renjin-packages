@@ -15,7 +15,7 @@
  */
 package org.renjin.cran.proxy;
 
-import org.renjin.cran.Workspace;
+import org.renjin.infra.agent.workspace.Workspace;
 
 import java.io.IOException;
 import java.net.ServerSocket;

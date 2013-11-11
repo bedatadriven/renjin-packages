@@ -1,4 +1,4 @@
-package org.renjin.cran;
+package org.renjin.infra.agent.build;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -6,6 +6,10 @@ import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.renjin.infra.agent.util.GoogleCloudStorage;
+import org.renjin.infra.agent.util.OutputCollector;
+import org.renjin.infra.agent.util.ProcessMonitor;
+import org.renjin.infra.agent.workspace.Workspace;
 import org.renjin.repo.model.BuildOutcome;
 
 import java.io.File;

@@ -37,4 +37,12 @@ public class PackageUnderTest {
   public String toString() {
     return name + ":" + version;
   }
+
+  public String getPackageId() {
+    return groupId + ":" + name;
+  }
+
+  public String getPackageVersionId() {
+    return getPackageId() + ":" + getVersion();
+  }
 }

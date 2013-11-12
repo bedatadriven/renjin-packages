@@ -36,14 +36,14 @@ public class PackageBuilder implements Callable<BuildResult> {
 
   public static final long TIMEOUT_SECONDS = 20 * 60;
 
-  public static final int MAX_LOG_SIZE = 1024 * 200;
+  public static final int MAX_LOG_SIZE = 1024 * 600;
 
   public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg) {
     this.workspace = workspace;
     this.reporter = reporter;
     this.pkg = pkg;
     this.baseDir = new File(workspace.getPackagesDir(), pkg.getName() + "_" + pkg.getVersion());
-    this.logFile = new File(baseDir, "build.log." + reporter.getBuildId());
+    this.logFile = new File(baseDir, "build.log");
   }
 
   @Override

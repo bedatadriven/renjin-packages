@@ -95,30 +95,6 @@ public class BuildResultRecorder {
 
   private void recordTestResult(TestResultParser testResult) {
 
-    // find the test record for the package
-    // find the test id or create a test record
-    // if we haven't seen this before.
-    Test test;
-    List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage = :package", Test.class)
-      .setParameter("name", testResult.getTestName())
-      .setParameter("package", em.getReference(RPackage.class, pkg.getPackageId()))
-      .getResultList();
-    if(tests.isEmpty()) {
-      test = new Test();
-      test.setRPackage(em.getReference(RPackage.class, pkg.getPackageId()));
-      test.setName(testResult.getTestName());
-      em.persist(test);
-    } else {
-      test = tests.get(0);
-    }
 
-    TestResult result = new TestResult();
-    result.setBuildResult(buildResult);
-    result.setTest(test);
-    result.setOutput(testResult.getOutput());
-    result.setErrorMessage(testResult.getErrorMessage());
-    result.setPassed(testResult.isPassed());
-
-    em.persist(result);
   }
 }

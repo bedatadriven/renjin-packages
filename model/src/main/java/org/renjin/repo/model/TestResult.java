@@ -2,6 +2,7 @@ package org.renjin.repo.model;
 
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 public class TestResult {
@@ -13,11 +14,19 @@ public class TestResult {
   @ManyToOne
   private Test test;
 
-  @ManyToOne
-  private RPackageBuildResult buildResult;
+  @Column
+  private String renjinCommitId;
 
   @Lob
   private String output;
+
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date startTime;
+
+  private long elapsedTime;
+
+  @ManyToOne
+  private RPackageVersion packageVersion;
 
 
   /**
@@ -48,13 +57,6 @@ public class TestResult {
     this.test = test;
   }
 
-  public RPackageBuildResult getBuildResult() {
-    return buildResult;
-  }
-
-  public void setBuildResult(RPackageBuildResult buildResult) {
-    this.buildResult = buildResult;
-  }
 
   public String getOutput() {
     return output;
@@ -86,5 +88,37 @@ public class TestResult {
 
   public void setDelta(int delta) {
     this.delta = delta;
+  }
+
+  public String getRenjinCommitId() {
+    return renjinCommitId;
+  }
+
+  public void setRenjinCommitId(String renjinCommitId) {
+    this.renjinCommitId = renjinCommitId;
+  }
+
+  public Date getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Date startTime) {
+    this.startTime = startTime;
+  }
+
+  public long getElapsedTime() {
+    return elapsedTime;
+  }
+
+  public void setElapsedTime(long elapsedTime) {
+    this.elapsedTime = elapsedTime;
+  }
+
+  public RPackageVersion getPackageVersion() {
+    return packageVersion;
+  }
+
+  public void setPackageVersion(RPackageVersion packageVersion) {
+    this.packageVersion = packageVersion;
   }
 }

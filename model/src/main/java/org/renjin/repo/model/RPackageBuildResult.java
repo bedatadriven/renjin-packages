@@ -1,6 +1,8 @@
 package org.renjin.repo.model;
 
 
+import com.google.common.collect.Sets;
+
 import javax.persistence.*;
 import java.util.Set;
 
@@ -19,8 +21,8 @@ public class RPackageBuildResult {
 	@ManyToOne
 	private RPackageVersion packageVersion;
 
-  @OneToMany(mappedBy = "buildResult")
-  private Set<TestResult> testResults;
+  @Transient
+  private Set<TestResult> testResults = Sets.newHashSet();
 
   @Column(nullable = false)
   private boolean latest;

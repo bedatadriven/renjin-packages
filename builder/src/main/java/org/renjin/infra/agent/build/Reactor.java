@@ -4,8 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.renjin.infra.agent.workspace.Workspace;
-import org.renjin.repo.model.*;
+import org.renjin.repo.model.BuildOutcome;
 
+import java.io.File;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -45,12 +46,11 @@ public class Reactor {
     this.nodes = nodes;
   }
 
-
   public void setNumConcurrentBuilds(int numConcurrentBuilds) {
     this.numConcurrentBuilds = numConcurrentBuilds;
   }
 
-  public void build() throws InterruptedException, ExecutionException {
+  public Set<PackageNode> build() throws InterruptedException, ExecutionException {
 
     List<PackageNode> toBuild = Lists.newArrayList(nodes.values());
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numConcurrentBuilds);
@@ -58,15 +58,17 @@ public class Reactor {
 
     System.out.println("Thread pool created with " + numConcurrentBuilds + " threads");
 
+    // first find the packages that have already been built
+    markBuiltPackages(toBuild);
+
     while(true) {
 
       // schedule any packages whose dependencies have been met
       ListIterator<PackageNode> it = toBuild.listIterator();
       while(it.hasNext()) {
         PackageNode pkg = it.next();
-        if(dependenciesAreResolved(pkg)) {
+      if(dependenciesAreResolved(pkg)) {
           scheduleForBuild(pkg);
-
           it.remove();
         }
       }
@@ -95,7 +97,6 @@ public class Reactor {
 
       } else if(result.getOutcome() == BuildOutcome.ERROR ||
         result.getOutcome() == BuildOutcome.TIMEOUT) {
-
       }
 
       // report status periodically
@@ -108,20 +109,40 @@ public class Reactor {
     executor.shutdown();
 
     System.out.println("Build complete; " + toBuild.size() + " package(s) with unmet dependencies");
+
+    return built;
   }
+
+  private void markBuiltPackages(List<PackageNode> toBuild) {
+    ListIterator<PackageNode> it = toBuild.listIterator();
+    while(it.hasNext()) {
+      PackageNode pkg = it.next();
+      if(packageAlreadySucceeded(pkg)) {
+        built.add(pkg);
+        it.remove();
+      }
+    }
+  }
+
 
   private void scheduleForBuild(PackageNode pkg) {
 
-    // check if we've already succeeded in building this package node
-    if(reporter.packageAlreadySucceeded(pkg.getId())) {
-      System.out.println(pkg + " already successfully built for this commit");
-      built.add(pkg);
-    } else {
-      System.out.println("Scheduling " + pkg + "...");
+    System.out.println("Scheduling " + pkg + "...");
 
-      this.service.submit(new PackageBuilder(workspace, reporter, pkg));
-      scheduled.add(pkg);
-    }
+    this.service.submit(new PackageBuilder(workspace, reporter, pkg));
+    scheduled.add(pkg);
+  }
+
+  private boolean packageAlreadySucceeded(PackageNode pkg) {
+    // check for presence of artifact in local repo
+    String version = pkg.getVersion() + "-SNAPSHOT";
+    String path = workspace.getLocalMavenRepository().getAbsolutePath() + "/" +
+      pkg.getGroupId().replace('.', '/') + "/" + pkg.getName() + "/" + version + "/"  +
+      pkg.getName() + "-" + version + ".jar";
+
+    System.out.println("Checking for " + path);
+
+    return new File(path).exists();
   }
 
   private boolean dependenciesAreResolved(PackageNode pkg) {

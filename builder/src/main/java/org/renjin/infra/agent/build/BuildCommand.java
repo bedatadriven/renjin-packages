@@ -1,15 +1,17 @@
 package org.renjin.infra.agent.build;
 
-import java.io.File;
-import java.util.*;
-
 import io.airlift.command.Arguments;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
-
+import org.renjin.infra.agent.test.TestQueue;
+import org.renjin.infra.agent.workspace.GitHistoryLoader;
 import org.renjin.infra.agent.workspace.Workspace;
 import org.renjin.infra.agent.workspace.WorkspaceBuilder;
 import org.renjin.repo.model.BuildOutcome;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Program that will retrieve package sources from CRAN,
@@ -53,6 +55,8 @@ public class BuildCommand implements Runnable {
       Workspace workspace = workspaceBuilder.build();
       workspace.setDevMode(devMode);
 
+      updateGitHistory(workspace);
+
       System.out.println("Testing against " + workspace.getRenjinVersion());
 
       buildRenjin(workspace);
@@ -72,11 +76,24 @@ public class BuildCommand implements Runnable {
       }
       packageBuilder = new Reactor(workspace, graphBuilder.build());
       packageBuilder.setNumConcurrentBuilds(numConcurrentBuilds);
-      packageBuilder.build();
+      Set<PackageNode> built = packageBuilder.build();
+
+      TestQueue testQueue = new TestQueue(workspace, built);
+      testQueue.setNumConcurrentTests(numConcurrentBuilds);
+      testQueue.run();
+
 
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void updateGitHistory(Workspace workspace) throws Exception {
+    // ensure that we have loaded the latest commit data into our
+    // build database
+    System.out.println("Updating git history...");
+    new GitHistoryLoader().run(workspace);
+    System.out.println("DONE");
   }
 
 

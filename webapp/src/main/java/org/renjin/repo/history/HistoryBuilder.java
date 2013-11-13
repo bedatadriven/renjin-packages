@@ -32,7 +32,7 @@ public class HistoryBuilder {
       .getResultList();
 
     for(TestResult historicalResult : results) {
-      commitResults.put(historicalResult.getBuildResult().getBuild().getRenjinCommit().getId(),
+      commitResults.put(historicalResult.getRenjinCommit().getId(),
           historicalResult);
     }
 
@@ -45,7 +45,7 @@ public class HistoryBuilder {
 
     boolean passing = latestResult.isPassed();
 
-    RenjinCommit head = latestResult.getBuildResult().getBuild().getRenjinCommit();
+    RenjinCommit head = latestResult.getRenjinCommit();
     while(head != null) {
 
       HistoryEvent event = new HistoryEvent(head, commitResults.get(head.getId()));

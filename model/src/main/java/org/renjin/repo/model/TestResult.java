@@ -14,8 +14,9 @@ public class TestResult {
   @ManyToOne
   private Test test;
 
-  @Column
-  private String renjinCommitId;
+  @ManyToOne
+  @JoinColumn(name = "renjinCommitId")
+  private RenjinCommit renjinCommit;
 
   @Lob
   private String output;
@@ -90,12 +91,12 @@ public class TestResult {
     this.delta = delta;
   }
 
-  public String getRenjinCommitId() {
-    return renjinCommitId;
+  public RenjinCommit getRenjinCommit() {
+    return renjinCommit;
   }
 
-  public void setRenjinCommitId(String renjinCommitId) {
-    this.renjinCommitId = renjinCommitId;
+  public void setRenjinCommit(RenjinCommit renjinCommit) {
+    this.renjinCommit = renjinCommit;
   }
 
   public Date getStartTime() {

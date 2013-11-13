@@ -6,6 +6,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.io.Closeables;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
+import org.renjin.eval.EvalException;
 import org.renjin.eval.Session;
 import org.renjin.eval.SessionBuilder;
 import org.renjin.repl.JlineRepl;
@@ -139,15 +140,17 @@ public class PackageTester {
       Stopwatch stopwatch = new Stopwatch().start();
       repl.run();
 
-
       resultsWriter.println("OK/" + stopwatch.elapsedMillis());
       resultsWriter.flush();
 
     } catch(Throwable e) {
 
+      if(!(e instanceof EvalException)) {
+        e.printStackTrace(logWriter);
+      }
+
       resultsWriter.println("ERROR");
       resultsWriter.flush();
-      e.printStackTrace();
 
     } finally {
       try {

@@ -40,7 +40,7 @@ public class CommitResources {
 
 
     List<TestResult> testResults = HibernateUtil.getActiveEntityManager()
-      .createQuery("select r from TestResult r where r.buildResult.build.renjinCommit.id = :sha", TestResult.class)
+      .createQuery("select r from TestResult r where r.renjinCommit.id = :sha", TestResult.class)
       .setParameter("sha", sha)
       .getResultList();
 
@@ -55,7 +55,7 @@ public class CommitResources {
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
     TestResult result = em.createQuery("select r from TestResult r where r.test.id = :testId and " +
-      "r.buildResult.build.renjinCommit.id = :sha", TestResult.class)
+      "r.renjinCommit.id = :sha", TestResult.class)
       .setParameter("testId", testId)
       .setParameter("sha", sha)
       .getSingleResult();

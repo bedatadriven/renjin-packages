@@ -1,16 +1,14 @@
 package org.renjin.infra.agent.test;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
+import org.renjin.infra.agent.build.PackageNode;
+import org.renjin.infra.agent.util.ProcessMonitor;
 import org.renjin.infra.agent.workspace.Workspace;
 import org.renjin.repo.PersistenceUtil;
-import org.renjin.repo.model.RPackage;
-import org.renjin.repo.model.RPackageVersion;
-import org.renjin.repo.model.Test;
-import org.renjin.repo.model.TestResult;
+import org.renjin.repo.model.*;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import java.io.File;
 import java.io.IOException;
@@ -19,15 +17,16 @@ import java.net.URLClassLoader;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-public class PackageTesterHarness implements Runnable {
+public class PackageTesterTask implements Callable<Void> {
   private Workspace workspace;
-  private PackageUnderTest put;
+  private PackageNode put;
   private File baseDir;
   private Date startTime;
   private final File logDir;
 
-  public PackageTesterHarness(Workspace workspace, PackageUnderTest put) {
+  public PackageTesterTask(Workspace workspace, PackageNode put) {
     this.workspace = workspace;
     this.put = put;
     this.baseDir = new File(workspace.getPackagesDir(), put.getName() + "_" + put.getVersion());
@@ -35,9 +34,8 @@ public class PackageTesterHarness implements Runnable {
     this.startTime = new Date();
   }
 
-
   @Override
-  public void run()  {
+  public Void call()  {
 
     System.out.println(put + ": Starting...");
 
@@ -53,9 +51,21 @@ public class PackageTesterHarness implements Runnable {
         .inheritIO()
         .start();
 
-      int exitCode = java.waitFor();
+      ProcessMonitor monitor = new ProcessMonitor(java);
+      monitor.start();
 
-      System.out.println(put + ": Finished with status code " + exitCode);
+      Stopwatch stopwatch = new Stopwatch().start();
+      while(!monitor.isFinished()) {
+        if(stopwatch.elapsedTime(TimeUnit.MINUTES) > 10) {
+          System.out.println(put + ": Timeout");
+          java.destroy();
+          monitor.interrupt();
+          break;
+        }
+        Thread.sleep(1000);
+      }
+
+      System.out.println(put + ": Testing finished with status code " + monitor.getExitCode());
 
       reportTestResults();
 
@@ -63,6 +73,7 @@ public class PackageTesterHarness implements Runnable {
       System.out.println(put + ": ERROR");
       e.printStackTrace();
     }
+    return null;
   }
 
   private void reportTestResults() throws IOException {
@@ -86,6 +97,8 @@ public class PackageTesterHarness implements Runnable {
 
   private void reportTestResult(String testName, boolean passed, long millis) throws IOException {
     EntityManager em = PersistenceUtil.createEntityManager();
+    em.getTransaction().begin();
+
     // find the test record for the package
     // find the test id or create a test record
     // if we haven't seen this before.
@@ -103,10 +116,14 @@ public class PackageTesterHarness implements Runnable {
       test = tests.get(0);
     }
 
-    List<TestResult> results = em.createQuery("from TestResult tr where tr.test = :test and tr.renjinCommitId = :commitId",
+    List<TestResult> results = em.createQuery("from TestResult tr where " +
+      "tr.test = :test and " +
+      "tr.renjinCommit.id = :commitId and " +
+      "tr.packageVersion.id = :packageVersionId",
       TestResult.class)
       .setParameter("test", test)
       .setParameter("commitId", workspace.getRenjinCommitId())
+      .setParameter("packageVersionId", put.getId())
       .getResultList();
 
     TestResult result;
@@ -119,8 +136,8 @@ public class PackageTesterHarness implements Runnable {
     File logFile = new File(logDir, testName + ".log");
     String log = Files.toString(logFile, Charsets.UTF_8);
 
-    result.setRenjinCommitId(workspace.getRenjinCommitId());
-    result.setPackageVersion(em.getReference(RPackageVersion.class, put.getPackageVersionId()));
+    result.setRenjinCommit(em.getReference(RenjinCommit.class, workspace.getRenjinCommitId()));
+    result.setPackageVersion(em.getReference(RPackageVersion.class, put.getId()));
     result.setTest(test);
     result.setStartTime(startTime);
     result.setElapsedTime(millis);
@@ -129,6 +146,7 @@ public class PackageTesterHarness implements Runnable {
     result.setPassed(passed);
 
     em.persist(result);
+    em.getTransaction().commit();
 
   }
 
@@ -188,4 +206,5 @@ public class PackageTesterHarness implements Runnable {
       throw new RuntimeException("Could not resolve package-under-test: " + put);
     }
   }
+
 }

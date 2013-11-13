@@ -1,29 +1,39 @@
 package org.renjin.infra.agent.test;
 
 import com.google.common.collect.Lists;
+import org.renjin.infra.agent.build.PackageNode;
 import org.renjin.infra.agent.workspace.Workspace;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TestQueue {
 
   private final Workspace workspace;
 
-  private List<PackageUnderTest> packages = Lists.newArrayList();
+  private List<PackageNode> packages = Lists.newArrayList();
+  private int numConcurrentTests;
 
-  public TestQueue(Workspace workspace) {
+  public TestQueue(Workspace workspace, Set<PackageNode> built) {
     this.workspace = workspace;
+    this.packages = Lists.newArrayList(built);
   }
 
-  public void addPackage(PackageUnderTest put) {
-    packages.add(put);
+  public void setNumConcurrentTests(int numConcurrentTests) {
+    this.numConcurrentTests = numConcurrentTests;
   }
 
   public void run() throws Exception {
-    for(PackageUnderTest put : packages) {
-      System.out.println(put.toString());
-      new PackageTesterHarness(workspace, put).run();
+    List<PackageTesterTask> tasks = Lists.newArrayList();
+    for(PackageNode packageUnderTest : packages) {
+      System.out.println(packageUnderTest.toString());
+      tasks.add(new PackageTesterTask(workspace, packageUnderTest)) ;
     }
+    ExecutorService executorService = Executors.newFixedThreadPool(numConcurrentTests);
+    executorService.invokeAll(tasks);
+    executorService.shutdown();
   }
 
 }

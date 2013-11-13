@@ -7,7 +7,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.renjin.infra.agent.util.PersistenceUtil;
+import com.google.common.collect.Sets;
+import org.renjin.repo.PersistenceUtil;
 import org.renjin.repo.model.RPackageDependency;
 import org.renjin.repo.model.RPackageVersion;
 
@@ -15,6 +16,7 @@ import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class GraphBuilder {
 
@@ -22,6 +24,8 @@ public class GraphBuilder {
    * Maps version id to node
    */
   private Map<String, PackageNode> nodes = Maps.newHashMap();
+
+  private Map<String, PackageNode> adding = Maps.newHashMap();
 
 
   private EntityManager em;
@@ -63,9 +67,18 @@ public class GraphBuilder {
 
     if(nodes.containsKey(packageVersion.getId())) {
       return nodes.get(packageVersion.getId());
+    } else if(adding.containsKey(packageVersion.getId())) {
+      System.out.println("(Circular Reference)");
+      return adding.get(packageVersion.getId());
+
     } else {
 
       System.out.println("Adding node " + packageVersion.getId());
+      PackageNode node = new PackageNode(packageVersion.getGroupId(),
+        packageVersion.getPackageName(),
+        packageVersion.getVersion());
+
+      adding.put(node.getId(), node);
 
       // make sure we have all dependencies
       List<PackageEdge> edges = Lists.newArrayList();
@@ -74,18 +87,25 @@ public class GraphBuilder {
         if(dep.getDependency() == null) {
           throw new UnresolvedDependencyException(dep.getDependencyName());
         }
-        Preconditions.checkNotNull(dep.getDependency(), "dep.getDependency()");
-        if(dep.getBuildScope().equals("compile") && !selfReferencing(dep)) {
-          edges.add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
+        if(!selfReferencing(dep)) {
+          Preconditions.checkNotNull(dep.getDependency(), "dep.getDependency()");
+          if(dep.getBuildScope().equals("compile")) {
+            edges.add(new PackageEdge(addPackageVersion(dep.getDependency()), dep.getType()));
+          } else {
+            try {
+              addPackageVersion(dep.getDependency());
+            } catch(Exception e) {
+              System.out.println("Warning: could not resolve test dependency " + dep.getDependencyName()
+                + ": " + e.getMessage());
+            }
+          }
         }
       }
 
       // add the node
-      PackageNode node = new PackageNode(packageVersion.getGroupId(),
-        packageVersion.getPackageName(),
-        packageVersion.getVersion());
       node.getEdges().addAll(edges);
       nodes.put(node.getId(), node);
+      adding.remove(node.getId());
 
       return node;
     }

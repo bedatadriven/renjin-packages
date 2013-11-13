@@ -82,6 +82,10 @@ public class DependencyResolver {
     return nlg.getClassPath();
   }
 
+  private List<RemoteRepository> noRepositories() {
+    return Lists.newArrayList();
+  }
+
   public static class ManualWagonProvider
     implements WagonProvider
   {

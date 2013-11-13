@@ -35,11 +35,6 @@ public class RenjinBuilder {
 
   public BuildOutcome call() throws Exception {
 
-    // ensure that we have loaded the latest commit data into our
-    // build database
-    System.out.println("Updating git history...");
-    new GitHistoryLoader().run(workspace);
-    System.out.println("DONE");
 
     // build!
 

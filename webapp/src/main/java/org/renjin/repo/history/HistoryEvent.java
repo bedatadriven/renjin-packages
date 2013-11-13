@@ -34,23 +34,8 @@ public class HistoryEvent {
       this.changeMessage = head.getMessage();
     }
 
-    this.testResults = sortResult(testResults);
+    this.testResults = Lists.newArrayList(testResults);
 
-  }
-
-  private List<TestResult> sortResult(Collection<TestResult> testResults) {
-    if(testResults.isEmpty()) {
-      return Collections.emptyList();
-    } else {
-      List<TestResult> list = Lists.newArrayList(testResults);
-      Collections.sort(list, Ordering.natural().onResultOf(new Function<TestResult, Comparable>() {
-        @Override
-        public Comparable apply(TestResult testResult) {
-          return testResult.getBuildResult().getId();
-        }
-      }).reverse());
-      return list;
-    }
   }
 
   public Date getTime() {

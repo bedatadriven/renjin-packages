@@ -1,16 +1,18 @@
 package org.renjin.infra.agent.build;
 
 
-import org.renjin.infra.agent.util.PersistenceUtil;
 import org.renjin.cran.TestResultParser;
-import org.renjin.repo.model.*;
+import org.renjin.repo.PersistenceUtil;
+import org.renjin.repo.model.Build;
+import org.renjin.repo.model.BuildOutcome;
+import org.renjin.repo.model.RPackageBuildResult;
+import org.renjin.repo.model.RPackageVersion;
 
 import javax.persistence.EntityManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

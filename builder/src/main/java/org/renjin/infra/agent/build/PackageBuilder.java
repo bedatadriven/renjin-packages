@@ -1,5 +1,6 @@
 package org.renjin.infra.agent.build;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -53,6 +54,16 @@ public class PackageBuilder implements Callable<BuildResult> {
     // name for debugging
     Thread.currentThread().setName(pkg.getName());
 
+    // see if this package has already been built
+//    if(resultFile().exists()) {
+//      try {
+//        BuildOutcome outcome = BuildOutcome.valueOf(Files.readFirstLine(resultFile(), Charsets.UTF_8));
+//        return new BuildResult(pkg.getId(), outcome);
+//      } catch(Exception e) {
+//        System.err.println("Exception reading build outcome record: ");
+//      }
+//    }
+
     BuildResult result = new BuildResult();
     result.setPackageVersionId(pkg.getId());
 
@@ -70,8 +81,11 @@ public class PackageBuilder implements Callable<BuildResult> {
       LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getId(), e);
     }
 
+    recordResultLocally(result);
+
     return result; 
   }
+
 
   private void executeMaven(BuildResult result) throws IOException, InterruptedException {
 
@@ -185,5 +199,18 @@ public class PackageBuilder implements Callable<BuildResult> {
     } else {
       return "mvn";
     }
+  }
+
+
+  private void recordResultLocally(BuildResult result) throws IOException {
+    Files.write(result.getOutcome().name(), resultFile(), Charsets.UTF_8);
+  }
+
+  private File resultFile() {
+    String resultPath = workspace.getLocalMavenRepository().getAbsolutePath() + "/" +
+        pkg.getGroupId().replace('.', '/') + "/" +
+        pkg.getName() + "/" +
+        pkg.getVersion() + "/outcome";
+    return new File(resultPath);
   }
 }

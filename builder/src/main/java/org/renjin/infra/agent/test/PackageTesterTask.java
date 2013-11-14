@@ -97,56 +97,64 @@ public class PackageTesterTask implements Callable<Void> {
 
   private void reportTestResult(String testName, boolean passed, long millis) throws IOException {
     EntityManager em = PersistenceUtil.createEntityManager();
-    em.getTransaction().begin();
+    try {
+      em.getTransaction().begin();
 
-    // find the test record for the package
-    // find the test id or create a test record
-    // if we haven't seen this before.
-    Test test;
-    List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage.id = :package", Test.class)
-      .setParameter("name", testName)
-      .setParameter("package", put.getPackageId())
-      .getResultList();
-    if(tests.isEmpty()) {
-      test = new Test();
-      test.setRPackage(em.getReference(RPackage.class, put.getPackageId()));
-      test.setName(testName);
-      em.persist(test);
-    } else {
-      test = tests.get(0);
+      // find the test record for the package
+      // find the test id or create a test record
+      // if we haven't seen this before.
+      Test test;
+      List<Test> tests = em.createQuery("from Test t where t.name = :name and t.rPackage.id = :package", Test.class)
+        .setParameter("name", testName)
+        .setParameter("package", put.getPackageId())
+        .getResultList();
+      if(tests.isEmpty()) {
+        test = new Test();
+        test.setRPackage(em.getReference(RPackage.class, put.getPackageId()));
+        test.setName(testName);
+        em.persist(test);
+      } else {
+        test = tests.get(0);
+      }
+
+      List<TestResult> results = em.createQuery("from TestResult tr where " +
+        "tr.test = :test and " +
+        "tr.renjinCommit.id = :commitId and " +
+        "tr.packageVersion.id = :packageVersionId",
+        TestResult.class)
+        .setParameter("test", test)
+        .setParameter("commitId", workspace.getRenjinCommitId())
+        .setParameter("packageVersionId", put.getId())
+        .getResultList();
+
+      TestResult result;
+      if(results.size() == 0) {
+        result = new TestResult();
+      } else {
+        result = results.get(0);
+      }
+
+      File logFile = new File(logDir, testName + ".log");
+      String log = Files.toString(logFile, Charsets.UTF_8);
+
+      result.setRenjinCommit(em.getReference(RenjinCommit.class, workspace.getRenjinCommitId()));
+      result.setPackageVersion(em.getReference(RPackageVersion.class, put.getId()));
+      result.setTest(test);
+      result.setStartTime(startTime);
+      result.setElapsedTime(millis);
+      result.setOutput(log);
+      result.setErrorMessage(parseErrorMessage(log));
+      result.setPassed(passed);
+
+      em.persist(result);
+      em.getTransaction().commit();
+    } finally {
+      try {
+        em.close();
+      } catch(Exception e) {
+        // ignore
+      }
     }
-
-    List<TestResult> results = em.createQuery("from TestResult tr where " +
-      "tr.test = :test and " +
-      "tr.renjinCommit.id = :commitId and " +
-      "tr.packageVersion.id = :packageVersionId",
-      TestResult.class)
-      .setParameter("test", test)
-      .setParameter("commitId", workspace.getRenjinCommitId())
-      .setParameter("packageVersionId", put.getId())
-      .getResultList();
-
-    TestResult result;
-    if(results.size() == 0) {
-      result = new TestResult();
-    } else {
-      result = results.get(0);
-    }
-
-    File logFile = new File(logDir, testName + ".log");
-    String log = Files.toString(logFile, Charsets.UTF_8);
-
-    result.setRenjinCommit(em.getReference(RenjinCommit.class, workspace.getRenjinCommitId()));
-    result.setPackageVersion(em.getReference(RPackageVersion.class, put.getId()));
-    result.setTest(test);
-    result.setStartTime(startTime);
-    result.setElapsedTime(millis);
-    result.setOutput(log);
-    result.setErrorMessage(parseErrorMessage(log));
-    result.setPassed(passed);
-
-    em.persist(result);
-    em.getTransaction().commit();
 
   }
 
@@ -206,5 +214,4 @@ public class PackageTesterTask implements Callable<Void> {
       throw new RuntimeException("Could not resolve package-under-test: " + put);
     }
   }
-
 }

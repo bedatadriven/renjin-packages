@@ -153,4 +153,15 @@ public class Reactor {
     }
     return true;
   }
+
+  public Set<PackageNode> alreadyBuilt() {
+
+    Set<PackageNode> set = Sets.newHashSet();
+    for(PackageNode node : nodes.values()) {
+      if(packageAlreadySucceeded(node)) {
+        set.add(node);
+      }
+    }
+    return set;
+  }
 }

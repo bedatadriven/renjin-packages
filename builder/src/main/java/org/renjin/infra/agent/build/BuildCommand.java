@@ -32,6 +32,9 @@ public class BuildCommand implements Runnable {
   @Option(name="-t", description = "Renjin target version to build/test against")
   private String renjinVersion;
 
+  @Option(name="--skip-build")
+  private boolean skipBuilding;
+
   @Arguments
   private List<String> packages;
 
@@ -76,7 +79,12 @@ public class BuildCommand implements Runnable {
       }
       packageBuilder = new Reactor(workspace, graphBuilder.build());
       packageBuilder.setNumConcurrentBuilds(numConcurrentBuilds);
-      Set<PackageNode> built = packageBuilder.build();
+      Set<PackageNode> built;
+      if(skipBuilding) {
+        built = packageBuilder.alreadyBuilt();
+      } else {
+        built = packageBuilder.build();
+      }
 
       TestQueue testQueue = new TestQueue(workspace, built);
       testQueue.setNumConcurrentTests(numConcurrentBuilds);

@@ -67,7 +67,7 @@ public class Reactor {
       ListIterator<PackageNode> it = toBuild.listIterator();
       while(it.hasNext()) {
         PackageNode pkg = it.next();
-      if(dependenciesAreResolved(pkg)) {
+        if(dependenciesAreResolved(pkg)) {
           scheduleForBuild(pkg);
           it.remove();
         }

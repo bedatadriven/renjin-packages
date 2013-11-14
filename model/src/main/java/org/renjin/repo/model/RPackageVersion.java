@@ -163,4 +163,9 @@ public class RPackageVersion {
   public void setGnuRDependency(String gnuRDependency) {
     this.gnuRDependency = gnuRDependency;
   }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

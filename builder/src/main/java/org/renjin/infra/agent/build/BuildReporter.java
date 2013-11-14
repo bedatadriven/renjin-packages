@@ -64,7 +64,6 @@ public class BuildReporter {
           Files.newInputStreamSupplier(logFile));
       } catch(Exception e) {
         System.err.println("Failed to post build log: " + e.getMessage());
-        e.printStackTrace();
       }
     }
   }

@@ -1,6 +1,7 @@
 package org.renjin.infra.agent.build;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -35,7 +37,7 @@ public class PackageBuilder implements Callable<BuildResult> {
   private PackageNode pkg;
   private File logFile;
 
-  public static final long TIMEOUT_SECONDS = 20 * 60;
+  public static final long TIMEOUT_MINUTES = 20 * 60;
 
   public static final int MAX_LOG_SIZE = 1024 * 600;
 
@@ -120,7 +122,6 @@ public class PackageBuilder implements Callable<BuildResult> {
     builder.directory(baseDir);
     builder.redirectErrorStream(true);
 
-    long startTime = System.currentTimeMillis();
     Process process = builder.start();
 
     InputStream processOutput = process.getInputStream();
@@ -133,10 +134,12 @@ public class PackageBuilder implements Callable<BuildResult> {
       monitor.setName(pkg + " - monitor");
       monitor.start();
 
+      Stopwatch stopwatch = new Stopwatch().start();
+
       while(!monitor.isFinished()) {
 
-        if(System.currentTimeMillis() > (startTime + TIMEOUT_SECONDS * 1000)) {
-          System.out.println(pkg + " build timed out after " + TIMEOUT_SECONDS + " seconds.");
+        if(stopwatch.elapsedTime(TimeUnit.MINUTES) > TIMEOUT_MINUTES) {
+          System.out.println(pkg + " build timed out after " + TIMEOUT_MINUTES + " minutes.");
           process.destroy();
           result.setOutcome(BuildOutcome.TIMEOUT);
           break;
@@ -203,7 +206,9 @@ public class PackageBuilder implements Callable<BuildResult> {
 
 
   private void recordResultLocally(BuildResult result) throws IOException {
-    Files.write(result.getOutcome().name(), resultFile(), Charsets.UTF_8);
+    File file = resultFile();
+    file.getParentFile().mkdirs();
+    Files.write(result.getOutcome().name(), file, Charsets.UTF_8);
   }
 
   private File resultFile() {

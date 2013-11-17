@@ -16,7 +16,12 @@ public class CommitResourcesTest extends ResourceTest {
   }
 
   @Test
-  public void testTestHistory() throws IOException, TemplateException {
-    assertTemplateRenders(resource.getTestHistory("412d8b64b20eef7cdab7fec380d0bc1bbb679edc", 7994));
+  public void testIndex() throws IOException, TemplateException {
+    assertTemplateRenders(resource.getCommitIndex());
+  }
+
+  @Test
+  public void compare() throws IOException, TemplateException {
+    assertTemplateRenders(resource.getProgress("11296081328313eaddcd98aa26159d18748e6fdb", "0.7.0-RC5"));
   }
 }

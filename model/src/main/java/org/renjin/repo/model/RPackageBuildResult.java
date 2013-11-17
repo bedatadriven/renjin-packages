@@ -31,7 +31,9 @@ public class RPackageBuildResult {
 
   private boolean nativeSourceCompilationFailures;
 
-  private int delta;
+  private Integer delta;
+
+  private boolean succeeded;
 
 	public int getId() {
 		return id;
@@ -52,6 +54,7 @@ public class RPackageBuildResult {
 
 	public void setOutcome(BuildOutcome outcome) {
 		this.outcome = outcome;
+    this.succeeded = (outcome == BuildOutcome.SUCCESS);
 	}
 
 	public Build getBuild() {
@@ -94,11 +97,19 @@ public class RPackageBuildResult {
     this.testResults = testResults;
   }
 
-  public int getDelta() {
+  public Integer getDelta() {
     return delta;
   }
 
-  public void setDelta(int delta) {
+  public void setDelta(Integer delta) {
     this.delta = delta;
+  }
+
+  public boolean isSucceeded() {
+    return succeeded;
+  }
+
+  public void setSucceeded(boolean succeeded) {
+    this.succeeded = succeeded;
   }
 }

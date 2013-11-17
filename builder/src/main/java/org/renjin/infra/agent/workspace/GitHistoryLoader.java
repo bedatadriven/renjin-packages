@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
@@ -17,6 +18,8 @@ import org.renjin.repo.PersistenceUtil;
 import org.renjin.repo.model.RenjinCommit;
 
 import javax.persistence.EntityManager;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;
@@ -28,6 +31,8 @@ public class GitHistoryLoader {
   private EntityManager em;
   private Set<String> knownCommitIds;
   private Set<String> newCommitIds = Sets.newHashSet();
+
+
 
 
   public void run(Workspace workspace) throws Exception {
@@ -101,5 +106,44 @@ public class GitHistoryLoader {
     Model model = reader.read(inputStreamReader);
     inputStreamReader.close();
     return model.getVersion();
+  }
+
+  /**
+   * Relink parents
+   * @param args
+   * @throws IOException
+   * @throws GitAPIException
+   */
+  public static void main(String[] args) throws IOException, GitAPIException {
+
+    FileRepositoryBuilder builder = new FileRepositoryBuilder();
+    Repository renjinRepo = builder
+      .readEnvironment()
+      .findGitDir(new File("/home/alex/dev/renjin"))
+      .build();
+
+    Git git = new Git(renjinRepo);
+
+    EntityManager em = PersistenceUtil.createEntityManager();
+
+    for(RevCommit commit : git.log().call()) {
+
+      System.out.println(commit.getName());
+
+      em.getTransaction().begin();
+
+      RenjinCommit entity = em.find(RenjinCommit.class, commit.getName());
+      for(int i=0;i!=commit.getParentCount();++i) {
+        RenjinCommit parentEntity = em.find(RenjinCommit.class, commit.getParent(i).getName());
+        if(parentEntity != null) {
+          entity.getParents().add(parentEntity);
+        }
+      }
+      em.getTransaction().commit();
+
+    }
+
+
+
   }
 }

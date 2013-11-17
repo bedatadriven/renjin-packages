@@ -1,16 +1,31 @@
 package org.renjin.repo;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.renjin.repo.model.Build;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 public class DeltaTest {
 
+  @Ignore
   @Test
   public void test() {
 
-    new DeltaCalculator(PersistenceUtil.createEntityManager(), 84).calculate();
+
+    EntityManager em = PersistenceUtil.createEntityManager();
+
+//    new DeltaCalculator(em, 87).calculate();
+
+
+    List<Build> builds = em.createQuery("select b from Build b", Build.class)
+      .getResultList();
+
+    for(Build build : builds) {
+      System.out.println("#" + build.getId());
+      new DeltaCalculator(em, build.getId()).calculate();
+    }
 
   }
 }

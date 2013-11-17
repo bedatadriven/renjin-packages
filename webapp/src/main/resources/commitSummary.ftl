@@ -5,24 +5,43 @@
   <div class="span12">
   <h1>${commit.version}</h1>
 
+
   <h2>Test Results</h2>
 
-  <table class="table table-condensed">
-  	<thead>
-  		<th>Package</th>
-  		<th>Test Name</th>
-  		<th>Status</th>
-  	</thead>
+  <h3>Summary</h3>
 
-  	<#list testResults as result>
-  		<tr>
-  		    <td>${result.test.RPackage.name}</td>
-  		    <td><a href="/commits/${commit.id}/tests/${result.test.id?c}">${result.test.name}</a></td>
-  		    <td>${result.passed?string('Passed', 'Failed')}</td>
-  		</tr>
-  	</#list>
+  <table class="table table-condensed">
+  <tr>
+    <td>Total Tests</td>
+    <td align="right">${totals.count}</td>
+    <td align="right">${referenceTotals.count}</td>
+  </tr>
+  <tr>
+    <td>Passing Tests</td>
+    <td align="right">${totals.passingCount}</td>
+    <td align="right">${referenceTotals.passingCount}</td>
+  </tr>
   </table>
-  </div>
-  </div>
+
+  <h3>Regressions (${regressions?size})</h3>
+
+   <table class="table table-condensed">
+   <thead>
+    <tr>
+      <td>Package</td>
+      <td>Test</td>
+      <td>Error</td>
+    </tr>
+   </thead>
+   <tbody>
+    <#list regressions as regression>
+     <tr>
+      <td>${regression.packageVersionId}</td>
+      <td><a href="/commits/${commit.id}/tests/${regression.testId?c}">${regression.testName}</a></td>
+      <td>${regression.errorMessage!''}</td>
+     </tr>
+    </#list>
+   </tbody>
+   </table>
 
 </@scaffolding>

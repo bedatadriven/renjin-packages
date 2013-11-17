@@ -1,7 +1,10 @@
 package org.renjin.repo;
 
+import freemarker.template.TemplateException;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class BuildResourcesTest extends ResourceTest {
 
@@ -14,7 +17,13 @@ public class BuildResourcesTest extends ResourceTest {
 
   @Test
   public void testGetBuildSummary() throws Exception {
-    assertTemplateRenders(resource.getBuildSummary(64));
+    assertTemplateRenders(resource.getBuildSummary(84, null));
+  }
+
+  @Test
+  public void testGetRelativeBuildSummary() throws IOException, TemplateException {
+    assertTemplateRenders(resource.getBuildSummary(84, 18));
+
   }
 
   @Test

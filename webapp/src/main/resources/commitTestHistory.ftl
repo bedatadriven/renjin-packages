@@ -25,12 +25,12 @@
       <div class="span6">
             <#list event.testResults as result>
                 <p>
-                <span class="label label-${result.passed?string('success', 'inverse')}">b${result.buildResult.build.id}</span>
-                     <a href="/builds/${result.buildResult.build.id}/${result.buildResult.packageVersion.groupId}/${result.buildResult.packageVersion.packageName}/${result.buildResult.packageVersion.version}#test-${result.test.name}">
+                <a class="label label-${result.passed?string('success', 'inverse')}" href="/tests/results/${result.id?c}">b${result.packageVersion.version}</a>
+                     <a href="#test-${result.test.name}">
                      <#if result.passed>
                       OK
                      <#else>
-                      ${result.errorMessage}
+                      ${result.errorMessage!'ERROR'}
                      </#if>
                      </a>
                 </p>

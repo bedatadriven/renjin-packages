@@ -2,66 +2,40 @@
 
 <@scaffolding>
 
-  <h1>Build #${build.id}</h1>
-  <h2>${packageVersion.packageName} ${packageVersion.version} </h2>
+  <h1>${packageVersion.packageName} ${packageVersion.version} (#${build.id})</h1>
 
   <p class="lead">${packageVersion.package.title}</p>
 
   <p>Built on ${build.started} against Renjin ${build.renjinCommit.version} (${build.renjinCommit.abbreviatedId})</p>
 
-  <#if outcome == "NOT_BUILT">
-  <div class="alert alert-error">This package was not built due to an unresolved dependency</div>
-  </#if>
-
-  <#if testFailures>
-  <div class="alert alert-warning">There were test failures when building this package</div>
-  </#if>
-
   <#if nativeSourceCompilationFailures>
   <div class="alert alert-warning">Compilation of C/Fortran sources failed, full functionality may not be available</div>
   </#if>
 
-  <#if outcome == "ERROR" || outcome == "TIMEOUT">
+  <#if outcome != "SUCCESS" >
   <div class="alert alert-error">There was an error building this package</div>
   </#if>
 
   <p>${packageVersion.package.description}</p>
 
+  <h2>Source Code Profile</h2>
 
-  <#if outcome == "SUCCESS">
-
-  <h2>Test Results</h2>
-
-  <h3>Summary</h3>
-
-  <table class="table" style="width: auto">
-  <#list testResults as testResult>
-  <tr class="${testResult.passed?string('success','error')}">
-    <td><a href="#test-${testResult.test.name}">${testResult.test.name}</a></td>
-    <td>${testResult.passed?string('OK','ERROR')}</td>
-  </tr>
-  </#list>
-  </table>
-
-  <#list testResults as testResult>
-  <a name="test-${testResult.test.name}"></a>
-  <h3>${testResult.test.name} [${testResult.passed?string('OK','ERROR')}] </h3>
-  <pre>
-${testResult.output?html}
-  </pre>
-  <p><a href="/${testResult.buildResult.build.renjinCommit.id}/tests/${testResult.test.id?c}">History</a>:
-    <#list testResult.test.results as prevResult>
-        <#if prevResult.id != testResult.id>
-            <#if prevResult.buildResult.build.renjinCommit.release>
-                <span class="label label-${prevResult.passed?string('success', 'inverse')}">
-                    ${prevResult.buildResult.build.renjinCommit.version}
-                </span>
-            </#if>
-        </#if>
+  <table class="table">
+  <thead>
+    <tr>
+        <th>Language</th>
+        <th>LOC</th>
+    </tr>
+  </thead>
+  <tbody>
+    <#list packageVersion.loc.counts as count>
+        <tr>
+            <th>${count.language}</th>
+            <th>${count.lines}</th>
+        </tr>
     </#list>
-  </p>
-  </#list>
-  </#if>
+  </tbody>
+  </table>
 
   <h2>Build Log</h2>
 
@@ -91,6 +65,4 @@ ${testResult.output?html}
         </#list>
     </tbody>
   </table>
-
-
 </@scaffolding>

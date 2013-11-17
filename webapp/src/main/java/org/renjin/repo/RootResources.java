@@ -3,11 +3,15 @@ package org.renjin.repo;
 
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.view.Viewable;
+import org.renjin.repo.model.TestResult;
 import org.renjin.repo.task.CranTasks;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import java.util.Map;
 
 @Path("/")
@@ -40,5 +44,12 @@ public class RootResources {
   @Path("commits")
   public CommitResources getVersions() {
     return new CommitResources();
+  }
+
+  @GET
+  @Path("tests/results/{id}")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getTestResult(@PathParam("id") int id) {
+    return HibernateUtil.getActiveEntityManager().find(TestResult.class, id).getOutput();
   }
 }

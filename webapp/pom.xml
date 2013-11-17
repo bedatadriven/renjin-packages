@@ -30,7 +30,7 @@
 
   <properties>
     <renjin.version>0.7.0-SNAPSHOT</renjin.version>
-    <gae.version>1.7.4</gae.version>
+    <gae.version>1.8.7</gae.version>
     <jersey.version>1.17</jersey.version>
   </properties>
 
@@ -76,17 +76,6 @@
         <exclusion>
           <groupId>com.sun.xml.bind</groupId>
           <artifactId>jaxb-impl</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-freemarker</artifactId>
-      <version>${jersey.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.freemarker</groupId>
-          <artifactId>freemarker</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -158,24 +147,15 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>net.kindleit</groupId>
-        <artifactId>maven-gae-plugin</artifactId>
-        <version>0.9.5-bdd</version>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine-maven-plugin</artifactId>
+        <version>1.8.7-maven3.0</version>
         <configuration>
-          <unpackVersion>${gae.version}</unpackVersion>
-          <port>8888</port>
           <jvmFlags>
-            <jvmFlag>-Xmx256m</jvmFlag>
             <jvmFlag>-Drdbms.server=hosted</jvmFlag>
           </jvmFlags>
-            <serverId>appengine.google.com</serverId>
-
         </configuration>
       </plugin>
     </plugins>
-
-
   </build>
-
-
 </project>

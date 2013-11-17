@@ -41,6 +41,8 @@ public class RPackageVersion {
   @OneToMany(mappedBy = "dependency")
   private Set<RPackageDependency> reverseDependencies;
 
+  private int downstreamCount;
+
   /**
    * The version of GNU R on which this package depends
    */
@@ -164,8 +166,18 @@ public class RPackageVersion {
     this.gnuRDependency = gnuRDependency;
   }
 
+  public int getDownstreamCount() {
+    return downstreamCount;
+  }
+
+  public void setDownstreamCount(int downstreamCount) {
+    this.downstreamCount = downstreamCount;
+  }
+
   @Override
   public String toString() {
     return id;
   }
+
+
 }

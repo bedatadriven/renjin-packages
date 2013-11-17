@@ -1,13 +1,16 @@
 package org.renjin.repo;
 
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.repo.model.Build;
+import org.renjin.repo.model.BuildOutcome;
 import org.renjin.repo.model.RPackageBuildResult;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -32,13 +35,48 @@ public class BuildResources {
 
   @GET
   @Path("{id}")
-  public Viewable getBuildSummary(@PathParam("id") int buildId) {
+  public Viewable getBuildSummary(@PathParam("id") int buildId, @QueryParam("compareTo") Integer comparisonBuildId) {
     Map<String, Object> model = Maps.newHashMap();
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
     model.put("build", em.find(Build.class, buildId));
+    model.put("totals",  queryTotals(buildId, em));
+    model.put("blockers", em.createQuery("select p from RPackageBuildResult p where p.build.id = :buildId and p.succeeded = false " +
+      "order by p.packageVersion.downstreamCount desc", RPackageBuildResult.class)
+        .setParameter("buildId", buildId)
+        .setMaxResults(15)
+        .getResultList());
+
+    if(comparisonBuildId != null) {
+      model.put("reference", em.find(Build.class, comparisonBuildId));
+      model.put("referenceTotals",  queryTotals(comparisonBuildId, em));
+      model.put("regressions", querySucceedWhereFailed(buildId, comparisonBuildId, em));
+      model.put("progressions", querySucceedWhereFailed(comparisonBuildId, buildId, em));
+    }
 
     return new Viewable("/buildSummary.ftl", model);
+  }
+
+  private Map<String, Number> queryTotals(int buildId, EntityManager em) {
+    List<Tuple> totals = em.createQuery("select p.outcome, count(*) from RPackageBuildResult p " +
+      "where p.build.id = :buildId group by p.outcome", Tuple.class)
+      .setParameter("buildId", buildId)
+      .getResultList();
+
+    Map<String, Number> totalMap = Maps.newHashMap();
+    for(Tuple total : totals) {
+      totalMap.put(((BuildOutcome)total.get(0)).name(), (Number)total.get(1));
+    }
+    return totalMap;
+  }
+
+  private List<RPackageBuildResult> querySucceedWhereFailed(int buildId, Integer comparisonBuildId, EntityManager em) {
+    return em.createQuery("select p from RPackageBuildResult p where p.build.id = :buildId and " +
+      "p.succeeded = false and p.packageVersion in (select o.packageVersion from RPackageBuildResult o where o.build.id=:reference and  " +
+      "o.succeeded = true)", RPackageBuildResult.class)
+      .setParameter("buildId", buildId)
+      .setParameter("reference", comparisonBuildId)
+      .getResultList();
   }
 
   @Path("{buildId}/{groupId}/{artifactId}/{version}")

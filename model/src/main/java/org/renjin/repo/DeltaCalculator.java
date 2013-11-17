@@ -18,7 +18,7 @@ public class DeltaCalculator {
   private Map<String, Boolean> ancestorsHaveBuilds = Maps.newHashMap();
 
   /**
-   * Map Commit ID to test results
+   * Map Commit ID to Builds
    */
   private Multimap<String, Build> commitResults = HashMultimap.create();
 
@@ -46,10 +46,16 @@ public class DeltaCalculator {
 
 
     RenjinCommit head = em.find(RenjinCommit.class, em.find(Build.class, buildId).getRenjinCommit().getId());
+    String headSha = head.getId();
+
     while(head != null) {
       List<Integer> buildIds = Lists.newArrayList();
       for(Build build : commitResults.get(head.getId())) {
-        buildIds.add(build.getId());
+        if(!build.getRenjinCommit().getId().equals(headSha) ||
+           build.getId() < buildId) {
+
+          buildIds.add(build.getId());
+        }
       }
       if(!buildIds.isEmpty()) {
         Collections.sort(buildIds, Ordering.natural().reverse());

@@ -41,10 +41,13 @@ public class PackageTesterTask implements Callable<Void> {
 
     String cp = buildClassPath();
 
+    System.out.println("CLASSPATH: " + cp);
+
     try {
       Process java = new ProcessBuilder("java",
         "-cp",
         cp,
+        "-verbose:class",
         PackageTester.class.getName(),
         put.getName(),
         baseDir.getAbsolutePath())

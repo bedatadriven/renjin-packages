@@ -174,9 +174,9 @@ public class PackageTesterTask implements Callable<Void> {
   private String buildClassPath() {
     StringBuilder classPath = new StringBuilder();
 
-    appendAgentDependencies(classPath);
-    appendRenjinDependencies(classPath);
     appendPackageUnderTestDependencies(classPath);
+    appendRenjinDependencies(classPath);
+    appendAgentDependencies(classPath);
 
     return classPath.toString();
   }

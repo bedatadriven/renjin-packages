@@ -1,6 +1,7 @@
 package org.renjin.repo;
 
 
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -60,6 +61,10 @@ public class CommitResources {
   @GET
   @Path("{sha}")
   public Viewable getProgress(@PathParam("sha") String sha, @QueryParam("compareTo") String releaseVersion) {
+
+    if(Strings.isNullOrEmpty(releaseVersion)) {
+      releaseVersion = "0.7.0-RC5";
+    }
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
     RenjinCommit commit = em.find(RenjinCommit.class, sha);

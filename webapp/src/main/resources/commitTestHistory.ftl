@@ -3,7 +3,8 @@
 
   <div class="row">
   <div class="span12">
-  <h1>${test.name}</h1>
+  <h1>${test.RPackage.name}</h1>
+  <h2>${test.name}</h2>
   </div>
   </div>
 

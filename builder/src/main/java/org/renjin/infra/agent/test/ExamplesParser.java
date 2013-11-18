@@ -12,15 +12,13 @@ public class ExamplesParser extends SexpVisitor<String> {
 
   private StringBuilder code = new StringBuilder();
 
+  private ExampleVisitor exampleVisitor = new ExampleVisitor();
+
   @Override
   public void visit(ListVector list) {
-    SEXP tag = list.getAttribute(Symbol.get("Rd_tag"));
-    if(tag != Null.INSTANCE) {
-      StringVector tagName = (StringVector)tag;
-      if(tagName.getElementAsString(0).equals("\\examples")) {
-        for(SEXP exp : list) {
-          exp.accept(this);
-        }
+    if("\\examples".equals(getTagName(list))) {
+      for(SEXP exp : list) {
+        exp.accept(exampleVisitor);
       }
     }
     for(SEXP sexp : list) {
@@ -30,17 +28,41 @@ public class ExamplesParser extends SexpVisitor<String> {
     }
   }
 
+  private String getTagName(SEXP sexp) {
+    SEXP tag = sexp.getAttribute(Symbol.get("Rd_tag"));
+    if(tag instanceof StringVector) {
+      return ((StringVector) tag).getElementAsString(0);
+    } else {
+      return "";
+    }
+  }
+
   @Override
   public void visit(StringVector vector) {
-    for(String line : vector) {
-      code.append(line);
-    }
   }
 
   @Override
   protected void unhandled(SEXP exp) {
     throw new UnsupportedOperationException(exp.toString());
   }
+
+  private class ExampleVisitor extends SexpVisitor {
+
+    @Override
+    public void visit(ListVector list) {
+
+    }
+
+    @Override
+    public void visit(StringVector vector) {
+      if(getTagName(vector).equals("RCODE")) {
+        for(String line : vector) {
+          code.append(line);
+        }
+      }
+    }
+  }
+
 
   /**
    * Parses the examples from an *.Rd file

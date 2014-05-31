@@ -10,6 +10,7 @@
     <property name="com.sun.xml.bind.v2.runtime.JAXBContextImpl.fastBoot"
               value="true" />
   </system-properties>
+  <use-google-connector-j>true</use-google-connector-j>
   <threadsafe>true</threadsafe>
 
 </appengine-web-app>

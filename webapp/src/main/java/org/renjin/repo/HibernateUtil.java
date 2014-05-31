@@ -32,8 +32,6 @@ public class HibernateUtil {
   }
   
   public static EntityManager getActiveEntityManager() {
-
-
     EntityManager em = EM.get();
     if(em == null) {
       LOGGER.info("Creating EntityManager for request");

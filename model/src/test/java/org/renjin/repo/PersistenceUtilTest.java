@@ -22,22 +22,6 @@ public class PersistenceUtilTest {
 
   }
 
-  @Test
-  @Ignore
-  public void jdbcTest() throws SQLException {
-    DriverManager.registerDriver(new com.google.cloud.sql.Driver());
-
-    Properties props = new Properties();
-    props.put("oauth2ClientId", "32555940559.apps.googleusercontent.com");
-    props.put("oauth2ClientSecret", "ZmssLNjJy2998hD4CTg2ejr2");
-
-    Connection connection = DriverManager.getConnection("jdbc:google:rdbms://bdd-renjin:renjin-repo/repo", props);
-    Statement stmt = connection.createStatement();
-    stmt.executeQuery("select count(*) from RPackageVersion");
-    stmt.close();
-    connection.close();
-
-  }
 
 
 }

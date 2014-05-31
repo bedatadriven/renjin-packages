@@ -24,11 +24,11 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.renjin.repo</groupId>
-  <artifactId>renjin-repo-parent</artifactId>
+  <groupId>org.renjin.build</groupId>
+  <artifactId>renjin-build-parent</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>Renjin Repo Parent</name>
+  <name>Renjin Build Parent</name>
 
   <modules>
     <module>model</module>
@@ -36,7 +36,7 @@
     <module>webapp</module>
   </modules>
 
-  <properties>	
+  <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <renjin.version>${project.version}</renjin.version>
     <renjin.display.version>${project.version}</renjin.display.version>
@@ -50,8 +50,6 @@
       <url>http://nexus.bedatadriven.com/content/repositories/oss-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
-
-
 
   <repositories>
 
@@ -82,9 +80,15 @@
       <name>bedatadriven public repo</name>
       <url>http://nexus.bedatadriven.com/content/groups/public/</url>
     </repository>
+    <repository>
+      <id>typesafe</id>
+      <name>Typesafe Repository</name>
+      <url>http://repo.typesafe.com/typesafe/releases/</url>
+    </repository>
   </repositories>
 
   <build>
+
 
     <pluginManagement>
       <plugins>
@@ -99,6 +103,9 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

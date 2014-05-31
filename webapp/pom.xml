@@ -26,11 +26,11 @@
 
   <artifactId>renjin-build-webapp</artifactId>
   <packaging>war</packaging>
-  <name>Renjin Infrastructure WebApp</name>
+  <name>Renjin Builder WebApp</name>
 
   <properties>
     <renjin.version>0.7.0-SNAPSHOT</renjin.version>
-    <gae.version>1.8.7</gae.version>
+    <gae.version>1.9.5</gae.version>
     <jersey.version>1.17</jersey.version>
   </properties>
 
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>com.google.appengine.tools</groupId>
       <artifactId>appengine-gcs-client</artifactId>
-      <version>0.3.1</version>
+      <version>0.3.12</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

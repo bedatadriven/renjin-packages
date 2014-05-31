@@ -211,7 +211,7 @@
           </descriptorRefs>
           <archive>
             <manifest>
-              <mainClass>org.renjin.infra.agent.Main</mainClass>
+              <mainClass>org.renjin.build.agent.Main</mainClass>
             </manifest>
           </archive>
         </configuration>

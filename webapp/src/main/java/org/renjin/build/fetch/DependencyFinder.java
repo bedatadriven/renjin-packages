@@ -1,4 +1,4 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
 import com.google.common.collect.Lists;
 import org.renjin.build.model.PackageDescription;

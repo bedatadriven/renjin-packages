@@ -20,7 +20,7 @@ public class Build {
 	private RenjinCommit renjinCommit;
 
 	@OneToMany(mappedBy = "build")
-	private Set<RPackageBuildResult> packageResults;
+	private Set<RPackageBuild> packageResults;
 
 	public int getId() {
 		return id;
@@ -46,11 +46,11 @@ public class Build {
     this.renjinCommit = renjinCommit;
   }
 
-  public Set<RPackageBuildResult> getPackageResults() {
+  public Set<RPackageBuild> getPackageResults() {
 		return packageResults;
 	}
 
-	public void setPackageResults(Set<RPackageBuildResult> packageResults) {
+	public void setPackageResults(Set<RPackageBuild> packageResults) {
 		this.packageResults = packageResults;
 	}
 }

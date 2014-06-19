@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
  * in a given source file.
  */
 public class PackageTester {
-
   private String packageName;
   private File baseDir;
   private File logDir;
@@ -90,7 +89,6 @@ public class PackageTester {
     }
   }
 
-
   private void loadLibrary(Session session, String namespaceName) {
     try {
       session.getTopLevelContext().evaluate(FunctionCall.newCall(Symbol.get("library"), Symbol.get(namespaceName)));
@@ -156,9 +154,7 @@ public class PackageTester {
         // ignored
       }
     }
-
   }
-
 
   private boolean isEmpty(String sourceText) {
     for(int i=0;i!=sourceText.length();++i) {

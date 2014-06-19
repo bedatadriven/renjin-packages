@@ -52,11 +52,14 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.logging.Logger;
 
 /**
  * @author pavel.bucek@oracle.com
  */
 public class FreemarkerViewProcessor implements ViewProcessor<String> {
+
+  private static final Logger LOGGER = Logger.getLogger(FreemarkerViewProcessor.class.getName());
 
   /**
    * Freemarker templates base path.
@@ -73,6 +76,7 @@ public class FreemarkerViewProcessor implements ViewProcessor<String> {
   private String basePath;
 
   public FreemarkerViewProcessor(@Context ResourceConfig resourceConfig) {
+
     configuration = new Configuration();
     configuration.setObjectWrapper(new TupleObjectWrapper());
 
@@ -90,16 +94,22 @@ public class FreemarkerViewProcessor implements ViewProcessor<String> {
   @Override
   public String resolve(String path) {
 
-    if (basePath != "")
+    LOGGER.info("Resolving [" + path + "]");
+
+    if (!basePath.equals(""))
       path = basePath + path;
 
-    if (uriInfo.getMatchedResources().get(0).getClass().getResource(path) != null) {
+    Class<?> matchedClass = uriInfo.getMatchedResources().get(0).getClass();
+
+    LOGGER.info("Trying to fetch [" + path + "] with base class " + matchedClass.getName());
+
+    if (matchedClass.getResource(path) != null) {
       return path;
     }
 
     if (!path.endsWith(".ftl")) {
       path = path + ".ftl";
-      if (uriInfo.getMatchedResources().get(0).getClass().getResource(path) != null) {
+      if (matchedClass.getResource(path) != null) {
         return path;
       }
     }

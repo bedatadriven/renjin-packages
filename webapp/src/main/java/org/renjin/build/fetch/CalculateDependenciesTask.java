@@ -1,4 +1,4 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;

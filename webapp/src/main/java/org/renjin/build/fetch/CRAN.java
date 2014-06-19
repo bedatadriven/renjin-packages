@@ -1,29 +1,24 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
-import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSource;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeParser;
 import org.renjin.build.storage.StorageKeys;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.*;
 import org.w3c.tidy.Tidy;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
 
 
 public class CRAN {
@@ -32,20 +27,9 @@ public class CRAN {
 
   public static final String CRAN_MIRROR = "http://ftp.heanet.ie/mirrors/cran.r-project.org/";
 
-  public static List<PackageEntry> fetchPackageList() {
-
-    try {
-      String indexUrl = CRAN_MIRROR + "src/contrib";
-      System.out.println("Fetching from " + indexUrl);
-      return parsePackageList(Resources.asByteSource(new URL(indexUrl)));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   public static List<String> fetchUpdatedPackageList(LocalDate lastUpdate) {
-    String indexUrl = CRAN_MIRROR + "cran.r-project.org/web/packages/available_packages_by_date.html";
-    System.out.println("Fetching from " + indexUrl);
+    String indexUrl = CRAN_MIRROR + "web/packages/available_packages_by_date.html";
+    LOGGER.info("Fetching from " + indexUrl);
 
     try {
       return parseUpdatedPackageList(lastUpdate, Resources.asByteSource(new URL(indexUrl)));
@@ -112,6 +96,9 @@ public class CRAN {
     DateTimeFormatter dateFormat = DateTimeFormat.forPattern("YYYY-MM-dd");
 
     NodeList rows = dom.getElementsByTagName("tr");
+
+    LOGGER.info("Received " + rows.getLength() + " rows");
+
     for(int i=0;i!=rows.getLength();++i) {
       Element row = (Element)rows.item(i);
       NodeList cells = row.getElementsByTagName("td");

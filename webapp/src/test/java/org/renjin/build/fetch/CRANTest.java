@@ -1,10 +1,6 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
-import com.google.api.client.repackaged.com.google.common.base.Joiner;
-import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
-import junit.framework.TestCase;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.joda.time.LocalDate;
 import org.junit.Test;
@@ -38,14 +34,6 @@ public class CRANTest {
         Resources.asByteSource(Resources.getResource("package_detail.html")));
 
     assertThat(version, Matchers.equalTo("1.3.4"));
-  }
-
-  @Test
-  public void integrationTest() throws IOException {
-
-    CranTasks tasks = new CranTasks();
-    tasks.fetchPackage("qtl");
-
   }
 
 }

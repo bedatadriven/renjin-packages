@@ -1,10 +1,7 @@
 package org.renjin.build.agent.build;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -13,101 +10,72 @@ import org.renjin.build.agent.util.OutputCollector;
 import org.renjin.build.agent.util.ProcessMonitor;
 import org.renjin.build.agent.workspace.Workspace;
 import org.renjin.build.model.BuildOutcome;
+import org.renjin.build.model.RPackageBuild;
+import org.renjin.build.model.RPackageVersion;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
+
 
 /**
  * Callable (concurrent) task that builds a package.
  */
-public class PackageBuilder implements Callable<BuildResult> {
+public class PackageBuilder {
 
   private static final Logger LOGGER = Logger.getLogger(PackageBuilder.class.getName());
-  private final Workspace workspace;
-  private final BuildReporter reporter;
-  private final File baseDir;
 
-  private PackageNode pkg;
+  private final File baseDir;
+  private final RPackageBuild build;
+  private RPackageVersion pkg;
+
   private File logFile;
 
-  public static final long TIMEOUT_MINUTES = 20 * 60;
+  public static final long TIMEOUT_MINUTES = 20;
 
   public static final int MAX_LOG_SIZE = 1024 * 600;
 
-  public PackageBuilder(Workspace workspace, BuildReporter reporter, PackageNode pkg) {
-    this.workspace = workspace;
-    this.reporter = reporter;
-    this.pkg = pkg;
-    this.baseDir = new File(workspace.getPackagesDir(), pkg.getName() + "_" + pkg.getVersion());
+  public PackageBuilder(Workspace workspace, RPackageBuild build) {
+    this.build = build;
+    this.pkg = build.getPackageVersion();
+    this.baseDir = new File(workspace.getPackagesDir(), pkg.getPackageName() + "_" + pkg.getVersion());
     this.logFile = new File(baseDir, "build.log");
   }
 
-  @Override
-  public BuildResult call() throws Exception {
+  public void build()  {
    
     // set the name of this thread to the package
     // name for debugging
-    Thread.currentThread().setName(pkg.getName());
-
-    // see if this package has already been built
-//    if(resultFile().exists()) {
-//      try {
-//        BuildOutcome outcome = BuildOutcome.valueOf(Files.readFirstLine(resultFile(), Charsets.UTF_8));
-//        return new BuildResult(pkg.getId(), outcome);
-//      } catch(Exception e) {
-//        System.err.println("Exception reading build outcome record: ");
-//      }
-//    }
-
-    BuildResult result = new BuildResult();
-    result.setPackageVersionId(pkg.getId());
+    Thread.currentThread().setName(pkg.getPackageName());
 
     try {
-      executeMaven(result);
+      // grab the source if we don't have it
+      ensureSourceUnpacked();
+
+      // write out the POM file for this package
+      PomBuilder pomBuilder = new PomBuilder(baseDir, build);
+      pomBuilder.writePom();
+
+      executeMaven();
+      build.setOutcome(BuildOutcome.SUCCESS);
 
     } catch(Exception e) {
       System.out.println("Exception building " + pkg.getId() + ": " + e.getMessage());
-      result.setOutcome(BuildOutcome.ERROR);
+      build.setOutcome(BuildOutcome.ERROR);
     }
-
-    try {
-      reporter.reportResult(pkg, result.getOutcome(), baseDir, logFile);
-    } catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception recording build results for " + pkg.getId(), e);
-    }
-
-    recordResultLocally(result);
-
-    return result; 
   }
 
+  private void executeMaven() throws IOException, InterruptedException {
 
-  private void executeMaven(BuildResult result) throws IOException, InterruptedException {
-
-    ensureUnpacked();
-
-    // write out the POM file for this package
-    PomBuilder pomBuilder = new PomBuilder(workspace.getRenjinVersion(), baseDir, pkg.getEdges());
-    pomBuilder.writePom();
+    System.out.println("Starting maven...");
 
     List<String> command = Lists.newArrayList();
-    command.add(getMavenPath());
+    command.add("mvn");
     command.add("-X");
-
-    // for snapshots,
-    // configure maven to use ONLY our local repo to which we deployed
-    // our specific versions of Renjin that we're testing against
-    if(workspace.isSnapshot()) {
-      command.add("-o");
-      command.add("-Dmaven.repo.local=" + workspace.getLocalMavenRepository().getAbsolutePath());
-    }
 
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");
@@ -129,7 +97,7 @@ public class PackageBuilder implements Callable<BuildResult> {
     collector.start();
 
     ProcessMonitor monitor = new ProcessMonitor(process);
-    monitor.setName(pkg + " - monitor");
+    monitor.setName(pkg.getId() + " - monitor");
     monitor.start();
 
     Stopwatch stopwatch = Stopwatch.createStarted();
@@ -139,41 +107,42 @@ public class PackageBuilder implements Callable<BuildResult> {
       if(stopwatch.elapsed(TimeUnit.MINUTES) > TIMEOUT_MINUTES) {
         System.out.println(pkg + " build timed out after " + TIMEOUT_MINUTES + " minutes.");
         process.destroy();
-        result.setOutcome(BuildOutcome.TIMEOUT);
+        build.setOutcome(BuildOutcome.TIMEOUT);
         break;
       }
       Thread.sleep(1000);
     }
 
     collector.join();
-    if(result.getOutcome() != BuildOutcome.TIMEOUT) {
+    if(build.getOutcome() != BuildOutcome.TIMEOUT) {
       if(monitor.getExitCode() == 0) {
-        result.setOutcome(BuildOutcome.SUCCESS);
+        build.setOutcome(BuildOutcome.SUCCESS);
       } else if(monitor.getExitCode() == 1) {
-        result.setOutcome(BuildOutcome.FAILED);
+        build.setOutcome(BuildOutcome.FAILURE);
       } else {
-        System.out.println(pkg.getName() + " exited with code " + monitor.getExitCode());
-        result.setOutcome(BuildOutcome.ERROR);
+        System.out.println(pkg + " exited with code " + monitor.getExitCode());
+        build.setOutcome(BuildOutcome.ERROR);
       }
     }
   }
-
 
   /**
    * Check whether the source is already unpacked in our workspace,
    * otherwise download and unpack
    */
-  private void ensureUnpacked() throws IOException {
+  private void ensureSourceUnpacked() throws IOException {
 
     if(!baseDir.exists()) {
 
-      InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(pkg.getGroupId(),
-        pkg.getName(), pkg.getVersion());
+      InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(
+          pkg.getGroupId(),
+          pkg.getPackage().getName(),
+          pkg.getVersion());
 
       TarArchiveInputStream tarIn = new TarArchiveInputStream(
         new GZIPInputStream(in));
 
-      String packagePrefix = pkg.getName() + "/";
+      String packagePrefix = pkg.getPackageName() + "/";
 
       TarArchiveEntry entry;
       while((entry=tarIn.getNextTarEntry())!=null) {
@@ -184,33 +153,10 @@ public class PackageBuilder implements Callable<BuildResult> {
           File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
           outFile.getParentFile().mkdirs();
 
-          ByteStreams.copy(tarIn, Files.newOutputStreamSupplier(outFile));
+          Files.asByteSink(outFile).writeFrom(tarIn);
         }
       }
       tarIn.close();
     }
-  }
-
-  private String getMavenPath() {
-    if(System.getProperty("os.name").toLowerCase().contains("windows")) {
-      return "mvn.bat";
-    } else {
-      return "mvn";
-    }
-  }
-
-
-  private void recordResultLocally(BuildResult result) throws IOException {
-    File file = resultFile();
-    file.getParentFile().mkdirs();
-    Files.write(result.getOutcome().name(), file, Charsets.UTF_8);
-  }
-
-  private File resultFile() {
-    String resultPath = workspace.getLocalMavenRepository().getAbsolutePath() + "/" +
-        pkg.getGroupId().replace('.', '/') + "/" +
-        pkg.getName() + "/" +
-        pkg.getVersion() + "/outcome";
-    return new File(resultPath);
   }
 }

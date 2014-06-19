@@ -1,11 +1,9 @@
 package org.renjin.build.agent.util;
 
+import com.google.common.io.CountingOutputStream;
+
 import java.io.*;
 import java.util.logging.Logger;
-
-import com.google.common.io.Closeables;
-import com.google.common.io.CountingOutputStream;
-import org.renjin.build.agent.build.PackageNode;
 
 /**
  * Thread which collects the output of the
@@ -45,8 +43,6 @@ public class OutputCollector extends Thread {
         }
       }
 
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
     }

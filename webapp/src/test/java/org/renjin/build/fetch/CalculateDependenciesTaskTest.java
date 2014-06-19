@@ -1,4 +1,4 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
 import org.junit.Ignore;
 import org.junit.Test;

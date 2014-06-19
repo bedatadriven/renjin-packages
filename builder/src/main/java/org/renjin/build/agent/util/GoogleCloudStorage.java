@@ -37,7 +37,7 @@ public class GoogleCloudStorage {
 
   /** E-mail address of the service account. */
   private static final String SERVICE_ACCOUNT_EMAIL =
-      "880103008819-o1u5qv1ul7jrip3172sms5ng2a1qhsus@developer.gserviceaccount.com";
+      "135288259907-c92vdks5f43qngv90bm9kirba7k7lntd@developer.gserviceaccount.com";
 
   /** Global configuration of Google Cloud Storage OAuth 2.0 scope. */
   private static final String STORAGE_SCOPE =
@@ -76,6 +76,8 @@ public class GoogleCloudStorage {
     String uri = "https://storage.googleapis.com/" +
         StorageKeys.BUCKET_NAME + "/" +
         StorageKeys.packageSource(groupId, packageName, version);
+
+    System.out.println("Reading " + uri + " as " + credential.getServiceAccountId());
 
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory(credential);
     GenericUrl url = new GenericUrl(uri);

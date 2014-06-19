@@ -1,4 +1,4 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.build.model.RPackageVersion;

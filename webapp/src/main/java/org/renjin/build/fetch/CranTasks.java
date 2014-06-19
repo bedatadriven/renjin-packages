@@ -1,4 +1,4 @@
-package org.renjin.build.task;
+package org.renjin.build.fetch;
 
 
 import com.google.appengine.api.taskqueue.Queue;
@@ -6,9 +6,7 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.tools.cloudstorage.*;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.joda.time.LocalDate;
@@ -28,7 +26,6 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -55,8 +52,11 @@ public class CranTasks {
           .createQuery("select max(v.publicationDate) from RPackageVersion v", Date.class)
           .getSingleResult();
 
+      LOGGER.info("Most recent update to index was: " + lastUpdate);
+
       List<String> updatedPackageNames = CRAN.fetchUpdatedPackageList(new LocalDate(lastUpdate));
       for(String updatedPackage : updatedPackageNames) {
+        LOGGER.info("Package " + updatedPackage + " was updated");
         enqueueFetch(updatedPackage);
       }
     } finally {

@@ -9,7 +9,7 @@ public enum BuildOutcome {
   /**
    * The build failed
    */
-  FAILED,
+  FAILURE,
   /**
    * The build succeeded: an artifact
    * was produced
@@ -19,10 +19,5 @@ public enum BuildOutcome {
   /**
    * The build timed out before completing
    */
-  TIMEOUT,
-
-  /**
-   * The package was not built at all due to a missing dependency
-   */
-  NOT_BUILT
+  TIMEOUT;
 }

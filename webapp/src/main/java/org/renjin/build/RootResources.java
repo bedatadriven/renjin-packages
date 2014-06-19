@@ -4,7 +4,7 @@ package org.renjin.build;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.build.model.TestResult;
-import org.renjin.build.task.CranTasks;
+import org.renjin.build.fetch.CranTasks;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;

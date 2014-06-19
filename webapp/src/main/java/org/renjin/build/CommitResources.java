@@ -44,7 +44,10 @@ public class CommitResources {
     List<CommitViewModel> models = Lists.newArrayList();
 
     // query all the commits at once
-    List<RenjinCommit> commits = em.createQuery("select c from RenjinCommit c order by c.commitTime desc", RenjinCommit.class).getResultList();
+    List<RenjinCommit> commits = em
+        .createQuery("select c from RenjinCommit c order by c.commitTime desc", RenjinCommit.class)
+        .getResultList();
+
     for(RenjinCommit commit : commits) {
       models.add(new CommitViewModel(commit, buildStatsByCommit.get(commit.getId())));
     }

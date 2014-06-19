@@ -1,131 +1,69 @@
 package org.renjin.build.agent.build;
 
-import io.airlift.command.Arguments;
-import io.airlift.command.Command;
-import io.airlift.command.Option;
-import org.renjin.build.agent.test.TestQueue;
-import org.renjin.build.agent.workspace.GitHistoryLoader;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.renjin.build.PersistenceUtil;
 import org.renjin.build.agent.workspace.Workspace;
-import org.renjin.build.agent.workspace.WorkspaceBuilder;
-import org.renjin.build.model.BuildOutcome;
+import org.renjin.build.model.RPackageBuild;
 
+import javax.persistence.EntityManager;
 import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Program that will retrieve package sources from CRAN,
  * build, and report results.
  */
-@Command(name = "build", description = "Build packages in workspace")
-public class BuildCommand implements Runnable {
+public class BuildCommand  {
 
-  @Option(name="-d", description = "location of workspace")
-  private File workspaceDir = new File(".");
+  public static final String WORKER_ID = "XYZ";
 
-  @Option(name="-j", description = "number of concurrent builds")
-  private int numConcurrentBuilds = 1;
 
-  @Option(name="-dev")
-  private boolean devMode;
+  public static void main(String[] args) throws IOException, GitAPIException, InterruptedException {
+    new BuildCommand().run();
+  }
 
-  @Option(name="-t", description = "Renjin target version to build/test against")
-  private String renjinVersion;
+  public void run() throws IOException, GitAPIException, InterruptedException {
+    Workspace workspace = new Workspace(new File("/tmp/workspace"));
 
-  @Option(name="--skip-build")
-  private boolean skipBuilding;
-
-  @Arguments
-  private List<String> packages;
-
-  private Reactor packageBuilder;
-
-  @Override
-  public void run() {
-
-    try {
-
-      WorkspaceBuilder workspaceBuilder = new WorkspaceBuilder(workspaceDir);
-
-      if(!devMode) {
-        if(renjinVersion != null) {
-          workspaceBuilder.setRenjinVersion(renjinVersion);
-        } else {
-          workspaceBuilder.setRenjinVersion("master");
-        }
-      }
-
-      Workspace workspace = workspaceBuilder.build();
-      workspace.setDevMode(devMode);
-
-      updateGitHistory(workspace);
-
-      System.out.println("Testing against " + workspace.getRenjinVersion());
-
-      buildRenjin(workspace);
-
-      GraphBuilder graphBuilder = new GraphBuilder();
-      if(packages.contains("ALL")) {
-        graphBuilder.addAllLatestVersions();
+    while(true) {
+      RPackageBuild build = leaseNextBuild();
+      if(build == null) {
+        System.out.println("Nothing to do...");
+        Thread.sleep(5_000);
       } else {
-        for(String packageName : packages) {
-          try {
-            graphBuilder.addPackage(packageName);
-          } catch(UnresolvedDependencyException ude) {
-            System.out.println("Could not add " + packageName + " because of unresolved dependency: " +
-              ude.getPackageName());
-          }
-        }
+        new PackageBuilder(workspace, build).build();
       }
-      packageBuilder = new Reactor(workspace, graphBuilder.build());
-      packageBuilder.setNumConcurrentBuilds(numConcurrentBuilds);
-      Set<PackageNode> built;
-      if(skipBuilding) {
-        built = packageBuilder.alreadyBuilt();
-      } else {
-        built = packageBuilder.build();
-      }
-
-      TestQueue testQueue = new TestQueue(workspace, built);
-      testQueue.setNumConcurrentTests(numConcurrentBuilds);
-      testQueue.run();
-
-
-    } catch (Exception e) {
-      e.printStackTrace();
     }
   }
 
-  private void updateGitHistory(Workspace workspace) throws Exception {
-    // ensure that we have loaded the latest commit data into our
-    // build database
-    System.out.println("Updating git history...");
-    new GitHistoryLoader().run(workspace);
-    System.out.println("DONE");
-  }
+  public RPackageBuild leaseNextBuild() {
+    EntityManager em = PersistenceUtil.createEntityManager();
 
+    em.getTransaction().begin();
+    try {
+      List<RPackageBuild> resultList = em.createQuery(
+          "select b from RPackageBuild b " +
+              "where dependenciesResolved = true and outcome = null and leased = null", RPackageBuild.class)
+          .setMaxResults(1)
+          .getResultList();
 
-  private void buildRenjin(Workspace workspace) throws Exception {
-    if(!devMode && workspace.isSnapshot() && workspace.getRenjinBuildOutcome() != BuildOutcome.SUCCESS) {
-      
-//      System.out.println("Starting proxy server...");
-//      Thread thread = new Thread(new MavenProxyServer(workspace));
-//      thread.start();
-//      Thread.sleep(1000);
-//
-      System.out.println("Building Renjin...");
-
-      RenjinBuilder renjinBuilder = new RenjinBuilder(workspace);
-      BuildOutcome result = renjinBuilder.call();
-      System.out.println("Renjin build complete: " + result);
-
-//      System.out.println("Shutting down proxy server...");
-//      thread.interrupt();
-//
-      if(result != BuildOutcome.SUCCESS) {
-        System.out.println("Renjin build failed! Abandoning ship...");
-        System.exit(-1);
+      RPackageBuild build;
+      if(!resultList.isEmpty()) {
+        build = resultList.get(0);
+        build.setLeased(WORKER_ID);
+        build.setLeaseTime(new Date());
+      } else {
+        // none available
+        build = null;
       }
+      em.getTransaction().commit();
+
+      return build;
+    } catch(Exception e) {
+      em.getTransaction().rollback();
+      throw new RuntimeException("Failed to lease task");
     }
   }
 }

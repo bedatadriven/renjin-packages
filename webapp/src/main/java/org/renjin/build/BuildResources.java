@@ -6,7 +6,7 @@ import com.google.common.collect.Ordering;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.build.model.Build;
 import org.renjin.build.model.BuildOutcome;
-import org.renjin.build.model.RPackageBuildResult;
+import org.renjin.build.model.RPackageBuild;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -39,8 +39,8 @@ public class BuildResources {
     EntityManager em = HibernateUtil.getActiveEntityManager();
     model.put("build", em.find(Build.class, buildId));
     model.put("totals",  queryTotals(buildId, em));
-    model.put("blockers", em.createQuery("select p from RPackageBuildResult p where p.build.id = :buildId and p.succeeded = false " +
-      "order by p.packageVersion.downstreamCount desc", RPackageBuildResult.class)
+    model.put("blockers", em.createQuery("select p from RPackageBuild p where p.build.id = :buildId and p.succeeded = false " +
+      "order by p.packageVersion.downstreamCount desc", RPackageBuild.class)
         .setParameter("buildId", buildId)
         .setMaxResults(15)
         .getResultList());
@@ -56,7 +56,7 @@ public class BuildResources {
   }
 
   private Map<String, Number> queryTotals(int buildId, EntityManager em) {
-    List<Tuple> totals = em.createQuery("select p.outcome, count(*) from RPackageBuildResult p " +
+    List<Tuple> totals = em.createQuery("select p.outcome, count(*) from RPackageBuild p " +
       "where p.build.id = :buildId group by p.outcome", Tuple.class)
       .setParameter("buildId", buildId)
       .getResultList();
@@ -68,10 +68,10 @@ public class BuildResources {
     return totalMap;
   }
 
-  private List<RPackageBuildResult> querySucceedWhereFailed(int buildId, Integer comparisonBuildId, EntityManager em) {
-    return em.createQuery("select p from RPackageBuildResult p where p.build.id = :buildId and " +
-      "p.succeeded = false and p.packageVersion in (select o.packageVersion from RPackageBuildResult o where o.build.id=:reference and  " +
-      "o.succeeded = true)", RPackageBuildResult.class)
+  private List<RPackageBuild> querySucceedWhereFailed(int buildId, Integer comparisonBuildId, EntityManager em) {
+    return em.createQuery("select p from RPackageBuild p where p.build.id = :buildId and " +
+      "p.succeeded = false and p.packageVersion in (select o.packageVersion from RPackageBuild o where o.build.id=:reference and  " +
+      "o.succeeded = true)", RPackageBuild.class)
       .setParameter("buildId", buildId)
       .setParameter("reference", comparisonBuildId)
       .getResultList();
@@ -84,9 +84,9 @@ public class BuildResources {
                                        @PathParam("version") String version) {
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
-    List<RPackageBuildResult> results = em.createQuery("select r from RPackageBuildResult r " +
+    List<RPackageBuild> results = em.createQuery("select r from RPackageBuild r " +
             "where r.build.id=:buildId and " +
-            "packageVersion.id = :gav", RPackageBuildResult.class)
+            "packageVersion.id = :gav", RPackageBuild.class)
             .setParameter("buildId", buildId)
             .setParameter("gav", groupId + ":" + artifactId + ":" + version)
             .getResultList();
@@ -95,9 +95,9 @@ public class BuildResources {
       throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
     if(results.size() > 1) {
-      Collections.sort(results, Ordering.natural().onResultOf(new Function<RPackageBuildResult, Comparable>() {
+      Collections.sort(results, Ordering.natural().onResultOf(new Function<RPackageBuild, Comparable>() {
         @Override
-        public Comparable apply(RPackageBuildResult result) {
+        public Comparable apply(RPackageBuild result) {
           return result.getId();
         }
       }).reverse());

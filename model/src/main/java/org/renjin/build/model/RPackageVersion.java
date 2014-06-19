@@ -33,7 +33,7 @@ public class RPackageVersion {
   private boolean latest;
 
   @OneToMany(mappedBy = "packageVersion")
-  private Set<RPackageBuildResult> buildResults;
+  private Set<RPackageBuild> buildResults;
 
   @OneToMany(mappedBy = "packageVersion", cascade = CascadeType.ALL)
   private Set<RPackageDependency> dependencies;
@@ -102,11 +102,11 @@ public class RPackageVersion {
 		this.publicationDate = publicationDate;
 	}
 
-  public Set<RPackageBuildResult> getBuildResults() {
+  public Set<RPackageBuild> getBuildResults() {
     return buildResults;
   }
 
-  public void setBuildResults(Set<RPackageBuildResult> buildResults) {
+  public void setBuildResults(Set<RPackageBuild> buildResults) {
     this.buildResults = buildResults;
   }
 

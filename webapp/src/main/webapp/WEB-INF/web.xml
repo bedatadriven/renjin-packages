@@ -13,28 +13,25 @@
   </filter-mapping>
 
 
-  <init-param>
-    <!-- speed up initial Jersey loading by deactivating WADL -->
-    <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
-    <param-value>true</param-value>
-  </init-param>
-
-  <init-param>
-    <param-name>com.sun.jersey.freemarker.templateBasePath</param-name>
-    <param-value></param-value>
-
-  </init-param>
-
   <servlet>
     <servlet-name>Jersey Web Application</servlet-name>
-    <servlet-class>
-      com.sun.jersey.spi.container.servlet.ServletContainer
-    </servlet-class>
+    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    
     <init-param>
-      <param-name>com.sun.jersey.config.property.packages</param-name>
-      <!-- Enter your Jersey resources to speed up initial Jersey loading -->
-      <!-- You can separate the java packages using , -->
-      <param-value>org.renjin.build</param-value>
+      <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+      <param-value>org.renjin.build.RenjinWebApp</param-value>
+    </init-param>
+
+
+    <init-param>
+      <!-- speed up initial Jersey loading by deactivating WADL -->
+      <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+      <param-value>true</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>com.sun.jersey.freemarker.templateBasePath</param-name>
+      <param-value>/</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

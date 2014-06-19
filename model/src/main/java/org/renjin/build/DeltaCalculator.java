@@ -105,7 +105,7 @@ public class DeltaCalculator {
   private void updateDeltaFlags() {
 
     em.getTransaction().begin();
-    em.createQuery("UPDATE RPackageBuildResult r SET r.delta = NULL where r.build.id = :buildId")
+    em.createQuery("UPDATE RPackageBuild r SET r.delta = NULL where r.build.id = :buildId")
       .setParameter("buildId", buildId)
       .executeUpdate();
 
@@ -127,7 +127,7 @@ public class DeltaCalculator {
 
     if(!buildResultIds.isEmpty()) {
 
-      em.createQuery("UPDATE RPackageBuildResult r SET r.delta = :deltaValue " +
+      em.createQuery("UPDATE RPackageBuild r SET r.delta = :deltaValue " +
                         "WHERE r.id in (:resultIds) and r.delta IS NULL")
           .setParameter("deltaValue", sign)
           .setParameter("resultIds", buildResultIds)
@@ -138,9 +138,9 @@ public class DeltaCalculator {
 
   private List<Integer> queryChangeType(int parentBuildId, boolean childSucceeded, boolean parentSucceeded) {
 
-    String jpql = "SELECT r.id FROM RPackageBuildResult r WHERE r.build.id = :buildId and " +
+    String jpql = "SELECT r.id FROM RPackageBuild r WHERE r.build.id = :buildId and " +
       buildSucceeded("r.outcome", childSucceeded) + " and " +
-      "r.packageVersion in (SELECT pr.packageVersion FROM RPackageBuildResult pr WHERE pr.build.id = :parentBuildId and " +
+      "r.packageVersion in (SELECT pr.packageVersion FROM RPackageBuild pr WHERE pr.build.id = :parentBuildId and " +
       buildSucceeded("pr.outcome", parentSucceeded) + ")";
 
     return em.createQuery(jpql, Integer.class)

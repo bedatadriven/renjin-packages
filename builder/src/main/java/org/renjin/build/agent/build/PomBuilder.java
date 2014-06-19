@@ -4,17 +4,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.maven.model.*;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.renjin.build.model.CorePackages;
-import org.renjin.build.model.PackageDescription;
+import org.renjin.build.model.*;
 import org.renjin.build.model.PackageDescription.PackageDependency;
 import org.renjin.build.model.PackageDescription.Person;
 
@@ -29,22 +28,24 @@ public class PomBuilder {
 
   public static final String[] DEFAULT_PACKAGES = new String[]{
     "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
+
   private File baseDir;
-  private List<PackageEdge> edges;
-  private Map<String, PackageEdge> edgeNameMap;
 
-  private boolean successful = true;
+  private final RPackageBuild packageBuild;
   private final PackageDescription description;
-  private String renjinVersion;
 
-  public PomBuilder(String renjinVersion, File baseDir, List<PackageEdge> edges) throws IOException {
-    this.renjinVersion = renjinVersion;
+  private String renjinVersion;
+  private String packageVersionSuffix;
+
+  private Map<String, RPackageDependency> dependencyMap = Maps.newHashMap();
+
+  public PomBuilder(File baseDir, RPackageBuild packageBuild) throws IOException {
+    this.packageBuild = packageBuild;
     this.baseDir = baseDir;
-    this.edges = edges;
-    this.edgeNameMap = Maps.newHashMap();
-    for(PackageEdge edge : edges) {
-     edgeNameMap.put(edge.getDependency().getName(), edge);
-    }
+
+    renjinVersion = packageBuild.getBuild().getRenjinCommit().getVersion();
+    packageVersionSuffix = "-"  + packageBuild.getBuild().getRenjinCommit().getAbbreviatedId() +
+                           "-b" + packageBuild.getBuild().getId();
 
     description = readDescription();
   }
@@ -54,16 +55,10 @@ public class PomBuilder {
     model.setModelVersion("4.0.0");
     model.setArtifactId(description.getPackage());
     model.setGroupId("org.renjin.cran");
-    model.setVersion(description.getVersion() + "-SNAPSHOT");
+    model.setVersion(description.getVersion() + "-" + packageVersionSuffix);
     model.setDescription(description.getDescription());
     model.setUrl(description.getUrl());
-    
-//    Parent parent = new Parent();
-//    parent.setGroupId("org.renjin.cran");
-//    parent.setArtifactId("cran-parent");
-//    parent.setVersion("0.7.0-SNAPSHOT");
-//    model.setParent(parent);
-    
+
     if(!Strings.isNullOrEmpty(description.getLicense())) {
       License license = new License();
       license.setName(description.getLicense());
@@ -94,10 +89,10 @@ public class PomBuilder {
         Dependency mavenDep = new Dependency();
         mavenDep.setGroupId("org.renjin");
         mavenDep.setArtifactId(packageDep.getName());
-        mavenDep.setVersion(renjinVersion);
+        mavenDep.setVersion(getRenjinVersion());
         model.addDependency(mavenDep);
       } else {
-        PackageEdge edge = edgeNameMap.get(packageDep.getName());
+        RPackageDependency edge = dependencyMap.get(packageDep.getName());
         if(edge == null) {
           throw new IllegalStateException("No RPackageDependency record for dependency " +
             description.getPackage() + " => " + packageDep.getName());
@@ -105,17 +100,6 @@ public class PomBuilder {
         model.addDependency(dependencyFromEdge(edge));
       }
     }
-
-    // Now add other types of dependencies as test scope deps
-//    for(PackageEdge edge : edges) {
-//      if(!edge.getType().equals("imports") && !edge.getType().equals("depends")) {
-//        if(!description.getPackage().equals(edge.getDependency().getName())) {
-//          Dependency mavenDep = dependencyFromEdge(edge);
-//          mavenDep.setScope("test");
-//          model.addDependency(mavenDep);
-//        }
-//      }
-//    }
 
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
@@ -125,7 +109,6 @@ public class PomBuilder {
     PluginExecution compileExecution = compileExecution();
     renjinPlugin.addExecution(compileExecution);
     renjinPlugin.addExecution(legacyCompileExecution());
-//    renjinPlugin.addExecution(testExecution());
 
     Build build = new Build();
     build.addPlugin(renjinPlugin);
@@ -151,11 +134,15 @@ public class PomBuilder {
     return model;
   }
 
-  private Dependency dependencyFromEdge(PackageEdge edge) {
+  private String getRenjinVersion() {
+    return packageBuild.getBuild().getRenjinCommit().getVersion();
+  }
+
+  private Dependency dependencyFromEdge(RPackageDependency dep) {
     Dependency mavenDep = new Dependency();
-    mavenDep.setGroupId(edge.getDependency().getGroupId());
-    mavenDep.setArtifactId(edge.getDependency().getName());
-    mavenDep.setVersion(edge.getDependency().getVersion() + "-SNAPSHOT");
+    mavenDep.setGroupId(dep.getDependency().getGroupId());
+    mavenDep.setArtifactId(dep.getDependency().getPackageName());
+    mavenDep.setVersion(dep.getDependency().getVersion() + packageVersionSuffix);
     return mavenDep;
   }
 
@@ -214,32 +201,6 @@ public class PomBuilder {
     return compileExecution;
   }
 
-  private PluginExecution testExecution() {
-    PluginExecution testExecution = new PluginExecution();
-    testExecution.setId("renjin-test");
-    testExecution.addGoal("test");
-
-    Xpp3Dom testSourceDirectory = new Xpp3Dom
-      ("testSourceDirectory");
-    testSourceDirectory.setValue("${basedir}/tests");
-
-    Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");
-    for(String defaultPackage : DEFAULT_PACKAGES) {
-      Xpp3Dom pkg = new Xpp3Dom("package");
-      pkg.setValue(defaultPackage);
-      defaultPackages.addChild(pkg);
-    }
-
-    Xpp3Dom configuration = new Xpp3Dom("configuration");
-    configuration.addChild(testSourceDirectory);
-    configuration.addChild(defaultPackages);
-
-
-    testExecution.setConfiguration(configuration);
-
-    return testExecution;
-  }
-
   private void addCoreModule(Model model, String name) {
     Dependency mavenDep = new Dependency();
     mavenDep.setGroupId("org.renjin");
@@ -264,9 +225,5 @@ public class PomBuilder {
     MavenXpp3Writer writer = new MavenXpp3Writer();
     writer.write(fileWriter, pom);
     fileWriter.close();
-  }
-
-  public boolean isSuccessful() {
-    return successful;
   }
 }

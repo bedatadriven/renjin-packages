@@ -44,8 +44,7 @@ public class PomBuilder {
     this.baseDir = baseDir;
 
     renjinVersion = packageBuild.getBuild().getRenjinCommit().getVersion();
-    packageVersionSuffix = "-"  + packageBuild.getBuild().getRenjinCommit().getAbbreviatedId() +
-                           "-b" + packageBuild.getBuild().getId();
+    packageVersionSuffix = "-b" + packageBuild.getBuild().getId();
 
     description = readDescription();
   }
@@ -55,7 +54,7 @@ public class PomBuilder {
     model.setModelVersion("4.0.0");
     model.setArtifactId(description.getPackage());
     model.setGroupId("org.renjin.cran");
-    model.setVersion(description.getVersion() + "-" + packageVersionSuffix);
+    model.setVersion(description.getVersion() + packageVersionSuffix);
     model.setDescription(description.getDescription());
     model.setUrl(description.getUrl());
 
@@ -110,26 +109,35 @@ public class PomBuilder {
     renjinPlugin.addExecution(compileExecution);
     renjinPlugin.addExecution(legacyCompileExecution());
 
+    Extension wagon = new Extension();
+    wagon.setGroupId("net.anzix.aws");
+    wagon.setArtifactId("s3-maven-wagon");
+    wagon.setVersion("3.2");
+
     Build build = new Build();
     build.addPlugin(renjinPlugin);
+    build.addExtension(wagon);
 
-    DeploymentRepository snapshotDeploymentRepository = new DeploymentRepository();
-    snapshotDeploymentRepository.setId("renjin-cran-repo");
-    snapshotDeploymentRepository.setUrl("http://nexus.bedatadriven.com/content/repositories/renjin-cran-0.7.0/");
-    snapshotDeploymentRepository.setName("Renjin CRAN Builds");
+    DeploymentRepository deploymentRepo = new DeploymentRepository();
+    deploymentRepo.setId("renjin-repository");
+    deploymentRepo.setUrl("s3://repository.renjin.org@commondatastorage.googleapis.com");
+    deploymentRepo.setName("Renjin Repository");
 
     DistributionManagement distributionManagement = new DistributionManagement();
-    distributionManagement.setSnapshotRepository(snapshotDeploymentRepository);
+    distributionManagement.setRepository(deploymentRepo);
 
-    
-    Repository repository = new Repository();
-    repository.setId("bedatadriven-public");
-    repository.setUrl("http://nexus.bedatadriven.com/content/groups/public/");
+    Repository bddRepo = new Repository();
+    bddRepo.setId("bedatadriven-public");
+    bddRepo.setUrl("http://nexus.bedatadriven.com/content/groups/public/");
+
+    Repository renjinRepo = new Repository();
+    renjinRepo.setId("renjin-repository");
+    renjinRepo.setUrl("s3://repository.renjin.org@commondatastorage.googleapis.com");
 
     model.setDistributionManagement(distributionManagement);
     model.setBuild(build);
-    model.setRepositories(Lists.newArrayList(repository));
-    model.setPluginRepositories(Lists.newArrayList(repository));
+    model.setRepositories(Lists.newArrayList(bddRepo, renjinRepo));
+    model.setPluginRepositories(Lists.newArrayList(bddRepo));
     
     return model;
   }

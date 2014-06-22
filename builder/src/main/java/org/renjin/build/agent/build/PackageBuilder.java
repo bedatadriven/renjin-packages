@@ -10,12 +10,14 @@ import org.renjin.build.agent.util.OutputCollector;
 import org.renjin.build.agent.util.ProcessMonitor;
 import org.renjin.build.agent.workspace.Workspace;
 import org.renjin.build.model.BuildOutcome;
+import org.renjin.build.model.BuildStage;
 import org.renjin.build.model.RPackageBuild;
 import org.renjin.build.model.RPackageVersion;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -47,6 +49,8 @@ public class PackageBuilder {
   }
 
   public void build()  {
+
+    System.out.println("Building " + build.getPackage().getId());
    
     // set the name of this thread to the package
     // name for debugging
@@ -61,12 +65,14 @@ public class PackageBuilder {
       pomBuilder.writePom();
 
       executeMaven();
-      build.setOutcome(BuildOutcome.SUCCESS);
 
     } catch(Exception e) {
       System.out.println("Exception building " + pkg.getId() + ": " + e.getMessage());
       build.setOutcome(BuildOutcome.ERROR);
     }
+
+    build.setStage(BuildStage.COMPLETED);
+    build.setCompletionTime(new Date());
   }
 
   private void executeMaven() throws IOException, InterruptedException {
@@ -83,7 +89,7 @@ public class PackageBuilder {
     command.add("-DskipTests");
 
     command.add("clean");
-    command.add("install");
+    command.add("deploy");
 
     ProcessBuilder builder = new ProcessBuilder(command);
 

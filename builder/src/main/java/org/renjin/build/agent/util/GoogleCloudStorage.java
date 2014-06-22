@@ -77,8 +77,6 @@ public class GoogleCloudStorage {
         StorageKeys.BUCKET_NAME + "/" +
         StorageKeys.packageSource(groupId, packageName, version);
 
-    System.out.println("Reading " + uri + " as " + credential.getServiceAccountId());
-
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory(credential);
     GenericUrl url = new GenericUrl(uri);
     HttpRequest request = requestFactory.buildGetRequest(url);

@@ -19,5 +19,7 @@ public enum BuildOutcome {
   /**
    * The build timed out before completing
    */
-  TIMEOUT;
+  TIMEOUT,
+
+  CANCELLED;
 }

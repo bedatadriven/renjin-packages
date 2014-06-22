@@ -48,26 +48,6 @@ public class CRAN {
     }
   }
 
-  public static List<PackageEntry> parsePackageList(ByteSource source) throws IOException {
-    Document dom = fetchAsDom(source);
-
-    List<PackageEntry> packages = Lists.newArrayList();
-
-    NodeList rows = dom.getElementsByTagName("a");
-    for(int i=0;i!=rows.getLength();++i) {
-      Element link = (Element)rows.item(i);
-      String url = link.getAttribute("href");
-
-      // http://cran.xl-mirror.nl/src/contrib/FactMixtAnalysis_1.0.tar.gz
-
-      if(url.endsWith(".tar.gz")) {
-        packages.add(new PackageEntry(CRAN_MIRROR + "src/contrib/" + url));
-      }
-    }
-    return packages;
-  }
-
-
   public static String parsePackageVersion(ByteSource source) throws IOException {
     Document dom = fetchAsDom(source);
 
@@ -172,5 +152,4 @@ public class CRAN {
   public static String packageVersionId(String packageName, String version) {
     return packageId(packageName) + ":" + version;
   }
-
 }

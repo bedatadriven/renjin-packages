@@ -19,90 +19,99 @@ import org.renjin.sexp.StringVector;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.net.URISyntaxException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Resolves the versions of the dependencies of CRAN packages.
+ *
+ * GNU R Package dependencies are not versioned; but we want to make sure that
+ * a given package remains stable even as new versions of its dependencies are
+ * released.
+ *
+ * This task assigns a version to each of a package's dependencies by finding a matching
+ * package released before this package.
+ */
+public class ResolveDependencyVersionsTask {
 
-public class CalculateDependenciesTask {
-
-  private static final Logger LOGGER = Logger.getLogger(CalculateDependenciesTask.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ResolveDependencyVersionsTask.class.getName());
 
   private static final boolean STRICT_VERSIONING = false;
 
-  private SourceArchiveProvider sourceArchiveProvider;
-
-  public CalculateDependenciesTask() {
-    this.sourceArchiveProvider = new AppEngineSourceArchiveProvider();
-  }
-
-  public CalculateDependenciesTask(SourceArchiveProvider sourceArchiveProvider) {
-    this.sourceArchiveProvider = sourceArchiveProvider;
-  }
-
-  @GET
-  public Response recalculateAll() {
-    List<String> ids = HibernateUtil.getActiveEntityManager()
-      .createQuery("select p.id from RPackage p", String.class).getResultList();
-    Queue queue = QueueFactory.getDefaultQueue();
-
-    for(String packageId : ids) {
-
-      queue.add(TaskOptions.Builder.withUrl("/tasks/cran/calculateDependencies")
-        .param("packageId", packageId));
-    }
-    return Response.ok().build();
-  }
 
   @POST
-  public void calculate(@FormParam("packageId") String packageId) {
+  public Response resolve(@FormParam("packageId") String packageId) throws URISyntaxException {
+
+    LOGGER.log(Level.INFO, "Resolving dependency versions for " + packageId);
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
     em.getTransaction().begin();
 
     RPackage pkg = em.find(RPackage.class, packageId);
     tagLatestVersion(pkg);
-    calculateDependencies(pkg);
+    resolve(pkg);
 
     em.getTransaction().commit();
 
+    return Response.ok().build();
   }
 
+  @POST
+  @Produces("text/plain")
+  @Path("scheduleAll")
+  private String scheduleAll() {
+    List<String> ids = HibernateUtil.getActiveEntityManager()
+        .createQuery("select p.id from RPackage p", String.class).getResultList();
+    Queue queue = QueueFactory.getDefaultQueue();
+
+    for(String packageId : ids) {
+
+      queue.add(TaskOptions.Builder.withUrl("/tasks/cran/resolveDependencies")
+          .param("packageId", packageId));
+    }
+
+    return "Scheduled " + ids.size() + " for dependency version resolution.";
+  }
+
+  /**
+   * Update the {@code latest} flag on all {@code RPackageVersion}s of the given {@code pkg}
+   */
   private void tagLatestVersion(RPackage pkg) {
 
-    RPackageVersion latestVersion = null;
-    DefaultArtifactVersion maxVersion = null;
+    if(!pkg.getVersions().isEmpty()) {
 
-    for(RPackageVersion packageVersion : pkg.getVersions()) {
-      DefaultArtifactVersion version = new DefaultArtifactVersion(packageVersion.getVersion());
-      if(maxVersion == null || version.compareTo(maxVersion) > 0) {
-        latestVersion = packageVersion;
-        maxVersion = version;
+      RPackageVersion latestVersion = Collections.max(pkg.getVersions());
+
+      for(RPackageVersion version : pkg.getVersions()) {
+        version.setLatest(version == latestVersion);
       }
     }
+  }
 
+  /**
+   * Resolves the dependencies of all versions of the given {@code pkg}
+   */
+  private void resolve(RPackage pkg) {
     for(RPackageVersion version : pkg.getVersions()) {
-      version.setLatest(version.getId().equals(latestVersion.getId()));
+      resolve(version);
     }
   }
 
-  private void calculateDependencies(RPackage pkg) {
-    for(RPackageVersion version : pkg.getVersions()) {
-      calculateDependencies(version);
-    }
-  }
-
-  private void calculateDependencies(RPackageVersion version) {
+  /**
+   * Resolves the dependency versions of the given {@code RPackageVersion}
+   * @param version The package version whose dependencies should be versioned
+   */
+  private void resolve(RPackageVersion version) {
 
     // bail out if we are missing the description file for this package
     if(Strings.isNullOrEmpty(version.getDescription())) {
@@ -112,8 +121,10 @@ public class CalculateDependenciesTask {
     PackageDescription description;
     try {
       description = PackageDescription.fromString(version.getDescription());
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Failed to parse package description from " + version.getId());
+    } catch (Exception e) {
+      version.setDependenciesResolved(false);
+      LOGGER.log(Level.SEVERE, "Failed to parse package description from " + version.getId() +
+          version.getDescription(), e);
       return;
     }
 
@@ -125,18 +136,17 @@ public class CalculateDependenciesTask {
       }
     }
 
-    try {
-      findTestDependencies(version);
-    } catch(Exception e) {
-      LOGGER.log(Level.SEVERE, "Caught exception while searching for test dependencies in " + version.getId(), e);
-    }
+    // Are we able to resolve all dependencies?
+    version.setDependenciesResolved(true);
 
     resolveDependencies(version, description.getDepends(), "depends", "compile");
     resolveDependencies(version, description.getImports(), "imports", "compile");
   }
 
   private void resolveDependencies(RPackageVersion version,
-                                   Iterable<PackageDescription.PackageDependency> depends, String type, String buildScope) {
+                                   Iterable<PackageDescription.PackageDependency> depends,
+                                   String type,
+                                   String buildScope) {
     for(PackageDescription.PackageDependency dep : depends) {
       if(!partOfRenjin(dep)) {
         RPackageDependency entity = findOrCreate(version, dep.getName());
@@ -144,6 +154,10 @@ public class CalculateDependenciesTask {
         entity.setBuildScope(buildScope);
         entity.setDependencyVersion(dep.getVersionSpec());
         entity.setDependency(resolveDependency(version, dep));
+
+        if(entity.getDependency() == null) {
+          version.setDependenciesResolved(false);
+        }
       }
     }
   }
@@ -155,7 +169,7 @@ public class CalculateDependenciesTask {
   private RPackageVersion resolveDependency(RPackageVersion version, PackageDescription.PackageDependency description) {
 
     List<RPackageVersion> depVersions = HibernateUtil.getActiveEntityManager()
-      .createQuery("select v from RPackageVersion v where v.rPackage.name = :name")
+      .createQuery("select v from RPackageVersion v where v.rPackage.name = :name", RPackageVersion.class)
       .setParameter("name", description.getName())
       .getResultList();
 
@@ -232,24 +246,6 @@ public class CalculateDependenciesTask {
     dep.setDependencyName(dependencyPackageName);
     version.getDependencies().add(dep);
     return dep;
-  }
-
-  /**
-   * Packages used during examples / testing are unfortunately not defined explicitly, so we have
-   * to do some crawling to find them.
-   *
-   * @param version
-   */
-  private void findTestDependencies(final RPackageVersion version) throws IOException {
-    SourceCrawler crawler = new SourceCrawler(sourceArchiveProvider, new SourceVisitor() {
-      @Override
-      public void visit(TarArchiveEntry entry, InputStream inputStream) throws IOException {
-        if(entry.getName().endsWith(".Rd")) {
-          findTestDependenciesInExamples(version, entry.getName(), inputStream);
-        }
-      }
-    });
-    crawler.crawl(version);
   }
 
   private void findTestDependenciesInExamples(RPackageVersion version, String fileName, InputStream inputStream) throws IOException {

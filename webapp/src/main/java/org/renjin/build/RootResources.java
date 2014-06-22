@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.sun.jersey.api.view.Viewable;
 import org.renjin.build.model.TestResult;
 import org.renjin.build.fetch.CranTasks;
+import org.renjin.build.queue.BuildQueue;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
@@ -44,6 +45,11 @@ public class RootResources {
   @Path("commits")
   public CommitResources getVersions() {
     return new CommitResources();
+  }
+
+  @Path("queue")
+  public BuildQueue getQueue() {
+    return new BuildQueue();
   }
 
   @GET

@@ -96,14 +96,15 @@ public class FreemarkerViewProcessor implements ViewProcessor<String> {
 
     LOGGER.info("Resolving [" + path + "]");
 
-    if (!basePath.equals(""))
-      path = basePath + path;
+//    if (!basePath.equals(""))
+//      path = basePath + path;
 
     Class<?> matchedClass = uriInfo.getMatchedResources().get(0).getClass();
 
     LOGGER.info("Trying to fetch [" + path + "] with base class " + matchedClass.getName());
 
     if (matchedClass.getResource(path) != null) {
+      LOGGER.info("Trying to fetch [" + path + "] with base class " + matchedClass.getName());
       return path;
     }
 

@@ -14,12 +14,12 @@ public class HibernateUtil {
 
   private static String getPersistenceUnitName() {
 
-    if(Strings.isNullOrEmpty(System.getProperty("com.google.appengine.runtime.environment"))) {
-      // unit tests
-      return "renjin-repo";
-    } else {
-      // appengine dev or production
+    String environment = System.getProperty("com.google.appengine.runtime.environment");
+    if("Production".equals(environment)) {
+      // appengine production
       return "renjin-repo-gae";
+    } else {
+      return "renjin-repo";
     }
   }
 

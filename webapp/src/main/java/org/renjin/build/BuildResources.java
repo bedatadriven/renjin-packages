@@ -39,9 +39,11 @@ public class BuildResources {
     EntityManager em = HibernateUtil.getActiveEntityManager();
     model.put("build", em.find(Build.class, buildId));
     model.put("totals",  queryTotals(buildId, em));
-    model.put("blockers", em.createQuery("select p from RPackageBuild p where p.build.id = :buildId and p.succeeded = false " +
+    model.put("blockers", em.createQuery("select p from RPackageBuild p " +
+        "where p.build.id = :buildId and p.outcome <> :success  " +
       "order by p.packageVersion.downstreamCount desc", RPackageBuild.class)
         .setParameter("buildId", buildId)
+        .setParameter("success", BuildOutcome.SUCCESS)
         .setMaxResults(15)
         .getResultList());
 
@@ -70,10 +72,11 @@ public class BuildResources {
 
   private List<RPackageBuild> querySucceedWhereFailed(int buildId, Integer comparisonBuildId, EntityManager em) {
     return em.createQuery("select p from RPackageBuild p where p.build.id = :buildId and " +
-      "p.succeeded = false and p.packageVersion in (select o.packageVersion from RPackageBuild o where o.build.id=:reference and  " +
-      "o.succeeded = true)", RPackageBuild.class)
+      "p.outcome <> :success and p.packageVersion in (select o.packageVersion from RPackageBuild o where o.build.id=:reference and  " +
+      "o.outcome = :success)", RPackageBuild.class)
       .setParameter("buildId", buildId)
       .setParameter("reference", comparisonBuildId)
+      .setParameter("success", BuildOutcome.SUCCESS)
       .getResultList();
   }
 

@@ -2,10 +2,12 @@ package org.renjin.build;
 
 import freemarker.template.TemplateException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 
+@Ignore
 public class CommitResourcesTest extends ResourceTest {
 
   private CommitResources resource;

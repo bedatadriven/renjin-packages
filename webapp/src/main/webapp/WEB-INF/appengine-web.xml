@@ -13,4 +13,7 @@
   <use-google-connector-j>true</use-google-connector-j>
   <threadsafe>true</threadsafe>
 
+  <admin-console>
+    <page name="CRAN Indexing" url="/tasks/cran/admin" />
+  </admin-console>
 </appengine-web-app>

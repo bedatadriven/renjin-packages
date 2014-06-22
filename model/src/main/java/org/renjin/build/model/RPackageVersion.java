@@ -1,11 +1,15 @@
 package org.renjin.build.model;
 
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+
+import javax.annotation.Nonnull;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.Set;
 
 @Entity
-public class RPackageVersion {
+public class RPackageVersion implements Comparable<RPackageVersion> {
 
 	/**
 	 * Package id in the form groupId:artifactId:version (e.g. org.renjin.cran:lattice:0.16)
@@ -42,6 +46,9 @@ public class RPackageVersion {
   private Set<RPackageDependency> reverseDependencies;
 
   private int downstreamCount;
+
+  @Column(nullable = false, columnDefinition = "tinyint")
+  private boolean dependenciesResolved;
 
   /**
    * The version of GNU R on which this package depends
@@ -89,6 +96,11 @@ public class RPackageVersion {
 	public String getVersion() {
 		return version;
 	}
+
+  @Transient
+  public ArtifactVersion getArtifactVersion() {
+    return new DefaultArtifactVersion(getVersion());
+  }
 
 	public void setVersion(String version) {
 		this.version = version;
@@ -174,10 +186,27 @@ public class RPackageVersion {
     this.downstreamCount = downstreamCount;
   }
 
+  public boolean isDependenciesResolved() {
+    return dependenciesResolved;
+  }
+
+  public void setDependenciesResolved(boolean dependenciesResolved) {
+    this.dependenciesResolved = dependenciesResolved;
+  }
+
   @Override
   public String toString() {
     return id;
   }
 
-
+  @Override
+  public int compareTo(@Nonnull RPackageVersion o) {
+    if(this.getPackage().getId().equals(o.getPackage().getId())) {
+      // if these are two versions of the same package, compare by version number
+      return this.getArtifactVersion().compareTo(o.getArtifactVersion());
+    } else {
+      // otherwise compare by package name
+      return this.getId().compareTo(o.getId());
+    }
+  }
 }

@@ -14,7 +14,13 @@ public class RPackageBuild {
   @GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name="outcome_type")
 	private BuildOutcome outcome;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, columnDefinition = "varchar(50) default 'COMPLETED'")
+  private BuildStage stage;
 
 	@ManyToOne
 	private Build build;
@@ -45,6 +51,10 @@ public class RPackageBuild {
   private Date leaseTime;
 
 
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date completionTime;
+
+
 	public int getId() {
 		return id;
 	}
@@ -58,8 +68,11 @@ public class RPackageBuild {
     return getBuild().getId() + "/" + getPackageVersion().getPath();
   }
 
-  @Enumerated(EnumType.STRING)
-  @Column(name="outcome_type")
+  @Transient
+  public boolean isSucceeded() {
+    return outcome == BuildOutcome.SUCCESS;
+  }
+
 	public BuildOutcome getOutcome() {
 		return outcome;
 	}
@@ -79,6 +92,17 @@ public class RPackageBuild {
 	public RPackageVersion getPackageVersion() {
 		return packageVersion;
 	}
+
+  @Transient
+  public RPackage getPackage() {
+    return packageVersion.getPackage();
+  }
+
+  @Transient
+  public String getPackageName() {
+    String[] parts = packageVersion.getId().split(":");
+    return parts[1];
+  }
 
 	public void setPackageVersion(RPackageVersion packageVersion) {
 		this.packageVersion = packageVersion;
@@ -130,7 +154,23 @@ public class RPackageBuild {
     return dependenciesResolved;
   }
 
+  public BuildStage getStage() {
+    return stage;
+  }
+
+  public void setStage(BuildStage stage) {
+    this.stage = stage;
+  }
+
   public void setDependenciesResolved(boolean dependenciesResolved) {
     this.dependenciesResolved = dependenciesResolved;
+  }
+
+  public Date getCompletionTime() {
+    return completionTime;
+  }
+
+  public void setCompletionTime(Date completionTime) {
+    this.completionTime = completionTime;
   }
 }

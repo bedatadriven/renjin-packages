@@ -7,6 +7,7 @@ import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.tools.cloudstorage.*;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.sun.jersey.api.view.Viewable;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.joda.time.LocalDate;
@@ -25,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +43,12 @@ public class CranTasks {
   private final GcsService gcsService =
           GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
+
+  @GET
+  @Path("admin")
+  public Viewable getAdminPage() {
+    return new Viewable("/cranAdmin.ftl", new HashMap());
+  }
 
   @GET
   @Path("updateIndex")
@@ -65,9 +73,9 @@ public class CranTasks {
     return Response.ok().build();
   }
 
-  @Path("calculateDependencies")
-  public CalculateDependenciesTask calculateDependencies() {
-    return new CalculateDependenciesTask();
+  @Path("resolveDependencies")
+  public ResolveDependencyVersionsTask versionDependencies() {
+    return new ResolveDependencyVersionsTask();
   }
 
   private void enqueueFetch(String packageName) {

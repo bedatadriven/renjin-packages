@@ -44,33 +44,32 @@ public class HistoryFetcher  {
   }
 
   private void importParent(EntityManager em, GHCommit commit) throws IOException {
-    do {
-      List<RenjinCommit> matching = em.createQuery("select c from RenjinCommit c where c.id = :sha", RenjinCommit.class)
-          .setParameter("sha", commit.getSHA1())
-          .getResultList();
+    List<RenjinCommit> matching = em.createQuery("select c from RenjinCommit c where c.id = :sha", RenjinCommit.class)
+        .setParameter("sha", commit.getSHA1())
+        .getResultList();
 
-      if(!matching.isEmpty()) {
-        break;
+    if(!matching.isEmpty()) {
+      return;
+    }
+
+    System.out.println("Importing " + commit.getSHA1() + " " + commit.getCommitShortInfo().getMessage());
+
+    RenjinCommit commitEntity = new RenjinCommit();
+    commitEntity.setId(commit.getSHA1());
+    commitEntity.setCommitTime(commit.getCommitShortInfo().getCommitter().getDate());
+    commitEntity.setMessage(commit.getCommitShortInfo().getMessage());
+    commitEntity.setVersion(fetchVersion(commit));
+    em.persist(commitEntity);
+    visitedShas.add(commitEntity.getId());
+
+    for(GHCommit parent : commit.getParents()) {
+      if(!visitedShas.contains(parent.getSHA1())) {
+        importParent(em, parent);
+
+        commitEntity.getParents().add(em.getReference(RenjinCommit.class, parent.getSHA1()));
+
       }
-
-      System.out.println("Importing " + commit.getSHA1() + " " + commit.getCommitShortInfo().getMessage());
-
-      RenjinCommit commitEntity = new RenjinCommit();
-      commitEntity.setCommitTime(commit.getCommitShortInfo().getCommitter().getDate());
-      commitEntity.setMessage(commit.getCommitShortInfo().getMessage());
-      commitEntity.setVersion(fetchVersion(commit));
-      em.persist(commitEntity);
-      visitedShas.add(commitEntity.getId());
-
-      for(GHCommit parent : commit.getParents()) {
-        if(!visitedShas.contains(parent.getSHA1())) {
-          importParent(em, parent);
-
-
-        }
-      }
-
-    } while(true);
+    }
   }
 
   private String fetchVersion(GHCommit commit)  {

@@ -1,4 +1,4 @@
-package org.renjin.build.agent.test;
+package org.renjin.build.worker.test;
 
 
 import org.renjin.parser.RdParser;

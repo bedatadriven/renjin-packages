@@ -12,15 +12,13 @@
  * the License.
  */
 
-package org.renjin.build.agent.util;
+package org.renjin.build.worker.util;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.io.ByteSource;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.InputSupplier;
 import org.renjin.build.storage.StorageKeys;
 
 import java.io.IOException;
@@ -32,7 +30,7 @@ import java.util.Collections;
 
 public class GoogleCloudStorage {
 
-  private static final String APPLICATION_NAME = "renjin-build-agent";
+  private static final String APPLICATION_NAME = "renjin-build-worker";
 
   public static final GoogleCloudStorage INSTANCE = new GoogleCloudStorage();
 

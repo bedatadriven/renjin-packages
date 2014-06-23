@@ -1,9 +1,8 @@
-package org.renjin.build.agent.test;
+package org.renjin.build.worker.test;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
-import com.google.common.io.Closeables;
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 import org.renjin.eval.EvalException;

@@ -13,7 +13,7 @@
   program. If not, see <http://www.gnu.org/licenses />. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -78,21 +78,12 @@
       <version>1.3</version>
     </dependency>
     <dependency>
-      <groupId>io.airlift</groupId>
-      <artifactId>airline</artifactId>
-      <version>0.5</version>
-    </dependency>
-    <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-client</artifactId>
       <version>2.9.1</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>3.0.0.201306101825-r</version>
-    </dependency>
+
     <dependency>
       <groupId>com.jcraft</groupId>
       <artifactId>jsch</artifactId>
@@ -207,52 +198,38 @@
 
   <build>
     <plugins>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.3.1</version>
-
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>1.8</version>
         <executions>
           <execution>
-            <id>run</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <phase>verify</phase>
-            <configuration>
-              <mainClass>org.renjin.build.agent.build.BuildCommand</mainClass>
-            </configuration>
-          </execution>
-
-        </executions>
-
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2.1</version>
-        <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <archive>
-            <manifest>
-              <mainClass>org.renjin.build.agent.Main</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-        <executions>
-          <execution>
-            <id>assemble-all</id>
+            <id>generate-jsw-scripts</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>generate-daemons</goal>
             </goals>
+            <configuration>
+              <repositoryLayout>flat</repositoryLayout>
+              <daemons>
+                <daemon>
+                  <id>renjin-worker</id>
+                  <!-- the next line is added by default if you don't have wrapperMainClass's setting -->
+                  <wrapperMainClass>org.tanukisoftware.wrapper.WrapperSimpleApp</wrapperMainClass>
+                  <mainClass>org.renjin.build.worker.Main</mainClass>
+                  <commandLineArguments>
+                    <commandLineArgument>start</commandLineArgument>
+                  </commandLineArguments>
+                  <platforms>
+                    <platform>jsw</platform>
+                  </platforms>
+                </daemon>
+              </daemons>
+            </configuration>
           </execution>
         </executions>
       </plugin>
+
     </plugins>
   </build>
 </project>

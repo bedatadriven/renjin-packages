@@ -1,14 +1,12 @@
-package org.renjin.build.agent.build;
+package org.renjin.build.worker;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.maven.model.*;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;

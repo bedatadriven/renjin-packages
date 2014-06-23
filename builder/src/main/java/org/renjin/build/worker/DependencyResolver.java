@@ -1,4 +1,4 @@
-package org.renjin.build.agent.workspace;
+package org.renjin.build.worker;
 
 import com.google.common.collect.Lists;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;

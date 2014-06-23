@@ -1,14 +1,13 @@
-package org.renjin.build.agent.build;
+package org.renjin.build.worker;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.renjin.build.agent.util.GoogleCloudStorage;
-import org.renjin.build.agent.util.OutputCollector;
-import org.renjin.build.agent.util.ProcessMonitor;
-import org.renjin.build.agent.workspace.Workspace;
+import org.renjin.build.worker.util.GoogleCloudStorage;
+import org.renjin.build.worker.util.OutputCollector;
+import org.renjin.build.worker.util.ProcessMonitor;
 import org.renjin.build.model.BuildOutcome;
 import org.renjin.build.model.BuildStage;
 import org.renjin.build.model.RPackageBuild;
@@ -42,10 +41,10 @@ public class PackageBuilder {
 
   public static final int MAX_LOG_SIZE = 1024 * 600;
 
-  public PackageBuilder(Workspace workspace, RPackageBuild build) {
+  public PackageBuilder(File packagesDir, RPackageBuild build) {
     this.build = build;
     this.pkg = build.getPackageVersion();
-    this.baseDir = new File(workspace.getPackagesDir(), pkg.getPackageName() + "_" + pkg.getVersion());
+    this.baseDir = new File(packagesDir, pkg.getPackageName() + "_" + pkg.getVersion());
     this.logFile = new File(baseDir, "build.log");
   }
 
@@ -130,6 +129,8 @@ public class PackageBuilder {
     List<String> command = Lists.newArrayList();
     command.add("mvn");
     command.add("-X");
+    command.add("--gs");
+    command.add("/etc/renjin-worker/settings.xml");
 
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");

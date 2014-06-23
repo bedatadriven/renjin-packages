@@ -11,11 +11,9 @@ import java.util.Set;
 public class RPackageBuild {
 
 	@Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-	private int id;
+	private String id;
 
   @Enumerated(EnumType.STRING)
-  @Column(name="outcome_type")
 	private BuildOutcome outcome;
 
   @Enumerated(EnumType.STRING)
@@ -31,12 +29,10 @@ public class RPackageBuild {
   @Transient
   private Set<TestResult> testResults = Sets.newHashSet();
 
+  @Lob
+  private String dependencyVersions;
+
   private boolean nativeSourceCompilationFailures;
-
-  private Integer delta;
-
-  @Column(nullable = false, columnDefinition = "tinyint")
-  private boolean dependenciesResolved;
 
   /**
    * True if this worker
@@ -54,14 +50,13 @@ public class RPackageBuild {
   @Temporal(TemporalType.TIMESTAMP)
   private Date completionTime;
 
+  public String getId() {
+    return id;
+  }
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
+  public void setId(String id) {
+    this.id = id;
+  }
 
   @Transient
   public String getPath() {
@@ -124,14 +119,6 @@ public class RPackageBuild {
     this.testResults = testResults;
   }
 
-  public Integer getDelta() {
-    return delta;
-  }
-
-  public void setDelta(Integer delta) {
-    this.delta = delta;
-  }
-
   @Column(nullable = true)
   public String getLeased() {
     return leased;
@@ -150,10 +137,6 @@ public class RPackageBuild {
     this.leaseTime = leaseTime;
   }
 
-  public boolean isDependenciesResolved() {
-    return dependenciesResolved;
-  }
-
   public BuildStage getStage() {
     return stage;
   }
@@ -162,15 +145,19 @@ public class RPackageBuild {
     this.stage = stage;
   }
 
-  public void setDependenciesResolved(boolean dependenciesResolved) {
-    this.dependenciesResolved = dependenciesResolved;
-  }
-
   public Date getCompletionTime() {
     return completionTime;
   }
 
   public void setCompletionTime(Date completionTime) {
     this.completionTime = completionTime;
+  }
+
+  public String getDependencyVersions() {
+    return dependencyVersions;
+  }
+
+  public void setDependencyVersions(String dependencyVersions) {
+    this.dependencyVersions = dependencyVersions;
   }
 }

@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -88,8 +89,8 @@ public class BuildQueue {
   }
 
   @GET
-  @Path("result/{id}")
-  public Viewable getResult(int buildId) {
+  @Path("result/{buildId}")
+  public Viewable getResult(@PathParam("buildId") int buildId) {
     RPackageBuild build = HibernateUtil.getActiveEntityManager().find(RPackageBuild.class, buildId);
     return new Viewable("/buildResult.ftl", build);
   }

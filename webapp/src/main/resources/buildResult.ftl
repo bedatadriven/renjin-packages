@@ -2,7 +2,7 @@
 
 <@scaffolding>
 
-  <h1>${packageVersion.packageName} ${packageVersion.version} (#${build.id})</h1>
+  <h1>${packageVersion.packageName} ${packageVersion.version} (#${build.id?c})</h1>
 
   <p class="lead">${packageVersion.package.title}</p>
 
@@ -60,7 +60,7 @@
         <tr>
             <td>#<a href="/builds/${result.path}">${result.build.id}</a></td>
             <td>${result.build.renjinCommit.version}</td>
-            <td>${result.outcome}</td>
+            <td>${ (result.outcome)!(result.stage) }</td>
         </tr>
         </#list>
     </tbody>

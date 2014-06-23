@@ -1,6 +1,9 @@
 package org.renjin.build;
 
 import com.google.common.base.Strings;
+import org.hibernate.StatelessSession;
+import org.hibernate.ejb.HibernateEntityManager;
+import org.hibernate.ejb.HibernateEntityManagerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -39,6 +42,10 @@ public class HibernateUtil {
       EM.set(em);
     }
     return em;
+  }
+
+  public static StatelessSession openStatelessSession() {
+    return ((HibernateEntityManagerFactory)EMF).getSessionFactory().openStatelessSession();
   }
   
   public static void cleanup() {

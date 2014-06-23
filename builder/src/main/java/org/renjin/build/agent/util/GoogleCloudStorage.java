@@ -18,6 +18,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.InputSupplier;
 import org.renjin.build.storage.StorageKeys;
@@ -96,7 +97,7 @@ public class GoogleCloudStorage {
    * @param input
    * @throws IOException
    */
-  public void putBuildLog(int buildId, String packageVersionId, InputSupplier<? extends InputStream> input) throws IOException {
+  public void putBuildLog(int buildId, String packageVersionId, ByteSource input) throws IOException {
 
     String uri = "https://storage.googleapis.com/renjin-build/log/" +
         StorageKeys.BUCKET_NAME + "/" + StorageKeys.buildLog(buildId, packageVersionId);
@@ -120,9 +121,9 @@ public class GoogleCloudStorage {
 
   public static class LogFileContent extends AbstractHttpContent {
 
-    private final InputSupplier<? extends InputStream> input;
+    private final ByteSource input;
 
-    public LogFileContent(InputSupplier<? extends InputStream> input) {
+    public LogFileContent(ByteSource input) {
       super("plain/text");
       this.input = input;
     }
@@ -134,7 +135,7 @@ public class GoogleCloudStorage {
 
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
-      ByteStreams.copy(input, outputStream);
+      input.copyTo(outputStream);
     }
   }
 }

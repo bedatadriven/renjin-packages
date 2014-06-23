@@ -37,8 +37,6 @@ public class PomBuilder {
   private String renjinVersion;
   private String packageVersionSuffix;
 
-  private Map<String, RPackageDependency> dependencyMap = Maps.newHashMap();
-
   public PomBuilder(File baseDir, RPackageBuild packageBuild) throws IOException {
     this.packageBuild = packageBuild;
     this.baseDir = baseDir;
@@ -77,27 +75,27 @@ public class PomBuilder {
       addCoreModule(model, packageName);
     }
 
-    // Make a list of the DEPENDS and IMPORTS package
-    // These will form the compile-scope dependencies
+    // Add dependencies on other core modules
     for(PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
-      if(packageDep.getName().equals("R")) {
-        // ignore
-      } else if(CorePackages.DEFAULT_PACKAGES.contains(packageDep.getName())) {
-        // already added above
-      } else if(CorePackages.isCorePackage(packageDep.getName())) {
+      if(CorePackages.DEFAULT_PACKAGES.contains(packageDep.getName())) {
         Dependency mavenDep = new Dependency();
         mavenDep.setGroupId("org.renjin");
         mavenDep.setArtifactId(packageDep.getName());
         mavenDep.setVersion(getRenjinVersion());
         model.addDependency(mavenDep);
-      } else {
-        RPackageDependency edge = dependencyMap.get(packageDep.getName());
-        if(edge == null) {
-          throw new IllegalStateException("No RPackageDependency record for dependency " +
-            description.getPackage() + " => " + packageDep.getName());
-        }
-        model.addDependency(dependencyFromEdge(edge));
       }
+    }
+
+    // Add dependencies on other packages:
+    // These are calculated when launching the build
+    String[] dependencies = packageBuild.getDependencyVersions().split(",");
+    for(String dependency : dependencies) {
+      String gav[] = dependency.split(":");
+      Dependency mavenDep = new Dependency();
+      mavenDep.setGroupId(gav[0]);
+      mavenDep.setArtifactId(gav[1]);
+      mavenDep.setVersion(gav[2]);
+      model.addDependency(mavenDep);
     }
 
     Plugin renjinPlugin = new Plugin();

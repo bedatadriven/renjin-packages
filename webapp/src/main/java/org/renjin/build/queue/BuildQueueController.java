@@ -3,15 +3,17 @@ package org.renjin.build.queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.utils.SystemProperty;
+import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.renjin.build.HibernateUtil;
-import org.renjin.build.model.RPackageBuild;
+import org.renjin.build.model.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Supervises the build queue:
@@ -24,7 +26,7 @@ import java.util.List;
 public class BuildQueueController  {
 
   @POST
-  public Response.ResponseBuilder execute() {
+  public Response execute() {
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
     em.getTransaction().begin();
@@ -32,23 +34,42 @@ public class BuildQueueController  {
     freeExpiredLeases(em);
     int scheduledBuilds = countScheduledBuilds();
 
-    resolveDependencies(em);
+  //    resolveDependencies(em);
+
+    em.getTransaction().commit();
 
     if(scheduledBuilds > 0) {
       schedule();
     }
 
-    em.getTransaction().commit();
-
-    return Response.ok();
+    return Response.ok().build();
   }
 
-  private void resolveDependencies(EntityManager em) {
-//
-//    List<RPackageBuild> resultList = em.createQuery("SELECT b FROM RPackageBuild b WHERE b.stage = WAITING", RPackageBuild.class)
-//        .getResultList();
+  private void resolveDependencies(EntityManager em, int buildId) {
 
 
+    List<RPackageBuild> builds = em.createQuery("SELECT b FROM RPackageBuild b " +
+        "where b.stage = 'WAITING'", RPackageBuild.class)
+        .setMaxResults(100)
+        .getResultList();
+
+    for(RPackageBuild build : builds) {
+      if(isDepResolved(em, build)) {
+        build.setStage(BuildStage.READY);
+      }
+    }
+  }
+
+  private boolean isDepResolved(EntityManager em, RPackageBuild build) {
+    for(RPackageDependency dep : build.getPackageVersion().getDependencies()) {
+      List<RPackageBuild> depBuilds = em.createQuery(
+          "select b from RPackageBuild b where b.packageVersion = :dep and b.outcome='SUCCESS'", RPackageBuild.class)
+          .getResultList();
+      if(depBuilds.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void freeExpiredLeases(EntityManager em) {

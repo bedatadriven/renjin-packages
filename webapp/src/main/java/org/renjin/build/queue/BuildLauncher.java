@@ -1,5 +1,16 @@
 package org.renjin.build.queue;
 
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import org.hibernate.LockMode;
+import org.hibernate.StatelessSession;
+import org.hibernate.Transaction;
+import org.renjin.build.HibernateUtil;
 import org.renjin.build.PersistenceUtil;
 import org.renjin.build.model.*;
 
@@ -7,8 +18,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
-import java.util.Date;
-import java.util.List;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.util.*;
 
 
 /**
@@ -16,69 +30,100 @@ import java.util.List;
  */
 public class BuildLauncher {
 
-  private final EntityManager entityManager = PersistenceUtil.createEntityManager();
 
   @POST
-  public String startBuild(@FormParam("renjinVersion") String renjinVersion,
-                           @FormParam("limit") Integer limit) {
+  public Response startBuild(
+                           @Context UriInfo uri,
+                           @FormParam("renjinCommitId") String renjinCommitId) {
 
-    RenjinCommit commit = entityManager.createQuery(
-        "select c from RenjinCommit c where c.version = :v", RenjinCommit.class)
-        .setParameter("v", renjinVersion)
-        .getSingleResult();
+    // It takes quite awhile to schedule all 10k packages, so queue this as a longer-running task
+    QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/queue/launch/all"));
 
-    int launchCount = 0;
+    return Response.temporaryRedirect(uri.getRequestUriBuilder().replacePath("/queue/dashboard").build()).build();
+  }
 
-    entityManager.getTransaction().begin();
+  @POST
+  @Path("all")
+  private void launch(String renjinCommitId) {
+
+
+    final StatelessSession session = HibernateUtil.openStatelessSession();
+    Transaction transaction = session.beginTransaction();
 
     try {
+
+
+      RenjinCommit commit = (RenjinCommit)session.get(RenjinCommit.class, renjinCommitId);
+
       Build build = new Build();
       build.setRenjinCommit(commit);
       build.setStarted(new Date());
-      entityManager.persist(build);
+      session.insert(build);
 
-      List<Tuple> versions = entityManager.createQuery(
-          "select v.id, count(d.id) from RPackageVersion v " +
-              "LEFT JOIN v.dependencies d GROUP BY v.id order by count(v.id) asc", Tuple.class)
-          .setMaxResults(20)
-          .getResultList();
+      List<Object[]> deps = session.createSQLQuery(
+          "SELECT p.id, d.dependency_id FROM RPackageVersion p " +
+              "LEFT JOIN RPackageDependency d ON (p.id = d.version_id) order by p.id")
+          .list();
 
-      for(Tuple version : versions) {
+      String packageId = null;
+      List<String> dependencies = Lists.newArrayList();
 
-        String versionId = (String) version.get(0);
-        long numDeps = version.get(1, Long.class);
+      int count = 0;
 
-        RPackageBuild packageBuild = new RPackageBuild();
-        packageBuild.setBuild(build);
-        packageBuild.setPackageVersion(entityManager.getReference(RPackageVersion.class, versionId));
-        if(numDeps == 0) {
-          packageBuild.setStage(BuildStage.READY);
-        } else {
-          packageBuild.setStage(BuildStage.WAITING);
+      for(Object[] pair : deps) {
+        if(!Objects.equals(packageId, pair[0])) {
+          if(count > 100) {
+            break;
+          }
+          scheduleBuild(session, build, packageId, dependencies);
+          count ++;
+          dependencies.clear();
+          packageId = (String)pair[0];
         }
-        packageBuild.setDependenciesResolved(numDeps == 0);
-        entityManager.persist(packageBuild);
+        String dependencyVersionId = (String)pair[1];
 
-        launchCount++;
-
-        if(limit!=null && launchCount > limit) {
-          break;
+        if(dependencyVersionId != null) {
+          // for now we expect to build within the same batch
+          dependencyVersionId += "-b" + build.getId();
+          dependencies.add(dependencyVersionId);
         }
       }
-      entityManager.getTransaction().commit();
+
+      scheduleBuild(session, build, packageId, dependencies);
+
+      transaction.commit();
+
+      System.out.println("started build " + build.getId());
 
     } catch(Exception e) {
-      entityManager.getTransaction().rollback();
+      transaction.rollback();
       throw new RuntimeException(e);
     }
-    entityManager.close();
 
     BuildQueueController.schedule();
+  }
 
-    return "Queued " + launchCount + " builds";
+  private void scheduleBuild(StatelessSession session, Build build, String packageId, List<String> dependencies) {
+    if(packageId != null) {
+      RPackageVersion version = new RPackageVersion();
+      version.setId(packageId);
+
+      RPackageBuild packageBuild = new RPackageBuild();
+      packageBuild.setId(packageId + "-b" + build.getId());
+      packageBuild.setBuild(build);
+      packageBuild.setPackageVersion(version);
+
+      if(dependencies.isEmpty()) {
+        packageBuild.setStage(BuildStage.READY);
+      } else {
+        packageBuild.setDependencyVersions(Joiner.on(",").join(dependencies));
+        packageBuild.setStage(BuildStage.WAITING);
+      }
+      session.insert(packageBuild);
+    }
   }
 
   public static void main(String[] args) {
-    new BuildLauncher().startBuild("0.7.0-RC7", 10);
+    new BuildLauncher().launch("cbf6435939168a0a527bdf97580bdb1f3f2ea264");
   }
 }

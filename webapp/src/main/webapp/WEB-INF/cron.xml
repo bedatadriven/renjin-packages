@@ -6,9 +6,9 @@
     <schedule>every day 02:00</schedule>
   </cron>
 
-  <cron>
-    <url>/queue/control</url>
-    <description>Supervise build queue</description>
-    <schedule>every 2 minutes</schedule>
-  </cron>
+  <!--<cron>-->
+    <!--<url>/queue/control</url>-->
+    <!--<description>Supervise build queue</description>-->
+    <!--<schedule>every 2 minutes</schedule>-->
+  <!--</cron>-->
 </cronentries>

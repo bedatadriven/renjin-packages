@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
@@ -66,6 +67,8 @@ public class PackageBuilder {
 
       executeMaven();
 
+      publishBuildLog();
+
     } catch(Exception e) {
       System.out.println("Exception building " + pkg.getId() + ": " + e.getMessage());
       build.setOutcome(BuildOutcome.ERROR);
@@ -73,6 +76,50 @@ public class PackageBuilder {
 
     build.setStage(BuildStage.COMPLETED);
     build.setCompletionTime(new Date());
+  }
+
+  private void publishBuildLog() {
+    try {
+      GoogleCloudStorage.INSTANCE.putBuildLog(build.getBuild().getId(),
+          build.getPackageVersion().getId(), Files.asByteSource(logFile));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Failed to publish build log", e);
+    }
+  }
+
+
+  /**
+   * Check whether the source is already unpacked in our workspace,
+   * otherwise download and unpack
+   */
+  private void ensureSourceUnpacked() throws IOException {
+
+    if(!baseDir.exists()) {
+
+      InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(
+          pkg.getGroupId(),
+          pkg.getPackage().getName(),
+          pkg.getVersion());
+
+      TarArchiveInputStream tarIn = new TarArchiveInputStream(
+          new GZIPInputStream(in));
+
+      String packagePrefix = pkg.getPackageName() + "/";
+
+      TarArchiveEntry entry;
+      while((entry=tarIn.getNextTarEntry())!=null) {
+        if(entry.isFile() && entry.getName().startsWith(packagePrefix)) {
+
+          String name = entry.getName().substring(packagePrefix.length());
+
+          File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
+          outFile.getParentFile().mkdirs();
+
+          Files.asByteSink(outFile).writeFrom(tarIn);
+        }
+      }
+      tarIn.close();
+    }
   }
 
   private void executeMaven() throws IOException, InterruptedException {
@@ -132,37 +179,4 @@ public class PackageBuilder {
     }
   }
 
-  /**
-   * Check whether the source is already unpacked in our workspace,
-   * otherwise download and unpack
-   */
-  private void ensureSourceUnpacked() throws IOException {
-
-    if(!baseDir.exists()) {
-
-      InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(
-          pkg.getGroupId(),
-          pkg.getPackage().getName(),
-          pkg.getVersion());
-
-      TarArchiveInputStream tarIn = new TarArchiveInputStream(
-        new GZIPInputStream(in));
-
-      String packagePrefix = pkg.getPackageName() + "/";
-
-      TarArchiveEntry entry;
-      while((entry=tarIn.getNextTarEntry())!=null) {
-        if(entry.isFile() && entry.getName().startsWith(packagePrefix)) {
-
-          String name = entry.getName().substring(packagePrefix.length());
-
-          File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
-          outFile.getParentFile().mkdirs();
-
-          Files.asByteSink(outFile).writeFrom(tarIn);
-        }
-      }
-      tarIn.close();
-    }
-  }
 }

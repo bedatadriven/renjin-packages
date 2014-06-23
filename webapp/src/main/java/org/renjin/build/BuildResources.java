@@ -87,25 +87,11 @@ public class BuildResources {
                                        @PathParam("version") String version) {
 
     EntityManager em = HibernateUtil.getActiveEntityManager();
-    List<RPackageBuild> results = em.createQuery("select r from RPackageBuild r " +
-            "where r.build.id=:buildId and " +
-            "packageVersion.id = :gav", RPackageBuild.class)
-            .setParameter("buildId", buildId)
-            .setParameter("gav", groupId + ":" + artifactId + ":" + version)
-            .getResultList();
-
-    if(results.isEmpty()) {
+    RPackageBuild build = em.find(RPackageBuild.class, groupId + ":" + artifactId + ":" + version + "-b" + buildId);
+    if(build == null) {
       throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
-    if(results.size() > 1) {
-      Collections.sort(results, Ordering.natural().onResultOf(new Function<RPackageBuild, Comparable>() {
-        @Override
-        public Comparable apply(RPackageBuild result) {
-          return result.getId();
-        }
-      }).reverse());
-    }
 
-    return new ResultResource(results.get(0));
+    return new ResultResource(build);
   }
 }

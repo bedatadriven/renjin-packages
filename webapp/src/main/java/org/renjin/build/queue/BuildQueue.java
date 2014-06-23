@@ -80,19 +80,13 @@ public class BuildQueue {
     EntityManager em = HibernateUtil.getActiveEntityManager();
     em.getTransaction().begin();
     em.createNativeQuery("update RPackageBuild set stage='COMPLETE', outcome='CANCELLED' " +
-        "where stage in ('READY', 'WAITING')");
+        "where stage in ('READY', 'WAITING')")
+        .executeUpdate();
     em.getTransaction().commit();
 
-    return Response.temporaryRedirect(uriInfo.getRequestUriBuilder().replacePath("/queue/dashboard").build())
+    return Response.seeOther(uriInfo.getRequestUriBuilder().replacePath("/queue/dashboard").build())
         .build();
 
-  }
-
-  @GET
-  @Path("result/{buildId}")
-  public Viewable getResult(@PathParam("buildId") int buildId) {
-    RPackageBuild build = HibernateUtil.getActiveEntityManager().find(RPackageBuild.class, buildId);
-    return new Viewable("/buildResult.ftl", build);
   }
 
   @Path("launch")

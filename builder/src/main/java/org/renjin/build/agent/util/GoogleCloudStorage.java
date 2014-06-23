@@ -99,7 +99,7 @@ public class GoogleCloudStorage {
    */
   public void putBuildLog(int buildId, String packageVersionId, ByteSource input) throws IOException {
 
-    String uri = "https://storage.googleapis.com/renjin-build/log/" +
+    String uri = "https://storage.googleapis.com/" +
         StorageKeys.BUCKET_NAME + "/" + StorageKeys.buildLog(buildId, packageVersionId);
 
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory(credential);

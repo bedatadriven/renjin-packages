@@ -28,7 +28,7 @@ public class BuildResourcesTest extends ResourceTest {
 
   @Test
   public void testGetBuildResult() throws Exception {
-    assertTemplateRenders(resource.getBuildResult(64, "org.renjin.cran", "scidb", "1.1-0").getIndex());
+    assertTemplateRenders(resource.getBuildResult(151, "org.renjin.cran", "actuar", "1.1-6").getIndex());
   }
 
   @Test

@@ -14,6 +14,16 @@
 
   <#if outcome != "SUCCESS" >
   <div class="alert alert-error">There was an error building this package</div>
+  </#if>lz
+
+  <#if outcome = "SUCCESS">
+  <textarea readonly="true" rows="6" cols="40">&lt;dependency&gt;
+      &lt;groupId&gt;${packageVersion.groupId}&lt;/groupId&gt;
+      &lt;artifactId&gt;${packageVersion.packageName}&lt;/artifactId&gt;
+      &lt;version&gt;${packageVersion.version}&lt;/version&gt;
+&lt;/dependency&gt;
+  </textarea>
+
   </#if>
 
   <p>${packageVersion.package.description}</p>

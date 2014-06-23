@@ -38,7 +38,7 @@
             <#list completed as build>
             <tr>
                 <td>${build.completionTime}</td>
-                <td><a href="result/${build.id}">${build.packageName} ${build.packageVersion.version}</a></td>
+                <td><a href="/build/${build.path}">${build.packageName} ${build.packageVersion.version}</a></td>
                 <td>${build.outcome}</td>
             </tr>
             </#list>

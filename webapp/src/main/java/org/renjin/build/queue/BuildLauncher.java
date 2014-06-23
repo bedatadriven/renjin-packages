@@ -3,19 +3,12 @@ package org.renjin.build.queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Joiner;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import org.hibernate.LockMode;
+import com.google.common.collect.*;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.renjin.build.HibernateUtil;
-import org.renjin.build.PersistenceUtil;
 import org.renjin.build.model.*;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -37,14 +30,16 @@ public class BuildLauncher {
                            @FormParam("renjinCommitId") String renjinCommitId) {
 
     // It takes quite awhile to schedule all 10k packages, so queue this as a longer-running task
-    QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/queue/launch/all"));
+    QueueFactory.getDefaultQueue().add(TaskOptions.Builder
+        .withUrl("/queue/launch/all")
+        .param("renjinCommitId", renjinCommitId));
 
-    return Response.temporaryRedirect(uri.getRequestUriBuilder().replacePath("/queue/dashboard").build()).build();
+    return Response.seeOther(uri.getRequestUriBuilder().replacePath("/queue/dashboard").build()).build();
   }
 
   @POST
   @Path("all")
-  private void launch(String renjinCommitId) {
+  public void launch(@FormParam("renjinCommitId") String renjinCommitId) {
 
 
     final StatelessSession session = HibernateUtil.openStatelessSession();
@@ -60,9 +55,24 @@ public class BuildLauncher {
       build.setStarted(new Date());
       session.insert(build);
 
+      List<Object[]> successfulBuilds = session.createSQLQuery(
+          "SELECT pb.packageVersion_id, pb.id FROM RPackageBuild pb LEFT JOIN Build b ON (pb.build_id = b.id)" +
+              " WHERE pb.outcome = 'SUCCESS' and build_id > 150 order by build_id")
+          .list();
+
+      Map<String, String> successfulBuildIds = Maps.newHashMap();
+      for(Object[] successfulBuild : successfulBuilds) {
+        String versionId = (String) successfulBuild[0];
+        String buildId = (String) successfulBuild[1];
+        successfulBuildIds.put(versionId, buildId);
+      }
+
       List<Object[]> deps = session.createSQLQuery(
           "SELECT p.id, d.dependency_id FROM RPackageVersion p " +
-              "LEFT JOIN RPackageDependency d ON (p.id = d.version_id) order by p.id")
+              "LEFT JOIN RPackageDependency d ON (p.id = d.version_id) " +
+              "WHERE p.id  NOT IN (select packageVersion_id FROM RPackageBuild b " +
+                                 "   WHERE b.stage != 'COMPLETE') " +
+              "ORDER by p.id")
           .list();
 
       String packageId = null;
@@ -72,10 +82,7 @@ public class BuildLauncher {
 
       for(Object[] pair : deps) {
         if(!Objects.equals(packageId, pair[0])) {
-          if(count > 100) {
-            break;
-          }
-          scheduleBuild(session, build, packageId, dependencies);
+          scheduleBuild(session, build, packageId, successfulBuildIds, dependencies);
           count ++;
           dependencies.clear();
           packageId = (String)pair[0];
@@ -83,13 +90,17 @@ public class BuildLauncher {
         String dependencyVersionId = (String)pair[1];
 
         if(dependencyVersionId != null) {
-          // for now we expect to build within the same batch
-          dependencyVersionId += "-b" + build.getId();
-          dependencies.add(dependencyVersionId);
+          if(successfulBuildIds.containsKey(dependencyVersionId)) {
+            dependencies.add(successfulBuildIds.get(dependencyVersionId));
+          } else {
+            // should be part of this batch
+            dependencyVersionId += "-b" + build.getId();
+            dependencies.add(dependencyVersionId);
+          }
         }
       }
 
-      scheduleBuild(session, build, packageId, dependencies);
+      scheduleBuild(session, build, packageId, successfulBuildIds, dependencies);
 
       transaction.commit();
 
@@ -103,8 +114,9 @@ public class BuildLauncher {
     BuildQueueController.schedule();
   }
 
-  private void scheduleBuild(StatelessSession session, Build build, String packageId, List<String> dependencies) {
-    if(packageId != null) {
+  private void scheduleBuild(StatelessSession session, Build build, String packageId,
+                             Map<String, String> successfulBuildIds, List<String> dependencies) {
+    if(packageId != null && !successfulBuildIds.containsKey(packageId)) {
       RPackageVersion version = new RPackageVersion();
       version.setId(packageId);
 
@@ -117,7 +129,11 @@ public class BuildLauncher {
         packageBuild.setStage(BuildStage.READY);
       } else {
         packageBuild.setDependencyVersions(Joiner.on(",").join(dependencies));
-        packageBuild.setStage(BuildStage.WAITING);
+        if(successfulBuildIds.values().containsAll(dependencies)) {
+          packageBuild.setStage(BuildStage.READY);
+        } else {
+          packageBuild.setStage(BuildStage.WAITING);
+        }
       }
       session.insert(packageBuild);
     }

@@ -88,14 +88,16 @@ public class PomBuilder {
 
     // Add dependencies on other packages:
     // These are calculated when launching the build
-    String[] dependencies = packageBuild.getDependencyVersions().split(",");
-    for(String dependency : dependencies) {
-      String gav[] = dependency.split(":");
-      Dependency mavenDep = new Dependency();
-      mavenDep.setGroupId(gav[0]);
-      mavenDep.setArtifactId(gav[1]);
-      mavenDep.setVersion(gav[2]);
-      model.addDependency(mavenDep);
+    if(!Strings.isNullOrEmpty(packageBuild.getDependencyVersions())) {
+      String[] dependencies = packageBuild.getDependencyVersions().split(",");
+      for(String dependency : dependencies) {
+        String gav[] = dependency.split(":");
+        Dependency mavenDep = new Dependency();
+        mavenDep.setGroupId(gav[0]);
+        mavenDep.setArtifactId(gav[1]);
+        mavenDep.setVersion(gav[2]);
+        model.addDependency(mavenDep);
+      }
     }
 
     Plugin renjinPlugin = new Plugin();

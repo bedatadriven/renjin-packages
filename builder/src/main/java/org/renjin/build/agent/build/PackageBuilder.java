@@ -71,6 +71,7 @@ public class PackageBuilder {
 
     } catch(Exception e) {
       System.out.println("Exception building " + pkg.getId() + ": " + e.getMessage());
+      e.printStackTrace();
       build.setOutcome(BuildOutcome.ERROR);
     }
 

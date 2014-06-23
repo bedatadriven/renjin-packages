@@ -49,10 +49,10 @@
 
   <h2>Build Log</h2>
 
-    <iframe src="//storage.googleapis.com/renjin-build-logs/${path}.log" width="100%" height="350px">
+    <iframe src="//storage.googleapis.com/renjin-build/log/${path}.log" width="100%" height="350px">
     </iframe>
 
-   <p><a href="//storage.googleapis.com/renjin-build-logs/${path}.log" target="_blank">Open in new window</a></p>
+   <p><a href="//storage.googleapis.com/renjin-build/log/${path}.log" target="_blank">Open in new window</a></p>
 
 
   <h2>Previous Builds</h2>

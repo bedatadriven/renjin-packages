@@ -136,6 +136,7 @@ public class PackageBuilder {
     command.add("-Dignore.gnur.compilation.failure=true");
 
     command.add("-DskipTests");
+    command.add("-B"); // run in batch mode
 
     command.add("clean");
     command.add("deploy");

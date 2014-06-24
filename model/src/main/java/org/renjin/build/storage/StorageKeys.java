@@ -13,7 +13,6 @@ public class StorageKeys {
   }
 
   public static String packageSource(String groupId, String packageName, String version) {
-    return "package-source/" + groupId + "/" +
-        packageName + "_" + version + ".tar.gz";
+    return "package-source/" + groupId + "/" + packageName + "_" + version + ".tar.gz";
   }
 }

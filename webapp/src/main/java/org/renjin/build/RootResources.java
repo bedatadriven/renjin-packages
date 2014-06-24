@@ -3,7 +3,7 @@ package org.renjin.build;
 
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.build.fetch.CranTasks;
+import org.renjin.build.tasks.cran.CranTasks;
 import org.renjin.build.migrate.MigrateBuilds;
 import org.renjin.build.model.TestResult;
 import org.renjin.build.queue.BuildQueue;
@@ -41,11 +41,6 @@ public class RootResources {
   @Path("builds")
   public BuildResources getBuilds() {
     return new BuildResources();
-  }
-
-  @Path("commits")
-  public CommitResources getVersions() {
-    return new CommitResources();
   }
 
   @Path("queue")

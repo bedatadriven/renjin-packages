@@ -1,14 +1,19 @@
 package org.renjin.build.model;
 
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
-import com.googlecode.objectify.annotation.Index;
+import com.google.common.collect.Sets;
+import com.googlecode.objectify.annotation.*;
+import com.googlecode.objectify.condition.IfEmpty;
+import com.googlecode.objectify.condition.IfFalse;
+import com.googlecode.objectify.condition.IfNotEmpty;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.joda.time.LocalDateTime;
 
-import java.util.Date;
-import java.util.List;
+import javax.annotation.Nonnull;
+import java.util.Set;
 
 @Entity
-public class PackageVersion {
+public class PackageVersion implements Comparable<PackageVersion> {
 
   @Id
   private String id;
@@ -17,22 +22,28 @@ public class PackageVersion {
 
   private boolean latest;
 
-  @Index
-  private long lastSuccessfulBuild;
-
-  private Date publicationDate;
-
-  /**
-   * The version of GNU R on which this package depends
-   */
-  private String gnuRDependency;
+  private LocalDateTime publicationDate;
 
   /**
    * List of PackageVersion ids on which this package depends.
    */
-  @Index
-  private List<String> dependencies;
+  @Index(IfNotEmpty.class)
+  @IgnoreSave(IfEmpty.class)
+  private Set<PackageVersionId> dependencies = Sets.newHashSet();
 
+  /**
+   * True if we have the source of all of this packages'
+   * compile time dependencies
+   */
+  @Index(IfFalse.class)
+  private boolean compileDependenciesResolved;
+
+  public PackageVersion() {
+  }
+
+  public PackageVersion(PackageVersionId packageVersionId) {
+    this.id = packageVersionId.toString();
+  }
 
   public String getId() {
     return id;
@@ -40,6 +51,19 @@ public class PackageVersion {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+
+  public PackageVersionId getPackageVersionId() {
+    return PackageVersionId.fromTriplet(id);
+  }
+
+  public ArtifactVersion getVersion() {
+    return new DefaultArtifactVersion(getPackageVersionId().getSourceVersion());
+  }
+
+  public String getGroupId() {
+    return getPackageVersionId().getGroupId();
   }
 
   public String getDescription() {
@@ -50,43 +74,62 @@ public class PackageVersion {
     this.description = description;
   }
 
-  public boolean isLatest() {
-    return latest;
+  public PackageDescription parseDescription() {
+    try {
+      return PackageDescription.fromString(description);
+    } catch (Exception e) {
+      throw new IllegalStateException("Could not parse DESCRIPTION for package version " + id, e);
+    }
   }
 
-  public void setLatest(boolean latest) {
-    this.latest = latest;
-  }
 
-  public long getLastSuccessfulBuild() {
-    return lastSuccessfulBuild;
-  }
-
-  public void setLastSuccessfulBuild(long lastSuccessfulBuild) {
-    this.lastSuccessfulBuild = lastSuccessfulBuild;
-  }
-
-  public String getGnuRDependency() {
-    return gnuRDependency;
-  }
-
-  public void setGnuRDependency(String gnuRDependency) {
-    this.gnuRDependency = gnuRDependency;
-  }
-
-  public List<String> getDependencies() {
+  public Set<PackageVersionId> getDependencies() {
     return dependencies;
   }
 
-  public void setDependencies(List<String> dependencies) {
+  public void setDependencies(Set<PackageVersionId> dependencies) {
     this.dependencies = dependencies;
   }
 
-  public Date getPublicationDate() {
+  public LocalDateTime getPublicationDate() {
     return publicationDate;
   }
 
-  public void setPublicationDate(Date publicationDate) {
+  public void setPublicationDate(LocalDateTime publicationDate) {
     this.publicationDate = publicationDate;
+  }
+
+  public boolean isCompileDependenciesResolved() {
+    return compileDependenciesResolved;
+  }
+
+  public void setCompileDependenciesResolved(boolean compileDependenciesResolved) {
+    this.compileDependenciesResolved = compileDependenciesResolved;
+  }
+
+  @OnLoad
+  public void onLoad() {
+    if(dependencies == null) {
+      dependencies = Sets.newHashSet();
+    }
+  }
+
+  @Override
+  public int compareTo(@Nonnull PackageVersion o) {
+    PackageVersionId thisId = PackageVersionId.fromTriplet(this.getId());
+    PackageVersionId thatId = PackageVersionId.fromTriplet(o.getId());
+
+    if(!thisId.getGroupId().equals(thatId.getGroupId())) {
+      return thisId.getGroupId().compareTo(thatId.getGroupId());
+    }
+
+    if(!thisId.getPackageName().equals(thatId.getPackageName())) {
+      return thisId.getPackageName().compareTo(thatId.getPackageName());
+    }
+
+    DefaultArtifactVersion thisVersion = new DefaultArtifactVersion(thisId.getSourceVersion());
+    DefaultArtifactVersion thatVersion = new DefaultArtifactVersion(thatId.getSourceVersion());
+
+    return thisVersion.compareTo(thatVersion);
   }
 }

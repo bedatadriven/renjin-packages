@@ -8,6 +8,7 @@ import com.googlecode.objectify.ObjectifyService;
 import org.renjin.build.HibernateUtil;
 import org.renjin.build.model.*;
 import org.renjin.build.model.Package;
+import org.renjin.build.tasks.RegisterPackageVersionTask;
 
 import javax.persistence.Tuple;
 import javax.ws.rs.FormParam;
@@ -65,6 +66,7 @@ public class MigrateBuilds {
   @Path("package")
   public Response migrateVersions(@FormParam("packageId") String packageId) {
 
+
     Objectify ofy = ObjectifyService.ofy();
 
     List<Object> entities = Lists.newArrayList();
@@ -82,16 +84,16 @@ public class MigrateBuilds {
       version.setId(v.getId());
       version.setDescription(v.getDescription());
 
-      if(v.getPublicationDate() != null) {
-        version.setPublicationDate(new Date(v.getPublicationDate().getTime()));
-      }
+//      if(v.getPublicationDate() != null) {
+//        //version.setPublicationDate(new Date(v.getPublicationDate()));
+//      }
 
       List<String> dependencies = Lists.newArrayList();
 
       for(RPackageDependency dep : v.getDependencies()) {
         dependencies.add(dep.getDependency().getId());
       }
-      version.setDependencies(dependencies);
+      //version.setDependencies(dependencies);
       entities.add(version);
     }
 
@@ -117,12 +119,11 @@ public class MigrateBuilds {
     List<String> pkgs = HibernateUtil
         .getActiveEntityManager()
         .createQuery("select b.id " +
-            "from RPackage  b", String.class)
+            "from RPackageVersion  b", String.class)
         .getResultList();
 
     for(String packageId : pkgs) {
-      QueueFactory.getDefaultQueue().add(TaskOptions.Builder
-          .withUrl("/migrateBuilds/package").param("packageId", packageId));
+      RegisterPackageVersionTask.queue(new PackageVersionId(packageId));
     }
 
     return Response.ok().build();

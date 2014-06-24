@@ -86,10 +86,10 @@ public class Migrate {
 		LocAnalyzer locAnalyzer = new LocAnalyzer(dir);
 		version.setLoc(locAnalyzer.count());
 
-		try {
-			version.setPublicationDate(description.getPublicationDate());
-		} catch (ParseException e) {
-			System.err.println("Could not parse publication date:" + description.getProperty("Date/Publication").toString());
-		}
+//		try {
+//			version.setPublicationDate(description.getPublicationDate());
+//		} catch (ParseException e) {
+//			System.err.println("Could not parse publication date:" + description.getProperty("Date/Publication").toString());
+//		}
 	}
 }

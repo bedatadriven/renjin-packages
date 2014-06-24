@@ -101,12 +101,12 @@ public class BuildLauncher {
 //
 //    Set<String> dependencies = Sets.newHashSet();
 //    Set<String> blocking = Sets.newHashSet();
-//
-    List<Key<PackageVersion>> dependencies = Lists.newArrayList();
-    for(String dependencyId : packageVersion.getDependencies()) {
-      dependencies.add(Key.create(PackageVersion.class, dependencyId));
-    }
-    Map<Key<PackageVersion>, PackageVersion> keys = ofy.load().keys(dependencies);
+////
+//    List<Key<PackageVersion>> dependencies = Lists.newArrayList();
+//    for(PackageVersionId dependencyId : packageVersion.getDependencies()) {
+//      dependencies.add(Key.create(PackageVersion.class, dependencyId));
+//    }
+//    Map<Key<PackageVersion>, PackageVersion> keys = ofy.load().keys(dependencies);
 
 
 //    List<PackageVersion> dependencies = ofy.load().key

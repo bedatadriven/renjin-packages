@@ -17,7 +17,7 @@ Specifically, we need to:
 * Extract test cases from those packages and other sources
 * Run these test cases as regression tests against new versions of Renjin (and potentially other interpreters)
 
-## Packages
+## Package Model
 
 We want to "injest" and build packages from a variety of sources, including CRAN, BioConductor, and GitHub.
 
@@ -34,28 +34,69 @@ For our purposes, we will consider three entities:
 * `RenjinVersion`: a specific commit id of the Renjin project
 * `Package`: identified by groupId and packageName
 * `PackageVersion`: identified by groupId, packageName, and the version of the package source
+* `PackageVersionStatus`: compatability status of a given PackageVersion with
+   a specific RenjinVersion.
 * `PackageBuild`: identified by groupId, packageName, the source version, a RenjinVersion and our unique build number.
 
-## Package Injestion
+
+## Outputs
+
+Ultimately there a few things we want to know:
+
+* Which packages have at least one "working" version
+* Which package versions are "working"
+* Which packages does a new Renjin version fix relative to the previous release,
+  how many does it break?
+* Which tests does a new Renjin version fix relative to the previous release,
+  how many does it break?
 
 
-### CRAN
+
+## Algorithms
+
+### FetchRenjinUpdates
+
+
+### Fetch CRAN Updates
 
 Assign groupId "org.renjin.cran" to all Packages from this repository
+Each night,
 
-Injestion algorithm:
+1. Query the most recent publicationDate of PackageVersion with groupId
+   org.renjin.cran in our database.
+2. Query the CRAN mirror for the list of newly released packages
+3. For each new PackageVersion, enqueue a named FetchCranPackageTask
 
-1. Each night, fetch the index from CRAN and identify any new PackageVersions
-2. For each new PackageVersions
-   1. Fetch the source archive and store in the renjin-package-source GCS bucket
-   2. Create a new PackageVersion entity from Description File
-   3. Create a new Package entity if one does not exist already
-   4. If this PackageVersion is the newer than any existing PackageVersion of this Package:
-      1. Update Package.latestVersion.
-      2. Update Search Document index for this Package
-   5. Resolve the package's dependencies to specific PackageVersions in our database
+### FetchCranPackage(packageName, version)
 
-Version resolution algorithm:
+1. Download the package source to the renjin-build/package-sources GCS bucket
+2. Create a new PackageVersion entity from the DESCRIPTION File
+2. Upon success, enqueue RegisterPackageVersionTask
+
+### RegisterPackageVersionTask(groupId, source)
+
+1. Create a new PackageVersion entity from the DESCRIPTION File
+2. Create a new Package entity if one does not exist already
+3. If this PackageVersion is the newer than any existing PackageVersion of this Package, run the PromoteLatestVersion task
+4. Set PackageVersion.dependencies to the result of the ResolveDependencyVersions
+5. If package is not orphan, run the EnqueuePVS algorithm for the latest release
+   version of Renjin
+
+### RegisterPackageVersionTask(packageVersion)
+
+
+### EnqueuePVS(packageVersion, renjinVersion)
+
+1. Create a new PVS entity, _status_, with the key groupId:packageName:sourceVersion:renjinVersion
+2. For each _dep_, a dependency of packageVersion:
+   1. Query _depStatus_, the corresponding PVS for the dependency
+   2. If _depStatus_ is not BUILT, then:
+      1. add the packageVersionId to blockingDependencies and/or blockingTestDependencies
+      2. set the _status_ to WAITING
+   3. Otherwise set _status_ to READY
+
+
+### ResolveDependencyVersions(dependencies)
 
 GNU R packages do not specify a version for their dependencies. This leads to problems for GNU R users because
 an existing package may be broken when a new version of a dependency is released.
@@ -68,6 +109,13 @@ For each dependency in `Imports` and `Depends` in _this_ package.
 2. If there are one or more matching PackageVersions:
    1. Choose the `PackageVersion` with the largest version number _published before_ this package.
    2. If no such `PackageVersion` exists, choose the first version _published after_ this PackageVersion
+
+
+### PromoteLatestVersionTask(packageVersion)
+
+1. Set Package.latestVersion to the packageVersionId
+2. Update Package.dependencies
+3. Update the Search document index for this package
 
 
 ## Package Building

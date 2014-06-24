@@ -99,10 +99,6 @@ public class BuildQueue {
     return new BuildLauncher();
   }
 
-  @Path("control")
-  public BuildQueueController control() {
-    return new BuildQueueController();
-  }
 
   @POST
   @Path("lease")

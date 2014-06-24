@@ -17,6 +17,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.DateTimeFormat;
 
 public class PackageDescription {
 
@@ -278,13 +281,12 @@ public class PackageDescription {
 		return properties.keySet();
 	}
 
-	public Date getPublicationDate() throws ParseException {
+	public LocalDateTime getPublicationDate() throws ParseException {
 		List<String> dateStrings = properties.get("Date/Publication");
 		if(dateStrings.isEmpty()) {
 			return null;
 		}
 		String dateString = dateStrings.get(0);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		return dateFormat.parse(dateString);
+    return LocalDateTime.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss"));
 	}
 }

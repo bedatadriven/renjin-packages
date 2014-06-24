@@ -10,6 +10,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.renjin.build.model.*;
+import org.renjin.build.tasks.RegisterPackageVersionTask;
 import org.renjin.build.util.TupleObjectWrapper;
 
 import javax.ws.rs.core.Application;
@@ -19,11 +20,6 @@ import java.util.Set;
 
 public class BuildApplication extends Application {
 
-  public BuildApplication() {
-    ObjectifyService.register(PackageBuild.class);
-    ObjectifyService.register(org.renjin.build.model.Package.class);
-    ObjectifyService.register(PackageVersion.class);
-  }
 
   @Override
   public Set<Class<?>> getClasses() {
@@ -31,6 +27,7 @@ public class BuildApplication extends Application {
     classes.add(RootResources.class);
     classes.add(JacksonFeature.class);
     classes.add(FreemarkerMvcFeature.class);
+    classes.add(RegisterPackageVersionTask.class);
     return classes;
   }
 

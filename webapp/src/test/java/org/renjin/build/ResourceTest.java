@@ -1,10 +1,10 @@
 package org.renjin.build;
 
 
-import com.sun.jersey.api.view.Viewable;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import org.glassfish.jersey.server.mvc.Viewable;
 
 import java.io.IOException;
 import java.io.PrintWriter;

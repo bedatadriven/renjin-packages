@@ -31,7 +31,6 @@
   <properties>
     <renjin.version>0.7.0-SNAPSHOT</renjin.version>
     <gae.version>1.9.5</gae.version>
-    <jersey.version>1.17</jersey.version>
   </properties>
 
   <dependencies>
@@ -46,16 +45,24 @@
       <version>0.3.12</version>
     </dependency>
     <dependency>
+      <groupId>com.googlecode.objectify</groupId>
+      <artifactId>objectify</artifactId>
+      <version>5.0.3</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.5</version>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-servlet-core</artifactId>
+      <version>${jersey.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-json-jackson</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
     <dependency>
       <groupId>net.sf.jtidy</groupId>
       <artifactId>jtidy</artifactId>
@@ -66,32 +73,13 @@
       <artifactId>github-api</artifactId>
       <version>1.55</version>
     </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-guice</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-      <version>${jersey.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sun.xml.bind</groupId>
-          <artifactId>jaxb-impl</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+
     <dependency>
       <groupId>org.codehaus.jsr166-mirror</groupId>
       <artifactId>jsr166y</artifactId>
       <version>1.7.0</version>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.9.12</version>
-    </dependency>
+
     <dependency>
       <groupId>org.renjin.build</groupId>
       <artifactId>renjin-build-model</artifactId>
@@ -101,6 +89,17 @@
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker-gae</artifactId>
       <version>2.3.20</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.ext</groupId>
+      <artifactId>jersey-mvc-freemarker</artifactId>
+      <version>${jersey.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.freemarker</groupId>
+          <artifactId>freemarker</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

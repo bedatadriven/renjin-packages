@@ -16,6 +16,7 @@ import org.renjin.build.model.PackageDescription.PackageDependency;
 import org.renjin.build.model.PackageDescription.Person;
 
 import com.google.common.base.Strings;
+import org.renjin.build.task.PackageBuildTask;
 
 /**
  * Constructs a Maven Project Object Model (POM) from a GNU-R style
@@ -29,18 +30,18 @@ public class PomBuilder {
 
   private File baseDir;
 
-  private final RPackageBuild packageBuild;
+  private final PackageBuildTask task;
   private final PackageDescription description;
 
   private String renjinVersion;
   private String packageVersionSuffix;
 
-  public PomBuilder(File baseDir, RPackageBuild packageBuild) throws IOException {
-    this.packageBuild = packageBuild;
+  public PomBuilder(File baseDir, PackageBuildTask task) throws IOException {
+    this.task = task;
     this.baseDir = baseDir;
 
-    renjinVersion = packageBuild.getBuild().getRenjinCommit().getVersion();
-    packageVersionSuffix = "-b" + packageBuild.getBuild().getId();
+    renjinVersion = task.getRenjinVersion();
+    packageVersionSuffix = "-b" + task.getBuildId();
 
     description = readDescription();
   }
@@ -49,7 +50,7 @@ public class PomBuilder {
     Model model = new Model();
     model.setModelVersion("4.0.0");
     model.setArtifactId(description.getPackage());
-    model.setGroupId("org.renjin.cran");
+    model.setGroupId(task.getPackageGroupId());
     model.setVersion(description.getVersion() + packageVersionSuffix);
     model.setDescription(description.getDescription());
     model.setUrl(description.getUrl());
@@ -79,23 +80,20 @@ public class PomBuilder {
         Dependency mavenDep = new Dependency();
         mavenDep.setGroupId("org.renjin");
         mavenDep.setArtifactId(packageDep.getName());
-        mavenDep.setVersion(getRenjinVersion());
+        mavenDep.setVersion(task.getRenjinVersion());
         model.addDependency(mavenDep);
       }
     }
 
     // Add dependencies on other packages:
     // These are calculated when launching the build
-    if(!Strings.isNullOrEmpty(packageBuild.getDependencyVersions())) {
-      String[] dependencies = packageBuild.getDependencyVersions().split(",");
-      for(String dependency : dependencies) {
-        String gav[] = dependency.split(":");
-        Dependency mavenDep = new Dependency();
-        mavenDep.setGroupId(gav[0]);
-        mavenDep.setArtifactId(gav[1]);
-        mavenDep.setVersion(gav[2]);
-        model.addDependency(mavenDep);
-      }
+    for(String dependency : task.getDependencies()) {
+      String gav[] = dependency.split(":");
+      Dependency mavenDep = new Dependency();
+      mavenDep.setGroupId(gav[0]);
+      mavenDep.setArtifactId(gav[1]);
+      mavenDep.setVersion(gav[2]);
+      model.addDependency(mavenDep);
     }
 
     Plugin renjinPlugin = new Plugin();
@@ -138,18 +136,6 @@ public class PomBuilder {
     model.setPluginRepositories(Lists.newArrayList(bddRepo));
     
     return model;
-  }
-
-  private String getRenjinVersion() {
-    return packageBuild.getBuild().getRenjinCommit().getVersion();
-  }
-
-  private Dependency dependencyFromEdge(RPackageDependency dep) {
-    Dependency mavenDep = new Dependency();
-    mavenDep.setGroupId(dep.getDependency().getGroupId());
-    mavenDep.setArtifactId(dep.getDependency().getPackageName());
-    mavenDep.setVersion(dep.getDependency().getVersion() + packageVersionSuffix);
-    return mavenDep;
   }
 
   private PluginExecution compileExecution() {

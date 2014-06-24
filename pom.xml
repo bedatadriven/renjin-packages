@@ -41,6 +41,7 @@
     <renjin.version>${project.version}</renjin.version>
     <renjin.display.version>${project.version}</renjin.display.version>
     <envClassifier>linux-x86</envClassifier>
+    <jersey.version>2.5.1</jersey.version>
   </properties>
 
   <distributionManagement>

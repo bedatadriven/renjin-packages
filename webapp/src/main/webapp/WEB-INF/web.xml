@@ -12,32 +12,19 @@
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
-
   <servlet>
-    <servlet-name>Jersey Web Application</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-    
-    <init-param>
-      <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
-      <param-value>org.renjin.build.RenjinWebApp</param-value>
-    </init-param>
-
+    <servlet-name>RenjinBuildServer</servlet-name>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 
     <init-param>
-      <!-- speed up initial Jersey loading by deactivating WADL -->
-      <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
-      <param-value>true</param-value>
+      <param-name>javax.ws.rs.Application</param-name>
+      <param-value>org.renjin.build.BuildApplication</param-value>
     </init-param>
 
-    <init-param>
-      <param-name>com.sun.jersey.freemarker.templateBasePath</param-name>
-      <param-value>/</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>Jersey Web Application</servlet-name>
+    <servlet-name>RenjinBuildServer</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
 

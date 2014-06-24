@@ -11,4 +11,11 @@
       <input type="submit" value="Re-resolve all dependency versions">
   </form>
 
+  <h1>Migrate builds</h1>
+
+  <form action="/migrateBuilds" method="post">
+      <input type="submit" value="Migrate build records">
+  </form>
+
+
 </html>

@@ -1,9 +1,18 @@
 package org.renjin.build.queue;
 
+import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.*;
+import com.googlecode.objectify.Key;
+import com.googlecode.objectify.Objectify;
+import com.googlecode.objectify.ObjectifyService;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.renjin.build.HibernateUtil;
@@ -16,6 +25,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -23,6 +34,8 @@ import java.util.*;
  */
 public class BuildLauncher {
 
+
+  private static final Logger LOGGER = Logger.getLogger(BuildLauncher.class.getName());
 
   @POST
   public Response startBuild(
@@ -39,80 +52,101 @@ public class BuildLauncher {
 
   @POST
   @Path("all")
-  public void launch(@FormParam("renjinCommitId") String renjinCommitId) {
+  public void launch(@FormParam("renjinVersion") String renjinVersion) {
 
+    Objectify ofy = ObjectifyService.ofy();
 
-    final StatelessSession session = HibernateUtil.openStatelessSession();
-    Transaction transaction = session.beginTransaction();
+    QueryResultIterator<Key<PackageVersion>> iterator = ofy.load()
+        .type(PackageVersion.class)
+        .filter("lastSuccessfulBuild = ", 0)
+        .keys()
+        .iterator();
 
-    try {
+    while(iterator.hasNext()) {
 
+      QueueFactory.getDefaultQueue().add(TaskOptions.Builder
+          .withUrl("/queue/launch/package")
+          .param("renjinVersion", renjinVersion)
+          .param("packageVersionId", iterator.next().getName()));
 
-      RenjinCommit commit = (RenjinCommit)session.get(RenjinCommit.class, renjinCommitId);
+    }
+  }
 
-      Build build = new Build();
-      build.setRenjinCommit(commit);
-      build.setStarted(new Date());
-      session.insert(build);
+  @POST
+  @Path("package")
+  public Response launch(@FormParam("renjinVersion") String renjinVersion,
+                         @FormParam("packageVersionId") String packageVersionId) {
 
-      List<Object[]> successfulBuilds = session.createSQLQuery(
-          "SELECT pb.packageVersion_id, pb.id FROM RPackageBuild pb LEFT JOIN Build b ON (pb.build_id = b.id)" +
-              " WHERE pb.outcome = 'SUCCESS' and build_id > 150 order by build_id")
-          .list();
+    // is there another build queued for this package version?
+    Objectify ofy = ObjectifyService.ofy();
 
-      Map<String, String> successfulBuildIds = Maps.newHashMap();
-      for(Object[] successfulBuild : successfulBuilds) {
-        String versionId = (String) successfulBuild[0];
-        String buildId = (String) successfulBuild[1];
-        successfulBuildIds.put(versionId, buildId);
-      }
-
-      List<Object[]> deps = session.createSQLQuery(
-          "SELECT p.id, d.dependency_id FROM RPackageVersion p " +
-              "LEFT JOIN RPackageDependency d ON (p.id = d.version_id) " +
-              "WHERE p.id  NOT IN (select packageVersion_id FROM RPackageBuild b " +
-                                 "   WHERE b.stage != 'COMPLETE') " +
-              "ORDER by p.id")
-          .list();
-
-      String packageId = null;
-      List<String> dependencies = Lists.newArrayList();
-
-      int count = 0;
-
-      for(Object[] pair : deps) {
-        if(!Objects.equals(packageId, pair[0])) {
-          scheduleBuild(session, build, packageId, successfulBuildIds, dependencies);
-          count ++;
-          dependencies.clear();
-          packageId = (String)pair[0];
-        }
-        String dependencyVersionId = (String)pair[1];
-
-        if(dependencyVersionId != null) {
-          if(successfulBuildIds.containsKey(dependencyVersionId)) {
-            dependencies.add(successfulBuildIds.get(dependencyVersionId));
-          } else {
-            // should be part of this batch
-            dependencyVersionId += "-b" + build.getId();
-            dependencies.add(dependencyVersionId);
-          }
-        }
-      }
-
-      scheduleBuild(session, build, packageId, successfulBuildIds, dependencies);
-
-      transaction.commit();
-
-      System.out.println("started build " + build.getId());
-
-    } catch(Exception e) {
-      transaction.rollback();
-      throw new RuntimeException(e);
+    if(inProgress(packageVersionId, null)) {
+      Response.ok().build();
     }
 
-    BuildQueueController.schedule();
+    // create the new build record
+    PackageBuild build = new PackageBuild();
+    build.setId(packageVersionId + "-b1000");
+    build.setStage(BuildStage.WAITING);
+    build.setRenjinVersion(renjinVersion);
+
+
+    // determine which dependencies we need
+    PackageVersion packageVersion = ofy.load()
+        .type(PackageVersion.class)
+        .filterKey(packageVersionId)
+        .first()
+        .now();
+
+//
+//    Set<String> dependencies = Sets.newHashSet();
+//    Set<String> blocking = Sets.newHashSet();
+//
+    List<Key<PackageVersion>> dependencies = Lists.newArrayList();
+    for(String dependencyId : packageVersion.getDependencies()) {
+      dependencies.add(Key.create(PackageVersion.class, dependencyId));
+    }
+    Map<Key<PackageVersion>, PackageVersion> keys = ofy.load().keys(dependencies);
+
+
+//    List<PackageVersion> dependencies = ofy.load().key
+//
+//    for(String dependency : packageVersion.getDependencies()) {
+//      dependencies.add(dependency);
+//
+//
+//    }
+//
+//    Iterable<PackageDescription.PackageDependency> declaredDeps =
+//        Iterables.concat(description.getImports(), description.getDepends());
+//
+//    for(PackageDescription.PackageDependency dep : declaredDeps) {
+//
+//    //  PackageVersion latestVersion = findLatestVersion(ofy, dep);
+//
+//    }
+    throw new UnsupportedOperationException();
   }
+
+
+  private boolean inProgress(String packageVersionId, Objectify ofy) {
+
+    QueryResultIterator<PackageBuild> iterator = ofy.load().type(PackageBuild.class)
+        .filterKey(">=", packageVersionId)
+        .iterator();
+
+    while(iterator.hasNext()) {
+      PackageBuild build = iterator.next();
+      if(!build.getPackageVersionId().equals(packageVersionId)) {
+        return false;
+      }
+      if(!build.isComplete()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   private void scheduleBuild(StatelessSession session, Build build, String packageId,
                              Map<String, String> successfulBuildIds, List<String> dependencies) {

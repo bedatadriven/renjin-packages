@@ -7,9 +7,9 @@ import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.tools.cloudstorage.*;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
-import com.sun.jersey.api.view.Viewable;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.joda.time.LocalDate;
 import org.renjin.build.HibernateUtil;
 import org.renjin.build.model.PackageDescription;
@@ -54,8 +54,11 @@ public class CranTasks {
   @Path("updateIndex")
   public Response updateIndex() {
 
+
+
     EntityManager em = HibernateUtil.createEntityManager();
     try {
+
       Date lastUpdate = em
           .createQuery("select max(v.publicationDate) from RPackageVersion v", Date.class)
           .getSingleResult();

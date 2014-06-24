@@ -2,9 +2,10 @@ package org.renjin.build;
 
 
 import com.google.common.collect.Maps;
-import com.sun.jersey.api.view.Viewable;
-import org.renjin.build.model.TestResult;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.build.fetch.CranTasks;
+import org.renjin.build.migrate.MigrateBuilds;
+import org.renjin.build.model.TestResult;
 import org.renjin.build.queue.BuildQueue;
 
 import javax.persistence.EntityManager;
@@ -50,6 +51,11 @@ public class RootResources {
   @Path("queue")
   public BuildQueue getQueue() {
     return new BuildQueue();
+  }
+
+  @Path("migrateBuilds")
+  public MigrateBuilds migrate() {
+    return new MigrateBuilds();
   }
 
   @GET

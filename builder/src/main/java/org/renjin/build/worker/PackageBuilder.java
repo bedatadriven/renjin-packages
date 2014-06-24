@@ -5,18 +5,16 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.renjin.build.task.PackageBuildResult;
+import org.renjin.build.task.PackageBuildTask;
 import org.renjin.build.worker.util.GoogleCloudStorage;
 import org.renjin.build.worker.util.OutputCollector;
 import org.renjin.build.worker.util.ProcessMonitor;
 import org.renjin.build.model.BuildOutcome;
-import org.renjin.build.model.BuildStage;
-import org.renjin.build.model.RPackageBuild;
-import org.renjin.build.model.RPackageVersion;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -32,8 +30,10 @@ public class PackageBuilder {
   private static final Logger LOGGER = Logger.getLogger(PackageBuilder.class.getName());
 
   private final File baseDir;
-  private final RPackageBuild build;
-  private RPackageVersion pkg;
+  private final PackageBuildTask build;
+
+  private BuildOutcome outcome = BuildOutcome.ERROR;
+  private boolean nativeSourceCompilationFailures = false;
 
   private File logFile;
 
@@ -41,20 +41,19 @@ public class PackageBuilder {
 
   public static final int MAX_LOG_SIZE = 1024 * 600;
 
-  public PackageBuilder(File packagesDir, RPackageBuild build) {
+  public PackageBuilder(File packagesDir, PackageBuildTask build) {
     this.build = build;
-    this.pkg = build.getPackageVersion();
-    this.baseDir = new File(packagesDir, pkg.getPackageName() + "_" + pkg.getVersion());
+    this.baseDir = new File(packagesDir, build.getPackageName() + "_" + build.getPackageVersion());
     this.logFile = new File(baseDir, "build.log");
   }
 
   public void build()  {
 
-    System.out.println("Building " + build.getPackage().getId());
+    System.out.println("Building " + build.packageBuildId());
    
     // set the name of this thread to the package
     // name for debugging
-    Thread.currentThread().setName(pkg.getPackageName());
+    Thread.currentThread().setName(build.getPackageName());
 
     try {
       // grab the source if we don't have it
@@ -68,20 +67,22 @@ public class PackageBuilder {
 
       publishBuildLog();
 
-    } catch(Exception e) {
-      System.out.println("Exception building " + pkg.getId() + ": " + e.getMessage());
-      e.printStackTrace();
-      build.setOutcome(BuildOutcome.ERROR);
-    }
+      removeBuildDir();
 
-    build.setStage(BuildStage.COMPLETED);
-    build.setCompletionTime(new Date());
+    } catch(Exception e) {
+      System.out.println("Exception building " + build.packageBuildId() + ": " + e.getMessage());
+      e.printStackTrace();
+      outcome = BuildOutcome.ERROR;
+    }
   }
+
 
   private void publishBuildLog() {
     try {
-      GoogleCloudStorage.INSTANCE.putBuildLog(build.getBuild().getId(),
-          build.getPackageVersion().getId(), Files.asByteSource(logFile));
+      GoogleCloudStorage.INSTANCE.putBuildLog(
+          build.getBuildId(),
+          build.versionId(),
+          Files.asByteSource(logFile));
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Failed to publish build log", e);
     }
@@ -97,14 +98,14 @@ public class PackageBuilder {
     if(!baseDir.exists()) {
 
       InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(
-          pkg.getGroupId(),
-          pkg.getPackage().getName(),
-          pkg.getVersion());
+          build.getPackageGroupId(),
+          build.getPackageName(),
+          build.getPackageVersion());
 
       TarArchiveInputStream tarIn = new TarArchiveInputStream(
           new GZIPInputStream(in));
 
-      String packagePrefix = pkg.getPackageName() + "/";
+      String packagePrefix = build.getPackageName() + "/";
 
       TarArchiveEntry entry;
       while((entry=tarIn.getNextTarEntry())!=null) {
@@ -129,8 +130,8 @@ public class PackageBuilder {
     List<String> command = Lists.newArrayList();
     command.add("mvn");
     command.add("-X");
-    command.add("--gs");
-    command.add("/etc/renjin-worker/settings.xml");
+//    command.add("--gs");
+//    command.add("/etc/renjin-worker/settings.xml");
 
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");
@@ -149,11 +150,11 @@ public class PackageBuilder {
     Process process = builder.start();
 
     OutputCollector collector = new OutputCollector(process, logFile, MAX_LOG_SIZE);
-    collector.setName(pkg + " - output collector");
+    collector.setName(build.getPackageName() + " - output collector");
     collector.start();
 
     ProcessMonitor monitor = new ProcessMonitor(process);
-    monitor.setName(pkg.getId() + " - monitor");
+    monitor.setName(build.packageBuildId() + " - monitor");
     monitor.start();
 
     Stopwatch stopwatch = Stopwatch.createStarted();
@@ -161,25 +162,46 @@ public class PackageBuilder {
     while(!monitor.isFinished()) {
 
       if(stopwatch.elapsed(TimeUnit.MINUTES) > TIMEOUT_MINUTES) {
-        System.out.println(pkg + " build timed out after " + TIMEOUT_MINUTES + " minutes.");
+        System.out.println(build.packageBuildId() + " build timed out after " + TIMEOUT_MINUTES + " minutes.");
         process.destroy();
-        build.setOutcome(BuildOutcome.TIMEOUT);
+        outcome = BuildOutcome.TIMEOUT;
         break;
       }
       Thread.sleep(1000);
     }
 
     collector.join();
-    if(build.getOutcome() != BuildOutcome.TIMEOUT) {
+    if(outcome != BuildOutcome.TIMEOUT) {
       if(monitor.getExitCode() == 0) {
-        build.setOutcome(BuildOutcome.SUCCESS);
+        outcome = BuildOutcome.SUCCESS;
       } else if(monitor.getExitCode() == 1) {
-        build.setOutcome(BuildOutcome.FAILURE);
+        outcome = BuildOutcome.FAILURE;
       } else {
-        System.out.println(pkg + " exited with code " + monitor.getExitCode());
-        build.setOutcome(BuildOutcome.ERROR);
+        System.out.println(build.packageBuildId() + " exited with code " + monitor.getExitCode());
+        outcome = BuildOutcome.ERROR;
       }
     }
   }
 
+
+  private void removeBuildDir() {
+    try {
+      Process p = Runtime.getRuntime().exec(new String[] {"rm","-rf", baseDir.getAbsolutePath() });
+      p.waitFor();
+    } catch(Exception e) {
+      LOGGER.log(Level.WARNING, "Failed to remove build dir", e);
+    }
+  }
+
+  public BuildOutcome getOutcome() {
+    return outcome;
+  }
+
+  public PackageBuildResult getResult() {
+    PackageBuildResult result = new PackageBuildResult();
+    result.setId(build.packageBuildId());
+    result.setOutcome(outcome);
+    result.setNativeSourcesCompilationFailure(nativeSourceCompilationFailures);
+    return result;
+  }
 }

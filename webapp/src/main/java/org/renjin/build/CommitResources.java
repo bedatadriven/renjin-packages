@@ -6,7 +6,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.sun.jersey.api.view.Viewable;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.build.history.HistoryBuilder;
 import org.renjin.build.model.RenjinCommit;
 import org.renjin.build.model.TestResult;

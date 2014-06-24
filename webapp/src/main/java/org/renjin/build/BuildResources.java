@@ -1,9 +1,7 @@
 package org.renjin.build;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-import com.sun.jersey.api.view.Viewable;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.build.model.Build;
 import org.renjin.build.model.BuildOutcome;
 import org.renjin.build.model.RPackageBuild;
@@ -12,7 +10,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

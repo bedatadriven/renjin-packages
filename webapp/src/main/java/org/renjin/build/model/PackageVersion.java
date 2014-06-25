@@ -1,5 +1,6 @@
 package org.renjin.build.model;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfEmpty;
@@ -20,8 +21,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   private String description;
 
-  private boolean latest;
-
   private LocalDateTime publicationDate;
 
   /**
@@ -29,13 +28,12 @@ public class PackageVersion implements Comparable<PackageVersion> {
    */
   @Index(IfNotEmpty.class)
   @IgnoreSave(IfEmpty.class)
-  private Set<PackageVersionId> dependencies = Sets.newHashSet();
+  private Set<String> dependencies = Sets.newHashSet();
 
   /**
    * True if we have the source of all of this packages'
    * compile time dependencies
    */
-  @Index(IfFalse.class)
   private boolean compileDependenciesResolved;
 
   public PackageVersion() {
@@ -83,11 +81,11 @@ public class PackageVersion implements Comparable<PackageVersion> {
   }
 
 
-  public Set<PackageVersionId> getDependencies() {
+  public Set<String> getDependencies() {
     return dependencies;
   }
 
-  public void setDependencies(Set<PackageVersionId> dependencies) {
+  public void setDependencies(Set<String> dependencies) {
     this.dependencies = dependencies;
   }
 
@@ -131,5 +129,13 @@ public class PackageVersion implements Comparable<PackageVersion> {
     DefaultArtifactVersion thatVersion = new DefaultArtifactVersion(thatId.getSourceVersion());
 
     return thisVersion.compareTo(thatVersion);
+  }
+
+  public Set<PackageVersionId> getDependencyIdSet() {
+    Set<PackageVersionId> set = Sets.newHashSet();
+    for(String id : dependencies) {
+      set.add(new PackageVersionId(id));
+    }
+    return set;
   }
 }

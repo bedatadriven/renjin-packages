@@ -35,7 +35,7 @@ public class ResolveDependenciesTaskTest extends AbstractDatastoreTest {
     // verify that we've resolved the package
     PackageVersion updatedSurvey = PackageDatabase.getPackageVersion(surveyId).get();
     assertThat(updatedSurvey.isCompileDependenciesResolved(), equalTo(true));
-    assertThat(updatedSurvey.getDependencies(), hasItem(mass.getPackageVersionId()));
+    assertThat(updatedSurvey.getDependencyIdSet(), hasItem(mass.getPackageVersionId()));
   }
 
 }

@@ -93,7 +93,7 @@ public class MigrateBuilds {
       for(RPackageDependency dep : v.getDependencies()) {
         dependencies.add(dep.getDependency().getId());
       }
-      //version.setDependencies(dependencies);
+      //version.setDependenciesFrom(dependencies);
       entities.add(version);
     }
 

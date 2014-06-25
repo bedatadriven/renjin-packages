@@ -42,6 +42,6 @@ public class RegisterPackageVersionTaskTest extends AbstractDatastoreTest {
 
     PackageStatus status = PackageDatabase.getStatus(survey.getPackageVersionId(), RenjinVersionId.RELEASE);
     assertThat(status.getBuildStatus(), equalTo(BuildStatus.BLOCKED));
-    assertThat(status.getBlockingDependencies(), hasItem(mass2.getPackageVersionId()));
+    assertThat(status.getBlockingDependencies(), hasItem(mass2.getId()));
   }
 }

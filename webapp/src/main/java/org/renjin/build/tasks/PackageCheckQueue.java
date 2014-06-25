@@ -1,10 +1,8 @@
 package org.renjin.build.tasks;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.googlecode.objectify.VoidWork;
 import org.renjin.build.model.*;
-import org.renjin.build.model.Package;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -26,9 +24,9 @@ public class PackageCheckQueue {
     LOGGER.log(Level.INFO, "Updating check status for " + packageVersion.getId() + " @ Renjin " + renjinVersion);
 
     // Determine which dependencies are built
-    final Map<PackageVersionId, PackageBuildId> built = resolveBuilds(packageVersion.getDependencies());
+    final Map<PackageVersionId, PackageBuildId> built = resolveBuilds(packageVersion.getDependencyIdSet());
 
-    final Set<PackageVersionId> notBuilt = Sets.newHashSet(packageVersion.getDependencies());
+    final Set<PackageVersionId> notBuilt = packageVersion.getDependencyIdSet();
     notBuilt.removeAll(built.keySet());
 
     // Now update
@@ -36,9 +34,11 @@ public class PackageCheckQueue {
       @Override
       public void vrun() {
 
-        PackageStatus status = PackageDatabase.getStatus(
-            packageVersion.getPackageVersionId(),
-            renjinVersion);
+//        PackageStatus status = PackageDatabase.getStatus(
+//            packageVersion.getPackageVersionId(),
+//            renjinVersion);
+
+        PackageStatus status = new PackageStatus(packageVersion.getPackageVersionId(), renjinVersion);
 
         if(!packageVersion.isCompileDependenciesResolved()) {
           LOGGER.warning("Compile-time dependencies are not yet resolved, setting status => ORPHANED");
@@ -48,8 +48,11 @@ public class PackageCheckQueue {
 
           // Don't mess with those already built
           if(status.getBuildStatus() != BuildStatus.BUILT) {
-            status.setDependencies(Sets.newHashSet(built.values()));
-            status.setBlockingDependencies(notBuilt);
+            status.setDependenciesFrom(built.values());
+            status.setBlockingDependenciesFrom(notBuilt);
+
+            LOGGER.warning("All dependencies resolved, transitioning to BLOCKED state");
+            status.setBuildStatus(BuildStatus.BLOCKED);
 
             // can we transition to READY?
             if( status.getBuildStatus() == BuildStatus.BLOCKED) {

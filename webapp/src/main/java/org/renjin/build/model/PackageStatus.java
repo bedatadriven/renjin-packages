@@ -1,11 +1,14 @@
 package org.renjin.build.model;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfEmpty;
 import com.googlecode.objectify.condition.IfNull;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -34,11 +37,11 @@ public class PackageStatus {
    */
   @Index
   @IgnoreSave(IfEmpty.class)
-  private Set<PackageVersionId> blockingDependencies = Sets.newHashSet();
+  private Set<String> blockingDependencies = Sets.newHashSet();
 
   @Unindex
   @IgnoreSave(IfEmpty.class)
-  private Set<PackageBuildId> dependencies = Sets.newHashSet();
+  private Set<String> dependencies = Sets.newHashSet();
 
   @IgnoreSave(IfNull.class)
   private PackageBuildId build;
@@ -76,19 +79,19 @@ public class PackageStatus {
     this.buildStatus = buildStatus;
   }
 
-  public Set<PackageVersionId> getBlockingDependencies() {
+  public Set<String> getBlockingDependencies() {
     return blockingDependencies;
   }
 
-  public void setBlockingDependencies(Set<PackageVersionId> blockingDependencies) {
+  public void setBlockingDependencies(Set<String> blockingDependencies) {
     this.blockingDependencies = blockingDependencies;
   }
 
-  public Set<PackageBuildId> getDependencies() {
+  public Set<String> getDependencies() {
     return dependencies;
   }
 
-  public void setDependencies(Set<PackageBuildId> dependencies) {
+  public void setDependencies(Set<String> dependencies) {
     this.dependencies = dependencies;
   }
 
@@ -98,5 +101,13 @@ public class PackageStatus {
 
   public void setBuild(PackageBuildId build) {
     this.build = build;
+  }
+
+  public void setDependenciesFrom(Iterable<PackageBuildId> values) {
+    this.dependencies = Sets.newHashSet(Iterables.transform(values, Functions.toStringFunction()));
+  }
+
+  public void setBlockingDependenciesFrom(Set<PackageVersionId> notBuilt) {
+    this.blockingDependencies = Sets.newHashSet(Iterables.transform(notBuilt, Functions.toStringFunction()));
   }
 }

@@ -63,7 +63,7 @@ public class ResolveDependenciesTask {
         if(dependencyId.isPresent()) {
 
           LOGGER.log(Level.INFO, "Resolved " + dependency + " to " + dependencyId.get());
-          packageVersion.getDependencies().add(dependencyId.get());
+          packageVersion.getDependencies().add(dependencyId.get().toString());
 
         } else {
           LOGGER.log(Level.WARNING, "Could not resolve dependency " + dependency);

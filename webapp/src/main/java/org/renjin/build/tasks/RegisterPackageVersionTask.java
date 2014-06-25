@@ -87,12 +87,10 @@ public class RegisterPackageVersionTask {
     PackageVersion packageVersion = new PackageVersion(packageVersionId);
     packageVersion.setPublicationDate(description.getPublicationDate());
     packageVersion.setDescription(descriptionSource);
-    packageVersion.setDependencies(Sets.<PackageVersionId>newHashSet());
+    packageVersion.setDependencies(Sets.<String>newHashSet());
 
     // try to resolve dependencies:
     new ResolveDependenciesTask().resolveDependencies(packageVersion);
-
-    packageVersion.setCompileDependenciesResolved(false);
 
     // queue this package for building / testing against the latest renjin
     // release

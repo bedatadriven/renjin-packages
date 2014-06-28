@@ -1,5 +1,7 @@
 package org.renjin.build.model;
 
+import com.googlecode.objectify.Key;
+
 /**
  * PackageVersion identifier, a composite of groupId, packageName,
  * and sourceVersion (a typical GAV from Maven world)
@@ -68,5 +70,9 @@ public class PackageVersionId {
     result = 31 * result + packageName.hashCode();
     result = 31 * result + sourceVersion.hashCode();
     return result;
+  }
+
+  public Key<PackageVersion> key() {
+    return Key.create(PackageVersion.class, toString());
   }
 }

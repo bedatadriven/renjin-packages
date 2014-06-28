@@ -1,6 +1,0 @@
-Package: renjin-build-worker
-Section: contrib/java
-Priority: optional
-Architecture: all
-Version: ${BUILD_ID}
-Description: Renjin Build Worker

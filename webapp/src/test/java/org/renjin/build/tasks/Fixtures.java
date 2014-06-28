@@ -18,4 +18,10 @@ public class Fixtures {
     return Resources.asCharSource(Resources.getResource(Fixtures.class, "survey-description.txt"),
         Charsets.UTF_8).read();
   }
+
+  public static PackageDescription getPpsDescription() throws IOException {
+    return PackageDescription.fromString(
+        Resources.asCharSource(Resources.getResource(Fixtures.class, "pps-description.txt"),
+            Charsets.UTF_8).read());
+  }
 }

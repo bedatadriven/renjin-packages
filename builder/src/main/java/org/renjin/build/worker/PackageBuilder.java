@@ -15,6 +15,7 @@ import org.renjin.build.model.BuildOutcome;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -43,48 +44,28 @@ public class PackageBuilder {
 
   public PackageBuilder(File packagesDir, PackageBuildTask build) {
     this.build = build;
-    this.baseDir = new File(packagesDir, build.getPackageName() + "_" + build.getPackageVersion());
+    this.baseDir = new File(packagesDir, build.getPackageName() + "_" + build.getSourceVersion());
     this.logFile = new File(baseDir, "build.log");
   }
 
   public void build()  {
 
-    System.out.println("Building " + build.packageBuildId());
+    LOGGER.info("Building " + build);
    
     // set the name of this thread to the package
     // name for debugging
     Thread.currentThread().setName(build.getPackageName());
 
     try {
-      // grab the source if we don't have it
       ensureSourceUnpacked();
-
-      // write out the POM file for this package
-      PomBuilder pomBuilder = new PomBuilder(baseDir, build);
-      pomBuilder.writePom();
-
       executeMaven();
-
       publishBuildLog();
-
       removeBuildDir();
 
     } catch(Exception e) {
-      System.out.println("Exception building " + build.packageBuildId() + ": " + e.getMessage());
+      LOGGER.log(Level.SEVERE, "Exception building " + build + ": " + e.getMessage());
       e.printStackTrace();
       outcome = BuildOutcome.ERROR;
-    }
-  }
-
-
-  private void publishBuildLog() {
-    try {
-      GoogleCloudStorage.INSTANCE.putBuildLog(
-          build.getBuildId(),
-          build.versionId(),
-          Files.asByteSource(logFile));
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Failed to publish build log", e);
     }
   }
 
@@ -97,29 +78,28 @@ public class PackageBuilder {
 
     if(!baseDir.exists()) {
 
-      InputStream in = GoogleCloudStorage.INSTANCE.openSourceArchive(
-          build.getPackageGroupId(),
-          build.getPackageName(),
-          build.getPackageVersion());
+      URL sourceUrl = new URL(build.getSourceUrl());
 
-      TarArchiveInputStream tarIn = new TarArchiveInputStream(
-          new GZIPInputStream(in));
+      try(InputStream in = sourceUrl.openStream()) {
 
-      String packagePrefix = build.getPackageName() + "/";
+        TarArchiveInputStream tarIn = new TarArchiveInputStream(
+            new GZIPInputStream(in));
 
-      TarArchiveEntry entry;
-      while((entry=tarIn.getNextTarEntry())!=null) {
-        if(entry.isFile() && entry.getName().startsWith(packagePrefix)) {
+        String packagePrefix = build.getPackageName() + "/";
 
-          String name = entry.getName().substring(packagePrefix.length());
+        TarArchiveEntry entry;
+        while((entry=tarIn.getNextTarEntry())!=null) {
+          if(entry.isFile() && entry.getName().startsWith(packagePrefix)) {
 
-          File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
-          outFile.getParentFile().mkdirs();
+            String name = entry.getName().substring(packagePrefix.length());
 
-          Files.asByteSink(outFile).writeFrom(tarIn);
+            File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
+            Files.createParentDirs(outFile);
+
+            Files.asByteSink(outFile).writeFrom(tarIn);
+          }
         }
       }
-      tarIn.close();
     }
   }
 
@@ -154,7 +134,7 @@ public class PackageBuilder {
     collector.start();
 
     ProcessMonitor monitor = new ProcessMonitor(process);
-    monitor.setName(build.packageBuildId() + " - monitor");
+    monitor.setName(build + " - monitor");
     monitor.start();
 
     Stopwatch stopwatch = Stopwatch.createStarted();
@@ -162,7 +142,7 @@ public class PackageBuilder {
     while(!monitor.isFinished()) {
 
       if(stopwatch.elapsed(TimeUnit.MINUTES) > TIMEOUT_MINUTES) {
-        System.out.println(build.packageBuildId() + " build timed out after " + TIMEOUT_MINUTES + " minutes.");
+        System.out.println(build + " build timed out after " + TIMEOUT_MINUTES + " minutes.");
         process.destroy();
         outcome = BuildOutcome.TIMEOUT;
         break;
@@ -177,12 +157,22 @@ public class PackageBuilder {
       } else if(monitor.getExitCode() == 1) {
         outcome = BuildOutcome.FAILURE;
       } else {
-        System.out.println(build.packageBuildId() + " exited with code " + monitor.getExitCode());
+        System.out.println(build + " exited with code " + monitor.getExitCode());
         outcome = BuildOutcome.ERROR;
       }
     }
   }
 
+  private void publishBuildLog() {
+//    try {
+//      GoogleCloudStorage.INSTANCE.putBuildLog(
+//          build.getBuildId(),
+//          build.versionId(),
+//          Files.asByteSource(logFile));
+//    } catch (Exception e) {
+//      LOGGER.log(Level.SEVERE, "Failed to publish build log", e);
+//    }
+  }
 
   private void removeBuildDir() {
     try {
@@ -199,7 +189,7 @@ public class PackageBuilder {
 
   public PackageBuildResult getResult() {
     PackageBuildResult result = new PackageBuildResult();
-    result.setId(build.packageBuildId());
+    result.setId(build.toString());
     result.setOutcome(outcome);
     result.setNativeSourcesCompilationFailure(nativeSourceCompilationFailures);
     return result;

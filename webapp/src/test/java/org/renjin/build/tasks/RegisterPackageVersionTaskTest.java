@@ -2,6 +2,7 @@ package org.renjin.build.tasks;
 
 import org.joda.time.LocalDateTime;
 import org.junit.Test;
+import org.renjin.build.AbstractDatastoreTest;
 import org.renjin.build.model.*;
 
 import java.io.IOException;

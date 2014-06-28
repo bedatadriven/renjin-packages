@@ -1,25 +1,15 @@
 package org.renjin.build.tasks.dependencies;
 
-import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
-import com.googlecode.objectify.Objectify;
-import com.googlecode.objectify.ObjectifyService;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.joda.time.LocalDate;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.renjin.build.BuildApplication;
 import org.renjin.build.model.PackageDatabase;
 import org.renjin.build.model.PackageDescription;
 import org.renjin.build.model.PackageVersion;
 import org.renjin.build.model.PackageVersionId;
-import org.renjin.build.tasks.AbstractDatastoreTest;
+import org.renjin.build.AbstractDatastoreTest;
 import org.renjin.build.tasks.Fixtures;
 
 import java.io.IOException;

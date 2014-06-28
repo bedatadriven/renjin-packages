@@ -39,9 +39,12 @@ public class PackageCheckQueue {
 //            renjinVersion);
 
         PackageStatus status = new PackageStatus(packageVersion.getPackageVersionId(), renjinVersion);
+        if(status.getBuildStatus() == null) {
+          status.setBuildStatus(BuildStatus.ORPHANED);
+        }
 
         if(!packageVersion.isCompileDependenciesResolved()) {
-          LOGGER.warning("Compile-time dependencies are not yet resolved, setting status => ORPHANED");
+          LOGGER.info("Compile-time dependencies are not yet resolved, setting status => ORPHANED");
           status.setBuildStatus(BuildStatus.ORPHANED);
 
         } else {
@@ -51,19 +54,21 @@ public class PackageCheckQueue {
             status.setDependenciesFrom(built.values());
             status.setBlockingDependenciesFrom(notBuilt);
 
-            LOGGER.warning("All dependencies resolved, transitioning to BLOCKED state");
-            status.setBuildStatus(BuildStatus.BLOCKED);
+            if( status.getBuildStatus() == BuildStatus.ORPHANED) {
+              LOGGER.info("All dependencies resolved, transitioning to BLOCKED state");
+              status.setBuildStatus(BuildStatus.BLOCKED);
+            }
 
             // can we transition to READY?
             if( status.getBuildStatus() == BuildStatus.BLOCKED) {
 
               if(status.getBlockingDependencies().isEmpty()) {
 
-                LOGGER.warning("All dependencies built, transitioning to READY state");
+                LOGGER.info("All dependencies built, transitioning to READY state");
                 status.setBuildStatus(BuildStatus.READY);
 
               } else {
-                LOGGER.warning("Status remains blocked: waiting on " + status.getBlockingDependencies());
+                LOGGER.info("Status remains blocked: waiting on " + status.getBlockingDependencies());
               }
             }
           }

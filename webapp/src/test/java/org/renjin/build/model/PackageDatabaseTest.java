@@ -1,13 +1,7 @@
 package org.renjin.build.model;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.googlecode.objectify.Objectify;
-import com.googlecode.objectify.ObjectifyService;
-import org.junit.*;
-import org.renjin.build.BuildApplication;
-import org.renjin.build.tasks.AbstractDatastoreTest;
+import org.renjin.build.AbstractDatastoreTest;
 
 import java.util.List;
 

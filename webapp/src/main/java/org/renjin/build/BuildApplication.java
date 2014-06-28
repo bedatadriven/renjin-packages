@@ -10,6 +10,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.renjin.build.model.*;
+import org.renjin.build.tasks.QueuePackageBuildTask;
 import org.renjin.build.tasks.RegisterPackageVersionTask;
 import org.renjin.build.util.TupleObjectWrapper;
 
@@ -25,9 +26,13 @@ public class BuildApplication extends Application {
   public Set<Class<?>> getClasses() {
     Set<Class<?>> classes = Sets.newHashSet();
     classes.add(RootResources.class);
+    classes.add(BuildResource.class);
+
     classes.add(JacksonFeature.class);
+
     classes.add(FreemarkerMvcFeature.class);
     classes.add(RegisterPackageVersionTask.class);
+    classes.add(QueuePackageBuildTask.class);
     return classes;
   }
 

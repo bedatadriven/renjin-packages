@@ -29,6 +29,7 @@ public class PackageStatus {
   @Id
   private String id;
 
+  @Index
   private BuildStatus buildStatus;
 
   /**

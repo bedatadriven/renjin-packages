@@ -46,7 +46,6 @@ public class MigrateBuilds {
       entity.setId(row.get(0, String.class));
       entity.setOutcome(row.get(1, BuildOutcome.class));
       entity.setRenjinVersion(row.get(2, String.class));
-      entity.setStage(BuildStage.COMPLETED);
       entities.add(entity);
 
       if(entities.size() > 50) {
@@ -103,6 +102,7 @@ public class MigrateBuilds {
   }
 
   @POST
+  @Path("enqueue")
   public Response migrate() {
 //    List<Integer> builds = HibernateUtil
 //        .getActiveEntityManager()
@@ -127,5 +127,11 @@ public class MigrateBuilds {
     }
 
     return Response.ok().build();
+  }
+
+  @POST
+  public String enqueueMigration() {
+    QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/migrateBuilds/enqueue"));
+    return "OK!";
   }
 }

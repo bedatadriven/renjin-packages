@@ -1,7 +1,7 @@
 package org.renjin.build.tasks;
 
-import com.googlecode.objectify.ObjectifyService;
 import org.junit.Test;
+import org.renjin.build.AbstractDatastoreTest;
 import org.renjin.build.model.PackageDatabase;
 import org.renjin.build.model.PackageVersion;
 import org.renjin.build.model.PackageVersionId;

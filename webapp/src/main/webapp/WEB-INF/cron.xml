@@ -6,4 +6,9 @@
     <schedule>every day 02:00</schedule>
   </cron>
 
+  <cron>
+    <url>/tasks/queuePackageBuilds</url>
+    <description>Poll build queue</description>
+    <schedule>every 2 minutes</schedule>
+  </cron>
 </cronentries>

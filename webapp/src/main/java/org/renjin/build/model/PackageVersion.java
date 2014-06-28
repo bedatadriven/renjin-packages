@@ -23,6 +23,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   private LocalDateTime publicationDate;
 
+  @Unindex
+  private long lastBuildNumber;
+
   /**
    * List of PackageVersion ids on which this package depends.
    */
@@ -80,6 +83,13 @@ public class PackageVersion implements Comparable<PackageVersion> {
     }
   }
 
+  public long getLastBuildNumber() {
+    return lastBuildNumber;
+  }
+
+  public void setLastBuildNumber(long lastBuildNumber) {
+    this.lastBuildNumber = lastBuildNumber;
+  }
 
   public Set<String> getDependencies() {
     return dependencies;

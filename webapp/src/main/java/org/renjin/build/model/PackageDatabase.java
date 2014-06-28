@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Result;
+import com.googlecode.objectify.Work;
 import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
 
 import java.util.Collection;
@@ -36,9 +37,26 @@ public class PackageDatabase {
     return Optional.fromNullable(ofy().load().key(Key.create(PackageVersion.class, id.toString())).now());
   }
 
-
   public static Optional<PackageVersion> getPackageVersion(String packageVersionId) {
     return getPackageVersion(PackageVersionId.fromTriplet(packageVersionId));
+  }
+
+  public static long newBuildNumber(final PackageVersionId packageVersionId) {
+    return ofy().transact(new Work<Long>() {
+
+      @Override
+      public Long run() {
+        PackageVersion pv = ofy().load().key(Key.create(PackageVersion.class, packageVersionId.toString())).safe();
+        long number = pv.getLastBuildNumber();
+        if(number == 0) {
+          number = 200;
+        }
+        number++;
+        pv.setLastBuildNumber(number);
+        ofy().save().entity(pv).now();
+        return number;
+      }
+    });
   }
 
   public static List<PackageVersion> queryPackageVersions(String groupId, String packageName) {
@@ -79,16 +97,24 @@ public class PackageDatabase {
     return status;
   }
 
-  public static Collection<PackageStatus> getStatus(Set<PackageVersionId> packageVersionIds, RenjinVersionId release) {
+  public static Collection<PackageStatus> getStatus(Set<PackageVersionId> packageVersionIds,
+                                                    RenjinVersionId renjinVersion) {
     List<Key<PackageStatus>> keys = Lists.newArrayList();
     for(PackageVersionId id : packageVersionIds) {
-      keys.add(Key.create(PackageStatus.class, id.toString()));
+      keys.add(Key.create(PackageStatus.class, id + ":" + renjinVersion));
     }
 
     return ofy().load().keys(keys).values();
   }
 
+  public static Optional<PackageStatus> getNextReady() {
+    PackageStatus now = ofy().load().type(PackageStatus.class).filter("buildStatus = ", BuildStatus.READY.name())
+        .first().now();
+
+    return Optional.fromNullable(now);
+  }
+
   public static void save(PackageStatus status) {
-    ofy().save().entity(status);
+    ofy().save().entity(status).now();
   }
 }

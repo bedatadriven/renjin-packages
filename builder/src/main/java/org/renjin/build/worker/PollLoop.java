@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.renjin.build.task.PackageBuildResult;
 import org.renjin.build.task.PackageBuildTask;
+import org.renjin.primitives.files.Files;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -14,22 +15,27 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Main {
+public class PollLoop implements Runnable {
 
-  private static Logger LOGGER = Logger.getLogger(Main.class.getName());
+  private static Logger LOGGER = Logger.getLogger(PollLoop.class.getName());
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  @Override
+  public void run() {
+
     File workspace = new File("/tmp/workspace/packages");
 
     while(true) {
       Optional<PackageBuildTask> task = leaseNextBuild();
       if(!task.isPresent()) {
         LOGGER.info("No tasks available, sleeping 60s...");
-        Thread.sleep(60_000);
+        try {
+          Thread.sleep(60_000);
+        } catch (InterruptedException e) {
+          return;
+        }
       } else {
 
         try {
@@ -37,8 +43,7 @@ public class Main {
           PackageBuilder builder = new PackageBuilder(workspace, task.get());
           builder.build();
 
-          LOGGER.log(Level.INFO, task.get().packageBuildId() + ": " +
-              builder.getOutcome());
+          LOGGER.log(Level.INFO, task.get() + ": " + builder.getOutcome());
 
           // report back on outcome
           reportResult(builder.getResult());
@@ -55,10 +60,9 @@ public class Main {
 
     try {
       Client client = ClientBuilder.newClient().register(JacksonFeature.class);
-      WebTarget target = client.target("http://localhost:8080").path("queue").path("lease");
+      WebTarget target = client.target("https://renjinpackages.appspot.com").path("build").path("next");
 
       Form form = new Form();
-      form.param("workerId", getWorkerId());
 
       PackageBuildTask task =
           target.request(MediaType.APPLICATION_JSON_TYPE)
@@ -71,6 +75,13 @@ public class Main {
     } catch(Exception e) {
       LOGGER.log(Level.SEVERE, "Exception while leasing build...", e);
       return Optional.absent();
+    }
+  }
+
+  public static void main(String[] args) {
+    Optional<PackageBuildTask> task = leaseNextBuild();
+    if(task.isPresent()) {
+      new PackageBuilder(com.google.common.io.Files.createTempDir(), task.get());
     }
   }
 

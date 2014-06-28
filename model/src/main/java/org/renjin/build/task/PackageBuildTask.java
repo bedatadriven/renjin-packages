@@ -4,28 +4,20 @@ import java.util.List;
 
 public class PackageBuildTask {
 
-  /**
-   * Package groupId:artifactId:versionId
-   */
-  private String packageGroupId;
-
+  private String groupId;
   private String packageName;
+  private String sourceVersion;
+  private String buildNumber;
 
-  private String packageVersion;
+  private String pom;
+  private String sourceUrl;
 
-  private String renjinVersion;
-
-  private int buildId;
-
-  private List<String> dependencies;
-
-
-  public String getPackageGroupId() {
-    return packageGroupId;
+  public String getGroupId() {
+    return groupId;
   }
 
-  public void setPackageGroupId(String packageGroupId) {
-    this.packageGroupId = packageGroupId;
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
   }
 
   public String getPackageName() {
@@ -36,43 +28,40 @@ public class PackageBuildTask {
     this.packageName = packageName;
   }
 
-  public String getPackageVersion() {
-    return packageVersion;
+  public String getSourceVersion() {
+    return sourceVersion;
   }
 
-  public void setPackageVersion(String packageVersion) {
-    this.packageVersion = packageVersion;
+  public void setSourceVersion(String sourceVersion) {
+    this.sourceVersion = sourceVersion;
   }
 
-  public String getRenjinVersion() {
-    return renjinVersion;
+  public String getBuildNumber() {
+    return buildNumber;
   }
 
-  public void setRenjinVersion(String renjinVersion) {
-    this.renjinVersion = renjinVersion;
+  public void setBuildNumber(String buildNumber) {
+    this.buildNumber = buildNumber;
   }
 
-  public int getBuildId() {
-    return buildId;
+  public String getPom() {
+    return pom;
   }
 
-  public void setBuildId(int buildId) {
-    this.buildId = buildId;
+  public void setPom(String pom) {
+    this.pom = pom;
   }
 
-  public List<String> getDependencies() {
-    return dependencies;
+  public String getSourceUrl() {
+    return sourceUrl;
   }
 
-  public void setDependencies(List<String> dependencies) {
-    this.dependencies = dependencies;
+  public void setSourceUrl(String sourceUrl) {
+    this.sourceUrl = sourceUrl;
   }
 
-  public String packageBuildId() {
-    return packageGroupId + ":" + packageName + ":" + packageVersion + "-b" + buildId;
-  }
-
-  public String versionId() {
-    return packageGroupId + ":" + packageName + ":" + packageVersion;
+  @Override
+  public String toString() {
+    return groupId + ":" + packageName + ":" + sourceVersion + "-b" + buildNumber;
   }
 }

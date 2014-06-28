@@ -18,4 +18,11 @@
   </form>
 
 
+  <h1>Start Test Build</h1>
+
+
+<form action="/tasks/queuePackageBuilds" method="post">
+    <input type="submit" value="Queue Test Build">
+</form>
+
 </html>

@@ -1,4 +1,4 @@
-package org.renjin.build.tasks;
+package org.renjin.build;
 
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestConfig;

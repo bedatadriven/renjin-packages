@@ -6,7 +6,6 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.build.tasks.cran.CranTasks;
 import org.renjin.build.migrate.MigrateBuilds;
 import org.renjin.build.model.TestResult;
-import org.renjin.build.queue.BuildQueue;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
@@ -43,10 +42,6 @@ public class RootResources {
     return new BuildResources();
   }
 
-  @Path("queue")
-  public BuildQueue getQueue() {
-    return new BuildQueue();
-  }
 
   @Path("migrateBuilds")
   public MigrateBuilds migrate() {

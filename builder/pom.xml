@@ -77,6 +77,11 @@
       <artifactId>jersey-client</artifactId>
       <version>${jersey.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-grizzly2-http</artifactId>
+      <version>2.10</version>
+    </dependency>
 
     <dependency>
       <groupId>com.jcraft</groupId>
@@ -190,39 +195,4 @@
 
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>appassembler-maven-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <id>generate-jsw-scripts</id>
-            <phase>package</phase>
-            <goals>
-              <goal>generate-daemons</goal>
-            </goals>
-            <configuration>
-              <repositoryLayout>flat</repositoryLayout>
-              <daemons>
-                <daemon>
-                  <id>renjin-worker</id>
-                  <!-- the next line is added by default if you don't have wrapperMainClass's setting -->
-                  <wrapperMainClass>org.tanukisoftware.wrapper.WrapperSimpleApp</wrapperMainClass>
-                  <mainClass>org.renjin.build.worker.Main</mainClass>
-                  <commandLineArguments>
-                    <commandLineArgument>start</commandLineArgument>
-                  </commandLineArguments>
-                  <platforms>
-                    <platform>jsw</platform>
-                  </platforms>
-                </daemon>
-              </daemons>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>

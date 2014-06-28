@@ -1,9 +1,6 @@
-package org.renjin.build.worker;
+package org.renjin.build;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -12,6 +9,7 @@ import org.apache.maven.model.Build;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.build.model.*;
+import org.renjin.build.model.Package;
 import org.renjin.build.model.PackageDescription.PackageDependency;
 import org.renjin.build.model.PackageDescription.Person;
 
@@ -26,31 +24,28 @@ import org.renjin.build.task.PackageBuildTask;
 public class PomBuilder {
 
   public static final String[] DEFAULT_PACKAGES = new String[]{
-    "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
+      "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
 
-  private File baseDir;
-
-  private final PackageBuildTask task;
+  private final PackageBuild task;
   private final PackageDescription description;
 
   private String renjinVersion;
   private String packageVersionSuffix;
 
-  public PomBuilder(File baseDir, PackageBuildTask task) throws IOException {
-    this.task = task;
-    this.baseDir = baseDir;
+  public PomBuilder(PackageBuild build, PackageDescription description) throws IOException {
+    this.task = build;
+    this.description = description;
 
-    renjinVersion = task.getRenjinVersion();
-    packageVersionSuffix = "-b" + task.getBuildId();
+    renjinVersion = build.getRenjinVersion();
+    packageVersionSuffix = "-b" + build.getBuildNumber();
 
-    description = readDescription();
   }
 
   private Model buildPom() throws IOException {
     Model model = new Model();
     model.setModelVersion("4.0.0");
     model.setArtifactId(description.getPackage());
-    model.setGroupId(task.getPackageGroupId());
+    model.setGroupId(task.getPackageVersionId().getGroupId());
     model.setVersion(description.getVersion() + packageVersionSuffix);
     model.setDescription(description.getDescription());
     model.setUrl(description.getUrl());
@@ -60,7 +55,7 @@ public class PomBuilder {
       license.setName(description.getLicense());
       model.addLicense(license);
     }
-    
+
     for(Person author : description.getAuthors()) {
       Developer developer = new Developer();
       developer.setName(author.getName());
@@ -134,7 +129,7 @@ public class PomBuilder {
     model.setBuild(build);
     model.setRepositories(Lists.newArrayList(bddRepo, renjinRepo));
     model.setPluginRepositories(Lists.newArrayList(bddRepo));
-    
+
     return model;
   }
 
@@ -201,21 +196,13 @@ public class PomBuilder {
     model.addDependency(mavenDep);
   }
 
-  private PackageDescription readDescription() throws IOException {
-    File descFile = new File(baseDir, "DESCRIPTION");
-    FileReader reader = new FileReader(descFile);
-    PackageDescription desc = PackageDescription.fromReader(reader);
-    reader.close();
-    
-    return desc;
-  }
 
-  public void writePom() throws IOException {
+  public String getXml() throws IOException {
     Model pom = buildPom();
-    File pomFile = new File(baseDir, "pom.xml");
-    FileWriter fileWriter = new FileWriter(pomFile);
+    StringWriter fileWriter = new StringWriter();
     MavenXpp3Writer writer = new MavenXpp3Writer();
     writer.write(fileWriter, pom);
     fileWriter.close();
+    return fileWriter.toString();
   }
 }

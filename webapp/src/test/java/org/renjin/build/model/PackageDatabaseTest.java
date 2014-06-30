@@ -27,12 +27,7 @@ public class PackageDatabaseTest extends AbstractDatastoreTest {
     PackageVersion ggplz = new PackageVersion();
     ggplz.setId("org.renjin.cran:ggplz-earth:5.4-34");
 
-    PackageDatabase.save(ggplot_1);
-    PackageDatabase.save(ggplot_2);
-    PackageDatabase.save(ggplz);
-
-    Entity entity = ofy().save().toEntity(ggplot_1);
-    assertThat(entity.getKey().getName(), equalTo("org.renjin.cran:ggplot:1.4-34"));
+    PackageDatabase.save(ggplot_1, ggplot_2, ggplz).now();
 
     assertThat("org.renjin.cran:ggplot:1.4-34", greaterThan("org.renjin.cran:ggplot"));
 

@@ -84,7 +84,7 @@ public class PackageVersion implements Comparable<PackageVersion> {
   }
 
   public long getLastBuildNumber() {
-    return lastBuildNumber;
+    return Math.max(lastBuildNumber, 200);
   }
 
   public void setLastBuildNumber(long lastBuildNumber) {

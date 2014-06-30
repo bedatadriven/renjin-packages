@@ -7,6 +7,7 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfEmpty;
 import com.googlecode.objectify.condition.IfNull;
+import com.googlecode.objectify.condition.IfZero;
 
 import java.util.Collection;
 import java.util.Set;
@@ -32,6 +33,10 @@ public class PackageStatus {
   @Index
   private BuildStatus buildStatus;
 
+  @Unindex
+  @IgnoreSave(IfZero.class)
+  private long buildNumber;
+
   /**
    * The set of compile time dependencies that have not yet
    * been resolved.
@@ -43,9 +48,6 @@ public class PackageStatus {
   @Unindex
   @IgnoreSave(IfEmpty.class)
   private Set<String> dependencies = Sets.newHashSet();
-
-  @IgnoreSave(IfNull.class)
-  private PackageBuildId build;
 
   public PackageStatus() {
   }
@@ -68,6 +70,14 @@ public class PackageStatus {
     return new RenjinVersionId(parts[3]);
   }
 
+  public String getPackageName() {
+    return getPackageVersionId().getPackageName();
+  }
+
+  public String getVersion() {
+    return getPackageVersionId().getSourceVersion();
+  }
+
   public void setId(String id) {
     this.id = id;
   }
@@ -80,8 +90,24 @@ public class PackageStatus {
     this.buildStatus = buildStatus;
   }
 
+  public long getBuildNumber() {
+    return buildNumber;
+  }
+
+  public void setBuildNumber(long buildNumber) {
+    this.buildNumber = buildNumber;
+  }
+
   public Set<String> getBlockingDependencies() {
     return blockingDependencies;
+  }
+
+  public Set<PackageVersionId> getBlockingDependencyIds() {
+    Set<PackageVersionId> ids = Sets.newHashSet();
+    for(String string : blockingDependencies) {
+      ids.add(new PackageVersionId(string));
+    }
+    return ids;
   }
 
   public void setBlockingDependencies(Set<String> blockingDependencies) {
@@ -94,14 +120,6 @@ public class PackageStatus {
 
   public void setDependencies(Set<String> dependencies) {
     this.dependencies = dependencies;
-  }
-
-  public PackageBuildId getBuild() {
-    return build;
-  }
-
-  public void setBuild(PackageBuildId build) {
-    this.build = build;
   }
 
   public void setDependenciesFrom(Iterable<PackageBuildId> values) {

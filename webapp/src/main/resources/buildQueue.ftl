@@ -7,106 +7,89 @@
 <div class="row">
 
   <div class="span9">
-      <h2>Currently Building <span class="badge badge-info">${active.count}</span></h2>
+      <h2>Currently Building</span></h2>
       <table class="table table-striped">
           <thead>
           <tr>
               <th>Package</th>
               <th>Started</th>
+              <th>Worker</th>
           </tr>
           </thead>
           <tbody>
-            <#list active.top as build>
+            <#list building as build>
             <tr>
-                <td>${build.packageName} ${build.packageVersion.version}</td>
-                <td>${build.leaseTime}</td>
+                <td>${build.packageName} ${build.version}</td>
+                <td>${build.startDate?datetime}</td>
+                <td>${build.workerId!('unknown')}</td>
             </tr>
             </#list>
           </tbody>
       </table>
 
-      <h2>Recently Completed</span></h2>
+      <h2>Recently Succeeded</span></h2>
       <table class="table table-striped">
           <thead>
           <tr>
               <th>Time complete</th>
+              <th>Worker</th>
               <th>Package</th>
               <th>Outcome</th>
           </tr>
           </thead>
           <tbody>
-            <#list completed as build>
+            <#list recent as build>
+            <#if build.endDate?? && build.outcome?? >
             <tr>
-                <td>${build.completionTime}</td>
-                <td><a href="/build/${build.path}">${build.packageName} ${build.packageVersion.version}</a></td>
+                <td><#if build.endDate??>${build.endDate?datetime}</#if></td>
+                <td>${build.workerId!('unknown')}</td>
+                <td><a href="/build/${build.path}">${build.packageName} ${build.version}</a></td>
                 <td>${build.outcome}</td>
             </tr>
+            </#if>
             </#list>
           </tbody>
       </table>
 
-      <h2>Ready <span class="badge">${ready.count}</span></h2>
+      <#--<h2>Ready</h2>-->
 
-      <table class="table table-striped">
-          <thead>
-          <tr>
-              <th>Package</th>
-              <th>Waiting</th>
-          </tr>
-          </thead>
-          <tbody>
-            <#list ready.top as build>
-            <tr>
-                <td>${build.packageName} ${build.packageVersion.version}</td>
-                <td>${build.build.started}</td>
-            </tr>
-            </#list>
-          </tbody>
-      </table>
+      <#--<table class="table table-striped">-->
+          <#--<thead>-->
+          <#--<tr>-->
+              <#--<th>Package</th>-->
+          <#--</tr>-->
+          <#--</thead>-->
+          <#--<tbody>-->
+            <#--<#list ready as build>-->
+            <#--<tr>-->
+                <#--<td>${build.packageName} ${build.version}</td>-->
+            <#--</tr>-->
+            <#--</#list>-->
+          <#--</tbody>-->
+      <#--</table>-->
 
-      <h2>Waiting <span class="badge">${waiting.count}</span></h2>
+      <#--<h2>Blocked</h2>-->
 
-      <table class="table table-striped">
-          <thead>
-          <tr>
-              <th>Package</th>
-              <th>Waiting</th>
-          </tr>
-          </thead>
-          <tbody>
-            <#list waiting.top as build>
-            <tr>
-                <td>${build.packageName} ${build.packageVersion.version}</td>
-                <td>${build.build.started}</td>
-            </tr>
-            </#list>
-          </tbody>
-      </table>
+      <#--<table class="table table-striped">-->
+          <#--<thead>-->
+          <#--<tr>-->
+              <#--<th>Package</th>-->
+              <#--<th>Blocked by</th>-->
+          <#--</tr>-->
+          <#--</thead>-->
+          <#--<tbody>-->
+            <#--<#list blocked as build>-->
+            <#--<tr>-->
+                <#--<td>${build.packageName} ${build.version}</td>-->
+                <#--<td><#list build.blockingDependencies as blocker>-->
+                <#--blocker.packageName-->
+                <#--</#list>-->
+            <#--</td>-->
+            <#--</tr>-->
+            <#--</#list>-->
+          <#--</tbody>-->
+      <#--</table>-->
 
-  </div>
-
-
-  <div class="span3">
-      <div class="well">
-        <form action="launch" method="post">
-            <fieldset>
-                <legend>Schedule Builds</legend>
-                <label for="commitSelect">Renjin Version</label>
-                <select name="renjinCommitId" id="commitSelect">
-                  <#list commits as commit>
-                    <#if commit.release >
-                        <option value="${commit.id}">${commit.version}</option>
-                    </#if>
-                  </#list>
-                </select>
-                <button type="submit" class="btn">Launch</button>
-            </fieldset>
-        </form>
-    </div>
-
-    <form action="cancelAll" method="post">
-        <input type="submit" class="pull-right btn btn-danger" value="Cancel all scheduled">
-    </form>
   </div>
 </div>
 

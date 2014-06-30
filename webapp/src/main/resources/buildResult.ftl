@@ -2,57 +2,57 @@
 
 <@scaffolding>
 
-  <h1>${packageVersion.packageName} ${packageVersion.version} (#${build.id?c})</h1>
+  <h1>${packageName} ${version} (#${buildNumber?c})</h1>
 
-  <p class="lead">${packageVersion.package.title}</p>
+  <p class="lead">${description.title}</p>
 
-  <p>Built on ${build.started} against Renjin ${build.renjinCommit.version} (${build.renjinCommit.abbreviatedId})</p>
+  <p>Built on ${startTime?datetime} against Renjin ${build.renjinVersion}</p>
 
-  <#if nativeSourceCompilationFailures>
-  <div class="alert alert-warning">Compilation of C/Fortran sources failed, full functionality may not be available</div>
+  <#--<#if nativeSourceCompilationFailures>-->
+  <#--<div class="alert alert-warning">Compilation of C/Fortran sources failed, full functionality may not be available</div>-->
+  <#--</#if>-->
+
+  <#if build.outcome != "SUCCESS" >
+  <div class="alert alert-error">This package failed to build.</div>
   </#if>
 
-  <#if outcome != "SUCCESS" >
-  <div class="alert alert-error">There was an error building this package</div>
-  </#if>lz
-
-  <#if outcome = "SUCCESS">
-  <textarea readonly="true" rows="6" cols="40">&lt;dependency&gt;
-      &lt;groupId&gt;${packageVersion.groupId}&lt;/groupId&gt;
-      &lt;artifactId&gt;${packageVersion.packageName}&lt;/artifactId&gt;
-      &lt;version&gt;${packageVersion.version}&lt;/version&gt;
+  <#if build.outcome = "SUCCESS">
+  <textarea readonly="true" rows="6" cols="80">&lt;dependency&gt;
+      &lt;groupId&gt;${groupId}&lt;/groupId&gt;
+      &lt;artifactId&gt;${packageName}&lt;/artifactId&gt;
+      &lt;version&gt;${version}-b${buildNumber}&lt;/version&gt;
 &lt;/dependency&gt;
   </textarea>
 
   </#if>
 
-  <p>${packageVersion.package.description}</p>
+  <p>${description.description}</p>
 
-  <h2>Source Code Profile</h2>
+  <#--<h2>Source Code Profile</h2>-->
 
-  <table class="table">
-  <thead>
-    <tr>
-        <th>Language</th>
-        <th>LOC</th>
-    </tr>
-  </thead>
-  <tbody>
-    <#list packageVersion.loc.counts as count>
-        <tr>
-            <th>${count.language}</th>
-            <th>${count.lines}</th>
-        </tr>
-    </#list>
-  </tbody>
-  </table>
+  <#--<table class="table">-->
+  <#--<thead>-->
+    <#--<tr>-->
+        <#--<th>Language</th>-->
+        <#--<th>LOC</th>-->
+    <#--</tr>-->
+  <#--</thead>-->
+  <#--<tbody>-->
+    <#--<#list packageVersion.loc.counts as count>-->
+        <#--<tr>-->
+            <#--<th>${count.language}</th>-->
+            <#--<th>${count.lines}</th>-->
+        <#--</tr>-->
+    <#--</#list>-->
+  <#--</tbody>-->
+  <#--</table>-->
 
   <h2>Build Log</h2>
 
-    <iframe src="//storage.googleapis.com/renjin-build/log/${path}.log" width="100%" height="350px">
+    <iframe src="//storage.googleapis.com/renjin-ci-build-logs/log/${build.logPath}" width="100%" height="350px">
     </iframe>
 
-   <p><a href="//storage.googleapis.com/renjin-build/log/${path}.log" target="_blank">Open in new window</a></p>
+   <p><a href="//storage.googleapis.com/renjin-ci-build-logs/log/${build.logPath}" target="_blank">Open in new window</a></p>
 
 
   <h2>Previous Builds</h2>
@@ -66,11 +66,11 @@
         </tr>
     </thead>
     <tbody>
-        <#list packageVersion.buildResults?sort_by(["build", "renjinCommit", "commitTime"], ["build", "id"])?reverse as result>
+        <#list previousBuilds as result>
         <tr>
-            <td>#<a href="/builds/${result.path}">${result.build.id}</a></td>
-            <td>${result.build.renjinCommit.version}</td>
-            <td>${ (result.outcome)!(result.stage) }</td>
+            <td>#<a href="/build/${result.path}">${result.buildNumber}</a></td>
+            <td>${result.renjinVersion}</td>
+            <td>${result.outcome }</td>
         </tr>
         </#list>
     </tbody>

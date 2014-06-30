@@ -1,8 +1,9 @@
-package org.renjin.build.worker.util;
+package org.renjin.build.worker;
 
 import com.google.common.io.CountingOutputStream;
 
 import java.io.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -26,9 +27,6 @@ public class OutputCollector extends Thread {
 
   public void run() {
     
-    // make sure the log file has a dir
-    logFile.getParentFile().mkdirs();
-
     try(BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         CountingOutputStream out = new CountingOutputStream(new FileOutputStream(logFile))) {
 
@@ -44,7 +42,7 @@ public class OutputCollector extends Thread {
       }
 
     } catch (IOException e) {
-      e.printStackTrace();
+      LOGGER.log(Level.SEVERE, "Exception while writing build log", e);
     }
   }
   

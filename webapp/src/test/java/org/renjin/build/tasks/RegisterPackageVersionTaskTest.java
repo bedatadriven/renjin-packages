@@ -31,7 +31,7 @@ public class RegisterPackageVersionTaskTest extends AbstractDatastoreTest {
   public void register() throws IOException, ParseException {
 
     PackageVersion mass2 = new PackageVersion(new PackageVersionId("org.renjin.cran", "MASS", "2.0"));
-    PackageDatabase.save(mass2);
+    PackageDatabase.save(mass2).now();
 
     RegisterPackageVersionTask task = new RegisterPackageVersionTask();
     PackageVersion survey = task.register(new PackageVersionId("org.renjin.cran", "survey", "3.29-5"),

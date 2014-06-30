@@ -3,6 +3,7 @@ package org.renjin.build.migrate;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.build.HibernateUtil;
@@ -17,6 +18,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class MigrateBuilds {
 
@@ -26,27 +28,52 @@ public class MigrateBuilds {
 
   @POST
   @Path("build")
-  public Response migrateBuild(@FormParam("build") int buildId) {
+  public Response migrateBuild(@FormParam("build") String packageId) {
 
 
     Objectify ofy = ObjectifyService.ofy();
 
-    List<Tuple> builds = HibernateUtil
+    List<Tuple> rows = HibernateUtil
         .getActiveEntityManager()
-        .createQuery("select b.id, b.outcome, b.build.renjinCommit.version " +
-            "from RPackageBuild  b where b.build.id = :build and b.stage = 'COMPLETED'", Tuple.class)
-            .setParameter("build", buildId)
+        .createQuery("select b.packageVersion.id, b.build.id,  b.build.renjinCommit.version, b.outcome " +
+            "from RPackageBuild  b " +
+            "where b.packageVersion.rPackage.id = :packageId and b.stage = 'COMPLETED' " +
+            "order by b.build.started", Tuple.class)
+            .setParameter("packageId", packageId)
         .getResultList();
 
     List<PackageBuild> entities = Lists.newArrayList();
+    Map<PackageVersionId, PackageStatus> statusMap = Maps.newHashMap();
 
-    for(Tuple row : builds) {
+    for(Tuple row : rows) {
 
-      PackageBuild entity = new PackageBuild();
-      entity.setId(row.get(0, String.class));
-      entity.setOutcome(row.get(1, BuildOutcome.class));
-      entity.setRenjinVersion(row.get(2, String.class));
-      entities.add(entity);
+      PackageVersionId pvid = new PackageVersionId(row.get(0, String.class));
+      long buildNumber = row.get(1, Long.class);
+
+      PackageBuild build = new PackageBuild(pvid, buildNumber);
+      build.setRenjinVersion(row.get(2, String.class));
+      build.setOutcome(row.get(1, BuildOutcome.class));
+      entities.add(build);
+
+      PackageStatus status = statusMap.get(pvid);
+      if(status == null) {
+        status = new PackageStatus(pvid, build.getRenjinVersionId());
+        statusMap.put(pvid, status);
+      }
+      switch(build.getOutcome()) {
+        case ERROR:
+        case FAILURE:
+        case TIMEOUT:
+          if(status.getBuildStatus() != BuildStatus.BUILT) {
+            status.setBuildStatus(BuildStatus.FAILED);
+            status.setBuildNumber(build.getBuildNumber());
+          }
+          break;
+        case SUCCESS:
+          status.setBuildStatus(BuildStatus.BUILT);
+          status.setBuildNumber(buildNumber);
+          break;
+      }
 
       if(entities.size() > 50) {
         ofy.save().entities(entities);

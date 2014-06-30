@@ -1,10 +1,9 @@
 package org.renjin.build.model;
 
 import com.google.common.collect.Sets;
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
-import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
+import com.googlecode.objectify.Key;
+import com.googlecode.objectify.annotation.*;
+import com.googlecode.objectify.condition.IfNull;
 
 import javax.persistence.Transient;
 import java.util.Date;
@@ -34,11 +33,38 @@ public class PackageBuild {
 
   private String pom;
 
+  @Index
+  @IgnoreSave(IfNull.class)
+  private Long startTime;
+
+  @Index
+  @IgnoreSave(IfNull.class)
+  private Long endTime;
+
+  private String workerId;
+
   public PackageBuild() {
   }
 
   public PackageBuild(PackageVersionId packageVersionId, long buildNumber) {
-    this.id = packageVersionId.toString() + ":" + buildNumber;
+    this.id = keyName(packageVersionId, buildNumber);
+  }
+
+  public static Key<PackageBuild> key(PackageVersionId packageVersionId, long buildNumber) {
+    return Key.create(PackageBuild.class, keyName(packageVersionId, buildNumber));
+  }
+
+  private static String keyName(PackageVersionId packageVersionId, long buildNumber) {
+    return packageVersionId.toString() + ":" + buildNumber;
+  }
+
+  public String getPath() {
+    return id.replaceAll(":", "/");
+  }
+
+  public String getLogPath() {
+    return getBuildNumber() + "/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" +
+        getPackageVersionId().getSourceVersion() + ".log";
   }
 
   public String getId() {
@@ -56,6 +82,9 @@ public class PackageBuild {
     return parts[1];
   }
 
+  public String getVersion() {
+    return getPackageVersionId().getSourceVersion();
+  }
 
   public PackageVersionId getPackageVersionId() {
     String[] parts = id.split(":");
@@ -84,6 +113,10 @@ public class PackageBuild {
     return renjinVersion;
   }
 
+  public RenjinVersionId getRenjinVersionId() {
+    return new RenjinVersionId(renjinVersion);
+  }
+
   public void setRenjinVersion(String renjinVersion) {
     this.renjinVersion = renjinVersion;
   }
@@ -108,5 +141,38 @@ public class PackageBuild {
     this.pom = pom;
   }
 
+  public Long getStartTime() {
+    return startTime;
+  }
 
+  public void setStartTime(Long startTime) {
+    this.startTime = startTime;
+  }
+
+  public Long getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(Long endTime) {
+    this.endTime = endTime;
+  }
+
+  public Date getStartDate() {
+    return new Date(startTime);
+  }
+
+  public Date getEndDate() {
+    if(endTime == null) {
+      return null;
+    }
+    return new Date(endTime);
+  }
+
+  public String getWorkerId() {
+    return workerId;
+  }
+
+  public void setWorkerId(String workerId) {
+    this.workerId = workerId;
+  }
 }

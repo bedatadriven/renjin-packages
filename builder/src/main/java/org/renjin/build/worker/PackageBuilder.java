@@ -1,5 +1,6 @@
 package org.renjin.build.worker;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -7,15 +8,11 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.build.task.PackageBuildResult;
 import org.renjin.build.task.PackageBuildTask;
-import org.renjin.build.worker.util.GoogleCloudStorage;
-import org.renjin.build.worker.util.OutputCollector;
-import org.renjin.build.worker.util.ProcessMonitor;
 import org.renjin.build.model.BuildOutcome;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -42,10 +39,12 @@ public class PackageBuilder {
 
   public static final int MAX_LOG_SIZE = 1024 * 600;
 
-  public PackageBuilder(File packagesDir, PackageBuildTask build) {
+  public PackageBuilder(PackageBuildTask build) {
     this.build = build;
-    this.baseDir = new File(packagesDir, build.getPackageName() + "_" + build.getSourceVersion());
+    this.baseDir = Files.createTempDir();
     this.logFile = new File(baseDir, "build.log");
+
+    LOGGER.info("Building " + build + " in " + baseDir);
   }
 
   public void build()  {
@@ -54,13 +53,13 @@ public class PackageBuilder {
    
     // set the name of this thread to the package
     // name for debugging
-    Thread.currentThread().setName(build.getPackageName());
+    Thread.currentThread().setName(build.toString());
 
     try {
-      ensureSourceUnpacked();
+      unpackSources();
       executeMaven();
       publishBuildLog();
-      removeBuildDir();
+     // removeBuildDir();
 
     } catch(Exception e) {
       LOGGER.log(Level.SEVERE, "Exception building " + build + ": " + e.getMessage());
@@ -71,47 +70,49 @@ public class PackageBuilder {
 
 
   /**
-   * Check whether the source is already unpacked in our workspace,
+   * Check whether the source is already unpacked in our workspace,.
    * otherwise download and unpack
    */
-  private void ensureSourceUnpacked() throws IOException {
+  private void unpackSources() throws IOException {
 
-    if(!baseDir.exists()) {
+    StorageClient storage = new StorageClient();
 
-      URL sourceUrl = new URL(build.getSourceUrl());
+    try(InputStream in = storage.openSourceArchive(build.getPackageVersionId())) {
 
-      try(InputStream in = sourceUrl.openStream()) {
+      TarArchiveInputStream tarIn = new TarArchiveInputStream(
+          new GZIPInputStream(in));
 
-        TarArchiveInputStream tarIn = new TarArchiveInputStream(
-            new GZIPInputStream(in));
+      TarArchiveEntry entry;
+      while((entry=tarIn.getNextTarEntry())!=null) {
+        if(entry.isFile()) {
 
-        String packagePrefix = build.getPackageName() + "/";
+          String name = stripPackageDir(entry.getName());
 
-        TarArchiveEntry entry;
-        while((entry=tarIn.getNextTarEntry())!=null) {
-          if(entry.isFile() && entry.getName().startsWith(packagePrefix)) {
+          File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
+          Files.createParentDirs(outFile);
 
-            String name = entry.getName().substring(packagePrefix.length());
-
-            File outFile = new File(baseDir.getAbsolutePath() + File.separator + name);
-            Files.createParentDirs(outFile);
-
-            Files.asByteSink(outFile).writeFrom(tarIn);
-          }
+          Files.asByteSink(outFile).writeFrom(tarIn);
         }
       }
     }
   }
 
+  private String stripPackageDir(String name) {
+    int slash = name.indexOf('/');
+    return name.substring(slash+1);
+  }
+
   private void executeMaven() throws IOException, InterruptedException {
 
-    System.out.println("Starting maven...");
+    LOGGER.info("Writing pom.xml");
+    Files.write(build.getPom().getBytes(Charsets.UTF_8), new File(baseDir, "pom.xml"));
+
+    LOGGER.info("Executing maven...");
+
 
     List<String> command = Lists.newArrayList();
     command.add("mvn");
-    command.add("-X");
-//    command.add("--gs");
-//    command.add("/etc/renjin-worker/settings.xml");
+ ///   command.add("-X");
 
     command.add("-DenvClassifier=linux-x86_64");
     command.add("-Dignore.gnur.compilation.failure=true");
@@ -130,7 +131,7 @@ public class PackageBuilder {
     Process process = builder.start();
 
     OutputCollector collector = new OutputCollector(process, logFile, MAX_LOG_SIZE);
-    collector.setName(build.getPackageName() + " - output collector");
+    collector.setName(build + " - output collector");
     collector.start();
 
     ProcessMonitor monitor = new ProcessMonitor(process);
@@ -151,6 +152,7 @@ public class PackageBuilder {
     }
 
     collector.join();
+
     if(outcome != BuildOutcome.TIMEOUT) {
       if(monitor.getExitCode() == 0) {
         outcome = BuildOutcome.SUCCESS;
@@ -164,14 +166,14 @@ public class PackageBuilder {
   }
 
   private void publishBuildLog() {
-//    try {
-//      GoogleCloudStorage.INSTANCE.putBuildLog(
-//          build.getBuildId(),
-//          build.versionId(),
-//          Files.asByteSource(logFile));
-//    } catch (Exception e) {
-//      LOGGER.log(Level.SEVERE, "Failed to publish build log", e);
-//    }
+    try {
+      StorageClient.INSTANCE.putBuildLog(
+          build.getBuildNumber(),
+          build.getPackageVersionId(),
+          Files.asByteSource(logFile));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Failed to publish build log", e);
+    }
   }
 
   private void removeBuildDir() {

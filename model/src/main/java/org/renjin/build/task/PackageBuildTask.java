@@ -1,46 +1,28 @@
 package org.renjin.build.task;
 
-import java.util.List;
-
 public class PackageBuildTask {
 
-  private String groupId;
-  private String packageName;
-  private String sourceVersion;
-  private String buildNumber;
-
+  private String packageVersionId;
+  private long buildNumber;
   private String pom;
-  private String sourceUrl;
 
-  public String getGroupId() {
-    return groupId;
+  public String url() {
+    return "https://renjinpackages.appspot.com/build/" + packageVersionId.replace(':', '/') + "/" + buildNumber;
   }
 
-  public void setGroupId(String groupId) {
-    this.groupId = groupId;
+  public String getPackageVersionId() {
+    return packageVersionId;
   }
 
-  public String getPackageName() {
-    return packageName;
+  public void setPackageVersionId(String packageVersionId) {
+    this.packageVersionId = packageVersionId;
   }
 
-  public void setPackageName(String packageName) {
-    this.packageName = packageName;
-  }
-
-  public String getSourceVersion() {
-    return sourceVersion;
-  }
-
-  public void setSourceVersion(String sourceVersion) {
-    this.sourceVersion = sourceVersion;
-  }
-
-  public String getBuildNumber() {
+  public long getBuildNumber() {
     return buildNumber;
   }
 
-  public void setBuildNumber(String buildNumber) {
+  public void setBuildNumber(long buildNumber) {
     this.buildNumber = buildNumber;
   }
 
@@ -52,16 +34,10 @@ public class PackageBuildTask {
     this.pom = pom;
   }
 
-  public String getSourceUrl() {
-    return sourceUrl;
-  }
-
-  public void setSourceUrl(String sourceUrl) {
-    this.sourceUrl = sourceUrl;
-  }
-
   @Override
   public String toString() {
-    return groupId + ":" + packageName + ":" + sourceVersion + "-b" + buildNumber;
+    return packageVersionId + "-b" + buildNumber;
   }
+
+
 }

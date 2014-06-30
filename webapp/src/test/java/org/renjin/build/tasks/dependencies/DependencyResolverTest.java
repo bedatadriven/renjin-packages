@@ -29,8 +29,7 @@ public class DependencyResolverTest extends AbstractDatastoreTest {
     PackageVersion mass2 = new PackageVersion(new PackageVersionId("org.renjin.cran", "MASS", "2.0"));
     PackageVersion mass10 = new PackageVersion(new PackageVersionId("org.renjin.cran", "MASS", "10.4"));
 
-    PackageDatabase.save(mass2);
-    PackageDatabase.save(mass10);
+    PackageDatabase.save(mass2, mass10).now();
 
     PackageDescription description = Fixtures.getSurveyPackageDescription();
 

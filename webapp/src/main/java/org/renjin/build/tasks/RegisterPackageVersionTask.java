@@ -4,18 +4,13 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.googlecode.objectify.ObjectifyService;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.build.archive.AppEngineSourceArchiveProvider;
 import org.renjin.build.model.*;
-import org.renjin.build.tasks.dependencies.DependencyResolver;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -94,7 +89,7 @@ public class RegisterPackageVersionTask {
 
     // queue this package for building / testing against the latest renjin
     // release
-    new PackageCheckQueue().updateStatus(packageVersion, RenjinVersionId.RELEASE);
+    new PackageCheckQueue().createStatus(packageVersion, RenjinVersionId.RELEASE);
 
     return packageVersion;
   }

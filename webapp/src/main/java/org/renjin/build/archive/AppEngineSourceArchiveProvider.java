@@ -22,7 +22,7 @@ public class AppEngineSourceArchiveProvider implements SourceArchiveProvider {
   @Override
   public TarArchiveInputStream openSourceArchive(PackageVersionId pvid) throws IOException {
 
-    GcsFilename filename = new GcsFilename(StorageKeys.BUCKET_NAME,
+    GcsFilename filename = new GcsFilename(StorageKeys.PACKAGE_SOURCE_BUCKET,
         StorageKeys.packageSource(pvid.getGroupId(), pvid.getPackageName(), pvid.getSourceVersion()));
 
     GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(filename, 0, 1024 * 1024);

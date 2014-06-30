@@ -1,4 +1,4 @@
-package org.renjin.build.worker.util;
+package org.renjin.build.worker;
 
 public class ProcessMonitor extends Thread {
 

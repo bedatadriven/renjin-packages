@@ -25,8 +25,7 @@ public class ResolveDependenciesTaskTest extends AbstractDatastoreTest {
     PackageVersion survey = new PackageVersion(surveyId);
     survey.setDescription(Fixtures.getSurveyPackageDescriptionSource());
 
-    PackageDatabase.save(mass);
-    PackageDatabase.save(survey);
+    PackageDatabase.save(mass, survey).now();
 
     // Try to resolve dependencies
     ResolveDependenciesTask task = new ResolveDependenciesTask();

@@ -1,25 +1,81 @@
 package org.renjin.build.tasks;
 
+import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.common.collect.Maps;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.VoidWork;
+import com.googlecode.objectify.cmd.QueryKeys;
 import org.renjin.build.model.*;
 
+import javax.ws.rs.FormParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
-/**
- */
+@Path("/tasks/updateStatus")
 public class PackageCheckQueue {
 
   private static final Logger LOGGER = Logger.getLogger(PackageCheckQueue.class.getName());
 
+
+  @POST
+  public void updateDownstream(@FormParam("packageVersionId") String packageVersionId,
+                               @FormParam("buildNumber") long buildNumber) {
+
+    updateDownStream(new PackageVersionId(packageVersionId), buildNumber);
+  }
+
+  public void updateDownStream(final PackageVersionId newlyBuilt, final long buildNumber) {
+
+    LOGGER.log(Level.INFO, "Update downstream package status records of " + newlyBuilt);
+
+
+    QueryKeys<PackageStatus> downstream = ofy().load().type(PackageStatus.class)
+        .filter("blockingDependency = ", newlyBuilt)
+        .keys();
+
+
+    for(final Key<PackageStatus> key : downstream) {
+
+        LOGGER.log(Level.INFO, "Updating " + key.getName());
+
+        ofy().transact(new VoidWork() {
+          @Override
+          public void vrun() {
+            PackageStatus status = ofy().load().key(key).now();
+
+            LOGGER.log(Level.INFO, "dependencies = " + status.getDependencies() +
+                " blockingDeps = " + status.getBlockingDependencies());
+
+            if (status.getBlockingDependencies().remove(newlyBuilt.toString())) {
+              status.getDependencies().add(newlyBuilt + "-b" + buildNumber);
+
+              if (status.getBuildStatus() == BuildStatus.BLOCKED &&
+                  status.getBlockingDependencies().isEmpty()) {
+
+                  status.setBuildStatus(BuildStatus.READY);
+              }
+
+              LOGGER.log(Level.INFO, "After update:: dependencies = " + status.getDependencies() +
+                  " blockingDeps = " + status.getBlockingDependencies());
+
+              ofy().save().entity(status);
+            }
+          }
+        });
+      }
+  }
+
+
   /**
    * (Possibly) updates the status of a PackageVersion-Renjin check
    */
-  public void updateStatus(final PackageVersion packageVersion, final RenjinVersionId renjinVersion) {
+  public void createStatus(final PackageVersion packageVersion, final RenjinVersionId renjinVersion) {
 
     LOGGER.log(Level.INFO, "Updating check status for " + packageVersion.getId() + " @ Renjin " + renjinVersion);
 
@@ -33,10 +89,6 @@ public class PackageCheckQueue {
     ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
-
-//        PackageStatus status = PackageDatabase.getStatus(
-//            packageVersion.getPackageVersionId(),
-//            renjinVersion);
 
         PackageStatus status = new PackageStatus(packageVersion.getPackageVersionId(), renjinVersion);
         if(status.getBuildStatus() == null) {
@@ -89,7 +141,8 @@ public class PackageCheckQueue {
 
     for(PackageStatus status : depStatus) {
       if(status.getBuildStatus() == BuildStatus.BUILT) {
-        builds.put(status.getPackageVersionId(), status.getBuild());
+        builds.put(status.getPackageVersionId(), new PackageBuildId(status.getPackageVersionId(),
+            status.getBuildNumber()));
       }
     }
 

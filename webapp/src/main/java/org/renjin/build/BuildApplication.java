@@ -2,25 +2,26 @@ package org.renjin.build;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
-import com.googlecode.objectify.ObjectifyService;
-import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
-import org.renjin.build.model.*;
-import org.renjin.build.tasks.QueuePackageBuildTask;
+import org.renjin.build.model.PackageDatabase;
+import org.renjin.build.tasks.PackageCheckQueue;
 import org.renjin.build.tasks.RegisterPackageVersionTask;
 import org.renjin.build.util.TupleObjectWrapper;
 
 import javax.ws.rs.core.Application;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
 public class BuildApplication extends Application {
 
+  public BuildApplication() {
+
+    PackageDatabase.init();
+
+  }
 
   @Override
   public Set<Class<?>> getClasses() {
@@ -32,7 +33,8 @@ public class BuildApplication extends Application {
 
     classes.add(FreemarkerMvcFeature.class);
     classes.add(RegisterPackageVersionTask.class);
-    classes.add(QueuePackageBuildTask.class);
+    classes.add(PackageCheckQueue.class);
+
     return classes;
   }
 
@@ -51,6 +53,4 @@ public class BuildApplication extends Application {
 
     return configuration;
   }
-
-
 }

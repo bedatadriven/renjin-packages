@@ -10,6 +10,7 @@ import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.googlecode.objectify.ObjectifyService.*;
@@ -21,16 +22,14 @@ import static com.googlecode.objectify.ObjectifyService.*;
 public class PackageDatabase {
 
   static {
+    init();
+  }
+
+  public static void init() {
     register(PackageBuild.class);
-    register(org.renjin.build.model.Package.class);
+    register(Package.class);
     register(PackageVersion.class);
     register(PackageStatus.class);
-
-    JodaTimeTranslators.add(factory());
-    factory().getTranslators().add(new IdTranslatorFactory<>(PackageVersionId.class));
-    factory().getTranslators().add(new IdTranslatorFactory<>(PackageBuild.class));
-    factory().getTranslators().add(new IdTranslatorFactory<>(RenjinVersionId.class));
-
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
@@ -84,8 +83,25 @@ public class PackageDatabase {
     return matching;
   }
 
-  public static void save(PackageVersion packageVersion) {
-    ofy().save().entities(packageVersion);
+
+  public static List<PackageBuild> getBuilds(PackageVersionId packageVersionId) {
+
+    // Keys are in the form: groupId:packageName:version:buildNumber
+
+    Key<PackageBuild> startKey = Key.create(PackageBuild.class, packageVersionId.toString() + ":");
+    Key<PackageBuild> endKey = Key.create(PackageBuild.class, packageVersionId.toString() + "Z");
+
+    return ofy().load().type(PackageBuild.class)
+        .filterKey(">=", startKey).filterKey("<", endKey).list();
+  }
+
+
+  public static PackageBuild getBuild(PackageVersionId packageVersionId, long buildNumber) {
+    return ofy().load().key(PackageBuild.key(packageVersionId, buildNumber)).safe();
+  }
+
+  public static Result<Map<Key<PackageVersion>,PackageVersion>> save(PackageVersion... packageVersions) {
+    return ofy().save().entities(packageVersions);
   }
 
   public static PackageStatus getStatus(PackageVersionId packageVersionId, RenjinVersionId renjinVersionId) {
@@ -117,4 +133,5 @@ public class PackageDatabase {
   public static void save(PackageStatus status) {
     ofy().save().entity(status).now();
   }
+
 }

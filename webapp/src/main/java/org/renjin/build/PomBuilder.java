@@ -32,7 +32,7 @@ public class PomBuilder {
   private String renjinVersion;
   private String packageVersionSuffix;
 
-  public PomBuilder(PackageBuild build, PackageDescription description) throws IOException {
+  public PomBuilder(PackageBuild build, PackageDescription description) {
     this.task = build;
     this.description = description;
 
@@ -110,9 +110,9 @@ public class PomBuilder {
     build.addExtension(wagon);
 
     DeploymentRepository deploymentRepo = new DeploymentRepository();
-    deploymentRepo.setId("renjin-repository");
-    deploymentRepo.setUrl("s3://repository.renjin.org@commondatastorage.googleapis.com");
-    deploymentRepo.setName("Renjin Repository");
+    deploymentRepo.setId("renjin-ci-repository");
+    deploymentRepo.setUrl("s3://repo.renjin.org@commondatastorage.googleapis.com/ci");
+    deploymentRepo.setName("Renjin CI Repository");
 
     DistributionManagement distributionManagement = new DistributionManagement();
     distributionManagement.setRepository(deploymentRepo);
@@ -122,8 +122,8 @@ public class PomBuilder {
     bddRepo.setUrl("http://nexus.bedatadriven.com/content/groups/public/");
 
     Repository renjinRepo = new Repository();
-    renjinRepo.setId("renjin-repository");
-    renjinRepo.setUrl("s3://repository.renjin.org@commondatastorage.googleapis.com");
+    renjinRepo.setId("renjin-ci-repository");
+    renjinRepo.setUrl("http://repo.renjin.org/ci");
 
     model.setDistributionManagement(distributionManagement);
     model.setBuild(build);
@@ -196,13 +196,16 @@ public class PomBuilder {
     model.addDependency(mavenDep);
   }
 
-
-  public String getXml() throws IOException {
-    Model pom = buildPom();
-    StringWriter fileWriter = new StringWriter();
-    MavenXpp3Writer writer = new MavenXpp3Writer();
-    writer.write(fileWriter, pom);
-    fileWriter.close();
-    return fileWriter.toString();
+  public String getXml()  {
+    try {
+      Model pom = buildPom();
+      StringWriter fileWriter = new StringWriter();
+      MavenXpp3Writer writer = new MavenXpp3Writer();
+      writer.write(fileWriter, pom);
+      fileWriter.close();
+      return fileWriter.toString();
+    } catch(Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }

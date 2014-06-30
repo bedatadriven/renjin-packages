@@ -3,10 +3,10 @@ package org.renjin.build.worker;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.io.Files;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.renjin.build.task.PackageBuildResult;
 import org.renjin.build.task.PackageBuildTask;
-import org.renjin.primitives.files.Files;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -15,54 +15,77 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class PollLoop implements Runnable {
+public class Main {
 
-  private static Logger LOGGER = Logger.getLogger(PollLoop.class.getName());
+  private static Logger LOGGER = Logger.getLogger(Main.class.getName()).getParent();
 
-  @Override
-  public void run() {
+  private String instanceId;
 
-    File workspace = new File("/tmp/workspace/packages");
+  public static void main(String[] args) {
+
+    new Main().run();
+  }
+
+  private void run() {
+    LOGGER.log(Level.INFO, "Renjin CI Worker Starting...");
+
+    instanceId = getInstanceId();
+
+    LOGGER.log(Level.INFO, "Instance ID: " + instanceId);
 
     while(true) {
+
+      LOGGER.log(Level.INFO, "Fetching next task...");
+
       Optional<PackageBuildTask> task = leaseNextBuild();
       if(!task.isPresent()) {
-        LOGGER.info("No tasks available, sleeping 60s...");
+        LOGGER.info("No tasks available, sleeping 60s.");
         try {
           Thread.sleep(60_000);
         } catch (InterruptedException e) {
           return;
         }
       } else {
-
         try {
-          // wrap up last task:
-          PackageBuilder builder = new PackageBuilder(workspace, task.get());
+          LOGGER.log(Level.INFO, "Building " + task.get().toString());
+
+          PackageBuilder builder = new PackageBuilder(task.get());
           builder.build();
 
           LOGGER.log(Level.INFO, task.get() + ": " + builder.getOutcome());
+          LOGGER.log(Level.INFO, task.get().url());
 
           // report back on outcome
-          reportResult(builder.getResult());
+          reportResult(task.get(), builder.getResult());
 
         } catch(Exception e) {
-          LOGGER.log(Level.SEVERE, "Exception while building " + task.get().getPackageName(), e);
+          LOGGER.log(Level.SEVERE, "Exception while building " + task.get(), e);
         }
       }
     }
   }
 
+  private String getInstanceId() {
+    Client client = ClientBuilder.newClient().register(JacksonFeature.class);
+    return client.target("http://metadata.google.internal/computeMetadata/v1/instance/id")
+        .request()
+        .header("Metadata-Flavor", "Google")
+        .get(String.class);
+  }
 
-  public static Optional<PackageBuildTask> leaseNextBuild() {
+  public Optional<PackageBuildTask> leaseNextBuild() {
 
     try {
       Client client = ClientBuilder.newClient().register(JacksonFeature.class);
-      WebTarget target = client.target("https://renjinpackages.appspot.com").path("build").path("next");
+      WebTarget target = client.target("https://renjinpackages.appspot.com")
+          .path("build").path("next");
 
       Form form = new Form();
+      form.param("worker", instanceId);
 
       PackageBuildTask task =
           target.request(MediaType.APPLICATION_JSON_TYPE)
@@ -78,17 +101,13 @@ public class PollLoop implements Runnable {
     }
   }
 
-  public static void main(String[] args) {
-    Optional<PackageBuildTask> task = leaseNextBuild();
-    if(task.isPresent()) {
-      new PackageBuilder(com.google.common.io.Files.createTempDir(), task.get());
-    }
-  }
-
-  private static void reportResult(PackageBuildResult result) {
+  private void reportResult(PackageBuildTask task, PackageBuildResult result) {
     try {
       Client client = ClientBuilder.newClient().register(JacksonFeature.class);
-      WebTarget target = client.target("http://localhost:8080").path("queue").path("result");
+      WebTarget target = client.target("https://renjinpackages.appspot.com")
+          .path("build")
+          .path(task.getPackageVersionId().replace(':', '/'))
+          .path(Long.toString(task.getBuildNumber()));
 
       int status = target.request()
           .post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE))
@@ -99,13 +118,5 @@ public class PollLoop implements Runnable {
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Exception while reporting result of build", e);
     }
-  }
-
-  private static String getWorkerId() {
-    String id = System.getenv("HOSTNAME");
-    if(Strings.isNullOrEmpty(id)) {
-      id = "worker" + Long.toString(Thread.currentThread().getId());
-    }
-    return id;
   }
 }

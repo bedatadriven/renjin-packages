@@ -18,6 +18,11 @@ public enum BuildStatus {
   READY,
 
   /**
+   * Currently building on a worker node
+   */
+  BUILDING,
+
+  /**
    * This package has been successfully built and deployed
    */
   BUILT,

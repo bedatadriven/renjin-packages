@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public abstract class ResourceTest {
 
 
-  protected final void assertTemplateRenders(Viewable viewable) throws IOException, TemplateException {
+  public static final void assertTemplateRenders(Viewable viewable) throws IOException, TemplateException {
     String templateName = viewable.getTemplateName();
     if(!templateName.startsWith("/")) {
       throw new AssertionError("Expected template name starting with '/', got: " + templateName);

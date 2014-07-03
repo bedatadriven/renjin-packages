@@ -4,7 +4,7 @@
              version="2.0">
   <persistence-unit name="renjin-repo-gae" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.ejb.HibernatePersistence</provider>
-    <class>org.renjin.build.model.RPackage</class>
+    <class>org.renjin.ci.model.RPackage</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
       <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
@@ -30,7 +30,7 @@
 
   <persistence-unit name="renjin-repo" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.ejb.HibernatePersistence</provider>
-    <class>org.renjin.build.model.RPackage</class>
+    <class>org.renjin.ci.model.RPackage</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
       <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver" />

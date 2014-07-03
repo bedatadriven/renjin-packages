@@ -3,14 +3,14 @@
   <display-name>Renjin</display-name>
 
 
-  <filter>
-    <filter-name>HibernateFilter</filter-name>
-    <filter-class>org.renjin.build.HibernateFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>HibernateFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+  <!--<filter>-->
+    <!--<filter-name>HibernateFilter</filter-name>-->
+    <!--<filter-class>org.renjin.ci.HibernateFilter</filter-class>-->
+  <!--</filter>-->
+  <!--<filter-mapping>-->
+    <!--<filter-name>HibernateFilter</filter-name>-->
+    <!--<url-pattern>/*</url-pattern>-->
+  <!--</filter-mapping>-->
 
   <servlet>
     <servlet-name>RenjinBuildServer</servlet-name>
@@ -18,7 +18,7 @@
 
     <init-param>
       <param-name>javax.ws.rs.Application</param-name>
-      <param-value>org.renjin.build.BuildApplication</param-value>
+      <param-value>org.renjin.ci.RenjinCI</param-value>
     </init-param>
 
   </servlet>
@@ -28,5 +28,35 @@
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>mapreduce</servlet-name>
+    <servlet-class>
+      com.google.appengine.tools.mapreduce.MapReduceServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>mapreduce</servlet-name>
+    <url-pattern>/mapreduce/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>pipeline</servlet-name>
+    <servlet-class>
+      com.google.appengine.tools.pipeline.impl.servlets.PipelineServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>pipeline</servlet-name>
+    <url-pattern>/_ah/pipeline/*</url-pattern>
+  </servlet-mapping>
+
+  <security-constraint>
+    <web-resource-collection>
+      <url-pattern>/mapreduce/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>admin</role-name>
+    </auth-constraint>
+  </security-constraint>
 
 </web-app>

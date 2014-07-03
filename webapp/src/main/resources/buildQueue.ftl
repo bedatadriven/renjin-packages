@@ -18,11 +18,13 @@
           </thead>
           <tbody>
             <#list building as build>
+            <#if ! (build.outcome??) >
             <tr>
-                <td>${build.packageName} ${build.version}</td>
+                <td><a href="/package/${build.groupId}/${build.packageName}">${build.packageName} ${build.version} #${build.buildNumber} </a></td>
                 <td>${build.startDate?datetime}</td>
                 <td>${build.workerId!('unknown')}</td>
             </tr>
+            </#if>
             </#list>
           </tbody>
       </table>
@@ -35,6 +37,7 @@
               <th>Worker</th>
               <th>Package</th>
               <th>Outcome</th>
+              <th>Native Sources</th>
           </tr>
           </thead>
           <tbody>
@@ -43,8 +46,9 @@
             <tr>
                 <td><#if build.endDate??>${build.endDate?datetime}</#if></td>
                 <td>${build.workerId!('unknown')}</td>
-                <td><a href="/build/${build.path}">${build.packageName} ${build.version}</a></td>
+                <td><a href="/build/result/${build.path}">${build.packageName} ${build.version} #${build.buildNumber}</a></td>
                 <td>${build.outcome}</td>
+                <td>${build.nativeOutcome!('?')}</td>
             </tr>
             </#if>
             </#list>
@@ -89,8 +93,34 @@
             <#--</#list>-->
           <#--</tbody>-->
       <#--</table>-->
-
   </div>
+
+  <div class="span3">
+    <div class="well">
+      <form action="/build/queue/retry" method="post">
+        <fieldset>
+          <legend>Retry Failed Builds</legend>
+          <label for="commitSelect">Renjin Version</label>
+          <select name="renjinVersion" id="commitSelect">
+                <option value="0.7.0-RC7" selected>0.7.0-RC7</option>
+          </select>
+          <button type="submit" class="btn">Retry</button>
+        </fieldset>
+      </form>
+    </div>
+
+    <div class="well">
+      <form action="/build/queue/resetStatus" method="post">
+        <fieldset>
+          <legend>Discard Builds & Reset Status</legend>
+          <label for="commitSelect">Renjin Version</label>
+          <select name="renjinVersion" id="commitSelect">
+            <option value="0.7.0-RC7" selected>0.7.0-RC7</option>
+          </select>
+          <button type="submit" class="btn btn-danger">Reset Status</button>
+        </fieldset>
+      </form>
+    </div>
 </div>
 
 </@scaffolding>

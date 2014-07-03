@@ -18,15 +18,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.renjin.build</groupId>
-    <artifactId>renjin-build-parent</artifactId>
+    <groupId>org.renjin.ci</groupId>
+    <artifactId>renjin-ci-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>renjin-build-webapp</artifactId>
+  <artifactId>renjin-ci-webapp</artifactId>
   <packaging>war</packaging>
-  <name>Renjin Builder WebApp</name>
+  <name>Renjin CI WebApp</name>
 
   <properties>
     <renjin.version>0.7.0-SNAPSHOT</renjin.version>
@@ -51,11 +51,17 @@
       <version>${gae.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-testing</artifactId>
       <version>${gae.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.appengine.tools</groupId>
+      <artifactId>appengine-mapreduce</artifactId>
+      <version>RELEASE</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.objectify</groupId>
@@ -92,8 +98,8 @@
       <version>1.7.0</version>
     </dependency>
     <dependency>
-      <groupId>org.renjin.build</groupId>
-      <artifactId>renjin-build-model</artifactId>
+      <groupId>org.renjin.ci</groupId>
+      <artifactId>renjin-ci-model</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

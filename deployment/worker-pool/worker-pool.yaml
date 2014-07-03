@@ -1,0 +1,27 @@
+template:
+  vmParams:
+    machineType: n1-standard-1
+    baseInstanceName: worker-replica
+    disksToCreate:
+      -  boot: true
+         autoDelete: true
+         initializeParams:
+            diskSizeGb: 10
+            sourceImage: "https://www.googleapis.com/compute/v1/projects/renjin-ci/global/images/worker-v1"
+    networkInterfaces:
+      - network: default
+        accessConfigs:
+          - name: External NAT
+            type: ONE_TO_ONE_NAT
+    serviceAccounts:
+      - email: default
+        scopes: [
+         "https://www.googleapis.com/auth/devstorage.read_write"
+        ]
+  action:
+    commands: [
+      "gsutil cp gs://renjin-ci-worker/worker.jar .",
+      "mkdir /root/.m2",
+      "gsutil cp gs://renjin-ci-worker/worker-maven-settings.xml /root/.m2/settings.xml",
+      "nohup java -jar worker.jar > worker.log &"
+    ]

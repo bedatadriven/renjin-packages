@@ -6,7 +6,7 @@
 
   <p class="lead">${description.title}</p>
 
-  <p>Built on ${startTime?datetime} against Renjin ${build.renjinVersion}</p>
+  <p>Built <#if startTime??>on ${startTime?datetime} </#if>against Renjin ${build.renjinVersion}</p>
 
   <#--<#if nativeSourceCompilationFailures>-->
   <#--<div class="alert alert-warning">Compilation of C/Fortran sources failed, full functionality may not be available</div>-->
@@ -49,10 +49,10 @@
 
   <h2>Build Log</h2>
 
-    <iframe src="//storage.googleapis.com/renjin-ci-build-logs/log/${build.logPath}" width="100%" height="350px">
+    <iframe src="//storage.googleapis.com/renjin-ci-build-logs/${build.logPath}" width="100%" height="350px">
     </iframe>
 
-   <p><a href="//storage.googleapis.com/renjin-ci-build-logs/log/${build.logPath}" target="_blank">Open in new window</a></p>
+   <p><a href="//storage.googleapis.com/renjin-ci-build-logs/${build.logPath}" target="_blank">Open in new window</a></p>
 
 
   <h2>Previous Builds</h2>

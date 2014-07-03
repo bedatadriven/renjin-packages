@@ -7,13 +7,13 @@
 
 
   <parent>
-    <groupId>org.renjin.build</groupId>
-    <artifactId>renjin-build-parent</artifactId>
+    <groupId>org.renjin.ci</groupId>
+    <artifactId>renjin-ci-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>renjin-build-model</artifactId>
+  <artifactId>renjin-ci-model</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <dependencies>

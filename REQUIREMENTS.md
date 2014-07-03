@@ -87,7 +87,7 @@ Each night,
 
 ### EnqueuePVS(packageVersion, renjinVersion)
 
-1. Create a new PVS entity, _status_, with the key groupId:packageName:sourceVersion:renjinVersion
+1. Create a new PVS entity, _status_, with the key groupId:packageName:version:renjinVersion
 2. For each _dep_, a dependency of packageVersion:
    1. Query _depStatus_, the corresponding PVS for the dependency
    2. If _depStatus_ is not BUILT, then:

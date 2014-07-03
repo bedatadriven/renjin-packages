@@ -13,7 +13,7 @@
 
   <h1>Migrate builds</h1>
 
-  <form action="/migrateBuilds" method="post">
+  <form action="/migrate" method="post">
       <input type="submit" value="Migrate build records">
   </form>
 

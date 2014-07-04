@@ -7,7 +7,7 @@ template:
          autoDelete: true
          initializeParams:
             diskSizeGb: 10
-            sourceImage: "https://www.googleapis.com/compute/v1/projects/renjin-ci/global/images/worker-v1"
+            sourceImage: "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-7-wheezy-v20140619"
     networkInterfaces:
       - network: default
         accessConfigs:
@@ -20,6 +20,7 @@ template:
         ]
   action:
     commands: [
+      "sudo apt-get install -y openjdk-7-jdk gcc-4.6 gcc-4.6-plugin-dev gfortran-4.6 gcc-4.6.multilib maven",
       "gsutil cp gs://renjin-ci-worker/worker.jar .",
       "mkdir /root/.m2",
       "gsutil cp gs://renjin-ci-worker/worker-maven-settings.xml /root/.m2/settings.xml",

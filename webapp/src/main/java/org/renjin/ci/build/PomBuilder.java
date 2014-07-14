@@ -1,18 +1,19 @@
 package org.renjin.ci.build;
 
-import java.io.*;
-
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.maven.model.*;
-import org.apache.maven.model.Build;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.renjin.ci.model.*;
+import org.renjin.ci.model.CorePackages;
+import org.renjin.ci.model.PackageBuild;
+import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
 
-import com.google.common.base.Strings;
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * Constructs a Maven Project Object Model (POM) from a GNU-R style

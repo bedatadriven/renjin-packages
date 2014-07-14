@@ -11,7 +11,8 @@ import com.googlecode.objectify.Work;
 
 import java.util.*;
 
-import static com.googlecode.objectify.ObjectifyService.*;
+import static com.googlecode.objectify.ObjectifyService.ofy;
+import static com.googlecode.objectify.ObjectifyService.register;
 
 /**
  * Provides basic query operations on

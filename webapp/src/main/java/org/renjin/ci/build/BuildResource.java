@@ -2,22 +2,14 @@ package org.renjin.ci.build;
 
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.VoidWork;
-import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.build.PomBuilder;
-import org.renjin.ci.archive.GcsAppIdentityServiceUrlSigner;
 import org.renjin.ci.model.*;
 import org.renjin.ci.task.PackageBuildResult;
-import org.renjin.ci.task.PackageBuildTask;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
-
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

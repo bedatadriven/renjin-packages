@@ -21,8 +21,8 @@ template:
   action:
     commands: [
       "sudo apt-get install -y openjdk-7-jdk gcc-4.6 gcc-4.6-plugin-dev gfortran-4.6 gcc-4.6.multilib maven",
-      "gsutil cp gs://renjin-ci-worker/worker.jar .",
-      "mkdir /root/.m2",
-      "gsutil cp gs://renjin-ci-worker/worker-maven-settings.xml /root/.m2/settings.xml",
-      "nohup java -jar worker.jar > worker.log &"
+      "gsutil cp gs://renjinci-worker/worker.jar .",
+      "test -d /root/.m2 || mkdir /root/.m2",
+      "gsutil cp gs://renjinci-worker/worker-maven-settings.xml /root/.m2/settings.xml",
+      "/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java -jar worker.jar &> worker.log &"
     ]

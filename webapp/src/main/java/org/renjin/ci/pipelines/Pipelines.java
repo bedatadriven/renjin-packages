@@ -26,7 +26,7 @@ public class Pipelines {
             .build();
 
     MapReduceSettings settings = new MapReduceSettings.Builder()
-        .setBucketName("renjin-ci-map-reduce")
+        .setBucketName("renjinci-map-reduce")
         .build();
 
     LOGGER.log(Level.INFO, "Settings: " + settings);

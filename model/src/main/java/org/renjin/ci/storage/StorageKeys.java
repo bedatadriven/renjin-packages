@@ -5,9 +5,8 @@ package org.renjin.ci.storage;
  */
 public class StorageKeys {
 
-  public static final String BUCKET_NAME = "renjin-build";
-  public static final String PACKAGE_SOURCE_BUCKET = "renjin-ci-package-sources";
-  public static final String  BUILD_LOG_BUCKET = "renjin-ci-build-logs";
+  public static final String PACKAGE_SOURCE_BUCKET = "renjinci-package-sources";
+  public static final String BUILD_LOG_BUCKET = "renjinci-logs";
 
 
   public static String buildLog(long buildId, String packageVersionId) {

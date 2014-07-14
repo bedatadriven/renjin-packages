@@ -109,7 +109,7 @@ public class PomBuilder {
 
     DeploymentRepository deploymentRepo = new DeploymentRepository();
     deploymentRepo.setId("renjin-ci-repository");
-    deploymentRepo.setUrl("s3://repo.renjin.org@commondatastorage.googleapis.com/ci");
+    deploymentRepo.setUrl("s3://ci.repo.renjin.org@commondatastorage.googleapis.com");
     deploymentRepo.setName("Renjin CI Repository");
 
     DistributionManagement distributionManagement = new DistributionManagement();
@@ -121,7 +121,7 @@ public class PomBuilder {
 
     Repository renjinRepo = new Repository();
     renjinRepo.setId("renjin-ci-repository-public");
-    renjinRepo.setUrl("http://repo.renjin.org/ci");
+    renjinRepo.setUrl("http://ci.repo.renjin.org");
 
     model.setDistributionManagement(distributionManagement);
     model.setBuild(build);

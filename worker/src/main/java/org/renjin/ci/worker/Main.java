@@ -77,8 +77,7 @@ public class Main {
 
     try {
       Client client = ClientBuilder.newClient().register(JacksonFeature.class);
-      WebTarget target = client.target("https://renjin-ci.appspot.com")
-          .path("build").path("queue").path("next");
+      WebTarget target = client.target("https://renjinci.appspot.com/build/queue/next");
 
       Form form = new Form();
       form.param("worker", instanceId);
@@ -100,7 +99,7 @@ public class Main {
   private void reportResult(PackageBuildTask task, PackageBuildResult result) {
     try {
       Client client = ClientBuilder.newClient().register(JacksonFeature.class);
-      WebTarget target = client.target("https://renjin-ci.appspot.com")
+      WebTarget target = client.target("https://renjinci.appspot.com")
           .path("build")
           .path("result")
           .path(task.getPackageVersionId().replace(':', '/'))

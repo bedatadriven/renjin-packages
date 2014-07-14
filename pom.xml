@@ -117,6 +117,14 @@
           </configuration>
         </plugin>
 
+        <!-- Disable the normal maven deployment to a repository -->
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>

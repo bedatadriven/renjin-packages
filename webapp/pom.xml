@@ -163,6 +163,14 @@
             <jvmFlag>-Drdbms.server=hosted</jvmFlag>
           </jvmFlags>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>update</goal>
+            </goals>
+            <phase>deploy</phase>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

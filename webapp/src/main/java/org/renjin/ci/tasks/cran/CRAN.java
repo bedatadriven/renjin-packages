@@ -141,7 +141,7 @@ public class CRAN {
   }
 
   public static GcsFilename gcsFileName(String packageName, String version) {
-    return new GcsFilename(StorageKeys.BUCKET_NAME,
+    return new GcsFilename(StorageKeys.PACKAGE_SOURCE_BUCKET,
         StorageKeys.packageSource("org.renjin.cran", packageName, version));
   }
   

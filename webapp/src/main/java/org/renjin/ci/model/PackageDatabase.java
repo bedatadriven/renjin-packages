@@ -30,6 +30,7 @@ public class PackageDatabase {
     register(Package.class);
     register(PackageVersion.class);
     register(PackageStatus.class);
+    register(PackageTest.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {

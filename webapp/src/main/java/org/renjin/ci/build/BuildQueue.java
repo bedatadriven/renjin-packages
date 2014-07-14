@@ -14,6 +14,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.model.*;
 import org.renjin.ci.pipelines.Pipelines;
 import org.renjin.ci.task.PackageBuildTask;
+import org.renjin.ci.test.ExtractTestFunction;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -235,4 +236,9 @@ public class BuildQueue {
     return Response.ok().build();
   }
 
+  @GET
+  @Path("test")
+  public Response test() {
+    return Pipelines.redirectToStatus(Pipelines.applyAll(new ExtractTestFunction()));
+  }
 }

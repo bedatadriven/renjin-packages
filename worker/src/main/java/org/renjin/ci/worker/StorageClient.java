@@ -38,12 +38,10 @@ public class StorageClient {
   public static final StorageClient INSTANCE = new StorageClient();
 
   private final Client client;
-  private final String accessToken;
 
 
   public StorageClient() {
     client = ClientBuilder.newClient().register(JacksonFeature.class);
-    accessToken = fetchAccessToken();
   }
 
   /**
@@ -69,7 +67,7 @@ public class StorageClient {
     return client
         .target(uri)
         .request()
-        .header("Authorization", "OAuth " + accessToken)
+        .header("Authorization", "OAuth " + fetchAccessToken())
         .get(InputStream.class);
   }
 
@@ -84,7 +82,7 @@ public class StorageClient {
     client
         .target(uri)
         .request()
-        .header("Authorization", "OAuth " + accessToken)
+        .header("Authorization", "OAuth " + fetchAccessToken())
         .header("x-goog-acl", "public-read")
         .put(gzip(input));
   }

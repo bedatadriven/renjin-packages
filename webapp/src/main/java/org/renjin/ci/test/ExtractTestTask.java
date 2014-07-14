@@ -28,11 +28,10 @@ public class ExtractTestTask implements DeferredTask {
   public ExtractTestTask(byte bytes[], String path, String group, String artifact) {
     boolean compressed = false;
     if (bytes.length > maxLength) {
-      try (
-          ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-          BZip2CompressorOutputStream bZip2CompressorOutputStream = new BZip2CompressorOutputStream(outputStream);
-      ) {
-        bZip2CompressorOutputStream.write(bytes, 0, bytes.length);
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        try (BZip2CompressorOutputStream bZip2CompressorOutputStream = new BZip2CompressorOutputStream(outputStream)) {
+          bZip2CompressorOutputStream.write(bytes, 0, bytes.length);
+        }
         bytes = outputStream.toByteArray();
         compressed = true;
       } catch (Exception e) {/* Just use the uncompressed data and hope for the best */}

@@ -2,6 +2,7 @@ package org.renjin.ci.build;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskAlreadyExistsException;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
@@ -221,9 +222,14 @@ public class BuildQueue {
       LOGGER.log(Level.INFO, "Killing " + buildKey.getName());
 
       String[] parts = buildKey.getName().split(":");
-      QueueFactory.getDefaultQueue().add(TaskOptions.Builder
-          .withTaskName(buildKey.getName())
-          .url("/build/result/" + parts[0] + "/" + parts[1] + "/" + parts[2] + "/" + parts[3] + "/timeout"));
+      String taskName = buildKey.getName().replace(':', '_').replace('.', '-') + "_timeout";
+      try {
+        QueueFactory.getDefaultQueue().add(TaskOptions.Builder
+            .withTaskName(taskName)
+            .url("/build/result/" + parts[0] + "/" + parts[1] + "/" + parts[2] + "/" + parts[3] + "/timeout"));
+      } catch (TaskAlreadyExistsException taskAlreadyExistsException) {
+        LOGGER.log(Level.SEVERE, "Task " + taskName + " already exists, skipping.");
+      }
     }
 
     return Response.ok().build();

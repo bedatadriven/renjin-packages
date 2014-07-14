@@ -68,6 +68,8 @@ public class PackageBuilder {
       e.printStackTrace();
       outcome = BuildOutcome.ERROR;
     }
+
+    LOGGER.info("Building " + build + " completed.");
   }
 
 

@@ -4,6 +4,7 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.VoidWork;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -89,8 +90,15 @@ public class BuildResource {
     ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
-        PackageBuild build = ofy().load().key(PackageBuild.key(packageVersionId, buildNumber)).safe();
-        PackageStatus status = ofy().load().key(PackageStatus.key(packageVersionId, build.getRenjinVersionId())).safe();
+        PackageBuild build;
+        PackageStatus status;
+        try {
+          build = ofy().load().key(PackageBuild.key(packageVersionId, buildNumber)).safe();
+          status = ofy().load().key(PackageStatus.key(packageVersionId, build.getRenjinVersionId())).safe();
+        } catch (NotFoundException notFoundException) {
+          LOGGER.info("No PackageStatus found for " + packageVersionId + "-b" + buildNumber + ".");
+          return;
+        }
 
         // Has the status already been reported?
         if(build.getOutcome() != null) {

@@ -20,6 +20,7 @@ template:
         ]
   action:
     commands: [
+      "sudo apt-get update",
       "sudo apt-get install -y openjdk-7-jdk gcc-4.6 gcc-4.6-plugin-dev gfortran-4.6 gcc-4.6.multilib maven",
       "gsutil cp gs://renjinci-worker/worker.jar .",
       "test -d /root/.m2 || mkdir /root/.m2",

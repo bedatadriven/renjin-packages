@@ -32,6 +32,7 @@
 
   <modules>
     <module>model</module>
+    <module>tester</module>
     <module>worker</module>
     <module>webapp</module>
   </modules>

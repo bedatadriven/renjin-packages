@@ -41,7 +41,7 @@ public class DependencyResolver {
   }
 
   public List<URL> resolveRenjin(String renjinVersion) throws Exception {
-    DefaultArtifact renjinArtifact = new DefaultArtifact("org.renjin", "renjin-script-engine", "jar", renjinVersion);
+    DefaultArtifact renjinArtifact = new DefaultArtifact("org.renjin", "renjin-cli", "jar", renjinVersion);
     return resolveArtifact(renjinArtifact);
   }
 

@@ -35,10 +35,12 @@
     <module>tester</module>
     <module>worker</module>
     <module>webapp</module>
+    <module>ear</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <appengine.target.version>1.9.15</appengine.target.version>
     <renjin.version>${project.version}</renjin.version>
     <renjin.display.version>${project.version}</renjin.display.version>
     <envClassifier>linux-x86</envClassifier>

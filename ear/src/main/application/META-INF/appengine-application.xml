@@ -1,0 +1,3 @@
+<appengine-application xmlns="http://appengine.google.com/ns/1.0">
+  <application>google.com:renjin-ci</application>
+</appengine-application>

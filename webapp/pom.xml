@@ -157,20 +157,7 @@
       <plugin>
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine-maven-plugin</artifactId>
-        <version>1.8.7-maven3.0</version>
-        <configuration>
-          <jvmFlags>
-            <jvmFlag>-Drdbms.server=hosted</jvmFlag>
-          </jvmFlags>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>update</goal>
-            </goals>
-            <phase>deploy</phase>
-          </execution>
-        </executions>
+        <version>${appengine.target.version}</version>
       </plugin>
     </plugins>
   </build>

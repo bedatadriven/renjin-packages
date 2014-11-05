@@ -1,0 +1,31 @@
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+  <application>renjinci</application>
+  <version>1</version>
+  <threadsafe>true</threadsafe>
+
+  <module>worker</module>
+  <vm>true</vm>
+
+  <automatic-scaling>
+    <min-num-instances>1</min-num-instances>
+    <max-num-instances>20</max-num-instances>
+    <cool-down-period-sec>60</cool-down-period-sec>
+    <cpu-utilization>
+      <target-utilization>0.5</target-utilization>
+    </cpu-utilization>
+  </automatic-scaling>
+  <resources>
+    <cpu>2</cpu>
+    <memory-gb>4</memory-gb>
+    <disk-size-gb>20</disk-size-gb>
+  </resources>
+  <health-check>
+    <enable-health-check>true</enable-health-check>
+    <check-interval-sec>5</check-interval-sec>
+    <timeout-sec>4</timeout-sec>
+    <unhealthy-threshold>2</unhealthy-threshold>
+    <healthy-threshold>2</healthy-threshold>
+    <restart-threshold>60</restart-threshold>
+  </health-check>
+
+</appengine-web-app>

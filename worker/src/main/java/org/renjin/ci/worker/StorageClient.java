@@ -14,6 +14,8 @@
 
 package org.renjin.ci.worker;
 
+import com.google.appengine.tools.cloudstorage.*;
+import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import org.codehaus.jackson.node.ObjectNode;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -27,6 +29,8 @@ import javax.ws.rs.core.Variant;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.Channels;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -34,6 +38,9 @@ import java.util.zip.GZIPOutputStream;
  * Post build artifacts
  */
 public class StorageClient {
+
+    private final GcsService gcsService =
+            GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
   public static final StorageClient INSTANCE = new StorageClient();
 
@@ -60,15 +67,13 @@ public class StorageClient {
 
   public InputStream openSourceArchive(String packageVersionId) throws IOException {
     String gav[] = packageVersionId.split(":");
-    String uri = "https://storage.googleapis.com/" +
-        StorageKeys.PACKAGE_SOURCE_BUCKET + "/" +
-        StorageKeys.packageSource(gav[0], gav[1], gav[2]);
 
-    return client
-        .target(uri)
-        .request()
-        .header("Authorization", "OAuth " + fetchAccessToken())
-        .get(InputStream.class);
+    GcsFilename filename = new GcsFilename(
+        StorageKeys.PACKAGE_SOURCE_BUCKET,
+        StorageKeys.packageSource(gav[0], gav[1], gav[2]));
+
+    GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(filename, 0, 1024 * 1024);
+    return Channels.newInputStream(readChannel);
   }
 
   /**
@@ -76,27 +81,22 @@ public class StorageClient {
    */
   public void putBuildLog(long buildNumber, String packageVersionId, ByteSource input) throws IOException {
 
-    String uri = "https://storage.googleapis.com/" +
-        StorageKeys.BUILD_LOG_BUCKET + "/" + StorageKeys.buildLog(buildNumber, packageVersionId);
+    GcsFilename filename = new GcsFilename(
+        StorageKeys.BUILD_LOG_BUCKET,
+        StorageKeys.buildLog(buildNumber, packageVersionId));
 
-    client
-        .target(uri)
-        .request()
-        .header("Authorization", "OAuth " + fetchAccessToken())
-        .header("x-goog-acl", "public-read")
-        .put(gzip(input));
-  }
+    GcsFileOptions options = new GcsFileOptions.Builder()
+        .contentEncoding("gzip")
+        .mimeType("text/plain")
+        .acl("public-read")
+        .build();
 
-  private Entity gzip(ByteSource input) throws IOException {
+    GcsOutputChannel outputChannel =
+        gcsService.createOrReplace(filename, options);
 
-    // GZIP the log text
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    GZIPOutputStream gz = new GZIPOutputStream(baos);
-    input.copyTo(gz);
-    gz.close();
+    try (OutputStream out = new GZIPOutputStream(Channels.newOutputStream(outputChannel))) {
+      input.copyTo(out);
+    }
 
-    // Create a variant describing mediatype
-    Variant variant = new Variant(MediaType.TEXT_PLAIN_TYPE, (String) null, "gzip");
-    return Entity.entity(baos.toByteArray(), variant);
   }
 }

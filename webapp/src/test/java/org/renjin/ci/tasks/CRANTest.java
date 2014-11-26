@@ -4,7 +4,7 @@ import com.google.common.io.Resources;
 import org.hamcrest.Matchers;
 import org.joda.time.LocalDate;
 import org.junit.Test;
-import org.renjin.ci.tasks.cran.CRAN;
+import org.renjin.ci.index.CRAN;
 
 
 import java.io.IOException;

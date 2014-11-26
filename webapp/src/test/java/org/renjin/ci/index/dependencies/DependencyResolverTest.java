@@ -1,4 +1,4 @@
-package org.renjin.ci.tasks.dependencies;
+package org.renjin.ci.index.dependencies;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -35,7 +35,8 @@ public class DependencyResolverTest extends AbstractDatastoreTest {
 
     List<PackageDescription.PackageDependency> dependencies = Lists.newArrayList(description.getDepends());
 
-    DependencyResolver resolver = new DependencyResolver("org.renjin.cran", new LocalDate(2014, 10, 1));
+    DependencyResolver resolver = new DependencyResolver()
+      .basedOnPublicationDateOf(new LocalDate(2014, 10, 1));
 
     PackageDescription.PackageDependency massDependency = dependencies.get(1);
     assertThat(massDependency.getName(), Matchers.equalTo("MASS"));

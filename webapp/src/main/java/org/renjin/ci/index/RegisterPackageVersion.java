@@ -1,21 +1,20 @@
-package org.renjin.ci.tasks;
+package org.renjin.ci.index;
 
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.tools.pipeline.Job1;
+import com.google.appengine.tools.pipeline.Value;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.googlecode.objectify.ObjectifyService;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.archive.AppEngineSourceArchiveProvider;
+import org.renjin.ci.build.PackageCheckQueue;
+import org.renjin.ci.index.dependencies.DependencyResolver;
+import org.renjin.ci.index.dependencies.DependencySet;
 import org.renjin.ci.model.*;
+import org.renjin.ci.archive.SourceArchiveProvider;
 
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.logging.Level;
@@ -24,21 +23,11 @@ import java.util.logging.Logger;
 /**
  * Registers a new PackageVersion in our database
  */
-@Path(RegisterPackageVersionTask.PATH)
-public class RegisterPackageVersionTask {
+public class RegisterPackageVersion extends Job1<PackageVersionId, PackageVersionId> {
 
-  public static final String PATH = "/tasks/registerPackVersion";
-
-  private static final Logger LOGGER = Logger.getLogger(RegisterPackageVersionTask.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RegisterPackageVersion.class.getName());
 
   SourceArchiveProvider sourceArchiveProvider = new AppEngineSourceArchiveProvider();
-
-
-  public static void queue(PackageVersionId packageVersionId) {
-    QueueFactory.getDefaultQueue().add(TaskOptions.Builder
-        .withUrl(PATH)
-        .param("packageVersionId", packageVersionId.toString()));
-  }
 
   /**
    *
@@ -49,14 +38,12 @@ public class RegisterPackageVersionTask {
    5. If package is not orpahn, run the EnqueuePVS algorithm for the latest release
    version of Renjin
    */
-  @POST
-  public Response register(@FormParam("packageVersionId") String packageVersionId) throws IOException, ParseException {
+  @Override
+  public Value<PackageVersionId> run(PackageVersionId pvid) throws Exception {
 
-    LOGGER.log(Level.INFO, "Registering new package version " + packageVersionId);
+    LOGGER.log(Level.INFO, "Registering new package version " + pvid);
 
     try {
-      PackageVersionId pvid = PackageVersionId.fromTriplet(packageVersionId);
-
       // Read the DESCRIPTION file from the .tar.gz source archive
       String descriptionSource = readPackageDescription(pvid);
 
@@ -65,12 +52,11 @@ public class RegisterPackageVersionTask {
 
       ObjectifyService.ofy().save().entity(packageVersion);
 
-
     } catch(InvalidPackageException e) {
-      LOGGER.log(Level.SEVERE, "Could not accept package " + packageVersionId, e);
+      LOGGER.log(Level.SEVERE, "Could not accept package " + pvid, e);
     }
 
-    return Response.ok().build();
+    return immediate(pvid);
   }
 
   @VisibleForTesting
@@ -78,18 +64,19 @@ public class RegisterPackageVersionTask {
 
     PackageDescription description = PackageDescription.fromString(descriptionSource);
 
+    // Resolve (versioned) dependencies
+    DependencySet dependencySet = new DependencyResolver()
+        .basedOnPublicationDateFrom(description)
+        .resolveAll(description);
+
     // Create a new PackageVersion entity
     PackageVersion packageVersion = new PackageVersion(packageVersionId);
     packageVersion.setPublicationDate(description.getPublicationDate());
     packageVersion.setDescription(descriptionSource);
-    packageVersion.setDependencies(Sets.<String>newHashSet());
+    packageVersion.setDependencies(dependencySet);
 
-    // try to resolve dependencies:
-    new ResolveDependenciesTask().resolveDependencies(packageVersion);
-
-    // queue this package for building / testing against the latest renjin
-    // release
-    new PackageCheckQueue().createStatus(packageVersion, RenjinVersionId.RELEASE);
+    // Create a status record for the current release
+    PackageCheckQueue.createStatus(packageVersion, RenjinVersionId.RELEASE);
 
     return packageVersion;
   }

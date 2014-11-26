@@ -61,7 +61,7 @@
     <dependency>
       <groupId>com.google.appengine.tools</groupId>
       <artifactId>appengine-mapreduce</artifactId>
-      <version>RELEASE</version>
+      <version>0.8.1</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.objectify</groupId>

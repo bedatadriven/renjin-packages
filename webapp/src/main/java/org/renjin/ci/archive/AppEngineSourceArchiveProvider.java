@@ -4,7 +4,6 @@ import com.google.appengine.tools.cloudstorage.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
-import org.renjin.ci.tasks.SourceArchiveProvider;
 
 import java.io.IOException;
 import java.nio.channels.Channels;

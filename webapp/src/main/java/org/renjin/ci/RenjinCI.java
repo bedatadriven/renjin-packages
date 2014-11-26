@@ -8,12 +8,10 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.renjin.ci.build.BuildQueue;
 import org.renjin.ci.build.BuildResource;
+import org.renjin.ci.index.IndexResources;
 import org.renjin.ci.migrate.MigrateBuilds;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
-import org.renjin.ci.tasks.PackageCheckQueue;
-import org.renjin.ci.tasks.RegisterPackageVersionTask;
-import org.renjin.ci.tasks.cran.CranTasks;
 import org.renjin.ci.util.TupleObjectWrapper;
 
 import javax.ws.rs.core.Application;
@@ -40,9 +38,7 @@ public class RenjinCI extends Application {
 
     classes.add(PackageResource.class);
 
-    classes.add(CranTasks.class);
-    classes.add(RegisterPackageVersionTask.class);
-    classes.add(PackageCheckQueue.class);
+    classes.add(IndexResources.class);
 
     classes.add(MigrateBuilds.class);
 

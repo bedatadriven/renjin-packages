@@ -1,17 +1,14 @@
 package org.renjin.ci.build;
 
-import junit.framework.TestCase;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
-import org.renjin.ci.ResourceTest;
+import org.renjin.ci.index.dependencies.DependencyResolver;
 import org.renjin.ci.model.*;
 import org.renjin.ci.tasks.Fixtures;
-import org.renjin.ci.tasks.ResolveDependenciesTask;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 import static org.hamcrest.Matchers.contains;
@@ -32,7 +29,7 @@ public class BuildQueueTest extends AbstractDatastoreTest {
     PackageVersionId surveyId = new PackageVersionId("org.renjin.cran", "survey", "3.29-5");
     PackageVersion survey = new PackageVersion(surveyId);
     survey.setDescription(Fixtures.getSurveyPackageDescriptionSource());
-    new ResolveDependenciesTask().resolveDependencies(survey);
+    DependencyResolver.update(survey);
 
     PackageStatus surveyStatus = new PackageStatus(surveyId, release);
     surveyStatus.setBuildStatus(BuildStatus.BLOCKED);

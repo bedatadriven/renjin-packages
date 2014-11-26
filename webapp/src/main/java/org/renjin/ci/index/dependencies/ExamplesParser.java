@@ -1,4 +1,4 @@
-package org.renjin.ci.tasks.dependencies;
+package org.renjin.ci.index.dependencies;
 
 import org.renjin.sexp.*;
 

@@ -8,10 +8,7 @@ import com.google.common.collect.Maps;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.HibernateUtil;
-import org.renjin.ci.PersistenceUtil;
 import org.renjin.ci.model.*;
-import org.renjin.ci.model.Package;
-import org.renjin.ci.tasks.RegisterPackageVersionTask;
 
 import javax.persistence.Tuple;
 import javax.ws.rs.FormParam;

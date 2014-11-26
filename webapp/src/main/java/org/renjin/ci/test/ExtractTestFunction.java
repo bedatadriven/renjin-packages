@@ -8,7 +8,7 @@ import org.renjin.ci.archive.AppEngineSourceArchiveProvider;
 import org.renjin.ci.model.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.pipelines.EntityMapFunction;
-import org.renjin.ci.tasks.SourceArchiveProvider;
+import org.renjin.ci.archive.SourceArchiveProvider;
 
 import java.io.IOException;
 import java.util.logging.Level;

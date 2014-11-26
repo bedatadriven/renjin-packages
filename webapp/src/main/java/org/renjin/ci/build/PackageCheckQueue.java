@@ -1,11 +1,7 @@
-package org.renjin.ci.tasks;
+package org.renjin.ci.build;
 
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.collect.Maps;
-import com.googlecode.objectify.Key;
 import com.googlecode.objectify.VoidWork;
-import com.googlecode.objectify.cmd.QueryKeys;
 import org.renjin.ci.model.*;
 
 import javax.ws.rs.*;

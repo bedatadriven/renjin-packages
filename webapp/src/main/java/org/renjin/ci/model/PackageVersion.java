@@ -7,8 +7,10 @@ import com.googlecode.objectify.condition.IfNotEmpty;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.joda.time.LocalDateTime;
+import org.renjin.ci.index.dependencies.DependencySet;
 
 import javax.annotation.Nonnull;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -95,6 +97,15 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   public void setDependencies(Set<String> dependencies) {
     this.dependencies = dependencies;
+  }
+
+
+  public void setDependencies(DependencySet dependencySet) {
+    this.dependencies = new HashSet<>();
+    this.compileDependenciesResolved = dependencySet.isCompileDependenciesResolved();
+    for(PackageVersionId id : dependencySet.getDependencies()) {
+      this.dependencies.add(id.toString());
+    }
   }
 
   public LocalDateTime getPublicationDate() {

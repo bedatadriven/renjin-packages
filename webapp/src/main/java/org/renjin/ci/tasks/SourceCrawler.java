@@ -4,6 +4,7 @@ package org.renjin.ci.tasks;
 import com.google.common.io.Closeables;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.renjin.ci.archive.SourceArchiveProvider;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;

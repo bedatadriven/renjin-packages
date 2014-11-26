@@ -1,9 +1,10 @@
-package org.renjin.ci.tasks;
+package org.renjin.ci.index;
 
 import org.joda.time.LocalDateTime;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.model.*;
+import org.renjin.ci.tasks.Fixtures;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -12,12 +13,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertThat;
 
-public class RegisterPackageVersionTaskTest extends AbstractDatastoreTest {
+public class RegisterPackageVersionTest extends AbstractDatastoreTest {
 
   @Test
   public void testRegisterOrphan() throws IOException, ParseException {
 
-    RegisterPackageVersionTask task = new RegisterPackageVersionTask();
+    RegisterPackageVersion task = new RegisterPackageVersion();
     PackageVersion survey = task.register(new PackageVersionId("org.renjin.cran", "survey", "3.29-5"),
         Fixtures.getSurveyPackageDescriptionSource());
 
@@ -33,7 +34,7 @@ public class RegisterPackageVersionTaskTest extends AbstractDatastoreTest {
     PackageVersion mass2 = new PackageVersion(new PackageVersionId("org.renjin.cran", "MASS", "2.0"));
     PackageDatabase.save(mass2).now();
 
-    RegisterPackageVersionTask task = new RegisterPackageVersionTask();
+    RegisterPackageVersion task = new RegisterPackageVersion();
     PackageVersion survey = task.register(new PackageVersionId("org.renjin.cran", "survey", "3.29-5"),
         Fixtures.getSurveyPackageDescriptionSource());
 

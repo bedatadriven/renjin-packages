@@ -4,11 +4,13 @@ import com.googlecode.objectify.Key;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
+import java.io.Serializable;
+
 /**
  * PackageVersion identifier, a composite of groupId, packageName,
  * and version (a typical GAV from Maven world)
  */
-public class PackageVersionId implements Comparable<PackageVersionId> {
+public class PackageVersionId implements Serializable, Comparable<PackageVersionId> {
   private String groupId;
   private String packageName;
   private ArtifactVersion version;

@@ -6,7 +6,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.renjin.ci.model.PackageTest;
-import org.renjin.ci.tasks.dependencies.ExamplesParser;
+import org.renjin.ci.index.dependencies.ExamplesParser;
 import org.renjin.parser.RdParser;
 import org.renjin.sexp.SEXP;
 import org.renjin.sexp.StringVector;

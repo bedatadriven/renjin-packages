@@ -1,8 +1,9 @@
-package org.renjin.ci.tasks.dependencies;
+package org.renjin.ci.index.dependencies;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
@@ -12,17 +13,24 @@ import org.joda.time.LocalDate;
 import org.renjin.ci.model.*;
 
 import javax.annotation.Nullable;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Resolves unqualified, unversioned dependency
  */
 public class DependencyResolver {
 
+  private static final Logger LOGGER = Logger.getLogger(DependencyResolver.class.getName());
 
-  private String groupId;
+  /**
+   * The group id to use for dependencies
+   */
+  private String groupId = "org.renjin.cran";
 
   /**
    * The publication date of the package version for which we
@@ -30,13 +38,21 @@ public class DependencyResolver {
    */
   private LocalDate publicationDate;
 
-  public DependencyResolver(String groupId, LocalDate publicationDate) {
-    this.groupId = groupId;
-    this.publicationDate = publicationDate;
+  public DependencyResolver() {
   }
 
-  public DependencyResolver(PackageVersion packageVersion) {
-    this(packageVersion.getGroupId(), new LocalDate(packageVersion.getPublicationDate()));
+  public DependencyResolver basedOnPublicationDateOf(LocalDate publicationDate) {
+    this.publicationDate = publicationDate;
+    return this;
+  }
+
+  public DependencyResolver basedOnPublicationDateFrom(PackageDescription description) {
+    try {
+      this.publicationDate = description.getPublicationDate().toLocalDate();
+    } catch (ParseException e) {
+      throw new IllegalArgumentException("date: " + e.getMessage(), e);
+    }
+    return this;
   }
 
   public boolean isPartOfRenjin(PackageDescription.PackageDependency dependency) {
@@ -93,4 +109,41 @@ public class DependencyResolver {
     return Predicates.alwaysTrue();
   }
 
+  public DependencySet resolveAll(PackageDescription description) {
+
+    // Keep track of whether we are able to resolve dependencies
+    DependencySet set = new DependencySet();
+    set.setCompileDependenciesResolved(true);
+
+    // Iterate over explicitly declared dependencies
+    Iterable<PackageDescription.PackageDependency> declared =
+        Iterables.concat(description.getImports(), description.getDepends());
+
+    for(PackageDescription.PackageDependency dependency : declared) {
+      if(!isPartOfRenjin(dependency)) {
+        Optional<PackageVersionId> dependencyId = resolveVersion(dependency);
+        if(dependencyId.isPresent()) {
+
+          LOGGER.log(Level.INFO, "Resolved " + dependency + " to " + dependencyId.get());
+          set.add(dependencyId.get());
+
+        } else {
+          LOGGER.log(Level.WARNING, "Could not resolve dependency " + dependency);
+          set.setCompileDependenciesResolved(false);
+        }
+      }
+    }
+
+    return set;
+  }
+
+  public static void update(PackageVersion packageVersion) {
+
+    PackageDescription description = packageVersion.parseDescription();
+    DependencySet dependencySet = new DependencyResolver()
+        .resolveAll(description);
+
+    packageVersion.setDependencies(dependencySet);
+
+  }
 }

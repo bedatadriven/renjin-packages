@@ -1,4 +1,4 @@
-package org.renjin.ci.tasks.cran;
+package org.renjin.ci.index;
 
 import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.common.collect.Lists;

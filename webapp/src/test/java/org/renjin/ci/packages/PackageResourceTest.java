@@ -12,9 +12,6 @@ import java.io.IOException;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
-/**
- * Created by alex on 6/30/14.
- */
 public class PackageResourceTest extends AbstractDatastoreTest {
 
   @Test

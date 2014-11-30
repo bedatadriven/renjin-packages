@@ -11,10 +11,10 @@ import com.googlecode.objectify.VoidWork;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.QueryKeys;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.index.test.ExtractTestFunction;
 import org.renjin.ci.model.*;
 import org.renjin.ci.pipelines.Pipelines;
 import org.renjin.ci.task.PackageBuildTask;
-import org.renjin.ci.test.ExtractTestFunction;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -143,6 +143,7 @@ public class BuildQueue {
 
       LOGGER.log(Level.INFO, "Downstream: " + key.getName());
 
+
       ofy().transact(new VoidWork() {
         @Override
         public void vrun() {
@@ -176,6 +177,12 @@ public class BuildQueue {
   public Response resetStatus() {
     Pipelines.applyAll(new TimeoutAllBuilds());
     return Pipelines.redirectToStatus(Pipelines.applyAll(new ResetPackageStatus()));
+  }
+
+  @POST
+  @Path("recomputeDeltas")
+  public Response recomputeDeltas() {
+    return Pipelines.redirectToStatus(Pipelines.applyAll(new UpdateBuildStatusDelta()));
   }
 
   @POST

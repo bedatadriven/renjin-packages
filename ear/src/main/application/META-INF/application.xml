@@ -3,17 +3,18 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/application_5.xsd"
              version="5">
-
+  <display-name>renjin-ci</display-name>
   <module>
     <web>
       <web-uri>renjin-ci-webapp-1.0-SNAPSHOT.war</web-uri>
-      <context-root>/</context-root>
+      <context-root>/webapp</context-root>
     </web>
   </module>
   <module>
     <web>
       <web-uri>renjin-ci-worker-1.0-SNAPSHOT.war</web-uri>
-      <context-root>/</context-root>
+      <context-root>/worker</context-root>
     </web>
   </module>
+  <library-directory>lib</library-directory>
 </application>

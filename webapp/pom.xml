@@ -30,7 +30,6 @@
 
   <properties>
     <renjin.version>0.7.0-SNAPSHOT</renjin.version>
-    <gae.version>1.9.5</gae.version>
   </properties>
 
   <dependencies>
@@ -63,11 +62,7 @@
       <artifactId>appengine-mapreduce</artifactId>
       <version>0.8.1</version>
     </dependency>
-    <dependency>
-      <groupId>com.googlecode.objectify</groupId>
-      <artifactId>objectify</artifactId>
-      <version>5.0.3</version>
-    </dependency>
+  
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -152,13 +147,4 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>com.google.appengine</groupId>
-        <artifactId>appengine-maven-plugin</artifactId>
-        <version>${appengine.target.version}</version>
-      </plugin>
-    </plugins>
-  </build>
 </project>

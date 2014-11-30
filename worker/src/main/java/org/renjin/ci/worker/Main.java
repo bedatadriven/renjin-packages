@@ -31,6 +31,7 @@ public class Main {
 
     instanceId = getInstanceId();
 
+
     LOGGER.log(Level.INFO, "Instance ID: " + instanceId);
 
     while(true) {

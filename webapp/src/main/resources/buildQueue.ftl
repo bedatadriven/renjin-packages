@@ -121,6 +121,15 @@
         </fieldset>
       </form>
     </div>
-</div>
+
+    <div class="well">
+    <form action="/build/queue/recomputeDeltas" method="post">
+      <fieldset>
+          <legend>Recompute Build Deltas</legend>
+          <button type="submit" class="btn btn-danger">Recompute</button>
+      </fieldset>
+    </form>
+    </div>
+  </div>
 
 </@scaffolding>

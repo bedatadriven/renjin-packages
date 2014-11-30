@@ -9,10 +9,8 @@ import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.renjin.ci.build.BuildQueue;
 import org.renjin.ci.build.BuildResource;
 import org.renjin.ci.index.IndexResources;
-import org.renjin.ci.migrate.MigrateBuilds;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
-import org.renjin.ci.util.TupleObjectWrapper;
 
 import javax.ws.rs.core.Application;
 import java.util.Map;
@@ -40,7 +38,6 @@ public class RenjinCI extends Application {
 
     classes.add(IndexResources.class);
 
-    classes.add(MigrateBuilds.class);
 
     return classes;
   }
@@ -54,9 +51,7 @@ public class RenjinCI extends Application {
 
   private Configuration templateConfiguration() {
     Configuration configuration = new Configuration();
-    configuration.setObjectWrapper(new TupleObjectWrapper());
     configuration.setClassForTemplateLoading(RenjinCI.class, "/");
-
 
     return configuration;
   }

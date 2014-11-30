@@ -22,13 +22,12 @@
           <version>5</version>
           <defaultLibBundleDir>lib</defaultLibBundleDir>
           <unpackTypes>war</unpackTypes>
-          <applicationXml>${project.basedir}/src/main/application/META-INF/maven-application.xml</applicationXml>
         </configuration>
       </plugin>
       <plugin>
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine-maven-plugin</artifactId>
-        <version>1.9.6</version>
+        <version>${gae.version}</version>
       </plugin>
     </plugins>
   </build>

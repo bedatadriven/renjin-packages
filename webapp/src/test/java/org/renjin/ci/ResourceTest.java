@@ -20,7 +20,7 @@ public abstract class ResourceTest {
     templateName = templateName.substring(1);
 
     Configuration templateConfig = new Configuration();
-    templateConfig.setClassForTemplateLoading(RootResources.class, "/");
+    templateConfig.setClassForTemplateLoading(RenjinCI.class, "/");
     Template template = templateConfig.getTemplate(templateName);
     template.process(viewable.getModel(), new PrintWriter(System.out));
   }

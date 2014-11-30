@@ -9,11 +9,10 @@ import com.googlecode.objectify.ObjectifyService;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.archive.AppEngineSourceArchiveProvider;
+import org.renjin.ci.archive.SourceArchiveProvider;
 import org.renjin.ci.build.PackageCheckQueue;
 import org.renjin.ci.index.dependencies.DependencyResolver;
-import org.renjin.ci.index.dependencies.DependencySet;
 import org.renjin.ci.model.*;
-import org.renjin.ci.archive.SourceArchiveProvider;
 
 import java.io.IOException;
 import java.text.ParseException;

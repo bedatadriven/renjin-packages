@@ -35,6 +35,12 @@ public class UpdateBuildStatusDelta extends EntityMapFunction<PackageVersion> {
     // and filter on only those builds that completed
     Iterator<PackageStatus> it = Iterators.filter(status.iterator(), new Completed());
 
+    if(!it.hasNext()) {
+      LOGGER.info("Package Version " + packageVersion + " has no completed builds.");
+      return;
+    }
+
+
     PackageStatus first = it.next();
     boolean wasBuilding = first.getBuildStatus() == BuildStatus.BUILT;
 
@@ -48,7 +54,7 @@ public class UpdateBuildStatusDelta extends EntityMapFunction<PackageVersion> {
         next.setBuildDelta(Delta.REGRESSION);
 
       } else if (!wasBuilding && buildingNow) {
-        next.setBuildDelta(Delta.IMPROVEMENT);
+        next.setBuildDelta(Delta.FIX);
 
       } else {
         next.setBuildDelta(Delta.NO_CHANGE);

@@ -6,7 +6,7 @@ package org.renjin.ci.model;
 public enum Delta {
   REGRESSION(-1),
   NO_CHANGE(0),
-  IMPROVEMENT(+1);
+  FIX(+1);
 
   private final int code;
 
@@ -23,7 +23,7 @@ public enum Delta {
     if(delta < 0) {
       return REGRESSION;
     } else if(delta > 0) {
-      return IMPROVEMENT;
+      return FIX;
     } else {
       return NO_CHANGE;
     }

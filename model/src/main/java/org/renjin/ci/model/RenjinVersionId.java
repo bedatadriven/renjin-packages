@@ -1,6 +1,8 @@
 package org.renjin.ci.model;
 
-public class RenjinVersionId {
+import java.io.Serializable;
+
+public class RenjinVersionId implements Serializable {
 
   public static final RenjinVersionId RELEASE = new RenjinVersionId("0.7.0-RC7");
 

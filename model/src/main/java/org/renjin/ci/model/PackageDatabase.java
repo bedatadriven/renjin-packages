@@ -12,6 +12,8 @@ import com.googlecode.objectify.Work;
 
 import java.util.*;
 
+import static com.googlecode.objectify.ObjectifyService.register;
+
 /**
  * Provides basic query operations on
  * database of Packages
@@ -25,11 +27,16 @@ public class PackageDatabase {
   }
 
   public static void init() {
-    ObjectifyService.register(PackageBuild.class);
-    ObjectifyService.register(Package.class);
-    ObjectifyService.register(PackageVersion.class);
-    ObjectifyService.register(PackageStatus.class);
-    ObjectifyService.register(PackageTest.class);
+    register(PackageBuild.class);
+    register(Package.class);
+    register(PackageVersion.class);
+    register(PackageStatus.class);
+    register(PackageTest.class);
+    register(VersionComparison.class);
+    register(VersionComparisonReport.class);
+    register(VersionComparisonEntry.class);
+    register(RenjinCommit.class);
+    register(RenjinRelease.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
@@ -184,4 +191,17 @@ public class PackageDatabase {
     ObjectifyService.ofy().save().entity(status).now();
   }
 
+  public static VersionComparison getVersionComparison(RenjinVersionId from, RenjinVersionId to) {
+    Key<VersionComparison> key = VersionComparison.key(from, to);
+    VersionComparison comparison = ObjectifyService.ofy().load().key(key).now();
+    if(comparison == null) {
+      comparison = new VersionComparison(from, to);
+    }
+    return comparison;
+  }
+
+  public static Optional<RenjinCommit> getCommit(String commitHash) {
+    Key<RenjinCommit> key = Key.create(RenjinCommit.class, commitHash);
+    return Optional.fromNullable(ObjectifyService.ofy().load().key(key).now());
+  }
 }

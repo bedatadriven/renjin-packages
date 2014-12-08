@@ -26,7 +26,7 @@ public class UpdateBuildStatusDeltaTest extends AbstractDatastoreTest {
     fn.apply(new PackageVersion(versionId));
 
     assertThat(queryDelta("1.2"), equalTo(Delta.REGRESSION));
-    assertThat(queryDelta("2.0"), equalTo(Delta.IMPROVEMENT));
+    assertThat(queryDelta("2.0"), equalTo(Delta.FIX));
     assertThat(queryDelta("10.4"), equalTo(Delta.REGRESSION));
   }
 
@@ -38,7 +38,7 @@ public class UpdateBuildStatusDeltaTest extends AbstractDatastoreTest {
 
   private Delta queryDelta(String renjinVersion) {
     PackageStatus status = PackageDatabase.getStatus(versionId, new RenjinVersionId(renjinVersion));
-    return Delta.valueOf(status.getBuildDelta());
+    return status.getBuildDelta();
   }
 
 

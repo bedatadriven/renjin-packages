@@ -5,9 +5,9 @@
     <description>Fetch new packages nightly</description>
     <schedule>every day 02:00</schedule>
   </cron>
-  <cron>
-    <url>/build/queue/cleanup</url>
-    <description>Clean up package build queue</description>
-    <schedule>every 5 minutes</schedule>
-  </cron>
+  <!--<cron>-->
+    <!--<url>/build/queue/cleanup</url>-->
+    <!--<description>Clean up package build queue</description>-->
+    <!--<schedule>every 5 minutes</schedule>-->
+  <!--</cron>-->
 </cronentries>

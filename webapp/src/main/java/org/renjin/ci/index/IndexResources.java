@@ -2,9 +2,11 @@ package org.renjin.ci.index;
 
 import com.google.appengine.tools.pipeline.PipelineService;
 import com.google.appengine.tools.pipeline.PipelineServiceFactory;
+import org.renjin.ci.pipelines.Pipelines;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.util.logging.Logger;
 
@@ -27,5 +29,13 @@ public class IndexResources {
 
     return Response.ok().build();
   }
+
+  @GET
+  @Path("updateGit/{sha}")
+  public Response updateGit(@PathParam("sha") String sha) {
+    String jobId = pipelineService.startNewPipeline(new IndexCommit(), sha);
+    return Pipelines.redirectToStatus(jobId);
+  }
+
 
 }

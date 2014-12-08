@@ -123,8 +123,8 @@ public class PackageStatus {
     this.buildDelta = buildDelta;
   }
 
-  public int getBuildDelta() {
-    return buildDelta;
+  public Delta getBuildDelta() {
+    return Delta.valueOf(buildDelta);
   }
 
   public void setBlockingDependencies(Set<String> blockingDependencies) {
@@ -169,4 +169,5 @@ public class PackageStatus {
       }
     });
   }
+
 }

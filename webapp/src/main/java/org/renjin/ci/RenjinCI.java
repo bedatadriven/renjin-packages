@@ -9,8 +9,10 @@ import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.renjin.ci.build.BuildQueue;
 import org.renjin.ci.build.BuildResource;
 import org.renjin.ci.index.IndexResources;
+import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
+import org.renjin.ci.qa.QaResources;
 
 import javax.ws.rs.core.Application;
 import java.util.Map;
@@ -37,7 +39,8 @@ public class RenjinCI extends Application {
     classes.add(PackageResource.class);
 
     classes.add(IndexResources.class);
-
+    classes.add(WebHooks.class);
+    classes.add(QaResources.class);
 
     return classes;
   }

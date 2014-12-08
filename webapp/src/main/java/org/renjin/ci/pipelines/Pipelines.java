@@ -19,6 +19,12 @@ public class Pipelines {
 
   public static <T> String applyAll(EntityMapFunction<T> function) {
 
+    MapJob<Entity, Void, Void> mapJob = newMapJob(function);
+
+    return PipelineServiceFactory.newPipelineService().startNewPipeline(mapJob);
+  }
+
+  public static <T> MapJob<Entity, Void, Void> newMapJob(EntityMapFunction<T> function) {
     MapSpecification<Entity, Void, Void> spec =
         new MapSpecification.Builder<Entity, Void, Void>(
             new DatastoreInput(function.getEntityName(), 10), function)
@@ -31,9 +37,7 @@ public class Pipelines {
 
     LOGGER.log(Level.INFO, "Settings: " + settings);
 
-    MapJob<Entity, Void, Void> mapJob = new MapJob<>(spec, settings);
-
-    return PipelineServiceFactory.newPipelineService().startNewPipeline(mapJob);
+    return new MapJob<>(spec, settings);
   }
 
   public static Response redirectToStatus(String pipelineId) {

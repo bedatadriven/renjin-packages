@@ -1,5 +1,8 @@
 package org.renjin.ci.model;
 
+
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.io.Serializable;
 
 public class RenjinVersionId implements Serializable {
@@ -12,6 +15,7 @@ public class RenjinVersionId implements Serializable {
     this.version = version;
   }
 
+  @JsonValue
   @Override
   public String toString() {
     return version;

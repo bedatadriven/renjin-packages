@@ -37,6 +37,7 @@ public class PackageDatabase {
     register(VersionComparisonEntry.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
+    register(BuildJob.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
@@ -203,5 +204,9 @@ public class PackageDatabase {
   public static Optional<RenjinCommit> getCommit(String commitHash) {
     Key<RenjinCommit> key = Key.create(RenjinCommit.class, commitHash);
     return Optional.fromNullable(ObjectifyService.ofy().load().key(key).now());
+  }
+
+  public static Iterable<RenjinRelease> getReleases() {
+    return ObjectifyService.ofy().load().type(RenjinRelease.class).iterable();
   }
 }

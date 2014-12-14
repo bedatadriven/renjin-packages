@@ -33,9 +33,8 @@
   <modules>
     <module>model</module>
     <module>tester</module>
-    <module>worker</module>
     <module>webapp</module>
-    <module>ear</module>
+    <module>jenkins</module>
   </modules>
 
   <properties>

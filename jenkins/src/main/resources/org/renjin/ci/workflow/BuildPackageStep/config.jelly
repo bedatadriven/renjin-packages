@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry field="packageVersionId" title="Renjin Version Id">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="packageVersionId" title="Package Version Id">
+        <f:textbox/>
+    </f:entry>
+</j:jelly>

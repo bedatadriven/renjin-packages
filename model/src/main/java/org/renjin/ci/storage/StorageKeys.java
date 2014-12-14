@@ -1,5 +1,7 @@
 package org.renjin.ci.storage;
 
+import org.renjin.ci.model.PackageVersionId;
+
 /**
  * Mappings of source/build artificats to storage keys
  */
@@ -13,8 +15,16 @@ public class StorageKeys {
     return buildId + "/" + packageVersionId.replace(':', '/') + ".log";
   }
 
+  public static String buildLog(long buildId, PackageVersionId packageVersionId) {
+    return buildId + "/" + packageVersionId.toString().replace(':', '/') + ".log";
+  }
+
+
   public static String packageSource(String groupId, String packageName, String version) {
     return groupId + "/" + packageName + "_" + version + ".tar.gz";
   }
 
+  public static String packageSource(PackageVersionId packageVersionId) {
+    return packageSource(packageVersionId.getGroupId(), packageVersionId.getPackageName(), packageVersionId.getVersionString());
+  }
 }

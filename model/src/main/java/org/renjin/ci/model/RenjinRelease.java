@@ -3,6 +3,7 @@ package org.renjin.ci.model;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Index;
 
 import java.util.Date;
 
@@ -13,8 +14,11 @@ public class RenjinRelease {
   @Id
   private String version;
 
+  @Index
   private Date date;
+
   private long packagesBuilt;
+
   private Ref<RenjinCommit> renjinCommit;
 
   public RenjinRelease() {

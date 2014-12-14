@@ -1,5 +1,6 @@
 package org.renjin.ci.model;
 
+import com.fasterxml.jackson.annotation.*;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
@@ -12,22 +13,29 @@ import java.util.Set;
  * build attempt
  */
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PackageBuild {
 
   @Id
+  @JsonProperty
   private String id;
 
+  @JsonProperty
   private BuildOutcome outcome;
 
+  @JsonProperty
   private NativeOutcome nativeOutcome;
 
   /**
    * The Renjin version against which the
    * package was built
    */
+  @JsonProperty
   private String renjinVersion;
 
   @Unindex
+  @JsonProperty
   private Set<String> dependencies;
 
   @IgnoreSave(IfNull.class)
@@ -63,6 +71,7 @@ public class PackageBuild {
     return packageVersionId.toString() + ":" + buildNumber;
   }
 
+  @JsonIgnore
   public String getPath() {
     return id.replaceAll(":", "/");
   }
@@ -124,6 +133,7 @@ public class PackageBuild {
     return new RenjinVersionId(renjinVersion);
   }
 
+  @JsonSetter
   public void setRenjinVersion(String renjinVersion) {
     this.renjinVersion = renjinVersion;
   }
@@ -136,6 +146,7 @@ public class PackageBuild {
     return dependencies;
   }
 
+  @JsonSetter
   public void setDependencies(Set<String> dependencies) {
     this.dependencies = dependencies;
   }

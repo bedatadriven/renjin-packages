@@ -100,8 +100,8 @@ public class BuildQueue {
         build.setStartTime(System.currentTimeMillis());
         build.setWorkerId(workerId);
 
-        PomBuilder pomBuilder = new PomBuilder(build, packageVersion.parseDescription());
-        build.setPom(pomBuilder.getXml());
+//        PomBuilder pomBuilder = new PomBuilder(build, packageVersion.parseDescription());
+//        build.setPom(pomBuilder.getXml());
 
         status.setBuildStatus(BuildStatus.BUILDING);
         status.setBuildNumber(build.getBuildNumber());

@@ -12,6 +12,20 @@ public class PackageBuildResult {
 
   private NativeOutcome nativeOutcome;
 
+  private PackageBuildResult() {
+  }
+
+  public PackageBuildResult(BuildOutcome outcome, NativeOutcome nativeOutcome) {
+    this.outcome = outcome;
+    this.nativeOutcome = nativeOutcome;
+  }
+
+  public static PackageBuildResult timeout() {
+    PackageBuildResult result = new PackageBuildResult();
+    result.setOutcome(BuildOutcome.TIMEOUT);
+    return result;
+  }
+
   public String getId() {
     return id;
   }

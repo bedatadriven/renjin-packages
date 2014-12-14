@@ -1,14 +1,15 @@
 package org.renjin.ci.packages;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/package/{groupId}/{packageName}")
@@ -43,4 +44,15 @@ public class PackageResource {
 
     return new Viewable("/package.ftl", model);
   }
+
+  @Path("{version}")
+  public PackageVersionResource getVersion(@PathParam("version") String version) {
+    PackageVersionId packageVersionId = new PackageVersionId(groupId, packageName, version);
+    Optional<PackageVersion> packageVersion = PackageDatabase.getPackageVersion(packageVersionId);
+    if(!packageVersion.isPresent()) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    return new PackageVersionResource(packageVersion.get());
+  }
+
 }

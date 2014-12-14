@@ -56,11 +56,7 @@ public class DependencyResolver {
   }
 
   public boolean isPartOfRenjin(PackageDescription.PackageDependency dependency) {
-    return isPartOfRenjin(dependency.getName());
-  }
-
-  public boolean isPartOfRenjin(String packageName) {
-    return packageName.equals("R") || CorePackages.isCorePackage(packageName);
+    return CorePackages.isPartOfRenjin(dependency.getName());
   }
 
   public Optional<PackageVersionId> resolveVersion(PackageDescription.PackageDependency dependency) {

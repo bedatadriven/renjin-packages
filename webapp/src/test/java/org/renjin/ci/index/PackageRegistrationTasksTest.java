@@ -13,12 +13,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertThat;
 
-public class RegisterPackageVersionTest extends AbstractDatastoreTest {
+public class PackageRegistrationTasksTest extends AbstractDatastoreTest {
 
   @Test
   public void testRegisterOrphan() throws IOException, ParseException {
 
-    RegisterPackageVersion task = new RegisterPackageVersion();
+    PackageRegistrationTasks task = new PackageRegistrationTasks();
     PackageVersion survey = task.register(new PackageVersionId("org.renjin.cran", "survey", "3.29-5"),
         Fixtures.getSurveyPackageDescriptionSource());
 
@@ -34,7 +34,7 @@ public class RegisterPackageVersionTest extends AbstractDatastoreTest {
     PackageVersion mass2 = new PackageVersion(new PackageVersionId("org.renjin.cran", "MASS", "2.0"));
     PackageDatabase.save(mass2).now();
 
-    RegisterPackageVersion task = new RegisterPackageVersion();
+    PackageRegistrationTasks task = new PackageRegistrationTasks();
     PackageVersion survey = task.register(new PackageVersionId("org.renjin.cran", "survey", "3.29-5"),
         Fixtures.getSurveyPackageDescriptionSource());
 

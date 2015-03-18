@@ -7,7 +7,8 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.renjin.ci.build.BuildQueue;
-import org.renjin.ci.index.IndexResources;
+import org.renjin.ci.index.IndexTasks;
+import org.renjin.ci.index.PackageRegistrationTasks;
 import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
@@ -37,7 +38,8 @@ public class RenjinCI extends Application {
 
     classes.add(PackageResource.class);
 
-    classes.add(IndexResources.class);
+    classes.add(IndexTasks.class);
+    classes.add(PackageRegistrationTasks.class);
     classes.add(WebHooks.class);
     classes.add(Releases.class);
     classes.add(QaResources.class);

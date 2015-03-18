@@ -14,6 +14,10 @@ import org.renjin.ci.build.PackageCheckQueue;
 import org.renjin.ci.index.dependencies.DependencyResolver;
 import org.renjin.ci.model.*;
 
+import javax.ws.rs.FormParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.logging.Level;
@@ -22,9 +26,10 @@ import java.util.logging.Logger;
 /**
  * Registers a new PackageVersion in our database
  */
-public class RegisterPackageVersion extends Job1<PackageVersionId, PackageVersionId> {
+@Path("/tasks/register")
+public class PackageRegistrationTasks {
 
-  private static final Logger LOGGER = Logger.getLogger(RegisterPackageVersion.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(PackageRegistrationTasks.class.getName());
 
 
   /**
@@ -36,10 +41,12 @@ public class RegisterPackageVersion extends Job1<PackageVersionId, PackageVersio
    5. If package is not orpahn, run the EnqueuePVS algorithm for the latest release
    version of Renjin
    */
-  @Override
-  public Value<PackageVersionId> run(PackageVersionId pvid) throws Exception {
+  @POST
+  public Response run(@FormParam("packageVersionId") String packageVersionId) throws Exception {
 
-    LOGGER.log(Level.INFO, "Registering new package version " + pvid);
+    LOGGER.log(Level.INFO, "Registering new package version " + packageVersionId);
+    
+    PackageVersionId pvid = PackageVersionId.fromTriplet(packageVersionId);
 
     try {
       // Read the DESCRIPTION file from the .tar.gz source archive
@@ -54,7 +61,7 @@ public class RegisterPackageVersion extends Job1<PackageVersionId, PackageVersio
       LOGGER.log(Level.SEVERE, "Could not accept package " + pvid, e);
     }
 
-    return immediate(pvid);
+    return Response.ok().build();
   }
 
   @VisibleForTesting

@@ -63,6 +63,8 @@ public class BuildResource {
     ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
+        
+        // Retrieve the current status of this package version and the build itself
         PackageBuild build;
         PackageStatus status;
         try {
@@ -106,13 +108,6 @@ public class BuildResource {
           status.setBuildStatus(BuildStatus.FAILED);
         }
 
-        if(build.getOutcome() == BuildOutcome.SUCCESS) {
-          QueueFactory.getDefaultQueue().add(
-            ofy().getTransaction(),
-            TaskOptions.Builder.withUrl("/build/queue/queueDownstream")
-            .param("packageVersionId", packageVersionId.toString())
-            .param("buildNumber", Long.toString(buildNumber)));
-        }
         ofy().save().entities(build, status);
       }
     });

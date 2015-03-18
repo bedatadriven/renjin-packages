@@ -1,13 +1,19 @@
 package org.renjin.ci.index;
 
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskHandle;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.tools.cloudstorage.*;
-import com.google.appengine.tools.pipeline.Job1;
-import com.google.appengine.tools.pipeline.Value;
+import com.google.appengine.tools.pipeline.PipelineService;
+import com.google.appengine.tools.pipeline.PipelineServiceFactory;
 import com.google.common.io.ByteStreams;
+import org.joda.time.LocalDate;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.pipelines.Pipelines;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,18 +21,56 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Fetches the latest version of a package in CRAN
+ * Endpoints triggered by the cron job
  */
-public class FetchCranPackage extends Job1<Void, String> {
+@Path("/tasks/index")
+public class IndexTasks {
 
-  private static final Logger LOGGER = Logger.getLogger(FetchCranPackage.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(IndexTasks.class.getName());
 
+  private final PipelineService pipelineService = PipelineServiceFactory.newPipelineService();
 
-  @Override
-  public Value<Void> run(String packageName) throws Exception {
+  @GET
+  @Path("updateCran")
+  public Response updateCran() {
+
+    Queue queue = QueueFactory.getQueue("cran-fetch");
+    TaskHandle taskHandle = queue.add(TaskOptions.Builder.withUrl("/tasks/index/fetchCranUpdates"));
+
+    LOGGER.info("Enqueued task to check for updated CRAN packages: " + taskHandle.getName());
+
+    return Response.ok().build();
+  }
+  
+  @POST
+  @Path("fetchCranUpdates")
+  public Response fetchCranUpdates() {
+
+    LocalDate threshold = new LocalDate().minusYears(2);
+
+    LOGGER.info("Fetching packages updated since: " + threshold);
+
+    Queue queue = QueueFactory.getQueue("cran-fetch");
+    List<String> recentlyUpdatedPackages = CRAN.fetchUpdatedPackageList(threshold);
+    
+    LOGGER.info("Found " + recentlyUpdatedPackages.size() + " recently updated packages.");
+    
+    for(String updatedPackage : recentlyUpdatedPackages) {
+      queue.add(TaskOptions.Builder
+              .withUrl("/tasks/index/fetchCranPackage")
+              .param("packageName", updatedPackage));
+    }
+    
+    return Response.ok().build();
+  }
+  
+  @POST
+  @Path("fetchCranPackage")
+  public Response fetchCranPackage(@FormParam("packageName") String packageName) throws IOException {
 
     LOGGER.info("Fetching latest version of " + packageName + " from CRAN");
 
@@ -49,13 +93,13 @@ public class FetchCranPackage extends Job1<Void, String> {
       archiveSourceToGcs(packageName, version);
 
       // Register the package version in our database
-
-      waitFor(futureCall(new RegisterPackageVersion(), immediate(packageVersionId)));
-
+      Queue queue = QueueFactory.getDefaultQueue();
+      queue.add(TaskOptions.Builder.withUrl("/tasks/register").param("packageVersionId", packageVersionId.toString()));
+      
     }
-
-    return null;
+    return Response.ok().build();
   }
+
 
   private GcsFilename archiveSourceToGcs(String packageName, String version) throws IOException {
     URL url = CRAN.sourceUrl(packageName, version);
@@ -91,18 +135,27 @@ public class FetchCranPackage extends Job1<Void, String> {
 
     GcsService gcsService =
             GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
-    
+
     GcsOutputChannel outputChannel =
-        gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
+            gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
 
     try(
-        OutputStream outputStream = Channels.newOutputStream(outputChannel);
-        InputStream inputStream = urlConnection.getInputStream()) {
+            OutputStream outputStream = Channels.newOutputStream(outputChannel);
+            InputStream inputStream = urlConnection.getInputStream()) {
 
       ByteStreams.copy(inputStream, outputStream);
 
     }
     return filename;
   }
+
+
+  @GET
+  @Path("updateGit/{sha}")
+  public Response updateGit(@PathParam("sha") String sha) {
+    String jobId = pipelineService.startNewPipeline(new IndexCommit(), sha);
+    return Pipelines.redirectToStatus(jobId);
+  }
+
 
 }

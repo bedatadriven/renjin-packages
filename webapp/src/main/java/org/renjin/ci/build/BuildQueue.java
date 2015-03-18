@@ -172,12 +172,6 @@ public class BuildQueue {
     }
   }
 
-  @POST
-  @Path("resetStatus")
-  public Response resetStatus() {
-    Pipelines.applyAll(new TimeoutAllBuilds());
-    return Pipelines.redirectToStatus(Pipelines.applyAll(new ResetPackageStatus()));
-  }
 
   @POST
   @Path("recomputeDeltas")

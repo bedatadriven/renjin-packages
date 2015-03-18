@@ -15,7 +15,7 @@
         <tr>
           <th>Package Version</th>
           <th>Renjin Version</th>
-          <th>Sta+tus</th>
+          <th>Status</th>
         </tr>
     </thead>
     <tbody>

@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 /**
  * Builds a Renjin Package
  */
-public final class BuildPackageExecution extends AbstractSynchronousStepExecution<String> {
+public final class   BuildPackageExecution extends AbstractSynchronousStepExecution<String> {
 
   private static final Logger LOGGER = Logger.getLogger(BuildPackageExecution.class.getName());
 

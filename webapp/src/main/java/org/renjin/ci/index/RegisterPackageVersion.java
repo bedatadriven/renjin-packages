@@ -26,7 +26,6 @@ public class RegisterPackageVersion extends Job1<PackageVersionId, PackageVersio
 
   private static final Logger LOGGER = Logger.getLogger(RegisterPackageVersion.class.getName());
 
-  SourceArchiveProvider sourceArchiveProvider = new AppEngineSourceArchiveProvider();
 
   /**
    *
@@ -87,6 +86,7 @@ public class RegisterPackageVersion extends Job1<PackageVersionId, PackageVersio
    * @throws IOException
    */
   private String readPackageDescription(PackageVersionId packageVersionId) throws InvalidPackageException, IOException {
+    SourceArchiveProvider sourceArchiveProvider = new AppEngineSourceArchiveProvider();
     try(TarArchiveInputStream tarIn = sourceArchiveProvider.openSourceArchive(packageVersionId)) {
       TarArchiveEntry entry;
       while((entry = tarIn.getNextTarEntry()) != null) {

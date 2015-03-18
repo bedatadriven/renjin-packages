@@ -13,7 +13,7 @@ import java.io.Serializable;
 public class PackageVersionId implements Serializable, Comparable<PackageVersionId> {
   private String groupId;
   private String packageName;
-  private ArtifactVersion version;
+  private String version;
 
   PackageVersionId() {
   }
@@ -23,13 +23,13 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     String gav[] = groupArtifactVersion.split(":");
     this.groupId = gav[0];
     this.packageName = gav[1];
-    this.version = new DefaultArtifactVersion(gav[2]);
+    this.version = gav[2];
   }
 
   public PackageVersionId(String groupId, String packageName, String version) {
     this.groupId = groupId;
     this.packageName = packageName;
-    this.version = new DefaultArtifactVersion(version);
+    this.version = version;
   }
 
   public String getGroupId() {
@@ -41,11 +41,11 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
   }
 
   public String getVersionString() {
-    return version.toString();
+    return version;
   }
 
   public ArtifactVersion getVersion() {
-    return version;
+    return new DefaultArtifactVersion(version);
   }
 
   public static PackageVersionId fromTriplet(String id) {
@@ -92,6 +92,6 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     if(!packageName.equals(o.packageName)) {
       return packageName.compareTo(o.packageName);
     }
-    return version.compareTo(o.version);
+    return getVersion().compareTo(o.getVersion());
   }
 }

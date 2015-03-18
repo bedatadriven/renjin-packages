@@ -24,8 +24,6 @@ public class FetchCranPackage extends Job1<Void, String> {
 
   private static final Logger LOGGER = Logger.getLogger(FetchCranPackage.class.getName());
 
-  private final GcsService gcsService =
-      GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
   @Override
   public Value<Void> run(String packageName) throws Exception {
@@ -90,6 +88,10 @@ public class FetchCranPackage extends Job1<Void, String> {
     GcsFilename filename = CRAN.gcsFileName(packageName, version);
     LOGGER.info("Storing source archive at " + filename);
 
+
+    GcsService gcsService =
+            GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
+    
     GcsOutputChannel outputChannel =
         gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
 

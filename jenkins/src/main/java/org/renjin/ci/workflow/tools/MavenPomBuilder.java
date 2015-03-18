@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.workflow.tools;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -20,7 +20,7 @@ import java.io.StringWriter;
  * package folder and DESCRIPTION file.
  *
  */
-public class PomBuilder {
+public class MavenPomBuilder {
 
 
   public static final String[] DEFAULT_PACKAGES = new String[]{
@@ -30,7 +30,7 @@ public class PomBuilder {
   private final PackageDescription description;
 
 
-  public PomBuilder(PackageBuild build, PackageDescription packageDescription) {
+  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription) {
     this.build = build;
     this.description = packageDescription;
   }

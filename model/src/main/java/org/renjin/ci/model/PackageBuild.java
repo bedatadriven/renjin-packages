@@ -226,4 +226,8 @@ public class PackageBuild {
     return "/build/result/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" + getVersion() +
         "/" + getBuildNumber();
   }
+
+  public String getLogUrl() {
+    return "//storage.googleapis.com/renjinci-logs/" + getLogPath();
+  }
 }

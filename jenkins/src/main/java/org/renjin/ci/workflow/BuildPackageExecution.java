@@ -1,46 +1,24 @@
 package org.renjin.ci.workflow;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.common.base.Charsets;
-import com.google.common.io.Closer;
-import hudson.*;
-import hudson.model.EnvironmentSpecific;
-import hudson.model.Node;
-import hudson.model.TaskListener;
-import hudson.slaves.NodeSpecific;
-import hudson.tools.ToolDescriptor;
-import hudson.tools.ToolInstallation;
-import hudson.util.ArgumentListBuilder;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.jenkinsci.plugins.workflow.actions.LabelAction;
+import org.jenkinsci.plugins.workflow.cps.persistence.PersistIn;
+import org.jenkinsci.plugins.workflow.cps.persistence.PersistenceContext;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
-import org.renjin.ci.model.PackageBuild;
-import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.BuildOutcome;
+import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.task.PackageBuildResult;
+import org.renjin.ci.workflow.tools.*;
 
 import javax.inject.Inject;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 /**
  * Builds a Renjin Package
  */
-public final class BuildPackageExecution extends AbstractSynchronousStepExecution<String> {
+public final class BuildPackageExecution extends AbstractSynchronousStepExecution<Boolean> {
 
-  private static final Logger LOGGER = Logger.getLogger(BuildPackageExecution.class.getName());
-
-  public static final long TIMEOUT_MINUTES = 20;
-
-  public static final int MAX_LOG_SIZE = 1024 * 600;
 
   private static final long serialVersionUID = 1L;
 
@@ -48,179 +26,124 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
   private transient BuildPackageStep step;
 
   @StepContextParameter
-  private transient Node node;
+  private transient FlowNode flowNode;
 
-  @StepContextParameter
-  transient FilePath workspace;
-
-  @StepContextParameter
-  transient EnvVars env;
-
-
-  @StepContextParameter
-  transient TaskListener listener;
-
-  private PackageVersionId packageVersionId;
-  private PackageBuild build;
+  /**
+   * The build number of this package version
+   */
+  private Long buildNumber;
 
   @Override
-  protected String run() throws Exception {
+  protected Boolean run() throws Exception {
+    flowNode.replaceAction(new PackageLabelAction(step.getPackageVersionId()));
+    flowNode.save();
 
-    packageVersionId = PackageVersionId.fromTriplet(step.getPackageVersionId());
-
-    createBuild();
-    unpackSources(packageVersionId);
-    generatePom();
-
-    executeMaven();
-
-    return null;
-  }
-
-  private void createBuild() throws AbortException {
-
-    Form form = new Form();
-    form.param("renjinVersion", step.getRenjinVersion());
-
-    Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-    WebTarget builds = client.target("https://renjinci.appspot.com")
-            .path("package")
-            .path(packageVersionId.getGroupId())
-            .path(packageVersionId.getPackageName())
-            .path(packageVersionId.getVersionString())
-            .path("builds");
-    try {
-
-      this.build = builds.request(MediaType.APPLICATION_JSON)
-              .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), PackageBuild.class);
-    } catch (Exception e) {
-      throw new AbortException("Failed to get next build number from " + builds.getUri() + ": " + e.getMessage());
+    /**
+     * First, get the next build sequence number of this package from renjinci.appspot.com
+     * and save it with the node so that if we are restarted, we retain the same build number
+     */
+    if(buildNumber == null) {
+      buildNumber = WebApp.startBuild(step);
+      flowNode.save();
     }
 
-    listener.getLogger().println("Created package build " + build.getId());
+    PackageBuildContext build = new PackageBuildContext(getContext(), step, buildNumber);
+
+    /**
+     * Download and unpack the original source of this package
+     */
+    GoogleCloudStorage.downloadAndUnpackSources(build);
+
+    /**
+     * Generate a POM file for this project that matches the GNU-R style layout
+     */
+    Maven.writePom(build);
+
+    /**
+     * Execute maven, building the jar file and deploying it to repo.renjin.org
+     */
+    Maven.build(build);
+
+    /**
+     * Parse the result of the build from the log files
+     */
+    PackageBuildResult result = LogFileParser.parse(build);
+
+    /**
+     * Archive the build log file permanently to Google Cloud Storage
+     */
+    GoogleCloudStorage.archiveLogFile(build);
+
+    /**
+     * Report the build result to ci.renjin.org
+     */
+    WebApp.reportBuildResult(build, result);
+
+
+    /**
+     * Update this node's label
+     */
+    flowNode.replaceAction(new PackageLabelAction(build, result));
+    flowNode.save();
+    
+    return result.getOutcome() == BuildOutcome.SUCCESS;
   }
 
-  private void unpackSources(PackageVersionId packageVersionId) throws IOException {
-    JenkinsSourceArchiveProvider sourceProvider = new JenkinsSourceArchiveProvider();
+  @PersistIn(PersistenceContext.FLOW_NODE)
+  public static class PackageLabelAction extends LabelAction {
 
-    Closer closer = Closer.create();
-    TarArchiveInputStream tarIn = closer.register(sourceProvider.openSourceArchive(packageVersionId));
+    private PackageVersionId packageVersionId;
+    private Long buildNumber;
+    private BuildOutcome buildOutcome;
+    private NativeOutcome nativeOutcome;
 
-    try {
-      TarArchiveEntry entry;
-      while((entry=tarIn.getNextTarEntry())!=null) {
-        if(entry.isFile()) {
-          workspace.child(stripPackageDir(entry.getName())).copyFrom(tarIn);
-        }
+    public PackageLabelAction(String packageVersionId) {
+      super(null);
+      this.packageVersionId = PackageVersionId.fromTriplet(packageVersionId);
+    }
+
+
+    public PackageLabelAction(PackageBuildContext build, PackageBuildResult result) {
+      super(null);
+      this.packageVersionId = build.getPackageVersionId();
+      this.buildNumber = build.getBuildNumber();
+      this.buildOutcome = result.getOutcome();
+      this.nativeOutcome = result.getNativeOutcome();
+    }
+
+    @Override
+    public String getDisplayName() {
+      StringBuilder sb = new StringBuilder();
+      sb.append(packageVersionId.getGroupId())
+              .append(".")
+              .append(packageVersionId.getPackageName())
+              .append(" ")
+              .append(packageVersionId.getVersion());
+
+      if(buildNumber != null) {
+        sb.append(" build ").append(buildNumber);
       }
-    } catch(Exception e) {
-      throw closer.rethrow(e);
-    } finally {
-      closer.close();
-    }
-  }
-
-  private static String stripPackageDir(String name) {
-    int slash = name.indexOf('/');
-    return name.substring(slash+1);
-  }
-
-  private void generatePom() throws IOException, InterruptedException {
-
-    // Load package description from unpacked sources
-    PackageDescription description = PackageDescription.fromString(workspace.child("DESCRIPTION").readToString());
-
-    // Write the POM to the workspace
-    PomBuilder pomBuilder = new PomBuilder(build, description);
-    workspace.child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
-  }
-
-  public File getMavenBinary() throws IOException, InterruptedException {
-    return new File(getMavenHome() + "/bin/mvn");
-  }
-
-  public String getMavenHome() throws IOException, InterruptedException {
-
-    for (ToolDescriptor<?> desc : ToolInstallation.all()) {
-      if (desc.getId().equals("hudson.tasks.Maven$MavenInstallation")) {
-        for (ToolInstallation tool : desc.getInstallations()) {
-          if (tool.getName().equals("M3")) {
-            if (tool instanceof NodeSpecific) {
-              tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(node, listener);
-            }
-            if (tool instanceof EnvironmentSpecific) {
-              tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(env);
-            }
-            return tool.getHome();
-          }
-        }
+      if(buildOutcome != null) {
+        sb.append(": ").append(buildOutcome.name());
       }
+
+      return sb.toString();
     }
-    throw new AbortException("Cannot find maven installation");
-  }
 
-  private void executeMaven() throws IOException, InterruptedException {
+    @Override
+    public String getUrlName() {
+      StringBuilder url = new StringBuilder();
+      url.append("https://renjinci.appspot.com/")
+              .append(packageVersionId.getGroupId())
+              .append("/")
+              .append(packageVersionId.getPackageName())
+              .append("/")
+              .append(packageVersionId.getVersion());
 
-    listener.getLogger().println("Executing maven...");
-
-    ArgumentListBuilder arguments = new ArgumentListBuilder();
-    arguments.add(getMavenBinary());
-
-    arguments.add("-e"); // show full stack traces
-
-    arguments.add("-DenvClassifier=linux-x86_64");
-    arguments.add("-Dignore.gnur.compilation.failure=true");
-
-    arguments.add("-DskipTests");
-    arguments.add("-B"); // run in batch mode
-
-    arguments.add("clean");
-    arguments.add("deploy");
-
-
-    Launcher launcher = getContext().get(Launcher.class);
-    if(launcher == null) {
-      throw new AbortException("Could not obtain Launcher");
+      if(buildNumber != null) {
+        url.append("/build/").append(buildNumber);
+      }
+      return url.toString();
     }
-    Proc proc = launcher.launch().cmds(arguments)
-            .pwd(workspace)
-            .stdout(listener)
-            .start();
-
-    int exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, listener);
-
-    listener.getLogger().println("Maven exited with " + exitCode);
   }
-
-  private File logFile(File buildDir) {
-    return new File(buildDir, "build.log");
-  }
-//
-//
-//  private void publishBuildLog(File buildDir, BuildJob buildJob, PackageVersion packageVersion) throws IOException {
-//
-//
-//
-//    GcsFilename filename =
-//        StorageKeys.buildLogFilename(buildJob.getId(), packageVersion.getPackageVersionId());
-//
-//    LOGGER.info("Publishing log file to " + filename);
-//
-//    GcsFileOptions options = new GcsFileOptions.Builder()
-//        .contentEncoding("gzip")
-//        .mimeType("text/plain")
-//        .acl("public-read")
-//        .build();
-//
-//    GcsOutputChannel outputChannel =
-//        gcsService.createOrReplace(filename, options);
-//
-//    ByteSource log = Files.asByteSource(logFile(buildDir));
-//
-//    try (OutputStream out = new GZIPOutputStream(Channels.newOutputStream(outputChannel))) {
-//      log.copyTo(out);
-//    }
-//  }
-
-
 }

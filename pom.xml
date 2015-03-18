@@ -43,7 +43,7 @@
     <renjin.version>${project.version}</renjin.version>
     <renjin.display.version>${project.version}</renjin.display.version>
     <envClassifier>linux-x86</envClassifier>
-    <jersey.version>2.5.1</jersey.version>
+    <jersey.version>2.17</jersey.version>
     <jackson.version>2.2.3</jackson.version>
     <gae.version>1.9.15</gae.version>
   </properties>

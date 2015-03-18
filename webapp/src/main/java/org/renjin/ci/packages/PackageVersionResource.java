@@ -4,6 +4,7 @@ package org.renjin.ci.packages;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
+import org.renjin.ci.build.BuildResource;
 import org.renjin.ci.model.PackageBuild;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.model.PackageVersion;
@@ -26,6 +27,10 @@ public class PackageVersionResource {
     this.packageVersion = packageVersion;
   }
 
+  @Path("build/{buildNumber}")
+  public BuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
+    return new BuildResource(packageVersion.getPackageVersionId(), buildNumber);
+  }
 
   /**
    * Allocate a new build number for this package version

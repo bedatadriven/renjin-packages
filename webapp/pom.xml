@@ -62,7 +62,7 @@
       <artifactId>appengine-mapreduce</artifactId>
       <version>0.8.1</version>
     </dependency>
-  
+
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -134,7 +134,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

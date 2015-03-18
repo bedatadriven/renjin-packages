@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 /**
  * Builds a Renjin Package
  */
-public final class   BuildPackageExecution extends AbstractSynchronousStepExecution<String> {
+public final class BuildPackageExecution extends AbstractSynchronousStepExecution<String> {
 
   private static final Logger LOGGER = Logger.getLogger(BuildPackageExecution.class.getName());
 
@@ -77,22 +77,25 @@ public final class   BuildPackageExecution extends AbstractSynchronousStepExecut
     return null;
   }
 
-  private void createBuild() {
+  private void createBuild() throws AbortException {
 
     Form form = new Form();
-    form.param("renjinVersion", step.getRenjinVersionId());
-
+    form.param("renjinVersion", step.getRenjinVersion());
 
     Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
     WebTarget builds = client.target("https://renjinci.appspot.com")
-        .path("package")
-        .path(packageVersionId.getGroupId())
-        .path(packageVersionId.getPackageName())
-        .path(packageVersionId.getVersionString())
-        .path("builds");
+            .path("package")
+            .path(packageVersionId.getGroupId())
+            .path(packageVersionId.getPackageName())
+            .path(packageVersionId.getVersionString())
+            .path("builds");
+    try {
 
-    this.build = builds.request(MediaType.APPLICATION_JSON)
-        .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), PackageBuild.class);
+      this.build = builds.request(MediaType.APPLICATION_JSON)
+              .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), PackageBuild.class);
+    } catch (Exception e) {
+      throw new AbortException("Failed to get next build number from " + builds.getUri() + ": " + e.getMessage());
+    }
 
     listener.getLogger().println("Created package build " + build.getId());
   }
@@ -174,16 +177,15 @@ public final class   BuildPackageExecution extends AbstractSynchronousStepExecut
     arguments.add("clean");
     arguments.add("deploy");
 
-    arguments.add("clean");
-    arguments.add("deploy");
 
     Launcher launcher = getContext().get(Launcher.class);
     if(launcher == null) {
       throw new AbortException("Could not obtain Launcher");
     }
     Proc proc = launcher.launch().cmds(arguments)
-        .stdout(listener)
-        .start();
+            .pwd(workspace)
+            .stdout(listener)
+            .start();
 
     int exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, listener);
 

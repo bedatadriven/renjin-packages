@@ -3,6 +3,7 @@ package org.renjin.ci.build;
 import freemarker.template.TemplateException;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
+import org.renjin.ci.ResourceTest;
 import org.renjin.ci.index.dependencies.DependencyResolver;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuild;
@@ -40,9 +41,9 @@ public class BuildResourceTest extends AbstractDatastoreTest {
     build16.setEndTime(new Date().getTime());
 
     ofy().save().entities(mass, survey, build15, build16).now();
-//
-//    BuildResource buildResource = new BuildResource("org.renjin.cran", "survey", "3.29-5", 16);
-//    ResourceTest.assertTemplateRenders(buildResource.get());
+
+    BuildResource buildResource = new BuildResource(surveyId, 16);
+    ResourceTest.assertTemplateRenders(buildResource.get());
   }
 
 }

@@ -5,6 +5,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.storage.Storage;
 import com.google.jenkins.plugins.credentials.oauth.GoogleRobotCredentials;
+import hudson.AbortException;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.archive.SourceArchiveProvider;
 import org.renjin.ci.model.PackageVersionId;
@@ -27,6 +28,9 @@ public class JenkinsSourceArchiveProvider implements SourceArchiveProvider {
    */
   private Credential fetchCredentials() throws IOException {
     GoogleRobotCredentials credentials = GoogleRobotCredentials.getById("renjinci");
+    if(credentials == null) {
+      throw new AbortException("No service key credential available for project renjin ci");
+    }
     Credential googleCredential;
     try {
       googleCredential = credentials.getGoogleCredential(new StorageRequirements());

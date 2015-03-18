@@ -148,8 +148,8 @@ public class PackageStatus {
   }
 
   public String getBuildURL() {
-    return "/build/result/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" + getVersion() +
-        "/" + getBuildNumber();
+    return "/package/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" + getVersion() +
+        "/build/" + getBuildNumber();
   }
 
   public static Ordering<PackageStatus> orderByPackageVersion() {

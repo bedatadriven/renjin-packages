@@ -13,30 +13,21 @@ import org.kohsuke.stapler.DataBoundSetter;
  */
 public class BuildPackageStep extends AbstractStepImpl {
 
-  private String renjinVersionId;
+  private String renjinVersion;
   private String packageVersionId;
 
   @DataBoundConstructor
-  public BuildPackageStep(String packageVersionId) {
+  public BuildPackageStep(String renjinVersion, String packageVersionId) {
+    this.renjinVersion = renjinVersion;
     this.packageVersionId = packageVersionId;
   }
 
   public String getPackageVersionId() {
     return packageVersionId;
   }
-
-  @DataBoundSetter
-  public void setPackageVersionId(String packageVersionId) {
-    this.packageVersionId = packageVersionId;
-  }
-
-  public String getRenjinVersionId() {
-    return renjinVersionId;
-  }
-
-  @DataBoundSetter
-  public void setRenjinVersionId(String renjinVersionId) {
-    this.renjinVersionId = renjinVersionId;
+  
+  public String getRenjinVersion() {
+    return renjinVersion;
   }
 
   @Override

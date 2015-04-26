@@ -1,10 +1,13 @@
 package org.renjin.ci.model;
 
 import com.fasterxml.jackson.annotation.*;
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Set;
 
@@ -107,6 +110,10 @@ public class PackageBuild {
   public long getBuildNumber() {
     String[] parts = id.split(":");
     return Long.parseLong(parts[3]);
+  }
+
+  public String getBuildVersion() {
+    return getVersion() + "-b" + getBuildNumber();
   }
 
   public String getGroupId() {
@@ -229,5 +236,53 @@ public class PackageBuild {
 
   public String getLogUrl() {
     return "//storage.googleapis.com/renjinci-logs/" + getLogPath();
+  }
+
+  public static Ordering<PackageBuild> orderByNumber() {
+    return Ordering.natural().onResultOf(new Function<PackageBuild, Comparable>() {
+      @Nullable
+      @Override
+      public Comparable apply(PackageBuild input) {
+        return input.getBuildNumber();
+      }
+    });
+  }
+
+  /**
+   *
+   * @return true if the build completed (was successful, failure, error, or timeout), but
+   * not null or cancelled
+   */
+  public boolean isFinished() {
+    if(outcome == null) {
+      return false;
+    }
+
+    switch (outcome) {
+      case SUCCESS:
+      case FAILURE:
+      case ERROR:
+      case TIMEOUT:
+        return true;
+
+      default:
+      case CANCELLED:
+        return false;
+    }
+  }
+
+  public boolean isFailed() {
+    if(outcome == null) {
+      return false;
+    }
+    switch (outcome) {
+      case ERROR:
+      case FAILURE:
+      case TIMEOUT:
+        return true;
+
+      default:
+        return false;
+    }
   }
 }

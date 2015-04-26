@@ -240,7 +240,11 @@ public class PackageDescription {
 	public Person getMaintainer() {
 		return new Person(getFirstProperty("Maintainer"));
 	}
-
+	
+	public Iterable<Person> getPeople() {
+		return Iterables.concat(Arrays.asList(getMaintainer()), getAuthors());
+	}
+	
 	public String getDescription() {
 		return getFirstProperty("Description");
 	}

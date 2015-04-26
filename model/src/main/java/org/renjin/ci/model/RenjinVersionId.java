@@ -2,10 +2,13 @@ package org.renjin.ci.model;
 
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.io.Serializable;
 
-public class RenjinVersionId implements Serializable {
+public class RenjinVersionId implements Serializable, Comparable<RenjinVersionId> {
 
   public static final RenjinVersionId RELEASE = new RenjinVersionId("0.7.0-RC7");
 
@@ -36,5 +39,12 @@ public class RenjinVersionId implements Serializable {
   @Override
   public int hashCode() {
     return version.hashCode();
+  }
+
+  @Override
+  public int compareTo(RenjinVersionId o) {
+    ArtifactVersion thisVersion = new DefaultArtifactVersion(version);
+    ArtifactVersion thatVersion = new DefaultArtifactVersion(o.version);
+    return thisVersion.compareTo(thatVersion);
   }
 }

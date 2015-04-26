@@ -6,12 +6,15 @@ import freemarker.template.Configuration;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
-import org.renjin.ci.build.BuildQueue;
+import org.renjin.ci.benchmarks.BenchmarksResource;
 import org.renjin.ci.index.IndexTasks;
+import org.renjin.ci.index.PackageIndexTasks;
 import org.renjin.ci.index.PackageRegistrationTasks;
 import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
+import org.renjin.ci.packages.PackageSearch;
+import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.Releases;
 
@@ -33,16 +36,18 @@ public class RenjinCI extends Application {
 
     classes.add(JacksonFeature.class);
     classes.add(FreemarkerMvcFeature.class);
-
-    classes.add(BuildQueue.class);
-
+    
     classes.add(PackageResource.class);
 
     classes.add(IndexTasks.class);
     classes.add(PackageRegistrationTasks.class);
+    classes.add(PackageIndexTasks.class);
+    classes.add(PackageSearch.class);
     classes.add(WebHooks.class);
     classes.add(Releases.class);
     classes.add(QaResources.class);
+    classes.add(BenchmarksResource.class);
+    classes.add(TestResources.class);
 
     return classes;
   }

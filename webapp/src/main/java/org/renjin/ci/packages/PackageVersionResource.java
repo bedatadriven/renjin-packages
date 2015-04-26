@@ -1,19 +1,25 @@
 
 package org.renjin.ci.packages;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.build.BuildResource;
 import org.renjin.ci.model.PackageBuild;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.model.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.qa.PackageVersionCheck;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Specific version of a package
@@ -27,6 +33,16 @@ public class PackageVersionResource {
     this.packageVersion = packageVersion;
   }
 
+  @GET
+  @Produces("text/html")
+  public Viewable getPage() {
+    VersionViewModel viewModel = new VersionViewModel(packageVersion);
+    Map<String, Object> model = new HashMap<>();
+    model.put("version", viewModel);
+
+    return new Viewable("/packageVersion.ftl", model);
+  }
+
   @Path("build/{buildNumber}")
   public BuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
     return new BuildResource(packageVersion.getPackageVersionId(), buildNumber);
@@ -34,7 +50,6 @@ public class PackageVersionResource {
 
   /**
    * Allocate a new build number for this package version
-   * @return
    */
   @POST
   @Path("builds")
@@ -62,6 +77,14 @@ public class PackageVersionResource {
     });
   }
 
+  @GET
+  @Path("check")
+  public Response check() {
+    PackageVersionCheck check = new PackageVersionCheck();
+    check.apply(packageVersionId);
+
+    return Response.ok("Done").build();
+  }
 
   @GET
   @Path("dependencies")

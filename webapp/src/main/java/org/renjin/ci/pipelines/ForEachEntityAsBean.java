@@ -6,7 +6,7 @@ import org.renjin.ci.model.PackageDatabase;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
-public abstract class EntityMapFunction<T> extends MapOnlyMapper<Entity, Void> {
+public abstract class ForEachEntityAsBean<T> extends ForEachEntity {
 
   static {
     PackageDatabase.init();
@@ -14,7 +14,7 @@ public abstract class EntityMapFunction<T> extends MapOnlyMapper<Entity, Void> {
 
   private final Class<T> clazz;
 
-  public EntityMapFunction(Class<T> entityClass) {
+  public ForEachEntityAsBean(Class<T> entityClass) {
     this.clazz = entityClass;
   }
 
@@ -22,7 +22,8 @@ public abstract class EntityMapFunction<T> extends MapOnlyMapper<Entity, Void> {
     return this.clazz;
   }
 
-  public String getEntityName() {
+  @Override
+  public String getEntityKind() {
     return this.clazz.getSimpleName();
   }
 
@@ -33,6 +34,7 @@ public abstract class EntityMapFunction<T> extends MapOnlyMapper<Entity, Void> {
 
   public abstract void apply(T entity);
 
+  
 
   public String getJobName() {
     return getClass().getSimpleName();

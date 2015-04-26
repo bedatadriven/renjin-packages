@@ -26,7 +26,7 @@ public class CRAN {
   private static final Logger LOGGER = Logger.getLogger(CRAN.class.getName());
 
   public static final String CRAN_MIRROR = "http://ftp.heanet.ie/mirrors/cran.r-project.org/";
-
+  
   public static List<String> fetchUpdatedPackageList(LocalDate lastUpdate) {
     String indexUrl = CRAN_MIRROR + "web/packages/available_packages_by_date.html";
     LOGGER.info("Fetching from " + indexUrl);
@@ -121,7 +121,7 @@ public class CRAN {
     }
   }
 
-  private static Document fetchAsDom(ByteSource source) throws IOException {
+  public static Document fetchAsDom(ByteSource source) throws IOException {
     Tidy tidy = new Tidy();
     tidy.setXHTML(false);
     tidy.setQuiet(true);

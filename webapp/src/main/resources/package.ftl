@@ -5,38 +5,58 @@
 
 <@scaffolding>
 
-  <h1>${package.name}</h1>
+<h1>${package.name}</h1>
 
-  <p class="lead">${version.title}</p>
+<p class="lead">${version.title}</p>
 
-  <h2>Build Status</h2>
-  <table>
+<p>${version.descriptionText}</p>
+
+<h2>Versions</h2>
+<table>
     <thead>
-        <tr>
-          <th>Package Version</th>
-          <th>Renjin Version</th>
-          <th>Status</th>
-        </tr>
+    <tr>
+        <th>Version</th>
+        <th>Release Date</th>
+    </tr>
     </thead>
     <tbody>
-       <#list package.status as s>
-           <tr>
-             <td>${s.version}</td>
-             <td>${s.renjinVersionId}</td>
-             <td>
-                <#if s.buildNumber??>
-                    <a href="${s.buildURL}">${s.buildStatus}</a>
-                <#else>
-                    ${s.buildStatus}
-                </#if>
-             </td>
-           </tr>
-       </#list>
-    </tbody>>
-  </table>
+        <#list package.versions as v>
+        <tr>
+            <td>${v.version}</td>
+            <td><#if v.publicationDate?? >
+                ${v.publicationDate}
+            </#if></td>
+        </tr>
+        </#list>
+    </tbody>
+</table>
 
-  <h2>Version ${version.version}</h2>
 
-  <p>${version.description}</p>
+<h2>Builds</h2>
+<table>
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Package Version</th>
+        <th>Renjin Version</th>
+        <th>Outcome</th>
+        <th>Native Compilation</th>
+    </tr>
+    </thead>
+    <tbody>
+        <#list package.builds as b>
+        <#if b.outcome?? >
+        <tr>
+            <td align="right">#${b.buildNumber}</td>
+            <td align="right">${b.packageVersionId.versionString}</td>
+            <td align="right">${b.renjinVersion!"?"}</td>
+            <td>${b.outcome!"N/A"}</td>
+            <td>${b.nativeOutcome!"N/A"}</td>
+        </tr>
+        </#if>
+        </#list>
+    </tbody>
+</table>
+
 
 </@scaffolding>

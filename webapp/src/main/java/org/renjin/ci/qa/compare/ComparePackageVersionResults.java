@@ -2,14 +2,14 @@ package org.renjin.ci.qa.compare;
 
 import com.google.appengine.tools.mapreduce.DatastoreMutationPool;
 import org.renjin.ci.model.*;
-import org.renjin.ci.pipelines.EntityMapFunction;
+import org.renjin.ci.pipelines.ForEachEntityAsBean;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 /**
  * For a given PackageVersion, compare the results of two Renjin Versions
  */
-public class ComparePackageVersionResults extends EntityMapFunction<PackageVersion> {
+public class ComparePackageVersionResults extends ForEachEntityAsBean<PackageVersion> {
 
   private long reportId;
   private RenjinVersionId fromVersionId;

@@ -41,7 +41,7 @@ public class MavenPomBuilder {
     model.setModelVersion("4.0.0");
     model.setArtifactId(description.getPackage());
     model.setGroupId(build.getPackageVersionId().getGroupId());
-    model.setVersion(description.getVersion() + "-b" + build.getBuildNumber());
+    model.setVersion(build.getBuildVersion());
     model.setDescription(description.getDescription());
     model.setUrl(description.getUrl());
 

@@ -18,7 +18,6 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
   PackageVersionId() {
   }
 
-
   public PackageVersionId(String groupArtifactVersion) {
     String gav[] = groupArtifactVersion.split(":");
     this.groupId = gav[0];
@@ -29,6 +28,12 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
   public PackageVersionId(String groupId, String packageName, String version) {
     this.groupId = groupId;
     this.packageName = packageName;
+    this.version = version;
+  }
+
+  public PackageVersionId(PackageId packageId, String version) {
+    this.groupId = packageId.getGroupId();
+    this.packageName = packageId.getPackageName();
     this.version = version;
   }
 
@@ -51,6 +56,10 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
   public static PackageVersionId fromTriplet(String id) {
     String gav[] = id.split(":");
     return new PackageVersionId(gav[0], gav[1], gav[2]);
+  }
+  
+  public boolean isNewer(PackageVersionId other) {
+    return compareTo(other) > 0;
   }
 
   @Override
@@ -93,5 +102,9 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
       return packageName.compareTo(o.packageName);
     }
     return getVersion().compareTo(o.getVersion());
+  }
+
+  public PackageId getPackageId() {
+    return new PackageId(groupId, packageName);
   }
 }

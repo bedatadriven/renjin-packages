@@ -43,6 +43,7 @@
             <span class="icon-bar"></span>
           </button>
           <div class="nav-collapse collapse">
+
                <ul class="nav">
                   <li><a href="http://www.renjin.org/">Home</a></li>
                   <li><a href="http://www.renjin.org/#about">About</a></li>
@@ -62,6 +63,9 @@
                     </ul>
                   </li>
                 </ul>
+              <form class="navbar-search pull-left" method="get" action="/packages/search">
+                  <input type="text" name="q" class="search-query" placeholder="Search">
+              </form>
           </div><!--/.nav-collapse -->
         </div>
       </div>
@@ -72,7 +76,8 @@
 		<#nested>
 
     </div> <!-- /container -->
-
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
   </body>
 </html>
 </#macro>

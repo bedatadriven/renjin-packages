@@ -1,29 +1,47 @@
 package org.renjin.ci.model;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfEmpty;
 import com.googlecode.objectify.condition.IfNotEmpty;
+import com.googlecode.objectify.condition.IfNull;
+import com.googlecode.objectify.condition.IfZero;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.joda.time.LocalDateTime;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 public class PackageVersion implements Comparable<PackageVersion> {
 
+  @Parent
+  private com.googlecode.objectify.Key<Package> packageKey; 
+  
   @Id
-  private String id;
+  private String version;
 
   private String description;
 
   private LocalDateTime publicationDate;
-
+  
+  private int compatibilityLevel;
+  
+  private int compatibilityFlags;
+  
   @Unindex
   private long lastBuildNumber;
+  
+  @Unindex
+  @IgnoreSave(IfZero.class)
+  private long lastSuccessfulBuildNumber;
+  
 
   /**
    * List of PackageVersion ids on which this package depends.
@@ -38,28 +56,60 @@ public class PackageVersion implements Comparable<PackageVersion> {
    */
   private boolean compileDependenciesResolved;
 
+
+  /**
+   * The bioConductor release of which this package version is a release.
+   */
+  @IgnoreSave(IfNull.class)
+  private String bioConductorRelease;
+  
   public PackageVersion() {
   }
 
-  public PackageVersion(PackageVersionId packageVersionId) {
-    this.id = packageVersionId.toString();
+  public PackageVersion(String packageVersionId) {
+    this(PackageVersionId.fromTriplet(packageVersionId)); 
   }
+
+  public PackageVersion(PackageVersionId packageVersionId) {
+    this.packageKey = Package.key(packageVersionId.getPackageId());
+    this.version = packageVersionId.getVersionString();
+  }
+
 
   public String getId() {
-    return id;
+    return getPackageVersionId().toString();
   }
 
-  public void setId(String id) {
-    this.id = id;
+  /**
+   * 
+   * @return the renjin compatibility score
+   */
+  public int getCompatibilityLevel() {
+    return compatibilityLevel;
   }
 
+  public int getCompatibilityFlags() {
+    return compatibilityFlags;
+  }
+
+  public void setCompatibilityFlags(int compatibilityFlags) {
+    this.compatibilityFlags = compatibilityFlags;
+  }
+  
+  public void setCompatibilityFlag(int flag) {
+    this.compatibilityFlags |= flag;
+  }
+
+  public void setCompatibilityLevel(int compatibilityLevel) {
+    this.compatibilityLevel = compatibilityLevel;
+  }
 
   public PackageVersionId getPackageVersionId() {
-    return PackageVersionId.fromTriplet(id);
+    return new PackageVersionId(getPackageId(), version);
   }
 
   public ArtifactVersion getVersion() {
-    return new DefaultArtifactVersion(getPackageVersionId().getVersionString());
+    return new DefaultArtifactVersion(version);
   }
 
   public String getGroupId() {
@@ -78,7 +128,7 @@ public class PackageVersion implements Comparable<PackageVersion> {
     try {
       return PackageDescription.fromString(description);
     } catch (Exception e) {
-      throw new IllegalStateException("Could not parse DESCRIPTION for package version " + id, e);
+      throw new IllegalStateException("Could not parse DESCRIPTION for package version " + getPackageVersionId(), e);
     }
   }
 
@@ -98,13 +148,29 @@ public class PackageVersion implements Comparable<PackageVersion> {
     this.dependencies = dependencies;
   }
 
-
   public void setDependencies(DependencySet dependencySet) {
     this.dependencies = new HashSet<>();
     this.compileDependenciesResolved = dependencySet.isCompileDependenciesResolved();
     for(PackageVersionId id : dependencySet.getDependencies()) {
       this.dependencies.add(id.toString());
     }
+  }
+
+  public long getLastSuccessfulBuildNumber() {
+    return lastSuccessfulBuildNumber;
+  }
+
+
+  public String getLastSuccessfulBuildVersion() {
+    if(lastSuccessfulBuildNumber > 0) {
+      return version + "-b" + lastSuccessfulBuildNumber;
+    } else {
+      return null;
+    }
+  }
+  
+  public void setLastSuccessfulBuildNumber(long lastSuccessfulBuildNumber) {
+    this.lastSuccessfulBuildNumber = lastSuccessfulBuildNumber;
   }
 
   public LocalDateTime getPublicationDate() {
@@ -155,5 +221,44 @@ public class PackageVersion implements Comparable<PackageVersion> {
       set.add(new PackageVersionId(id));
     }
     return set;
+  }
+  
+  public static Ordering<PackageVersion> orderByVersion() {
+    return Ordering.natural().onResultOf(new Function<PackageVersion, Comparable>() {
+      @Nullable
+      @Override
+      public Comparable apply(PackageVersion input) {
+        return input.getVersion();
+      }
+    });
+  }
+
+  public String getBioConductorRelease() {
+    return bioConductorRelease;
+  }
+
+  public void setBioConductorRelease(String bioConductorRelease) {
+    this.bioConductorRelease = bioConductorRelease;
+  }
+
+  public String getPackageName() {
+    return getPackageVersionId().getPackageName();
+  }
+
+  public PackageId getPackageId() {
+    return PackageId.valueOf(packageKey.getName());
+  }
+
+  public static Key<PackageVersion> key(PackageVersionId id) {
+    Key<Package> packageKey = Package.key(id.getPackageId());
+    return Key.create(packageKey, PackageVersion.class, id.getVersionString());
+  }
+
+  public boolean getCompatibilityFlag(int flag) {
+    if( (this.compatibilityFlags & flag) != 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

@@ -59,10 +59,10 @@ public class ComparisonViewModel {
   public long getBuildRegressionCount() {
     return report.getStatistic(VersionComparisonReport.Statistic.BUILD_REGRESSIONS);
   }
-
-
-
+  
   public long getBuildFixCount() {
     return report.getStatistic(VersionComparisonReport.Statistic.BUILD_FIXES);
   }
+
+  
 }

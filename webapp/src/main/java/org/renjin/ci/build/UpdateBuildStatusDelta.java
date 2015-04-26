@@ -5,7 +5,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.model.*;
-import org.renjin.ci.pipelines.EntityMapFunction;
+import org.renjin.ci.pipelines.ForEachEntityAsBean;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * Update PackageBuildStatus with delta flags
  */
-public class UpdateBuildStatusDelta extends EntityMapFunction<PackageVersion> {
+public class UpdateBuildStatusDelta extends ForEachEntityAsBean<PackageVersion> {
 
   private static final Logger LOGGER = Logger.getLogger(UpdateBuildStatusDelta.class.getName());
 

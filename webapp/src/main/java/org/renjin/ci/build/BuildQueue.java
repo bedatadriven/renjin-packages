@@ -11,7 +11,6 @@ import com.googlecode.objectify.VoidWork;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.QueryKeys;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.index.test.ExtractTestFunction;
 import org.renjin.ci.model.*;
 import org.renjin.ci.pipelines.Pipelines;
 import org.renjin.ci.task.PackageBuildTask;
@@ -237,9 +236,4 @@ public class BuildQueue {
     return Response.ok().build();
   }
 
-  @GET
-  @Path("test")
-  public Response test() {
-    return Pipelines.redirectToStatus(Pipelines.applyAll(new ExtractTestFunction()));
-  }
 }

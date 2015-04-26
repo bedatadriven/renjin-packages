@@ -1,11 +1,12 @@
 package org.renjin.ci.packages;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import org.renjin.ci.model.PackageStatus;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.model.*;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,8 @@ public class PackageViewModel {
 
   private String groupId;
   private String name;
-  private List<PackageStatus> status;
+  private List<PackageVersion> versions;
+  private List<PackageBuild> builds;
 
   public PackageViewModel(String groupId, String name) {
     this.groupId = groupId;
@@ -30,34 +32,30 @@ public class PackageViewModel {
     return name;
   }
 
-  public List<PackageStatus> getStatus() {
-    return status;
+  public List<PackageVersion> getVersions() {
+    return versions;
   }
 
-  public void setStatus(List<PackageStatus> status) {
-    this.status = status;
+  public void setVersions(List<PackageVersion> versions) {
+    this.versions = versions;
   }
 
-  public Set<PackageVersionId> getVersions() {
-    Set<PackageVersionId> set = Sets.newHashSet();
-    for(PackageStatus status : this.status) {
-      set.add(status.getPackageVersionId());
-    }
-    return set;
+  public List<PackageBuild> getBuilds() {
+    return builds;
   }
 
-  public PackageVersionId getLatestVersion() {
-    return Collections.max(getVersions());
+  public void setBuilds(List<PackageBuild> builds) {
+    this.builds = builds;
   }
 
-  public Map<RenjinVersionId, PackageStatus> statusOf(PackageVersionId version) {
-    Map<RenjinVersionId, PackageStatus> map = Maps.newHashMap();
-    for(PackageStatus status : this.status) {
-      if(status.getRenjinVersionId().equals(version)) {
-        map.put(status.getRenjinVersionId(), status);
-      }
-    }
-    return map;
+  public PackageVersion getLatestVersion() {
+    return Collections.max(versions, Ordering.natural().onResultOf(new Function<PackageVersion, Comparable>() {
+      @Nullable
+      @Override
+      public Comparable apply(PackageVersion input) {
+        return input.getVersion();
+      };
+    }));
+    
   }
-
 }

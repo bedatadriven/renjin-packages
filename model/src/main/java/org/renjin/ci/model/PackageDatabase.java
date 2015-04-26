@@ -9,6 +9,7 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Result;
 import com.googlecode.objectify.Work;
+import com.googlecode.objectify.cmd.Query;
 
 import java.util.*;
 
@@ -31,17 +32,20 @@ public class PackageDatabase {
     register(Package.class);
     register(PackageVersion.class);
     register(PackageStatus.class);
-    register(PackageTest.class);
+    register(PackageTestResult.class);
     register(VersionComparison.class);
     register(VersionComparisonReport.class);
     register(VersionComparisonEntry.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
     register(BuildJob.class);
+    register(Benchmark.class);
+    register(BenchmarkEnvironment.class);
+    register(BenchmarkResult.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
-    return Optional.fromNullable(ObjectifyService.ofy().load().key(Key.create(PackageVersion.class, id.toString())).now());
+    return Optional.fromNullable(ObjectifyService.ofy().load().key(PackageVersion.key(id)).now());
   }
 
   public static Optional<PackageVersion> getPackageVersion(String packageVersionId) {
@@ -66,6 +70,11 @@ public class PackageDatabase {
     });
   }
 
+
+  public static List<PackageVersion> queryPackageVersions(Package entity) {
+    return queryPackageVersions(entity.getGroupId(), entity.getName());
+  }
+
   public static List<PackageVersion> queryPackageVersions(String groupId, String packageName) {
 
     // PackageVersions are keyed by groupId:packageName:versionXXX so we can use
@@ -73,7 +82,7 @@ public class PackageDatabase {
 
     QueryResultIterator<PackageVersion> iterator = ObjectifyService.ofy().load()
         .type(PackageVersion.class)
-        .filterKey(">=", Key.create(PackageVersion.class, groupId + ":" + packageName))
+        .ancestor(Package.key(groupId, packageName))
         .iterator();
 
     List<PackageVersion> matching = Lists.newArrayList();
@@ -91,6 +100,31 @@ public class PackageDatabase {
     return matching;
   }
 
+
+  public static List<PackageBuild> queryPackageBuilds(String groupId, String packageName) {
+
+    // PackageBuilds are keyed by groupId:packageName:version:buildNumber so we can use
+    // lexical graphical ordering properties to query by key
+
+    QueryResultIterator<PackageBuild> iterator = ObjectifyService.ofy().load()
+            .type(PackageBuild.class)
+            .filterKey(">=", Key.create(PackageBuild.class, groupId + ":" + packageName + ":"))
+            .iterator();
+
+    List<PackageBuild> matching = Lists.newArrayList();
+    while(iterator.hasNext()) {
+      PackageBuild build = iterator.next();
+      if(build.getGroupId().equals(groupId) && build.getPackageName().equals(packageName)) {
+        matching.add(build);
+      } else {
+        // end of the sequence
+        break;
+      }
+    }
+    
+    return matching;
+  }
+
   public static List<PackageBuild> getBuilds(PackageVersionId packageVersionId) {
 
     // Keys are in the form: groupId:packageName:version:buildNumber
@@ -102,6 +136,26 @@ public class PackageDatabase {
         .filterKey(">=", startKey).filterKey("<", endKey).list();
   }
 
+  public static List<PackageBuild> getFinishedBuilds(PackageVersionId packageVersionId) {
+
+    // Keys are in the form: groupId:packageName:version:buildNumber
+
+    Key<PackageBuild> startKey = Key.create(PackageBuild.class, packageVersionId.toString() + ":");
+    Key<PackageBuild> endKey = Key.create(PackageBuild.class, packageVersionId.toString() + "Z");
+
+    QueryResultIterable<PackageBuild> list = ObjectifyService.ofy().load().type(PackageBuild.class)
+        .filterKey(">=", startKey).filterKey("<", endKey).iterable();
+    
+    List<PackageBuild> finished = new ArrayList<>();
+    for (PackageBuild build : list) {
+      if(build.isFinished()) {
+        finished.add(build);
+      }
+    }
+    
+    return finished;
+  }
+  
   public static List<PackageStatus> getStatus(String groupId, String packageName) {
 
     // Keys are in the form: groupId:packageName:version:buildNumber
@@ -208,5 +262,21 @@ public class PackageDatabase {
 
   public static Iterable<RenjinRelease> getReleases() {
     return ObjectifyService.ofy().load().type(RenjinRelease.class).iterable();
+  }
+
+  public static Optional<Package> getPackageOf(PackageVersionId packageVersionId) {
+    return Optional.fromNullable(ObjectifyService.ofy().load().key(Key.create(Package.class, 
+            packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName())).now());
+    
+  }
+
+  public static QueryResultIterable<PackageTestResult> getTestResults(PackageVersionId packageVersionId) {
+
+    
+    return ObjectifyService.ofy()
+            .load()
+            .type(PackageTestResult.class)
+            .ancestor(PackageTestResult.parentKey(packageVersionId))
+            .iterable();
   }
 }

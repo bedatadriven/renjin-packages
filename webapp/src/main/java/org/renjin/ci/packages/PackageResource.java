@@ -6,6 +6,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.model.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.qa.PackageVersionCheck;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -29,13 +30,16 @@ public class PackageResource {
   public Viewable get() {
 
     PackageViewModel packageModel = new PackageViewModel(groupId, packageName);
-    packageModel.setStatus(PackageDatabase.getStatus(groupId, packageName));
-
-    if(packageModel.getStatus().isEmpty()) {
+    packageModel.setVersions(PackageDatabase.queryPackageVersions(groupId, packageName));
+    
+    if(packageModel.getVersions().isEmpty()) {
       throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
-    PackageVersion packageVersion = PackageDatabase.getPackageVersion(packageModel.getLatestVersion()).get();
+    // Fetch all builds of this package
+    packageModel.setBuilds(PackageDatabase.queryPackageBuilds(groupId, packageName));
+
+    PackageVersion packageVersion = packageModel.getLatestVersion();
     VersionViewModel versionModel = new VersionViewModel(packageVersion);
 
     Map<String, Object> model = Maps.newHashMap();

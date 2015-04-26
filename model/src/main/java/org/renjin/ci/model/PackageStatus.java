@@ -31,6 +31,8 @@ public class PackageStatus {
   @Id
   private String id;
 
+  private int compatibilityLevel;
+  
   @Index
   private BuildStatus buildStatus;
 
@@ -42,6 +44,10 @@ public class PackageStatus {
   @IgnoreSave(IfZero.class)
   private long buildNumber;
 
+  private Integer testCount;
+  
+  private Integer testPassCount;
+  
   /**
    * The set of compile time dependencies that have not yet
    * been resolved.
@@ -65,6 +71,14 @@ public class PackageStatus {
     return id;
   }
 
+  public int getCompatibilityLevel() {
+    return compatibilityLevel;
+  }
+
+  public void setCompatibilityLevel(int compatibilityLevel) {
+    this.compatibilityLevel = compatibilityLevel;
+  }
+
   public PackageVersionId getPackageVersionId() {
     String[] parts = id.split(":");
     return new PackageVersionId(parts[0], parts[1], parts[2]);
@@ -74,6 +88,7 @@ public class PackageStatus {
     String[] parts = id.split(":");
     return new RenjinVersionId(parts[3]);
   }
+  
 
   public String getPackageName() {
     return getPackageVersionId().getPackageName();
@@ -152,6 +167,7 @@ public class PackageStatus {
         "/build/" + getBuildNumber();
   }
 
+
   public static Ordering<PackageStatus> orderByPackageVersion() {
     return Ordering.natural().onResultOf(new Function<PackageStatus, Comparable>() {
       @Override
@@ -170,4 +186,19 @@ public class PackageStatus {
     });
   }
 
+  public Integer getTestCount() {
+    return testCount;
+  }
+
+  public void setTestCount(Integer testCount) {
+    this.testCount = testCount;
+  }
+
+  public Integer getTestPassCount() {
+    return testPassCount;
+  }
+
+  public void setTestPassCount(Integer testPassCount) {
+    this.testPassCount = testPassCount;
+  }
 }

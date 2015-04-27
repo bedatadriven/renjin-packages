@@ -33,8 +33,6 @@
 </table>
 
 
-
-
 <h2>Builds</h2>
 <table class="table table-striped">
     <thead>
@@ -44,6 +42,7 @@
         <th>Build #</th>
         <th>Outcome</th>
         <th>Native Compilation</th>
+        <th></th>
     </tr>
     </thead>
     <tbody>
@@ -55,6 +54,7 @@
             <td>#${b.buildNumber}</td>
             <td>${b.outcome!"?"}</td>
             <td>${b.nativeOutcome!"?"}</td>
+            <td><a href="${b.logUrl}" target="_blank" class="glyphicon glyphicon-file"></a></td>
         </tr>
         </#if>
         </#list>
@@ -69,6 +69,7 @@
         <th>Package Version</th>
         <th>Package Build</th>  
         <th>Results</th>
+        <th>Log</th>
     </tr>
     </thead>
     <tbody>
@@ -100,6 +101,7 @@
             <td>${renjinVersion.id}</td>
             <td>${renjinVersion.lastBuild.buildVersion}</td>
             <td>${renjinVersion.buildDeltaLabel}</td>
+            <td><a href="${renjinVersion.lastBuild.logUrl}" target="_blank" class="glyphicon glyphicon-file"></a></td>
         </tr>
         </#list>
     </tbody>

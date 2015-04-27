@@ -2,7 +2,7 @@
 <@scaffolding>
 
   <div class="row">
-  <div class="span12">
+  <div class="col-md-12">
   <h1>${commit.version}</h1>
 
 

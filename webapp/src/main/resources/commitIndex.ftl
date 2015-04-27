@@ -3,7 +3,7 @@
 <@scaffolding>
 
   <div class="row">
-  <div class="span12">
+  <div class="col-md-12">
   <h1>Builds</h1>
 
   <table class="table table-condensed">

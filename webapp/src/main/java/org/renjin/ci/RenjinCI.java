@@ -15,7 +15,6 @@ import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.PackageSearch;
 import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
-import org.renjin.ci.releases.Releases;
 
 import javax.ws.rs.core.Application;
 import java.util.Map;
@@ -42,7 +41,6 @@ public class RenjinCI extends Application {
     classes.add(PackageRegistrationTasks.class);
     classes.add(PackageSearch.class);
     classes.add(WebHooks.class);
-    classes.add(Releases.class);
     classes.add(QaResources.class);
     classes.add(BenchmarksResource.class);
     classes.add(TestResources.class);

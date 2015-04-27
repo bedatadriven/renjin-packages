@@ -1,84 +1,83 @@
 <#macro scaffolding>
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Renjin CRAN Builds</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Builds of CRAN packages for use with Renjin">
-    <meta name="author" content="">
 
-    <!-- Le styles -->
-    <link href="/assets/css/bootstrap.css" rel="stylesheet">
+    <#--Le styles-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
+        body {
+            padding-top: 60px;
+        }
     </style>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-      ga('create', 'UA-20543588-4', 'renjin.org');
-      ga('send', 'pageview');
-
-    </script>
-
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <#--HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <#--WARNING: Respond.js doesn't work if you view the page via file://-->
     <!--[if lt IE 9]>
-      <script src="/js/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
 
-  <body>
+    <#--HTML5 shim, for IE6-8 support of HTML5 elements--> 
+    <!--[if lt IE 9]>
+    <script src="/js/html5shiv.js"></script>
+    <![endif]-->
 
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <div class="nav-collapse collapse">
+</head>
 
-               <ul class="nav">
-                  <li><a href="http://www.renjin.org/">Home</a></li>
-                  <li><a href="http://www.renjin.org/#about">About</a></li>
-                  <li><a href="http://www.renjin.org/#downloads">Downloads</a></li>
-                  <li><a href="http://www.renjin.org/blog/">Blog</a></li>
-                  <li><a href="http://packages.renjin.org/index.html">Packages</a></li>
-                  <li><a href="http://www.renjin.org/support.html">Support</a></li>
-                  <li class="dropdown">
+<body>
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Renjin</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="http://www.renjin.org/">Home</a></li>
+                <li><a href="http://www.renjin.org/#about">About</a></li>
+                <li><a href="http://www.renjin.org/#downloads">Downloads</a></li>
+                <li><a href="http://www.renjin.org/blog/">Blog</a></li>
+                <li><a href="http://packages.renjin.org/index.html">Packages</a></li>
+                <li><a href="http://www.renjin.org/support.html">Support</a></li>
+                <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-target="#" data-toggle="dropdown">Documentation <b class="caret"></b></a>
                     <ul class="dropdown-menu">
-                      <li><a href="http://www.renjin.org/documentation/">Overview</a></li>
-                      <li class="divider"></li>
-                      <li class="nav-header">Guides for...</li>
-                      <li><a href="http://www.renjin.org/documentation/analyst-guide.html">Analysts</a></li>
-                      <li><a href="http://www.renjin.org/documentation/developer-guide.html">Developers</a></li>
-                      <li><a href="http://www.renjin.org/documentation/contributor-guide.html">Contributors</a></li>
+                        <li><a href="http://www.renjin.org/documentation/">Overview</a></li>
+                        <li class="divider"></li>
+                        <li class="nav-header">Guides for...</li>
+                        <li><a href="http://www.renjin.org/documentation/analyst-guide.html">Analysts</a></li>
+                        <li><a href="http://www.renjin.org/documentation/developer-guide.html">Developers</a></li>
+                        <li><a href="http://www.renjin.org/documentation/contributor-guide.html">Contributors</a></li>
                     </ul>
-                  </li>
-                </ul>
-              <form class="navbar-search pull-left" method="get" action="/packages/search">
-                  <input type="text" name="q" class="search-query" placeholder="Search">
-              </form>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
+                </li>
+            </ul>
+            <form class="navbar-form navbar-left" role="search" method="get" action="/packages/search">
+                <div class="form-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search">
+                </div>
+            </form>
+        </div><!--/.nav-collapse -->
     </div>
+</nav>
 
-    <div class="container">
+<div class="container">
+    <#nested>
 
-		<#nested>
-
-    </div> <!-- /container -->
-    <script src="http://code.jquery.com/jquery.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
-  </body>
+</div> <!-- /container -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</body>
 </html>
 </#macro>
 

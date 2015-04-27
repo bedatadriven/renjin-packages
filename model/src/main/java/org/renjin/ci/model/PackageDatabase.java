@@ -33,6 +33,7 @@ public class PackageDatabase {
     register(PackageVersion.class);
     register(PackageStatus.class);
     register(PackageTestResult.class);
+    register(PackageTestRun.class);
     register(VersionComparison.class);
     register(VersionComparisonReport.class);
     register(VersionComparisonEntry.class);
@@ -72,79 +73,42 @@ public class PackageDatabase {
 
 
   public static List<PackageVersion> queryPackageVersions(Package entity) {
-    return queryPackageVersions(entity.getGroupId(), entity.getName());
+    return getPackageVersions(entity.getPackageId());
   }
 
-  public static List<PackageVersion> queryPackageVersions(String groupId, String packageName) {
+  public static List<PackageVersion> getPackageVersions(PackageId packageId) {
 
     // PackageVersions are keyed by groupId:packageName:versionXXX so we can use
     // lexical graphical ordering properties to query by key
 
-    QueryResultIterator<PackageVersion> iterator = ObjectifyService.ofy().load()
+    return ObjectifyService.ofy().load()
         .type(PackageVersion.class)
-        .ancestor(Package.key(groupId, packageName))
-        .iterator();
+        .ancestor(Package.key(packageId))
+        .list();
 
-    List<PackageVersion> matching = Lists.newArrayList();
-    while(iterator.hasNext()) {
-      PackageVersion pv = iterator.next();
-      PackageVersionId pvId = PackageVersionId.fromTriplet(pv.getId());
-      if(pvId.getGroupId().equals(groupId) && pvId.getPackageName().equals(packageName)) {
-        matching.add(pv);
-      } else {
-        // end of the sequence
-        break;
-      }
-    }
-
-    return matching;
   }
 
 
-  public static List<PackageBuild> queryPackageBuilds(String groupId, String packageName) {
+  public static Query<PackageBuild> getBuilds(PackageId packageId) {
 
-    // PackageBuilds are keyed by groupId:packageName:version:buildNumber so we can use
-    // lexical graphical ordering properties to query by key
-
-    QueryResultIterator<PackageBuild> iterator = ObjectifyService.ofy().load()
+    return ObjectifyService.ofy().load()
             .type(PackageBuild.class)
-            .filterKey(">=", Key.create(PackageBuild.class, groupId + ":" + packageName + ":"))
-            .iterator();
-
-    List<PackageBuild> matching = Lists.newArrayList();
-    while(iterator.hasNext()) {
-      PackageBuild build = iterator.next();
-      if(build.getGroupId().equals(groupId) && build.getPackageName().equals(packageName)) {
-        matching.add(build);
-      } else {
-        // end of the sequence
-        break;
-      }
-    }
-    
-    return matching;
+            .ancestor(Package.key(packageId));
   }
 
-  public static List<PackageBuild> getBuilds(PackageVersionId packageVersionId) {
+  public static Query<PackageBuild> getBuilds(PackageVersionId packageVersionId) {
 
-    // Keys are in the form: groupId:packageName:version:buildNumber
-
-    Key<PackageBuild> startKey = Key.create(PackageBuild.class, packageVersionId.toString() + ":");
-    Key<PackageBuild> endKey = Key.create(PackageBuild.class, packageVersionId.toString() + "Z");
-
-    return ObjectifyService.ofy().load().type(PackageBuild.class)
-        .filterKey(">=", startKey).filterKey("<", endKey).list();
+    return ObjectifyService.ofy().load()
+        .type(PackageBuild.class)
+        .ancestor(PackageVersion.key(packageVersionId));
   }
 
   public static List<PackageBuild> getFinishedBuilds(PackageVersionId packageVersionId) {
-
-    // Keys are in the form: groupId:packageName:version:buildNumber
-
-    Key<PackageBuild> startKey = Key.create(PackageBuild.class, packageVersionId.toString() + ":");
-    Key<PackageBuild> endKey = Key.create(PackageBuild.class, packageVersionId.toString() + "Z");
-
-    QueryResultIterable<PackageBuild> list = ObjectifyService.ofy().load().type(PackageBuild.class)
-        .filterKey(">=", startKey).filterKey("<", endKey).iterable();
+    
+    QueryResultIterable<PackageBuild> list = ObjectifyService.ofy().load()
+        .type(PackageBuild.class)
+        .ancestor(PackageVersion.key(packageVersionId))
+        .iterable();
     
     List<PackageBuild> finished = new ArrayList<>();
     for (PackageBuild build : list) {
@@ -271,12 +235,24 @@ public class PackageDatabase {
   }
 
   public static QueryResultIterable<PackageTestResult> getTestResults(PackageVersionId packageVersionId) {
-
     
     return ObjectifyService.ofy()
             .load()
             .type(PackageTestResult.class)
-            .ancestor(PackageTestResult.parentKey(packageVersionId))
+            .ancestor(PackageVersion.key(packageVersionId))
             .iterable();
+  }
+
+  public static Query<PackageTestResult> getTestResults(PackageId packageId) {
+
+    return ObjectifyService.ofy()
+        .load()
+        .type(PackageTestResult.class)
+        .ancestor(Package.key(packageId));
+    
+  }
+
+  public static List<PackageVersion> getPackageVersions(String groupId, String name) {
+    return getPackageVersions(new PackageId(groupId, name));
   }
 }

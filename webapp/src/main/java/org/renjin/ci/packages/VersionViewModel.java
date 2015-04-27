@@ -1,7 +1,6 @@
 package org.renjin.ci.packages;
 
 import com.google.common.collect.Maps;
-import org.omg.CORBA.COMM_FAILURE;
 import org.renjin.ci.model.*;
 
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public class VersionViewModel {
   }
   
   public void queryBuilds() {
-    this.builds = PackageDatabase.getBuilds(packageVersion.getPackageVersionId());
+    this.builds = PackageDatabase.getBuilds(packageVersion.getPackageVersionId()).list();
   }
 
   public String getPackageName() {

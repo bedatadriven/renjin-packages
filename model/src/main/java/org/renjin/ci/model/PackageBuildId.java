@@ -19,6 +19,18 @@ public class PackageBuildId {
     this.packageVersionId = packageVersionId;
     this.buildNumber = buildNumber;
   }
+  
+  public PackageId getPackageId() {
+    return packageVersionId.getPackageId();
+  }
+
+  public PackageVersionId getPackageVersionId() {
+    return packageVersionId;
+  }
+
+  public long getBuildNumber() {
+    return buildNumber;
+  }
 
   @Override
   public String toString() {

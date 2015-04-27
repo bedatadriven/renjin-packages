@@ -72,5 +72,7 @@
 </div>
 </#if>
 
+<h2>Test Results</h2>
+
 
 </@scaffolding>

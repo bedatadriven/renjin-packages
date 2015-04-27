@@ -5,6 +5,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
+import com.googlecode.objectify.condition.IfFalse;
 import com.googlecode.objectify.condition.IfNull;
 
 import javax.annotation.Nullable;
@@ -20,9 +21,11 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PackageBuild {
 
+  @Parent
+  private Key<PackageVersion> versionKey;
+  
   @Id
-  @JsonProperty
-  private String id;
+  private long buildNumber;
 
   @JsonProperty
   private BuildOutcome outcome;
@@ -58,25 +61,18 @@ public class PackageBuild {
   @Unindex
   @IgnoreSave(IfNull.class)
   private Long duration;
-
+  
+  
   public PackageBuild() {
   }
 
   public PackageBuild(PackageVersionId packageVersionId, long buildNumber) {
-    this.id = keyName(packageVersionId, buildNumber);
+    this.versionKey = PackageVersion.key(packageVersionId);
+    this.buildNumber = buildNumber;
   }
 
   public static Key<PackageBuild> key(PackageVersionId packageVersionId, long buildNumber) {
-    return Key.create(PackageBuild.class, keyName(packageVersionId, buildNumber));
-  }
-
-  private static String keyName(PackageVersionId packageVersionId, long buildNumber) {
-    return packageVersionId.toString() + ":" + buildNumber;
-  }
-
-  @JsonIgnore
-  public String getPath() {
-    return id.replaceAll(":", "/");
+    return Key.create(PackageVersion.key(packageVersionId), PackageBuild.class, buildNumber);
   }
 
   public String getLogPath() {
@@ -84,32 +80,35 @@ public class PackageBuild {
         getPackageVersionId().getVersionString() + ".log";
   }
 
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
+  public PackageBuildId getId() {
+    return new PackageBuildId(getPackageVersionId(), buildNumber);
   }
 
 
   public String getPackageName() {
-    String[] parts = id.split(":");
-    return parts[1];
+    return getPackageVersionId().getPackageName();
   }
+
+  @JsonIgnore
+  public String getPath() {
+    return getId().toString().replaceAll(":", "/");
+  }
+
 
   public String getVersion() {
     return getPackageVersionId().getVersionString();
   }
 
+  public PackageId getPackageId() {
+    return PackageId.valueOf(versionKey.getParent().getName());
+  }
+  
   public PackageVersionId getPackageVersionId() {
-    String[] parts = id.split(":");
-    return new PackageVersionId(parts[0], parts[1], parts[2]);
+    return new PackageVersionId(getPackageId(), versionKey.getName());
   }
 
   public long getBuildNumber() {
-    String[] parts = id.split(":");
-    return Long.parseLong(parts[3]);
+    return buildNumber;
   }
 
   public String getBuildVersion() {

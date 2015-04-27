@@ -30,9 +30,8 @@ public class PackageVersion implements Comparable<PackageVersion> {
   private String description;
 
   private LocalDateTime publicationDate;
-  
-  private int compatibilityLevel;
-  
+
+  @Unindex
   private int compatibilityFlags;
   
   @Unindex
@@ -80,13 +79,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
     return getPackageVersionId().toString();
   }
 
-  /**
-   * 
-   * @return the renjin compatibility score
-   */
-  public int getCompatibilityLevel() {
-    return compatibilityLevel;
-  }
 
   public int getCompatibilityFlags() {
     return compatibilityFlags;
@@ -99,11 +91,7 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public void setCompatibilityFlag(int flag) {
     this.compatibilityFlags |= flag;
   }
-
-  public void setCompatibilityLevel(int compatibilityLevel) {
-    this.compatibilityLevel = compatibilityLevel;
-  }
-
+  
   public PackageVersionId getPackageVersionId() {
     return new PackageVersionId(getPackageId(), version);
   }

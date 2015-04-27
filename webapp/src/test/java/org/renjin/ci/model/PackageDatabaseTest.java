@@ -26,7 +26,7 @@ public class PackageDatabaseTest extends AbstractDatastoreTest {
     assertThat("org.renjin.cran:ggplot:1.4-34", greaterThan("org.renjin.cran:ggplot"));
 
     // ensure that we can fetch
-    List<PackageVersion> versions = PackageDatabase.queryPackageVersions("org.renjin.cran", "ggplot");
+    List<PackageVersion> versions = PackageDatabase.getPackageVersions("org.renjin.cran", "ggplot");
 
     assertThat(versions, hasSize(2));
 

@@ -1,3 +1,4 @@
+<#-- @ftlvariable name="results" type="org.renjin.ci.packages.results.PackageResults" -->
 <#-- @ftlvariable name="package" type="org.renjin.ci.packages.PackageViewModel" -->
 <#-- @ftlvariable name="version" type="org.renjin.ci.packages.VersionViewModel" -->
 
@@ -32,31 +33,78 @@
 </table>
 
 
+
+
 <h2>Builds</h2>
-<table>
+<table class="table table-striped">
     <thead>
     <tr>
-        <th>#</th>
-        <th>Package Version</th>
         <th>Renjin Version</th>
+        <th>Package Version</th>
+        <th>Build #</th>
         <th>Outcome</th>
         <th>Native Compilation</th>
     </tr>
     </thead>
     <tbody>
-        <#list package.builds as b>
+        <#list package.builds?sort_by('renjinVersionId') as b>
         <#if b.outcome?? >
         <tr>
-            <td align="right">#${b.buildNumber}</td>
-            <td align="right">${b.packageVersionId.versionString}</td>
-            <td align="right">${b.renjinVersion!"?"}</td>
-            <td>${b.outcome!"N/A"}</td>
-            <td>${b.nativeOutcome!"N/A"}</td>
+            <td>${b.renjinVersion!"?"}</td>
+            <td>${b.packageVersionId.versionString}</td>
+            <td>#${b.buildNumber}</td>
+            <td>${b.outcome!"?"}</td>
+            <td>${b.nativeOutcome!"?"}</td>
         </tr>
         </#if>
         </#list>
     </tbody>
 </table>
+
+<h2>Test Runs</h2>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Renjin Version</th>
+        <th>Package Version</th>
+        <th>Package Build</th>  
+        <th>Results</th>
+    </tr>
+    </thead>
+    <tbody>
+        <#list package.testRuns as run>
+            <tr>
+                <td>${run.renjinVersion}</td>                
+                <td>${run.packageVersion}</td>
+                <td>${run.buildNumber}</td>
+                <td>${run.passCount}/${run.count}</td>
+            </tr>
+        </#list>
+    </tbody>
+</table>
+
+
+<h2>History</h2>
+
+<table class="table">
+    <thead>
+    <tr>
+        <td>Renjin Version</td>
+        <td>Build</td>
+        <td>Build Delta</td>
+    </tr>
+    </thead>
+    <tbody>
+        <#list results.versions as renjinVersion>
+        <tr>
+            <td>${renjinVersion.id}</td>
+            <td>${renjinVersion.lastBuild.buildVersion}</td>
+            <td>${renjinVersion.buildDeltaLabel}</td>
+        </tr>
+        </#list>
+    </tbody>
+</table>
+
 
 
 </@scaffolding>

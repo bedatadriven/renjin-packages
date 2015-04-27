@@ -37,7 +37,7 @@ public class BuildResource {
     PackageBuild build = PackageDatabase.getBuild(packageVersionId, buildNumber);
     PackageVersion packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
 
-    List<PackageBuild> previousBuilds = PackageDatabase.getBuilds(packageVersionId);
+    List<PackageBuild> previousBuilds = PackageDatabase.getBuilds(packageVersionId).list();
 
     Map<String, Object> model = Maps.newHashMap();
     model.put("groupId", packageVersion.getGroupId());

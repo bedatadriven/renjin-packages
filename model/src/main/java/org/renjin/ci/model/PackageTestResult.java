@@ -9,19 +9,22 @@ import com.googlecode.objectify.condition.IfNull;
 public class PackageTestResult {
   
   @Parent
-  private Key versionKey;
+  private Key parentKey;
 
 
   /**
    * Composite key consisting of testRunNumber:testName
    */
   @Id
-  private String id;
+  private String name;
 
   @Unindex
   private String renjinVersion;
   
   @Unindex
+  private long packageBuildNumber;
+  
+  @Index
   private boolean passed;
   
   @Unindex
@@ -35,30 +38,47 @@ public class PackageTestResult {
   public PackageTestResult() {
   }
 
+
   public PackageTestResult(PackageVersionId packageVersionId, long testRunNumber, String testName) {
-    this.versionKey = parentKey(packageVersionId);
-    this.id = testRunNumber + ":" + testName;
+    Key versionKey = PackageVersion.key(packageVersionId).getRaw();
+    
+    this.parentKey = KeyFactory.createKey(versionKey, "TestRun", testRunNumber);
+    this.name = testName;
   }
 
-  public static Key parentKey(PackageVersionId packageVersionId) {
-    Key packageKey = KeyFactory.createKey("Package", packageVersionId.getPackageId().toString());
-    return KeyFactory.createKey(packageKey, "PackageVersion", packageVersionId.getVersionString());
+  public Key getParentKey() {
+    return parentKey;
   }
 
-  public String getId() {
-    return id;
+  public void setParentKey(Key parentKey) {
+    this.parentKey = parentKey;
+  }
+  
+  public PackageVersionId getPackageVersionId() {
+    Key versionKey = parentKey.getParent();
+    Key packageKey = versionKey.getParent();
+    PackageId packageId = PackageId.valueOf(packageKey.getName());
+    return new PackageVersionId(packageId, versionKey.getName());
   }
 
-  public void setId(String id) {
-    this.id = id;
+  public long getTestRunNumber() {
+    return parentKey.getId();
   }
 
-  public Key getVersionKey() {
-    return versionKey;
+  public String getName() {
+    return name;
   }
 
-  public void setVersionKey(Key versionKey) {
-    this.versionKey = versionKey;
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public long getPackageBuildNumber() {
+    return packageBuildNumber;
+  }
+
+  public void setPackageBuildNumber(long packageBuildNumber) {
+    this.packageBuildNumber = packageBuildNumber;
   }
 
   public RenjinVersionId getRenjinVersionId() {
@@ -97,9 +117,5 @@ public class PackageTestResult {
     this.error = error;
   }
 
-  public long getTestRunNumber() {
-    String parts[] = id.split(":");
-    return Long.parseLong(parts[0]);
-  }
 
 }

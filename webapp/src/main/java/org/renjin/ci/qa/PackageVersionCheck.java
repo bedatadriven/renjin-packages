@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.VoidWork;
 import org.renjin.ci.model.*;
+import org.renjin.ci.packages.CompatibilityAlert;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 
 import java.util.*;
@@ -39,63 +40,51 @@ public class PackageVersionCheck extends ForEachPackageVersion {
                 for(RenjinVersionId renjinVersionId : renjinVersions(builds, testResults)) {
 
                     LOGGER.info("Considering Renjin Version " + renjinVersionId);
-                    
+
                     Optional<PackageBuild> build = lastBuildAgainst(builds, renjinVersionId);
-                    if(build.isPresent()) {
-                        LOGGER.info(renjinVersionId + ": Build #" + build.get().getBuildNumber() + " " + 
+                    if (build.isPresent()) {
+                        LOGGER.info(renjinVersionId + ": Build #" + build.get().getBuildNumber() + " " +
                             build.get().getOutcome());
-                        
+
                     } else {
                         LOGGER.info("No finished builds");
                     }
-                    
+
 
                     Collection<PackageTestResult> tests = lastTestSetAgainst(testResults, renjinVersionId);
 
                     int testCount = tests.size();
                     int passCount = passCount(tests);
-                    
+
 
                     LOGGER.info(renjinVersionId + ": " + passCount + "/" + testCount + " tests passing");
-                    
+
                     packageVersion.setCompatibilityFlags(0);
-                    
-                    if (!build.isPresent()) {
-                        packageVersion.setCompatibilityLevel(Compatibility.NOT_AVAILABLE);
-                        
-                    } else if(build.get().isFailed()) {
 
-                        packageVersion.setCompatibilityLevel(Compatibility.BROKEN);
-                        packageVersion.setCompatibilityFlag(CompatibilityFlags.BUILD_FAILURE);
-                    
-                    } else {
+                    if (build.isPresent()) {
+                        if (build.get().isFailed()) {
 
-                        if(build.get().getNativeOutcome() == NativeOutcome.FAILURE) {
-                            packageVersion.setCompatibilityFlag(CompatibilityFlags.NATIVE_COMPILATION_FAILURE);
-                        }
-                        
-                        if(tests.size() == 0) {
-                            packageVersion.setCompatibilityFlag(CompatibilityFlags.NO_TESTS);
-                        } else if(passCount == 0) {
-                            packageVersion.setCompatibilityFlag(CompatibilityFlags.NO_TESTS_PASSING);
-                        } else if(passCount < tests.size()) {
-                            packageVersion.setCompatibilityFlag(CompatibilityFlags.TEST_FAILURES);
-                        }
-
-                        packageVersion.setLastSuccessfulBuildNumber(build.get().getBuildNumber());
-                        
-                        if(build.get().getNativeOutcome() == NativeOutcome.FAILURE ||
-                            passCount < testCount) {
-
-                            packageVersion.setCompatibilityLevel(Compatibility.PARTIAL);
+                            packageVersion.setCompatibilityFlag(CompatibilityFlags.BUILD_FAILURE);
 
                         } else {
 
-                            packageVersion.setCompatibilityLevel(Compatibility.HIGH);
-                        }
-                    }
+                            if (build.get().getNativeOutcome() == NativeOutcome.FAILURE) {
+                                packageVersion.setCompatibilityFlag(CompatibilityFlags.NATIVE_COMPILATION_FAILURE);
+                            }
 
-                    LOGGER.info("Setting compatibility level to: " + packageVersion.getCompatibilityLevel());
+                            if (tests.size() == 0) {
+                                packageVersion.setCompatibilityFlag(CompatibilityFlags.NO_TESTS);
+                            } else if (passCount == 0) {
+                                packageVersion.setCompatibilityFlag(CompatibilityFlags.NO_TESTS_PASSING);
+                            } else if (passCount < tests.size()) {
+                                packageVersion.setCompatibilityFlag(CompatibilityFlags.TEST_FAILURES);
+                            }
+
+                            packageVersion.setLastSuccessfulBuildNumber(build.get().getBuildNumber());
+                        }
+
+                    }
+                    LOGGER.info("Compatibility: " + new CompatibilityAlert(packageVersion).getMessage());
                 }
                 
                 ObjectifyService.ofy().save().entity(packageVersion);

@@ -63,7 +63,7 @@ public class DependencyResolver {
 
     // 1. Find all PackageVersions in our database that match the dependency
     List<PackageVersion> packageVersions =
-        PackageDatabase.queryPackageVersions(groupId, dependency.getName());
+        PackageDatabase.getPackageVersions(groupId, dependency.getName());
 
     // Apply the version range, if applied by the DESCRIPTION file
     Predicate<ArtifactVersion> expectedRange = versionRangePredicate(dependency);

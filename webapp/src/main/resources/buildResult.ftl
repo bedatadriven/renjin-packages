@@ -1,78 +1,48 @@
+<#-- @ftlvariable name="builds" type="java.util.List<org.renjin.ci.model.PackageBuild>" -->
 <#include "base.ftl">
 
 <@scaffolding>
 
-  <h1>${packageName} ${version} (#${buildNumber?c})</h1>
+<h1>${packageName} ${version}</h1>
 
-  <p class="lead">${description.title}</p>
-
-  <p>Built <#if startTime??>on ${startTime?datetime} </#if>against Renjin ${build.renjinVersion}</p>
-
-  <#--<#if nativeSourceCompilationFailures>-->
-  <#--<div class="alert alert-warning">Compilation of C/Fortran sources failed, full functionality may not be available</div>-->
-  <#--</#if>-->
-
-  <#if build.outcome != "SUCCESS" >
-  <div class="alert alert-error">This package failed to build.</div>
-  </#if>
-
-  <#if build.outcome = "SUCCESS">
-  <textarea readonly="true" rows="6" cols="80">&lt;dependency&gt;
-      &lt;groupId&gt;${groupId}&lt;/groupId&gt;
-      &lt;artifactId&gt;${packageName}&lt;/artifactId&gt;
-      &lt;version&gt;${version}-b${buildNumber}&lt;/version&gt;
-&lt;/dependency&gt;
-  </textarea>
-
-  </#if>
-
-  <p>${description.description}</p>
-
-  <#--<h2>Source Code Profile</h2>-->
-
-  <#--<table class="table">-->
-  <#--<thead>-->
-    <#--<tr>-->
-        <#--<th>Language</th>-->
-        <#--<th>LOC</th>-->
-    <#--</tr>-->
-  <#--</thead>-->
-  <#--<tbody>-->
-    <#--<#list packageVersion.loc.counts as count>-->
-        <#--<tr>-->
-            <#--<th>${count.language}</th>-->
-            <#--<th>${count.lines}</th>-->
-        <#--</tr>-->
-    <#--</#list>-->
-  <#--</tbody>-->
-  <#--</table>-->
-
-  <h2>Build Log</h2>
-
-    <iframe src="//storage.googleapis.com/renjinci-logs/${build.logPath}" width="100%" height="350px">
-    </iframe>
-
-   <p><a href="//storage.googleapis.com/renjinci-logs/${build.logPath}" target="_blank">Open in new window</a></p>
+<div class="row">
 
 
-  <h2>Previous Builds</h2>
+    <div class="col-md-9">
+        <h2>Build #${buildNumber}</h2>
 
-  <table>
-    <thead>
-        <tr>
-            <th>Build#</th>
-            <th>Renjin Version</th>
-            <th>Outcome</th>
-        </tr>
-    </thead>
-    <tbody>
-        <#list previousBuilds as result>
-        <tr>
-            <td>#<a href="/build/${result.path}">${result.buildNumber}</a></td>
-            <td>${result.renjinVersion}</td>
-            <td>${result.outcome }</td>
-        </tr>
-        </#list>
-    </tbody>
-  </table>
+        <p>${build.outcome!"Started"} <#if startTime??>on ${startTime?datetime} </#if>against Renjin ${build.renjinVersion}</p>
+
+        <#if log??>
+            <pre class="log">${log}</pre>
+        <#else>
+            <div class="alert alert-warning">Build log is not available.</div>
+        </#if>
+        
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="panel panel-default" data-spy="affix" data-offset-top="60" data-offset-bottom="200">
+            <!-- Default panel contents -->
+            <div class="panel-heading">Build History</div>
+            <div class="list-group">
+            <#list builds as build>
+            <a href="${build.buildNumber}" class="list-group-item">#${build.buildNumber}
+                    <small class="text-muted"> with Renjin ${build.renjinVersion}</small>
+                    <#if build.succeeded>
+                        <span class="glyphicon glyphicon-ok-sign text-success pull-right" aria-hidden="true"></span>
+                    <#else>
+                        <span class="glyphicon glyphicon-remove-sign text-danger pull-right" aria-hidden="true"></span>
+                    </#if>
+            </a>
+            </#list>
+            </div>
+        </div>
+        
+        <ul class="nav nav-pills nav-stacked">
+         
+        </ul>
+    </div>
+</div>
 </@scaffolding>

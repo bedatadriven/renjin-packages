@@ -1,7 +1,6 @@
 
 package org.renjin.ci.packages;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
@@ -11,7 +10,7 @@ import org.renjin.ci.model.PackageBuild;
 import org.renjin.ci.model.PackageDatabase;
 import org.renjin.ci.model.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.qa.PackageVersionCheck;
+import org.renjin.ci.qa.stats.ComputeBuildDeltas;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -37,6 +36,7 @@ public class PackageVersionResource {
   @Produces("text/html")
   public Viewable getPage() {
     VersionViewModel viewModel = new VersionViewModel(packageVersion);
+    viewModel.setBuilds(PackageDatabase.getBuilds(packageVersionId).list());
     Map<String, Object> model = new HashMap<>();
     model.put("version", viewModel);
 
@@ -81,8 +81,8 @@ public class PackageVersionResource {
   @GET
   @Path("check")
   public Response check() {
-    PackageVersionCheck check = new PackageVersionCheck();
-    check.apply(packageVersionId);
+    ComputeBuildDeltas markBuildDeltas = new ComputeBuildDeltas();
+    markBuildDeltas.map(PackageVersion.key(packageVersionId).getRaw());
 
     return Response.ok("Done").build();
   }

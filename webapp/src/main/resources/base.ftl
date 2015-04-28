@@ -9,6 +9,8 @@
 
     <#--Le styles-->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/renjinci.css">
+
     <style>
         body {
             padding-top: 60px;

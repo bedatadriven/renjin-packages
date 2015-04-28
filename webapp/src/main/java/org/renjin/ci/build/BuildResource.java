@@ -1,22 +1,29 @@
 package org.renjin.ci.build;
 
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.CharStreams;
+import com.google.common.io.Resources;
 import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.model.*;
+import org.renjin.ci.storage.StorageKeys;
 import org.renjin.ci.task.PackageBuildResult;
 
 import javax.ws.rs.*;
-import java.util.List;
+import javax.ws.rs.core.Response;
+import java.io.*;
+import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
+import static java.nio.channels.Channels.newInputStream;
 
 public class BuildResource {
 
@@ -33,26 +40,52 @@ public class BuildResource {
 
   @GET
   @Produces("text/html")
-  public Viewable get() {
-    PackageBuild build = PackageDatabase.getBuild(packageVersionId, buildNumber);
-    PackageVersion packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
+  public Viewable get() throws IOException {
+    
+    // Start fetching list of builds
+    Iterable<PackageBuild> builds = PackageDatabase.getBuilds(packageVersionId).iterable();
 
-    List<PackageBuild> previousBuilds = PackageDatabase.getBuilds(packageVersionId).list();
-
+    // Start fetching log text
+    String logText = tryFetchLog();
+    
     Map<String, Object> model = Maps.newHashMap();
-    model.put("groupId", packageVersion.getGroupId());
-    model.put("packageName", packageVersion.getPackageVersionId().getPackageName());
-    model.put("version", packageVersion.getPackageVersionId().getVersion());
+    model.put("groupId", packageVersionId.getGroupId());
+    model.put("packageName", packageVersionId.getPackageName());
+    model.put("version", packageVersionId.getVersionString());
     model.put("buildNumber", buildNumber);
-    model.put("build", build);
-    model.put("package", packageVersion);
-    model.put("description", packageVersion.parseDescription());
-    model.put("startTime", build.getStartDate());
-    model.put("previousBuilds", previousBuilds);
-
+    model.put("builds", Lists.newArrayList(builds));
+    model.put("build", findBuild(builds));
+    model.put("log", logText);
+    
     return new Viewable("/buildResult.ftl", model);
   }
 
+  private PackageBuild findBuild(Iterable<PackageBuild> builds) {
+    for (PackageBuild build : builds) {
+      if(build.getBuildNumber() == buildNumber) {
+        return build;
+      }
+    }
+    throw new WebApplicationException(Response.Status.NOT_FOUND);
+  }
+
+  private String tryFetchLog() {
+
+    String logUrl = "http://storage.googleapis.com/renjinci-logs/" + StorageKeys.buildLog(packageVersionId, buildNumber);
+    try {
+      byte[] bytes = Resources.toByteArray(new URL(logUrl));
+      if(bytes.length >= 2 && bytes[0] == (byte)0x1f && bytes[1] == (byte)0x8b) {
+        try(Reader reader = new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(bytes)), Charsets.UTF_8)) {
+          return CharStreams.toString(reader);
+        }
+      } else {
+        return new String(bytes, Charsets.UTF_8);
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error reading " + logUrl, e);
+      return null;
+    }    
+  }
 
   @POST
   @Consumes("application/json")

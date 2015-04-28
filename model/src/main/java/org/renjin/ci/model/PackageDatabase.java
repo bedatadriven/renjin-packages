@@ -34,6 +34,7 @@ public class PackageDatabase {
     register(PackageStatus.class);
     register(PackageTestResult.class);
     register(PackageTestRun.class);
+    register(RenjinVersionStat.class);
     register(VersionComparison.class);
     register(VersionComparisonReport.class);
     register(VersionComparisonEntry.class);

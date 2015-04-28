@@ -1,5 +1,6 @@
 package org.renjin.ci.storage;
 
+import org.renjin.ci.model.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 
 /**
@@ -11,12 +12,13 @@ public class StorageKeys {
   public static final String BUILD_LOG_BUCKET = "renjinci-logs";
 
 
-  public static String buildLog(long buildId, String packageVersionId) {
-    return buildId + "/" + packageVersionId.replace(':', '/') + ".log";
+  public static String buildLog(String packageVersionId, long buildId) {
+    return buildLog(PackageVersionId.fromTriplet(packageVersionId), buildId);
   }
 
-  public static String buildLog(long buildId, PackageVersionId packageVersionId) {
-    return buildId + "/" + packageVersionId.toString().replace(':', '/') + ".log";
+  public static String buildLog(PackageVersionId packageVersionId, long buildId) {
+    return packageVersionId.getGroupId() + "/" + packageVersionId.getPackageName() + "/" + 
+        packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-b" + buildId + ".log";
   }
 
 

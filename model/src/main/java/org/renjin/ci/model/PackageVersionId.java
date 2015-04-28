@@ -62,6 +62,10 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     return compareTo(other) > 0;
   }
 
+  public String getPath() {
+    return "/package/" + getGroupId() + "/" + getPackageName() + "/" + getVersionString();
+  }
+  
   @Override
   public String toString() {
     return groupId + ":" + packageName + ":" + version;

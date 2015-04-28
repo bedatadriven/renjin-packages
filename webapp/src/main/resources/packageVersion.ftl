@@ -74,5 +74,41 @@
 
 <h2>Test Results</h2>
 
+<h2>Build History</h2>
+
+
+<h2>Builds</h2>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th></th>
+        <th>Build #</th>
+        <th>Renjin Version</th>
+        <th>Outcome</th>
+        <th>Native Compilation</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+        <#list version.builds as b>
+            <#if b.outcome?? >
+            <tr>
+                <td>
+                    <#if b.buildDelta == -1><span class="label label-warning">Broken</span></#if>
+                    <#if b.buildDelta == +1><span class="label label-success">Fixed</span></#if>
+                </td>
+                <td>#${b.buildNumber}</td>
+                <td>${b.renjinVersion!"?"}</td>
+                <td>${b.outcome!"?"}</td>
+                <td>${b.nativeOutcome!"?"}</td>
+                <td><a href="${b.logUrl}" target="_blank" class="glyphicon glyphicon-file"></a></td>
+            </tr>
+            </#if>
+        </#list>
+    </tbody>
+</table>
+
+
 
 </@scaffolding>

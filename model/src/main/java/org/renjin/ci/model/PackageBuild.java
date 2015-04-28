@@ -7,6 +7,7 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfFalse;
 import com.googlecode.objectify.condition.IfNull;
+import com.googlecode.objectify.condition.IfZero;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -62,6 +63,10 @@ public class PackageBuild {
   @IgnoreSave(IfNull.class)
   private Long duration;
   
+  @Index
+  @IgnoreSave(IfZero.class)
+  private byte buildDelta;
+  
   
   public PackageBuild() {
   }
@@ -76,9 +81,15 @@ public class PackageBuild {
   }
 
   public String getLogPath() {
-    return getBuildNumber() + "/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" +
-        getPackageVersionId().getVersionString() + ".log";
+    return getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" +
+        getPackageVersionId().getVersionString() + "-b" + buildNumber + ".log";
   }
+  
+  public static String getLogUrl(PackageBuildId id) {
+    return "http://storage.googleapis.com/renjinci-logs/" + id.getGroupId() + "/" + id.getPackageName() + "/" +
+        id.getPackageVersionId().getVersionString() + "-b" + id.getBuildNumber() + ".log";
+  }
+  
 
   public PackageBuildId getId() {
     return new PackageBuildId(getPackageVersionId(), buildNumber);
@@ -201,6 +212,14 @@ public class PackageBuild {
     this.nativeOutcome = nativeOutcome;
   }
 
+  public byte getBuildDelta() {
+    return buildDelta;
+  }
+
+  public void setBuildDelta(byte buildDelta) {
+    this.buildDelta = buildDelta;
+  }
+
   /**
    *
    * @return the start time of a build in progress, or null if the build is complete
@@ -229,13 +248,14 @@ public class PackageBuild {
   }
 
   public String getResultURL() {
-    return "/build/result/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" + getVersion() +
-        "/" + getBuildNumber();
+    return "/package/" + getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" + getVersion() +
+        "/build/" + getBuildNumber();
   }
 
   public String getLogUrl() {
     return "//storage.googleapis.com/renjinci-logs/" + getLogPath();
   }
+  
 
   public static Ordering<PackageBuild> orderByNumber() {
     return Ordering.natural().onResultOf(new Function<PackageBuild, Comparable>() {

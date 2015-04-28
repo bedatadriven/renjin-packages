@@ -41,6 +41,10 @@ public class RenjinVersionId implements Serializable, Comparable<RenjinVersionId
     return version.hashCode();
   }
 
+  public static RenjinVersionId valueOf(String string) {
+    return new RenjinVersionId(string);
+  }
+  
   @Override
   public int compareTo(RenjinVersionId o) {
     ArtifactVersion thisVersion = new DefaultArtifactVersion(version);

@@ -28,8 +28,16 @@ public class PackageBuildId {
     return packageVersionId;
   }
 
+  public String getGroupId() {
+    return packageVersionId.getGroupId();
+  }
+  
   public long getBuildNumber() {
     return buildNumber;
+  }
+
+  public String getPackageName() {
+    return packageVersionId.getPackageName();
   }
 
   @Override
@@ -56,5 +64,5 @@ public class PackageBuildId {
     result = 31 * result + (int) (buildNumber ^ (buildNumber >>> 32));
     return result;
   }
-  
+
 }

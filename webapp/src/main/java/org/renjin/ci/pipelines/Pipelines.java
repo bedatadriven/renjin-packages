@@ -19,7 +19,7 @@ public class Pipelines {
 
   private static final Logger LOGGER = Logger.getLogger(Pipelines.class.getName());
 
-  public static <T> String applyAll(ForEachEntity function) {
+  public static String applyAll(ForEachEntity function) {
 
     MapJob<Entity, Void, Void> mapJob = newMapJob(function);
 
@@ -40,6 +40,10 @@ public class Pipelines {
     LOGGER.log(Level.INFO, "Settings: " + settings);
 
     return new MapJob<>(spec, settings);
+  }
+  
+  public static String forEach(ForEachPackageVersion function) {
+    return PipelineServiceFactory.newPipelineService().startNewPipeline(newMapPackageVersionJob(function));
   }
 
   public static <T> MapJob<Key, Void, Void> newMapPackageVersionJob(ForEachPackageVersion function) {

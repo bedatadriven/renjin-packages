@@ -13,10 +13,7 @@ import hudson.AbortException;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.jenkinsci.plugins.workflow.actions.LogAction;
-import org.renjin.ci.archive.SourceArchiveProvider;
-import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
-import org.renjin.ci.task.PackageBuildResult;
 import org.renjin.ci.workflow.PackageBuildContext;
 
 import java.io.*;
@@ -95,7 +92,7 @@ public class GoogleCloudStorage {
 
         Storage storage = GoogleCloudStorage.newClient();
 
-        String objectName = StorageKeys.buildLog(build.getBuildNumber(), build.getPackageVersionId());
+        String objectName = StorageKeys.buildLog(build.getPackageVersionId(), build.getBuildNumber());
         StorageObject objectMetadata = new StorageObject()
                 .setName(objectName)
                 .setContentType("text/plain")

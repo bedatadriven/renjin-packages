@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.appengine.api.taskqueue.*;
 import com.google.common.base.Optional;
-import org.renjin.ci.model.PackageDatabase;
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.FormParam;
@@ -14,7 +14,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.logging.Logger;

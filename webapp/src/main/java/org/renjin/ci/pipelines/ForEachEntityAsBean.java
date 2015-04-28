@@ -1,8 +1,7 @@
 package org.renjin.ci.pipelines;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.tools.mapreduce.MapOnlyMapper;
-import org.renjin.ci.model.PackageDatabase;
+import org.renjin.ci.datastore.PackageDatabase;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 

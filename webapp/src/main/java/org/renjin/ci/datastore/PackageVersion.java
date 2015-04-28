@@ -1,4 +1,4 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
@@ -12,9 +12,14 @@ import com.googlecode.objectify.condition.IfZero;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.joda.time.LocalDateTime;
+import org.renjin.ci.model.DependencySet;
+import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageVersionId;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.*;
 import java.util.HashSet;
 import java.util.Set;
 

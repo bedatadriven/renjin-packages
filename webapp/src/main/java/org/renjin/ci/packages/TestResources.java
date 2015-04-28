@@ -1,15 +1,15 @@
 package org.renjin.ci.packages;
 
-import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.appengine.tools.mapreduce.MapJob;
-import com.google.appengine.tools.pipeline.PipelineServiceFactory;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.Ref;
-import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
+import org.renjin.ci.datastore.PackageTestResult;
+import org.renjin.ci.datastore.PackageTestRun;
+import org.renjin.ci.datastore.RenjinCommit;
+import org.renjin.ci.datastore.RenjinRelease;
 import org.renjin.ci.model.*;
 import org.renjin.ci.pipelines.Pipelines;
 

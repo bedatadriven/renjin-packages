@@ -3,9 +3,11 @@ package org.renjin.ci.packages;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageTestResult;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.packages.results.PackageResults;
-import org.renjin.ci.task.PackageBuildResult;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

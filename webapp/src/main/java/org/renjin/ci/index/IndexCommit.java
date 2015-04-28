@@ -11,9 +11,9 @@ import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.HttpConnector;
-import org.renjin.ci.model.PackageDatabase;
-import org.renjin.ci.model.RenjinCommit;
-import org.renjin.ci.model.RenjinRelease;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.RenjinCommit;
+import org.renjin.ci.datastore.RenjinRelease;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

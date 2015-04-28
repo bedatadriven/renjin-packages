@@ -1,6 +1,5 @@
 package org.renjin.ci.model;
 
-import com.googlecode.objectify.Key;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
@@ -92,11 +91,7 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     result = 31 * result + version.hashCode();
     return result;
   }
-
-  public Key<PackageVersion> key() {
-    return Key.create(PackageVersion.class, toString());
-  }
-
+  
   @Override
   public int compareTo(PackageVersionId o) {
     if(!groupId.equals(o.groupId)) {

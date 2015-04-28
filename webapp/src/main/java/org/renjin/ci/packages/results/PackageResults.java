@@ -4,8 +4,10 @@ package org.renjin.ci.packages.results;
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.common.collect.Maps;
 import com.googlecode.objectify.ObjectifyService;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.model.*;
-import org.renjin.ci.model.Package;
+import org.renjin.ci.datastore.Package;
 
 import java.util.*;
 
@@ -32,7 +34,7 @@ public class PackageResults {
 
     QueryResultIterable<PackageBuild> builds = ObjectifyService.ofy().load()
         .type(PackageBuild.class)
-        .ancestor(org.renjin.ci.model.Package.key(packageId))
+        .ancestor(Package.key(packageId))
         .iterable();
 
     QueryResultIterable<PackageTestResult> testResults = ObjectifyService.ofy().load()

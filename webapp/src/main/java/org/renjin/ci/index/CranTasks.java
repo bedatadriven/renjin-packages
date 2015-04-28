@@ -4,9 +4,8 @@ import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskHandle;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.appengine.tools.cloudstorage.GcsFilename;
 import org.joda.time.LocalDate;
-import org.renjin.ci.model.PackageDatabase;
+import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.*;

@@ -1,5 +1,8 @@
 package org.renjin.ci.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Identifies a build by packageId:renjinVersion:buildNumber
  */
@@ -36,13 +39,18 @@ public class PackageBuildId {
     return buildNumber;
   }
 
+  public String getBuildVersion() {
+    return packageVersionId.getVersionString() + "-b" + buildNumber;
+  }
+  
   public String getPackageName() {
     return packageVersionId.getPackageName();
   }
 
   @Override
+  @JsonValue
   public String toString() {
-    return packageVersionId + "-b" + buildNumber;
+    return packageVersionId + ":" + buildNumber;
   }
 
   @Override

@@ -3,8 +3,8 @@ package org.renjin.ci.tasks;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.index.dependencies.DependencyResolver;
-import org.renjin.ci.model.PackageDatabase;
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;

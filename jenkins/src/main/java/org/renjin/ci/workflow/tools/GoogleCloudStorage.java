@@ -128,7 +128,7 @@ public class GoogleCloudStorage {
         }
 
         build.getListener().getLogger().print("Archived build log to ");
-        build.getListener().hyperlink("https:" + build.getPackageBuild().getLogUrl(), StorageKeys.PACKAGE_SOURCE_BUCKET);
+        build.getListener().hyperlink(StorageKeys.buildLogUrl(build.getPackageBuild().getId()), StorageKeys.PACKAGE_SOURCE_BUCKET);
         build.getListener().getLogger().println();
 
     }

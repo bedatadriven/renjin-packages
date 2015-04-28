@@ -3,8 +3,10 @@ package org.renjin.ci.index;
 
 import com.google.appengine.api.search.*;
 import com.googlecode.objectify.VoidWork;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
-import org.renjin.ci.model.Package;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.pipelines.ForEachEntityAsBean;
 
 import java.util.Collections;

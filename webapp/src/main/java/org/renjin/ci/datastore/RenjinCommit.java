@@ -1,4 +1,4 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;

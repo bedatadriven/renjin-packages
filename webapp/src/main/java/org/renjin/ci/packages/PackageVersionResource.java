@@ -6,9 +6,9 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.build.BuildResource;
-import org.renjin.ci.model.PackageBuild;
-import org.renjin.ci.model.PackageDatabase;
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.qa.stats.ComputeBuildDeltas;
 

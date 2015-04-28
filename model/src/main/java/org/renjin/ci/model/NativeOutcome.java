@@ -1,7 +1,7 @@
 package org.renjin.ci.model;
 
 /**
- * Created by alex on 7/1/14.
+ * Describes the outcome of the native code compilation step 
  */
 public enum NativeOutcome {
 

@@ -1,7 +1,7 @@
 package org.renjin.ci.packages.results;
 
 import com.google.common.collect.Sets;
-import org.renjin.ci.model.PackageBuild;
+import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.model.RenjinVersionId;
 
 import java.util.ArrayList;

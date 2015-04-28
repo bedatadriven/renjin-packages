@@ -1,6 +1,9 @@
 package org.renjin.ci.packages;
 
 import com.google.common.collect.Maps;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 
 import java.util.ArrayList;

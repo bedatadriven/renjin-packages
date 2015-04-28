@@ -1,7 +1,7 @@
 package org.renjin.ci.packages;
 
 import org.renjin.ci.model.CompatibilityFlags;
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageVersion;
 
 import java.util.ArrayList;
 import java.util.List;

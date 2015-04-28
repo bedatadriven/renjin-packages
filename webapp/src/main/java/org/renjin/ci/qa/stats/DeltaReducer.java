@@ -4,7 +4,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.mapreduce.Reducer;
 import com.google.appengine.tools.mapreduce.ReducerInput;
 import com.googlecode.objectify.ObjectifyService;
-import org.renjin.ci.model.RenjinVersionStat;
+import org.renjin.ci.datastore.RenjinVersionStat;
 
 /**
  * Reduces a set of [RenjinVersionId:DeltaType, +/-] to a {@code RenjinVersionDeltas}

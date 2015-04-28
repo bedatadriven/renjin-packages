@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="stats" type="java.util.List<org.renjin.ci.model.RenjinVersionStat>" -->
+<#-- @ftlvariable name="stats" type="java.util.List<org.renjin.ci.datastore.RenjinVersionStat>" -->
 
 <#include "base.ftl">
 

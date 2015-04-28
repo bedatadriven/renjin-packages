@@ -1,9 +1,10 @@
 package org.renjin.ci.packages;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageTestResult;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.packages.results.TestRun;
 

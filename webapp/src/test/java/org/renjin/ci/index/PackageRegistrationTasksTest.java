@@ -3,6 +3,9 @@ package org.renjin.ci.index;
 import org.joda.time.LocalDateTime;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageStatus;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.tasks.Fixtures;
 

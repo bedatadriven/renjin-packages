@@ -10,7 +10,7 @@ import org.renjin.ci.benchmarks.BenchmarksResource;
 import org.renjin.ci.index.IndexTasks;
 import org.renjin.ci.index.PackageRegistrationTasks;
 import org.renjin.ci.index.WebHooks;
-import org.renjin.ci.model.PackageDatabase;
+import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.PackageSearch;
 import org.renjin.ci.packages.TestResources;

@@ -1,4 +1,4 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashFunction;

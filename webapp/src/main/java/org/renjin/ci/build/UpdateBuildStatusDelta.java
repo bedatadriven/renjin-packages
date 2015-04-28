@@ -4,6 +4,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageStatus;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.pipelines.ForEachEntityAsBean;
 

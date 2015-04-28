@@ -1,7 +1,6 @@
 package org.renjin.ci.workflow;
 
 
-import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -11,10 +10,8 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.renjin.ci.model.PackageBuild;
 import org.renjin.ci.model.PackageVersionId;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 

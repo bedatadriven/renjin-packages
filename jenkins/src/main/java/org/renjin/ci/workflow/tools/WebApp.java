@@ -2,11 +2,10 @@ package org.renjin.ci.workflow.tools;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import hudson.AbortException;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.renjin.ci.model.PackageBuild;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.task.PackageBuildResult;
 import org.renjin.ci.workflow.BuildPackageStep;
+import org.renjin.ci.workflow.PackageBuild;
 import org.renjin.ci.workflow.PackageBuildContext;
 
 import javax.ws.rs.client.Client;
@@ -16,11 +15,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.io.Reader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class WebApp {
 
+  private static final Logger LOGGER = Logger.getLogger(WebApp.class.getName());
 
     public static final String ROOT_URL = "https://renjinci.appspot.com";
 
@@ -54,6 +55,7 @@ public class WebApp {
 
 
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Exception getting build number", e);
             throw new AbortException("Failed to get next build number from " + builds.getUri() + ": " + e.getMessage());
         }
         return build.getBuildNumber();

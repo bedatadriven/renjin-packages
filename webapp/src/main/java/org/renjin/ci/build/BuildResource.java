@@ -5,9 +5,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageStatus;
 import org.renjin.ci.model.*;
 import org.renjin.ci.storage.StorageKeys;
 import org.renjin.ci.task.PackageBuildResult;
@@ -96,34 +100,21 @@ public class BuildResource {
     ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
-        
+
+        Key<PackageBuild> buildKey = PackageBuild.key(packageVersionId, buildNumber);
+
         // Retrieve the current status of this package version and the build itself
         PackageBuild build;
-        PackageStatus status;
         try {
-          build = ofy().load().key(PackageBuild.key(packageVersionId, buildNumber)).safe();
-          status = ofy().load().key(PackageStatus.key(packageVersionId, build.getRenjinVersionId())).safe();
+          build = ofy().load().key(buildKey).safe();
         } catch (NotFoundException notFoundException) {
-          LOGGER.info("No PackageStatus found for " + packageVersionId + "-b" + buildNumber + ".");
+          LOGGER.info("Cannot find PackageBuild entity to update: " + buildKey);
           return;
         }
 
         // Has the status already been reported?
         if(build.getOutcome() != null) {
           LOGGER.log(Level.INFO, "Build " + build.getId() + " is already marked as " + build.getOutcome());
-          if(build.getStartTime() != null) {
-            LOGGER.log(Level.INFO, "Setting startTime to NULL");
-            build.setStartTime(null);
-            ofy().save().entities(build).now();
-          }
-          return;
-        }
-
-        // Has someone else gotten here first?
-        if(!status.getBuildStatus().equals(BuildStatus.BUILDING) ||
-           !Objects.equals(status.getBuildNumber(), build.getBuildNumber())) {
-
-          LOGGER.log(Level.INFO, "Build " + build.getId() + " has been superseded by " + status.getBuildNumber());
           return;
         }
 
@@ -133,15 +124,8 @@ public class BuildResource {
         build.setEndTime(System.currentTimeMillis());
         build.setDuration(build.getEndTime() - build.getStartTime());
         build.setNativeOutcome(buildResult.getNativeOutcome());
-        build.setStartTime(null);
 
-        if(build.getOutcome() == BuildOutcome.SUCCESS) {
-          status.setBuildStatus(BuildStatus.BUILT);
-        } else {
-          status.setBuildStatus(BuildStatus.FAILED);
-        }
-
-        ofy().save().entities(build, status);
+        ofy().save().entities(build);
       }
     });
   }

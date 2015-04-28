@@ -1,9 +1,12 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
+import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.RenjinVersionId;
 
 @Entity
 public class PackageTestResult {

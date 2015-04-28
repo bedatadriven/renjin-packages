@@ -2,6 +2,9 @@ package org.renjin.ci.build;
 
 import com.google.common.collect.Maps;
 import com.googlecode.objectify.VoidWork;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageStatus;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 
 import javax.ws.rs.*;

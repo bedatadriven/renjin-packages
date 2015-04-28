@@ -1,6 +1,6 @@
 package org.renjin.ci.packages.results;
 
-import org.renjin.ci.model.PackageTestResult;
+import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 

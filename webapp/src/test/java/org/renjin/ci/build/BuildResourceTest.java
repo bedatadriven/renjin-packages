@@ -6,8 +6,8 @@ import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.ResourceTest;
 import org.renjin.ci.index.dependencies.DependencyResolver;
 import org.renjin.ci.model.BuildOutcome;
-import org.renjin.ci.model.PackageBuild;
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.tasks.Fixtures;
 

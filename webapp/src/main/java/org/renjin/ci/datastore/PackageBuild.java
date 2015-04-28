@@ -1,13 +1,13 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
-import com.googlecode.objectify.condition.IfFalse;
 import com.googlecode.objectify.condition.IfNull;
 import com.googlecode.objectify.condition.IfZero;
+import org.renjin.ci.model.*;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -19,7 +19,11 @@ import java.util.Set;
  */
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonAutoDetect(
+    fieldVisibility=JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE, 
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PackageBuild {
 
   @Parent
@@ -56,9 +60,6 @@ public class PackageBuild {
   @IgnoreSave(IfNull.class)
   private Long endTime;
 
-  @IgnoreSave(IfNull.class)
-  private String workerId;
-
   @Unindex
   @IgnoreSave(IfNull.class)
   private Long duration;
@@ -90,7 +91,7 @@ public class PackageBuild {
         id.getPackageVersionId().getVersionString() + "-b" + id.getBuildNumber() + ".log";
   }
   
-
+  @JsonProperty
   public PackageBuildId getId() {
     return new PackageBuildId(getPackageVersionId(), buildNumber);
   }
@@ -159,6 +160,7 @@ public class PackageBuild {
     this.renjinVersion = release.toString();
   }
 
+  @JsonProperty
   public Set<String> getDependencies() {
     return dependencies;
   }
@@ -237,14 +239,6 @@ public class PackageBuild {
       return null;
     }
     return new Date(endTime);
-  }
-
-  public String getWorkerId() {
-    return workerId;
-  }
-
-  public void setWorkerId(String workerId) {
-    this.workerId = workerId;
   }
 
   public String getResultURL() {

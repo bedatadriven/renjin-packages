@@ -3,7 +3,7 @@ package org.renjin.ci.index;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
-import org.renjin.ci.model.RenjinCommit;
+import org.renjin.ci.datastore.RenjinCommit;
 
 import java.io.IOException;
 

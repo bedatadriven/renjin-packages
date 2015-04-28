@@ -1,6 +1,6 @@
 package org.renjin.ci.build;
 
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.pipelines.ForEachEntityAsBean;
 

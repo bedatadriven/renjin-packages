@@ -7,10 +7,10 @@ import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.ci.model.CorePackages;
-import org.renjin.ci.model.PackageBuild;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
+import org.renjin.ci.workflow.PackageBuild;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -70,7 +70,7 @@ public class MavenPomBuilder {
         Dependency mavenDep = new Dependency();
         mavenDep.setGroupId("org.renjin");
         mavenDep.setArtifactId(packageDep.getName());
-        mavenDep.setVersion(build.getRenjinVersion());
+        mavenDep.setVersion(build.getRenjinVersionId().toString());
         model.addDependency(mavenDep);
       }
     }
@@ -89,7 +89,7 @@ public class MavenPomBuilder {
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
     renjinPlugin.setArtifactId("renjin-maven-plugin");
-    renjinPlugin.setVersion(build.getRenjinVersion());
+    renjinPlugin.setVersion(build.getRenjinVersionId().toString());
 
     PluginExecution compileExecution = compileExecution();
     renjinPlugin.addExecution(compileExecution);
@@ -187,7 +187,7 @@ public class MavenPomBuilder {
     Dependency mavenDep = new Dependency();
     mavenDep.setGroupId("org.renjin");
     mavenDep.setArtifactId(name);
-    mavenDep.setVersion(build.getRenjinVersion());
+    mavenDep.setVersion(build.getRenjinVersionId().toString());
     model.addDependency(mavenDep);
   }
 

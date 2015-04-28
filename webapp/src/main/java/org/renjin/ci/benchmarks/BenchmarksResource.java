@@ -5,9 +5,9 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
-import org.renjin.ci.model.BenchmarkEnvironment;
-import org.renjin.ci.model.BenchmarkResult;
-import org.renjin.ci.model.RenjinRelease;
+import org.renjin.ci.datastore.BenchmarkEnvironment;
+import org.renjin.ci.datastore.BenchmarkResult;
+import org.renjin.ci.datastore.RenjinRelease;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

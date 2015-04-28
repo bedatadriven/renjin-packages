@@ -1,4 +1,4 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -10,6 +10,7 @@ import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfEmpty;
 import com.googlecode.objectify.condition.IfZero;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.renjin.ci.model.*;
 
 import java.util.Set;
 

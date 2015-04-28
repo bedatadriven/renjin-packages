@@ -15,9 +15,11 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.archive.AppEngineSourceArchiveProvider;
 import org.renjin.ci.archive.SourceArchiveProvider;
 import org.renjin.ci.build.PackageCheckQueue;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.index.dependencies.DependencyResolver;
 import org.renjin.ci.model.*;
-import org.renjin.ci.model.Package;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.FormParam;

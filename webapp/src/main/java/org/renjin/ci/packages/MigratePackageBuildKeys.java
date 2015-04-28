@@ -6,7 +6,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
-import org.renjin.ci.model.PackageVersion;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.pipelines.ForEachEntity;
 

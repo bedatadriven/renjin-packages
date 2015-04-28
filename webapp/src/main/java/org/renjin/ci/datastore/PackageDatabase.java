@@ -1,4 +1,4 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
@@ -10,6 +10,10 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Result;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.Query;
+import org.renjin.ci.model.BuildStatus;
+import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.util.*;
 
@@ -35,12 +39,8 @@ public class PackageDatabase {
     register(PackageTestResult.class);
     register(PackageTestRun.class);
     register(RenjinVersionStat.class);
-    register(VersionComparison.class);
-    register(VersionComparisonReport.class);
-    register(VersionComparisonEntry.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
-    register(BuildJob.class);
     register(Benchmark.class);
     register(BenchmarkEnvironment.class);
     register(BenchmarkResult.class);
@@ -209,15 +209,6 @@ public class PackageDatabase {
 
   public static void save(PackageStatus status) {
     ObjectifyService.ofy().save().entity(status).now();
-  }
-
-  public static VersionComparison getVersionComparison(RenjinVersionId from, RenjinVersionId to) {
-    Key<VersionComparison> key = VersionComparison.key(from, to);
-    VersionComparison comparison = ObjectifyService.ofy().load().key(key).now();
-    if(comparison == null) {
-      comparison = new VersionComparison(from, to);
-    }
-    return comparison;
   }
 
   public static Optional<RenjinCommit> getCommit(String commitHash) {

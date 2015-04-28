@@ -1,4 +1,4 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
@@ -6,7 +6,8 @@ import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.IgnoreSave;
 import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.condition.IfFalse;
-import com.googlecode.objectify.condition.IfNull;
+import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageVersionId;
 
 @Entity
 public class Package {

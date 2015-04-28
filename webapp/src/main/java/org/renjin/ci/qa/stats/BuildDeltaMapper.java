@@ -4,7 +4,7 @@ package org.renjin.ci.qa.stats;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.mapreduce.Mapper;
 import com.googlecode.objectify.ObjectifyService;
-import org.renjin.ci.model.PackageBuild;
+import org.renjin.ci.datastore.PackageBuild;
 
 import java.util.logging.Logger;
 

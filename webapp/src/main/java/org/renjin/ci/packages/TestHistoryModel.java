@@ -1,7 +1,6 @@
 package org.renjin.ci.packages;
 
-import org.renjin.ci.model.PackageTestResult;
-import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.datastore.PackageTestResult;
 
 import java.util.HashSet;
 import java.util.List;

@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="builds" type="java.util.List<org.renjin.ci.model.PackageBuild>" -->
+<#-- @ftlvariable name="builds" type="java.util.List<org.renjin.ci.datastore.PackageBuild>" -->
 <#-- @ftlvariable name="renjinVersion" type="org.renjin.ci.model.RenjinVersionId" -->
 
 <#include "base.ftl">

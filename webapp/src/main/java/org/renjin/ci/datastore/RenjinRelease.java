@@ -1,9 +1,10 @@
-package org.renjin.ci.model;
+package org.renjin.ci.datastore;
 
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.util.Date;
 

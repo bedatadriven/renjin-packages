@@ -38,14 +38,6 @@ public class TestResources {
         .param("offset", "0"));
   }
   
-  @GET
-  @Path("/migrateBuilds")
-  public void migrateBuilds() {
-
-    Pipelines.redirectToStatus(Pipelines.applyAll(new MigratePackageBuildKeys()));
-
-  }
-
   @POST
   public void migrateTests(@FormParam("offset") int offset) throws ClassNotFoundException, SQLException {
 

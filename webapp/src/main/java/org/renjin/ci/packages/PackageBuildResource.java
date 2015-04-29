@@ -15,7 +15,7 @@ import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.stats.StatTasks;
 import org.renjin.ci.storage.StorageKeys;
-import org.renjin.ci.task.PackageBuildResult;
+import org.renjin.ci.model.PackageBuildResult;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -173,6 +173,13 @@ public class PackageBuildResource {
    * 
    * A regression is evidence that a change in Renjin has led to a failure in package building. A progression
    * is evidence that a change in Renjin has fixed an existing defect in the Renjin build process.
+   * 
+   * For example, if survey:2.5 fails to build against
+   * Renjin 0.7.1514, but successfully builds against Renjin 0.7.1534, then this is an improvement
+   * we want to highlight. 
+   *
+   * <p>However, if we try to build again with Renjin 0.7.1560 and it fails, then that PackageBuild is
+   * a regression to flag immediately.</p>
    *
    * @return true, if any flags have been changed
    */

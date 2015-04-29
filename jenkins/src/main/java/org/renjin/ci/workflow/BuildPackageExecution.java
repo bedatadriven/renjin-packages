@@ -10,7 +10,7 @@ import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.task.PackageBuildResult;
+import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.workflow.graph.PackageNode;
 import org.renjin.ci.workflow.tools.*;
 
@@ -53,7 +53,7 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
       flowNode.save();
     }
 
-    listener.getLogger().printf("Starting build #%d of %s...\n", 
+    listener.getLogger().printf("Starting build #%d of %s...\n",
         buildNumber, step.getLeasedBuild().getPackageVersionId());
 
     for (PackageNode packageNode : step.getLeasedBuild().getNode().getDependencies()) {

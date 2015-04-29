@@ -7,7 +7,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.RenjinVersionStat;
 import org.renjin.ci.pipelines.Pipelines;
-import org.renjin.ci.stats.ComputeBuildDeltas;
+import org.renjin.ci.stats.ReComputeBuildDeltas;
 import org.renjin.ci.stats.StatPipelines;
 
 import javax.ws.rs.GET;
@@ -27,7 +27,7 @@ public class QaResources {
     
     
     
-    return Pipelines.redirectToStatus(Pipelines.forEach(new ComputeBuildDeltas()));  
+    return Pipelines.redirectToStatus(Pipelines.forEach(new ReComputeBuildDeltas()));  
   }
 
   @GET

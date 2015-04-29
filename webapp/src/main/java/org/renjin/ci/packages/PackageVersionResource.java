@@ -9,7 +9,7 @@ import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.stats.ComputeBuildDeltas;
+import org.renjin.ci.stats.ReComputeBuildDeltas;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -77,7 +77,7 @@ public class PackageVersionResource {
   @GET
   @Path("check")
   public Response check() {
-    ComputeBuildDeltas markBuildDeltas = new ComputeBuildDeltas();
+    ReComputeBuildDeltas markBuildDeltas = new ReComputeBuildDeltas();
     markBuildDeltas.map(PackageVersion.key(packageVersionId).getRaw());
 
     return Response.ok("Done").build();

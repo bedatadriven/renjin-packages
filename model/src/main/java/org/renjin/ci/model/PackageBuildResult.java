@@ -1,8 +1,5 @@
-package org.renjin.ci.task;
+package org.renjin.ci.model;
 
-
-import org.renjin.ci.model.BuildOutcome;
-import org.renjin.ci.model.NativeOutcome;
 
 public class PackageBuildResult {
 

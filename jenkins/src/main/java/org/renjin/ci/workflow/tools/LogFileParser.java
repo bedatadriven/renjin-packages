@@ -3,7 +3,7 @@ package org.renjin.ci.workflow.tools;
 import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
-import org.renjin.ci.task.PackageBuildResult;
+import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.workflow.PackageBuildContext;
 
 import java.io.BufferedReader;

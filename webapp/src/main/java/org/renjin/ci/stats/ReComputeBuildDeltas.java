@@ -22,9 +22,9 @@ import java.util.logging.Logger;
  * <p>However, if we try to build again with Renjin 0.7.1560 and it fails, then that PackageBuild is
  * a regression to flag immediately.</p>
  */
-public class ComputeBuildDeltas extends ForEachPackageVersion {
+public class ReComputeBuildDeltas extends ForEachPackageVersion {
 
-  private static final Logger LOGGER = Logger.getLogger(ComputeBuildDeltas.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ReComputeBuildDeltas.class.getName());
 
   @Override
   protected void apply(final PackageVersionId packageVersionId) {

@@ -1,0 +1,7 @@
+
+digraph G {
+
+    WebApp -> Jenkins
+    WebApp -> GoogleCloudStorage
+    Jenkins <-> 
+}

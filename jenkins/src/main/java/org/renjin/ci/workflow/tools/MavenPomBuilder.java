@@ -6,11 +6,14 @@ import com.google.common.collect.Lists;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.CorePackages;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
 import org.renjin.ci.workflow.PackageBuild;
+import org.renjin.ci.workflow.graph.NodeState;
+import org.renjin.ci.workflow.graph.PackageNode;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -28,11 +31,13 @@ public class MavenPomBuilder {
 
   private final PackageBuild build;
   private final PackageDescription description;
+  private PackageNode node;
 
 
-  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription) {
+  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription, PackageNode node) {
     this.build = build;
     this.description = packageDescription;
+    this.node = node;
   }
 
   private Model buildPom() throws IOException {
@@ -66,26 +71,28 @@ public class MavenPomBuilder {
 
     // Add dependencies on other core modules
     for(PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
-      if(CorePackages.CORE_PACKAGES.contains(packageDep.getName())) {
-        Dependency mavenDep = new Dependency();
-        mavenDep.setGroupId("org.renjin");
-        mavenDep.setArtifactId(packageDep.getName());
-        mavenDep.setVersion(build.getRenjinVersionId().toString());
-        model.addDependency(mavenDep);
+      if (!packageDep.getName().equals("R")) {
+        if (CorePackages.CORE_PACKAGES.contains(packageDep.getName())) {
+          Dependency mavenDep = new Dependency();
+          mavenDep.setGroupId("org.renjin");
+          mavenDep.setArtifactId(packageDep.getName());
+          mavenDep.setVersion(build.getRenjinVersionId().toString());
+          model.addDependency(mavenDep);
+
+        } else {
+
+          PackageNode dependencyNode = node.getDependency(packageDep.getName());
+          dependencyNode.assertState(NodeState.BUILT);
+
+          Dependency mavenDep = new Dependency();
+          mavenDep.setGroupId(dependencyNode.getId().getGroupId());
+          mavenDep.setArtifactId(packageDep.getName());
+          mavenDep.setVersion(dependencyNode.getBuildVersion());
+          model.addDependency(mavenDep);
+        }
       }
     }
-
-//    // Add dependencies on other packages:
-//    // These are calculated when launching the build
-//    for(String dependency : packageVersion.getDependencies()) {
-//      String gav[] = dependency.split(":");
-//      Dependency mavenDep = new Depenqdency();
-//      mavenDep.setGroupId(gav[0]);
-//      mavenDep.setArtifactId(gav[1]);
-//      mavenDep.setVersion(gav[2]);
-//      model.addDependency(mavenDep);
-//    }
-
+    
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
     renjinPlugin.setArtifactId("renjin-maven-plugin");

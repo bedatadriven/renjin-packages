@@ -32,8 +32,7 @@ public class WebApp {
 
   public static long startBuild(BuildPackageStep step) throws IOException, InterruptedException {
 
-    PackageVersionId packageVersionId = PackageVersionId.fromTriplet(step.getPackageVersionId());
-    return postBuild(step, packageVersionId);
+    return postBuild(step, step.getPackageVersionId());
   }
 
   public static void reportBuildResult(PackageBuildContext context, PackageBuildResult result) throws IOException {

@@ -1,4 +1,4 @@
-package org.renjin.ci.qa.stats;
+package org.renjin.ci.stats;
 
 /**
  * Describes a type of change between Renjin Versions

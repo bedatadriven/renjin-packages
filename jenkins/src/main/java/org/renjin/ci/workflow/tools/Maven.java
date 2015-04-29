@@ -33,7 +33,7 @@ public class Maven {
         PackageDescription description = PackageDescription.fromString(context.workspaceChild("DESCRIPTION").readToString());
 
         // Write the POM to the workspace
-        MavenPomBuilder pomBuilder = new MavenPomBuilder(context.getPackageBuild(), description);
+        MavenPomBuilder pomBuilder = new MavenPomBuilder(context.getPackageBuild(), description, context.getPackageNode());
         context.workspaceChild("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
     }
 

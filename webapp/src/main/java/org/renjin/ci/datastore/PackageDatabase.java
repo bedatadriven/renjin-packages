@@ -1,21 +1,19 @@
 package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
-import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Result;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.Query;
-import org.renjin.ci.model.BuildStatus;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.RenjinVersionId;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import static com.googlecode.objectify.ObjectifyService.register;
 
@@ -35,12 +33,12 @@ public class PackageDatabase {
     register(PackageBuild.class);
     register(Package.class);
     register(PackageVersion.class);
-    register(PackageStatus.class);
     register(PackageTestResult.class);
     register(PackageTestRun.class);
     register(RenjinVersionStat.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
+    register(LastEventTime.class);
     register(Benchmark.class);
     register(BenchmarkEnvironment.class);
     register(BenchmarkResult.class);
@@ -120,20 +118,6 @@ public class PackageDatabase {
     
     return finished;
   }
-  
-  public static List<PackageStatus> getStatus(String groupId, String packageName) {
-
-    // Keys are in the form: groupId:packageName:version:buildNumber
-
-    String prefix = groupId + ":" + packageName;
-
-    Key<PackageStatus> startKey = Key.create(PackageStatus.class, prefix + ":");
-    Key<PackageStatus> endKey = Key.create(PackageStatus.class, prefix + "Z");
-
-
-    return ObjectifyService.ofy().load().type(PackageStatus.class)
-        .filterKey(">=", startKey).filterKey("<", endKey).list();
-  }
 
 
   public static PackageBuild getBuild(PackageVersionId packageVersionId, long buildNumber) {
@@ -142,73 +126,6 @@ public class PackageDatabase {
 
   public static Result<Map<Key<PackageVersion>,PackageVersion>> save(PackageVersion... packageVersions) {
     return ObjectifyService.ofy().save().entities(packageVersions);
-  }
-
-  public static PackageStatus getStatus(PackageVersionId packageVersionId, RenjinVersionId renjinVersionId) {
-    PackageStatus status = ObjectifyService.ofy().load().key(PackageStatus.key(packageVersionId, renjinVersionId)).now();
-    if(status == null) {
-      status = new PackageStatus(packageVersionId, renjinVersionId);
-      status.setBuildStatus(BuildStatus.BLOCKED);
-    }
-    return status;
-  }
-
-  public static Collection<PackageStatus> getStatus(Set<PackageVersionId> packageVersionIds,
-                                                    RenjinVersionId renjinVersion) {
-    List<Key<PackageStatus>> keys = Lists.newArrayList();
-    for(PackageVersionId id : packageVersionIds) {
-      keys.add(Key.create(PackageStatus.class, id + ":" + renjinVersion));
-    }
-
-    return ObjectifyService.ofy().load().keys(keys).values();
-  }
-
-  public static List<PackageStatus> getAllStatusForPackageVersion(PackageVersionId packageVersionId) {
-
-    // PackageStatus entities are ordered by PackageVersionId, so we can do a single range
-    // query on key to find status records for a given PV for all versions of renjin
-    Key<PackageStatus> beginKey = Key.create(PackageStatus.class, packageVersionId.toString() + ":");
-
-    QueryResultIterator<PackageStatus> it = ObjectifyService.ofy()
-        .load()
-        .type(PackageStatus.class)
-        .filterKey(">=", beginKey)
-        .iterator();
-
-    List<PackageStatus> results = Lists.newArrayList();
-    while(it.hasNext()) {
-      PackageStatus status = it.next();
-      if(!status.getPackageVersionId().equals(packageVersionId)) {
-        break;
-      }
-      results.add(status);
-    }
-
-    return results;
-  }
-
-  public static Optional<Key<PackageStatus>> getNextReady() {
-
-    QueryResultIterable<Key<PackageStatus>> keys = ObjectifyService.ofy()
-        .load()
-        .type(PackageStatus.class)
-        .filter("buildStatus = ", BuildStatus.READY.name())
-        .keys()
-        .iterable();
-
-    // Choose a key at random to avoid contention between multiple workers
-    List<Key<PackageStatus>> top = Lists.newArrayList(Iterables.limit(keys, 40));
-    if(top.isEmpty()) {
-      return Optional.absent();
-
-    } else {
-      int index = RANDOM.nextInt(top.size());
-      return Optional.of(top.get(index));
-    }
-  }
-
-  public static void save(PackageStatus status) {
-    ObjectifyService.ofy().save().entity(status).now();
   }
 
   public static Optional<RenjinCommit> getCommit(String commitHash) {
@@ -247,4 +164,6 @@ public class PackageDatabase {
   public static List<PackageVersion> getPackageVersions(String groupId, String name) {
     return getPackageVersions(new PackageId(groupId, name));
   }
+  
+  
 }

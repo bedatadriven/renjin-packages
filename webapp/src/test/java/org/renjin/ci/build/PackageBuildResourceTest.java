@@ -9,6 +9,7 @@ import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.packages.PackageBuildResource;
 import org.renjin.ci.tasks.Fixtures;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ import java.util.Date;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
-public class BuildResourceTest extends AbstractDatastoreTest {
+public class PackageBuildResourceTest extends AbstractDatastoreTest {
 
   @Test
   public void testResultPage() throws IOException, TemplateException {
@@ -42,8 +43,8 @@ public class BuildResourceTest extends AbstractDatastoreTest {
 
     ofy().save().entities(mass, survey, build15, build16).now();
 
-    BuildResource buildResource = new BuildResource(surveyId, 16);
-    ResourceTest.assertTemplateRenders(buildResource.get());
+    PackageBuildResource packageBuildResource = new PackageBuildResource(surveyId, 16);
+    ResourceTest.assertTemplateRenders(packageBuildResource.get());
   }
 
 }

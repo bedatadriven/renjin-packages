@@ -1,10 +1,12 @@
-package org.renjin.ci.qa.stats;
+package org.renjin.ci.stats;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.mapreduce.*;
 import com.google.appengine.tools.mapreduce.inputs.DatastoreInput;
 import com.google.appengine.tools.mapreduce.outputs.DatastoreOutput;
 import com.google.appengine.tools.pipeline.PipelineServiceFactory;
+import org.renjin.ci.stats.BuildDeltaMapper;
+import org.renjin.ci.stats.DeltaReducer;
 
 public class StatPipelines {
   

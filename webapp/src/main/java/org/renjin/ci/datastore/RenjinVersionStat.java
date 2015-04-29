@@ -3,7 +3,6 @@ package org.renjin.ci.datastore;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Unindex;
-import org.renjin.ci.model.DeltaType;
 import org.renjin.ci.model.RenjinVersionId;
 
 @Entity
@@ -27,10 +26,6 @@ public class RenjinVersionStat {
   }
   
   public RenjinVersionStat() {
-  }
-
-  public RenjinVersionStat(RenjinVersionId renjinVersionId, DeltaType deltaType) {
-    id = renjinVersionId + ":" + deltaType; 
   }
 
   public String getId() {

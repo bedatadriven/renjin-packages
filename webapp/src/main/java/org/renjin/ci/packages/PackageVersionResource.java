@@ -1,18 +1,15 @@
 
 package org.renjin.ci.packages;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.build.BuildResource;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
-import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.qa.stats.ComputeBuildDeltas;
+import org.renjin.ci.stats.ComputeBuildDeltas;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -43,8 +40,8 @@ public class PackageVersionResource {
   }
 
   @Path("build/{buildNumber}")
-  public BuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
-    return new BuildResource(packageVersion.getPackageVersionId(), buildNumber);
+  public PackageBuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
+    return new PackageBuildResource(packageVersion.getPackageVersionId(), buildNumber);
   }
 
   /**

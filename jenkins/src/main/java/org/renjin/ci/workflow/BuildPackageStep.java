@@ -5,8 +5,8 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.renjin.ci.workflow.BuildPackageExecution;
+import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.workflow.graph.BuildQueue;
 
 /**
  * Downloads package sources from Google Cloud Storage and
@@ -15,18 +15,18 @@ import org.renjin.ci.workflow.BuildPackageExecution;
 public class BuildPackageStep extends AbstractStepImpl {
 
   private String renjinVersion;
-  private String packageVersionId;
+  private BuildQueue.Lease lease;
 
   @DataBoundConstructor
-  public BuildPackageStep(String renjinVersion, String packageVersionId) {
+  public BuildPackageStep(String renjinVersion, BuildQueue.Lease lease) {
     this.renjinVersion = renjinVersion;
-    this.packageVersionId = packageVersionId;
+    this.lease = lease;
   }
 
-  public String getPackageVersionId() {
-    return packageVersionId;
+  public BuildQueue.Lease getLeasedBuild() {
+    return lease;
   }
-  
+
   public String getRenjinVersion() {
     return renjinVersion;
   }
@@ -35,16 +35,17 @@ public class BuildPackageStep extends AbstractStepImpl {
   public StepDescriptor getDescriptor() {
     return super.getDescriptor();
   }
-  
-  
+
+  public PackageVersionId getPackageVersionId() {
+    return lease.getPackageVersionId();
+  }
 
   @Extension
   public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
     public DescriptorImpl() {
-      super(BuildGraphExecution.class);
+      super(BuildPackageExecution.class);
     }
-    
     
 
     @Override

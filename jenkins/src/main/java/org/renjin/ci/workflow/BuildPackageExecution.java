@@ -1,5 +1,6 @@
 package org.renjin.ci.workflow;
 
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.cps.persistence.PersistIn;
 import org.jenkinsci.plugins.workflow.cps.persistence.PersistenceContext;
@@ -10,6 +11,7 @@ import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.task.PackageBuildResult;
+import org.renjin.ci.workflow.graph.PackageNode;
 import org.renjin.ci.workflow.tools.*;
 
 import javax.inject.Inject;
@@ -27,6 +29,9 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
 
   @StepContextParameter
   private transient FlowNode flowNode;
+  
+  @StepContextParameter
+  private transient TaskListener listener;
 
   /**
    * The build number of this package version
@@ -35,9 +40,10 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
 
   @Override
   protected Boolean run() throws Exception {
-    flowNode.replaceAction(new PackageLabelAction(step.getPackageVersionId()));
+    flowNode.replaceAction(new PackageLabelAction(step.getPackageVersionId().toString()));
     flowNode.save();
-
+    
+    
     /**
      * First, get the next build sequence number of this package from renjinci.appspot.com
      * and save it with the node so that if we are restarted, we retain the same build number
@@ -47,43 +53,65 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
       flowNode.save();
     }
 
-    PackageBuildContext build = new PackageBuildContext(getContext(), step, buildNumber);
+    listener.getLogger().printf("Starting build #%d of %s...\n", 
+        buildNumber, step.getLeasedBuild().getPackageVersionId());
+
+    for (PackageNode packageNode : step.getLeasedBuild().getNode().getDependencies()) {
+      listener.getLogger().printf("Dependency: %s", packageNode.getId());
+    }
+    
+    
+
+    PackageBuildResult result;
+
+    try {
+
+      PackageBuildContext build = new PackageBuildContext(getContext(), step, buildNumber);
+
+      /**
+       * Download and unpack the original source of this package
+       */
+      GoogleCloudStorage.downloadAndUnpackSources(build);
+
+      /**
+       * Generate a POM file for this project that matches the GNU-R style layout
+       */
+      Maven.writePom(build);
+
+      /**
+       * Execute maven, building the jar file and deploying it to repo.renjin.org
+       */
+      Maven.build(build);
+
+      /**
+       * Parse the result of the build from the log files
+       */
+      result = LogFileParser.parse(build);
+
+      /**
+       * Archive the build log file permanently to Google Cloud Storage
+       */
+      GoogleCloudStorage.archiveLogFile(build);
+
+      /**
+       * Report the build result to ci.renjin.org
+       */
+      WebApp.reportBuildResult(build, result);
+      
+    } catch (Exception e) {
+      result = new PackageBuildResult(BuildOutcome.ERROR);
+    }
+
 
     /**
-     * Download and unpack the original source of this package
+     * Update the package graph
      */
-    GoogleCloudStorage.downloadAndUnpackSources(build);
-
-    /**
-     * Generate a POM file for this project that matches the GNU-R style layout
-     */
-    Maven.writePom(build);
-
-    /**
-     * Execute maven, building the jar file and deploying it to repo.renjin.org
-     */
-    Maven.build(build);
-
-    /**
-     * Parse the result of the build from the log files
-     */
-    PackageBuildResult result = LogFileParser.parse(build);
-
-    /**
-     * Archive the build log file permanently to Google Cloud Storage
-     */
-    GoogleCloudStorage.archiveLogFile(build);
-
-    /**
-     * Report the build result to ci.renjin.org
-     */
-    WebApp.reportBuildResult(build, result);
-
-
+    step.getLeasedBuild().completed(listener, buildNumber, result.getOutcome());
+    
     /**
      * Update this node's label
      */
-    flowNode.replaceAction(new PackageLabelAction(build, result));
+    flowNode.replaceAction(new PackageLabelAction(step.getPackageVersionId(), buildNumber, result));
     flowNode.save();
     
     return result.getOutcome() == BuildOutcome.SUCCESS;
@@ -103,10 +131,10 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
     }
 
 
-    public PackageLabelAction(PackageBuildContext build, PackageBuildResult result) {
+    public PackageLabelAction(PackageVersionId versionId, long buildNumber, PackageBuildResult result) {
       super(null);
-      this.packageVersionId = build.getPackageVersionId();
-      this.buildNumber = build.getBuildNumber();
+      this.packageVersionId = versionId;
+      this.buildNumber = buildNumber;
       this.buildOutcome = result.getOutcome();
       this.nativeOutcome = result.getNativeOutcome();
     }

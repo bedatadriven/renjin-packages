@@ -4,10 +4,9 @@ import freemarker.template.TemplateException;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.ResourceTest;
-import org.renjin.ci.datastore.PackageStatus;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.index.dependencies.DependencyResolver;
-import org.renjin.ci.model.*;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.tasks.Fixtures;
 
 import java.io.IOException;
@@ -24,12 +23,8 @@ public class PackageResourceTest extends AbstractDatastoreTest {
     survey.setDescription(Fixtures.getSurveyPackageDescriptionSource());
     DependencyResolver.update(survey);
 
-    PackageStatus surveyStatus = new PackageStatus(surveyId, RenjinVersionId.RELEASE);
-    surveyStatus.setBuildStatus(BuildStatus.BUILT);
-    surveyStatus.setBuildNumber(101);
 
-
-    ofy().save().entities(survey, surveyStatus).now();
+    ofy().save().entities(survey).now();
 
     PackageResource resource = new PackageResource("org.renjin.cran", "survey");
     ResourceTest.assertTemplateRenders(resource.get());

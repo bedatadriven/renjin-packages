@@ -14,12 +14,14 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.archive.AppEngineSourceArchiveProvider;
 import org.renjin.ci.archive.SourceArchiveProvider;
-import org.renjin.ci.build.PackageCheckQueue;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.index.dependencies.DependencyResolver;
-import org.renjin.ci.model.*;
-import org.renjin.ci.datastore.Package;
+import org.renjin.ci.model.DependencySet;
+import org.renjin.ci.model.InvalidPackageException;
+import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.FormParam;
@@ -176,9 +178,6 @@ public class PackageRegistrationTasks {
     packageVersion.setPublicationDate(description.getPublicationDate());
     packageVersion.setDescription(descriptionSource);
     packageVersion.setDependencies(dependencySet);
-
-    // Create a status record for the current release
-    PackageCheckQueue.createStatus(packageVersion, RenjinVersionId.RELEASE);
 
     return packageVersion;
   }

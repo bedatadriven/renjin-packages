@@ -1,4 +1,4 @@
-package org.renjin.ci.qa.stats;
+package org.renjin.ci.stats;
 
 
 import com.google.appengine.api.datastore.Entity;

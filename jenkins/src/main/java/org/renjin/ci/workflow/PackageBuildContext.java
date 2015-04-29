@@ -11,6 +11,7 @@ import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.workflow.graph.PackageNode;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -24,10 +25,11 @@ public class PackageBuildContext {
     private PackageBuild packageBuild;
     private Node node;
     private final Launcher launcher;
+    private PackageNode packageNode;
         
 
     public PackageBuildContext(StepContext context, BuildPackageStep step, long buildNumber) throws IOException, InterruptedException {
-        this.packageBuild = new PackageBuild(PackageVersionId.fromTriplet(step.getPackageVersionId()), buildNumber);
+        this.packageBuild = new PackageBuild(step.getLeasedBuild().getPackageVersionId(), buildNumber);
         this.packageBuild.setRenjinVersion(step.getRenjinVersion());
         this.run = getInstance(context, Run.class);
         this.listener = getInstance(context, TaskListener.class);
@@ -36,6 +38,7 @@ public class PackageBuildContext {
         this.launcher = getInstance(context, Launcher.class);
         this.node = getInstance(context, Node.class);
         this.flowNode = getInstance(context, FlowNode.class);
+        this.packageNode = step.getLeasedBuild().getNode();
     }
 
     private <T> T getInstance(StepContext context, Class<T> clazz) throws IOException, InterruptedException {
@@ -65,6 +68,7 @@ public class PackageBuildContext {
     public PackageBuild getPackageBuild() {
         return packageBuild;
     }
+    
 
     public PackageVersionId getPackageVersionId() {
         return packageBuild.getPackageVersionId();
@@ -84,6 +88,10 @@ public class PackageBuildContext {
 
     public Node getNode() {
         return node;
+    }
+
+    public PackageNode getPackageNode() {
+        return packageNode;
     }
 
     public Launcher.ProcStarter launch() {

@@ -20,6 +20,11 @@ public class PackageBuildResult {
     this.nativeOutcome = nativeOutcome;
   }
 
+  public PackageBuildResult(BuildOutcome outcome) {
+    this.outcome = outcome;
+    this.nativeOutcome = NativeOutcome.NA;
+  }
+
   public static PackageBuildResult timeout() {
     PackageBuildResult result = new PackageBuildResult();
     result.setOutcome(BuildOutcome.TIMEOUT);

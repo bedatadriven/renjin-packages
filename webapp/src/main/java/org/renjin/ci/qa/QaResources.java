@@ -7,8 +7,8 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.RenjinVersionStat;
 import org.renjin.ci.pipelines.Pipelines;
-import org.renjin.ci.qa.stats.ComputeBuildDeltas;
-import org.renjin.ci.qa.stats.StatPipelines;
+import org.renjin.ci.stats.ComputeBuildDeltas;
+import org.renjin.ci.stats.StatPipelines;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

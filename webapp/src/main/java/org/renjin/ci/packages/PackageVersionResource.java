@@ -1,6 +1,7 @@
 
 package org.renjin.ci.packages;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
@@ -9,16 +10,14 @@ import org.renjin.ci.build.BuildResource;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.qa.stats.ComputeBuildDeltas;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Specific version of a package
@@ -93,5 +92,10 @@ public class PackageVersionResource {
   public List<String> getVersionMetadata() {
 
     return Lists.newArrayList(packageVersion.getDependencies());
+  }
+  
+  @Path("resolveDependencies")
+  public DependencyResolution resolveDependencies() {
+    return new DependencyResolution(packageVersion);
   }
 }

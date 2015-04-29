@@ -1,5 +1,7 @@
 package org.renjin.ci.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
@@ -17,6 +19,7 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
   PackageVersionId() {
   }
 
+  @JsonCreator
   public PackageVersionId(String groupArtifactVersion) {
     String gav[] = groupArtifactVersion.split(":");
     this.groupId = gav[0];
@@ -65,6 +68,7 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     return "/package/" + getGroupId() + "/" + getPackageName() + "/" + getVersionString();
   }
   
+  @JsonValue
   @Override
   public String toString() {
     return groupId + ":" + packageName + ":" + version;

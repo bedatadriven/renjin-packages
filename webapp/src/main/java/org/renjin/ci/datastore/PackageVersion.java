@@ -1,5 +1,6 @@
 package org.renjin.ci.datastore;
 
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
@@ -12,10 +13,7 @@ import com.googlecode.objectify.condition.IfZero;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.joda.time.LocalDateTime;
-import org.renjin.ci.model.DependencySet;
-import org.renjin.ci.model.PackageDescription;
-import org.renjin.ci.model.PackageId;
-import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -161,9 +159,18 @@ public class PackageVersion implements Comparable<PackageVersion> {
       return null;
     }
   }
+
+  public PackageBuildId getLastSuccessfulBuildId() {
+    Preconditions.checkState(hasSuccessfulBuild(), "No successful builds recorded for this version");
+    return new PackageBuildId(getPackageVersionId(), lastSuccessfulBuildNumber);
+  }
   
   public void setLastSuccessfulBuildNumber(long lastSuccessfulBuildNumber) {
     this.lastSuccessfulBuildNumber = lastSuccessfulBuildNumber;
+  }
+
+  public boolean hasSuccessfulBuild() {
+    return lastSuccessfulBuildNumber > 0;
   }
 
   public LocalDateTime getPublicationDate() {
@@ -253,5 +260,10 @@ public class PackageVersion implements Comparable<PackageVersion> {
     } else {
       return false;
     }
+  }
+
+  @Override
+  public String toString() {
+    return getPackageVersionId().toString();
   }
 }

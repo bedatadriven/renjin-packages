@@ -3,6 +3,8 @@
 
 <@scaffolding>
 
+<h1>${packageName} ${version}</h1>
+
 
 <div class="row">
 
@@ -31,7 +33,6 @@
     </div>
     <div class="col-md-9">
 
-        <h1>${packageName} ${version}</h1>
 
         <h2>Build #${buildNumber}</h2>
 

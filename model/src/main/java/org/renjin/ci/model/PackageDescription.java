@@ -15,6 +15,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 
@@ -27,6 +28,7 @@ public class PackageDescription {
     private String version;
 		private String versionRange;
     private String versionSpec;
+		private boolean singleVersion;
 
 		public PackageDependency(String spec) {
 			int versionSpecStart = spec.indexOf('(');
@@ -71,6 +73,7 @@ public class PackageDescription {
     public String getVersionSpec() {
       return versionSpec;
     }
+		
 
     /**
      * @return Maven-style version range. If none was provided in the description file,

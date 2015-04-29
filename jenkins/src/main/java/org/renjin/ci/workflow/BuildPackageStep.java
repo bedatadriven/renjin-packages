@@ -6,6 +6,7 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.renjin.ci.workflow.BuildPackageExecution;
 
 /**
  * Downloads package sources from Google Cloud Storage and
@@ -34,13 +35,17 @@ public class BuildPackageStep extends AbstractStepImpl {
   public StepDescriptor getDescriptor() {
     return super.getDescriptor();
   }
+  
+  
 
   @Extension
   public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
     public DescriptorImpl() {
-      super(BuildPackageExecution.class);
+      super(BuildGraphExecution.class);
     }
+    
+    
 
     @Override
     public String getFunctionName() {

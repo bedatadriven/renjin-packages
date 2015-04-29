@@ -3,23 +3,21 @@ package org.renjin.ci.datastore;
 import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.*;
-import com.googlecode.objectify.condition.IfEmpty;
-import com.googlecode.objectify.condition.IfNotEmpty;
-import com.googlecode.objectify.condition.IfNull;
+import com.googlecode.objectify.condition.IfTrue;
 import com.googlecode.objectify.condition.IfZero;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.joda.time.LocalDateTime;
-import org.renjin.ci.model.*;
+import org.renjin.ci.model.PackageBuildId;
+import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageVersionId;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Date;
 
 @Entity
 public class PackageVersion implements Comparable<PackageVersion> {
@@ -29,11 +27,12 @@ public class PackageVersion implements Comparable<PackageVersion> {
   
   @Id
   private String version;
-
-  private String description;
-
-  private LocalDateTime publicationDate;
-
+  
+  private String title;
+  
+  @Index
+  private Date publicationDate;
+  
   @Unindex
   private int compatibilityFlags;
   
@@ -43,28 +42,16 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @Unindex
   @IgnoreSave(IfZero.class)
   private long lastSuccessfulBuildNumber;
+
+  /**
+   * True if there is a build of this PackageVersion available. (Used for searching
+   * for PackageVersions without a build)
+   */
+  @Index
+  @IgnoreSave(IfTrue.class)
+  private boolean built;
   
 
-  /**
-   * List of PackageVersion ids on which this package depends.
-   */
-  @Index(IfNotEmpty.class)
-  @IgnoreSave(IfEmpty.class)
-  private Set<String> dependencies = Sets.newHashSet();
-
-  /**
-   * True if we have the source of all of this packages'
-   * compile time dependencies
-   */
-  private boolean compileDependenciesResolved;
-
-
-  /**
-   * The bioConductor release of which this package version is a release.
-   */
-  @IgnoreSave(IfNull.class)
-  private String bioConductorRelease;
-  
   public PackageVersion() {
   }
 
@@ -107,20 +94,20 @@ public class PackageVersion implements Comparable<PackageVersion> {
     return getPackageVersionId().getGroupId();
   }
 
-  public String getDescription() {
-    return description;
+  public String getTitle() {
+    return title;
   }
 
-  public void setDescription(String description) {
-    this.description = description;
+  public void setTitle(String title) {
+    this.title = title;
   }
 
-  public PackageDescription parseDescription() {
-    try {
-      return PackageDescription.fromString(description);
-    } catch (Exception e) {
-      throw new IllegalStateException("Could not parse DESCRIPTION for package version " + getPackageVersionId(), e);
-    }
+  public PackageDescription loadDescription() {
+    return ObjectifyService.ofy()
+        .load()
+        .key(Key.create(packageKey, PackageVersionDescription.class, version))
+        .safe()
+        .parse();
   }
 
   public long getLastBuildNumber() {
@@ -129,22 +116,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   public void setLastBuildNumber(long lastBuildNumber) {
     this.lastBuildNumber = lastBuildNumber;
-  }
-
-  public Set<String> getDependencies() {
-    return dependencies;
-  }
-
-  public void setDependencies(Set<String> dependencies) {
-    this.dependencies = dependencies;
-  }
-
-  public void setDependencies(DependencySet dependencySet) {
-    this.dependencies = new HashSet<>();
-    this.compileDependenciesResolved = dependencySet.isCompileDependenciesResolved();
-    for(PackageVersionId id : dependencySet.getDependencies()) {
-      this.dependencies.add(id.toString());
-    }
   }
 
   public long getLastSuccessfulBuildNumber() {
@@ -167,33 +138,32 @@ public class PackageVersion implements Comparable<PackageVersion> {
   
   public void setLastSuccessfulBuildNumber(long lastSuccessfulBuildNumber) {
     this.lastSuccessfulBuildNumber = lastSuccessfulBuildNumber;
+    this.built = (lastSuccessfulBuildNumber > 0);
   }
 
   public boolean hasSuccessfulBuild() {
     return lastSuccessfulBuildNumber > 0;
   }
 
-  public LocalDateTime getPublicationDate() {
+  public Date getPublicationDate() {
     return publicationDate;
   }
 
-  public void setPublicationDate(LocalDateTime publicationDate) {
+  public void setPublicationDate(Date publicationDate) {
     this.publicationDate = publicationDate;
   }
 
-  public boolean isCompileDependenciesResolved() {
-    return compileDependenciesResolved;
+  public boolean isBuilt() {
+    return built;
   }
 
-  public void setCompileDependenciesResolved(boolean compileDependenciesResolved) {
-    this.compileDependenciesResolved = compileDependenciesResolved;
+  public void setBuilt(boolean built) {
+    this.built = built;
   }
 
   @OnLoad
   public void onLoad() {
-    if(dependencies == null) {
-      dependencies = Sets.newHashSet();
-    }
+    this.built = (lastSuccessfulBuildNumber > 0);
   }
 
   @Override
@@ -215,13 +185,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
     return thisVersion.compareTo(thatVersion);
   }
 
-  public Set<PackageVersionId> getDependencyIdSet() {
-    Set<PackageVersionId> set = Sets.newHashSet();
-    for(String id : dependencies) {
-      set.add(new PackageVersionId(id));
-    }
-    return set;
-  }
   
   public static Ordering<PackageVersion> orderByVersion() {
     return Ordering.natural().onResultOf(new Function<PackageVersion, Comparable>() {
@@ -233,13 +196,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
     });
   }
 
-  public String getBioConductorRelease() {
-    return bioConductorRelease;
-  }
-
-  public void setBioConductorRelease(String bioConductorRelease) {
-    this.bioConductorRelease = bioConductorRelease;
-  }
 
   public String getPackageName() {
     return getPackageVersionId().getPackageName();
@@ -265,5 +221,12 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @Override
   public String toString() {
     return getPackageVersionId().toString();
+  }
+
+  public static PackageVersionId idOf(Key<PackageVersion> packageVersionKey) {
+    PackageId packageId = PackageId.valueOf(packageVersionKey.getParent().getName());
+    String version = packageVersionKey.getName();
+    
+    return new PackageVersionId(packageId, version);
   }
 }

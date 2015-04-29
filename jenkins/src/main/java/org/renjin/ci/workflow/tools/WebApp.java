@@ -14,8 +14,10 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,13 +67,17 @@ public class WebApp {
   }
 
   private static WebTarget packageVersion(PackageVersionId packageVersionId) {
-    Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-
-    return client.target(ROOT_URL)
+    return rootTarget()
         .path("package")
         .path(packageVersionId.getGroupId())
         .path(packageVersionId.getPackageName())
         .path(packageVersionId.getVersionString());
+  }
+
+  private static WebTarget rootTarget() {
+    Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
+
+    return client.target(ROOT_URL);
   }
 
   private static void postResult(PackageBuildContext build, PackageBuildResult result) {
@@ -89,5 +95,14 @@ public class WebApp {
         .path(Long.toString(build.getBuildNumber()));
 
     buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
+  }
+
+  public static List<PackageVersionId> queryPackageList(String filter) {
+    String[] ids = rootTarget().path("packages").path(filter).request().get(String[].class);
+    List<PackageVersionId> packageVersionIds = new ArrayList<PackageVersionId>();
+    for (String id : ids) {
+      packageVersionIds.add(PackageVersionId.fromTriplet(id));
+    }
+    return packageVersionIds;
   }
 }

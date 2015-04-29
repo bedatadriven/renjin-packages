@@ -5,6 +5,7 @@ import com.google.appengine.tools.development.testing.LocalServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import org.junit.After;
 import org.junit.Before;
+import org.renjin.ci.datastore.PackageDatabase;
 
 public class AbstractDatastoreTest {
 
@@ -18,6 +19,8 @@ public class AbstractDatastoreTest {
         .setApplyAllHighRepJobPolicy();
     helper = new LocalServiceTestHelper(datastoreConfig);
     helper.setUp();
+
+    PackageDatabase.init();
   }
 
   @After

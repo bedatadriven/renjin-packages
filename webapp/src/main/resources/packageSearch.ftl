@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="queryString" type="java.lang.String" -->
-<#-- @ftlvariable name="results" type="java.util.List<org.renjin.ci.packages.PackageSearch.SearchResult>" -->
+<#-- @ftlvariable name="results" type="java.util.List<org.renjin.ci.packages.PackageListResource.SearchResult>" -->
 <#-- @ftlvariable name="resultCount" type="long" -->
 
 <#include "base.ftl">

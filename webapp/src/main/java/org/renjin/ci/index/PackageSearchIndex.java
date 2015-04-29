@@ -25,7 +25,7 @@ public class PackageSearchIndex {
 
     public static void updateIndex(PackageVersion packageVersion) {
 
-        PackageDescription description = packageVersion.parseDescription();
+        PackageDescription description = packageVersion.loadDescription();
         
         Document.Builder document = Document.newBuilder();
         document.setId(packageVersion.getPackageId().toString());
@@ -57,7 +57,7 @@ public class PackageSearchIndex {
             final List<PackageVersion> packageVersions = PackageDatabase.queryPackageVersions(entity);
             
             final PackageVersion latestVersion = Collections.max(packageVersions, PackageVersion.orderByVersion());
-            final PackageDescription description = latestVersion.parseDescription();
+            final PackageDescription description = latestVersion.loadDescription();
 
             if(!latestVersion.getPackageVersionId().equals(entity.getLatestVersionId())) {
                 

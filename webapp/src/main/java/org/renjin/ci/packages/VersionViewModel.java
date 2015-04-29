@@ -20,14 +20,7 @@ public class VersionViewModel {
   
   public VersionViewModel(PackageVersion packageVersion) {
     this.packageVersion = packageVersion;
-    this.description = packageVersion.parseDescription();
-
-
-    for (String pvid : packageVersion.getDependencies()) {
-      PackageVersionId packageVersionId = PackageVersionId.fromTriplet(pvid);
-      dependencyMap.put(packageVersionId.getPackageName(), packageVersionId);
-    }
-    
+    this.description = packageVersion.loadDescription();
     this.compatibilityAlert = new CompatibilityAlert(packageVersion);
   }
   

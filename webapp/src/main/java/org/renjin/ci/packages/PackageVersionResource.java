@@ -64,7 +64,6 @@ public class PackageVersionResource {
         PackageBuild packageBuild = new PackageBuild(packageVersionId, nextBuild);
         packageBuild.setRenjinVersion(renjinVersion);
         packageBuild.setStartTime(new Date().getTime());
-        packageBuild.setDependencies(packageVersion.getDependencies());
 
         ObjectifyService.ofy().save().entities(packageBuild, packageVersion);
 
@@ -81,14 +80,6 @@ public class PackageVersionResource {
     markBuildDeltas.map(PackageVersion.key(packageVersionId).getRaw());
 
     return Response.ok("Done").build();
-  }
-
-  @GET
-  @Path("dependencies")
-  @Produces(MediaType.APPLICATION_JSON)
-  public List<String> getVersionMetadata() {
-
-    return Lists.newArrayList(packageVersion.getDependencies());
   }
   
   @Path("resolveDependencies")

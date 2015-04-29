@@ -57,7 +57,10 @@ public class DependencyResolution {
     // Now find candidates that meet both declared criteria and availability of builds
     Map<String, ResolvedDependency> resolved = new HashMap<>();
     for (String packageName : declared.keySet()) {
-      resolved.put(packageName, select(declared.get(packageName), candidates.get(packageName)));
+      ResolvedDependency selected = select(declared.get(packageName), candidates.get(packageName));
+      if(selected != null) {
+        resolved.put(packageName, selected);
+      }
     }
     
     LOGGER.info("Resolution: " + resolved);
@@ -72,7 +75,7 @@ public class DependencyResolution {
 
     Map<String, PackageDependency> map = new HashMap<>();
 
-    PackageDescription description = packageVersion.parseDescription();
+    PackageDescription description = packageVersion.loadDescription();
     Iterable<PackageDependency> declared = concat(
         description.getImports(),
         description.getDepends());

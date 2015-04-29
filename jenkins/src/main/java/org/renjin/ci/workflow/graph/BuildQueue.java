@@ -25,7 +25,7 @@ public class BuildQueue implements Serializable {
     for (PackageNode packageNode : graph.getNodes()) {
       if(packageNode.getState() == NodeState.READY) {
         ready.add(packageNode);
-      } else {
+      } else if(packageNode.getState() == NodeState.BLOCKED) {
         blockedPackages ++;
       }
     }
@@ -61,7 +61,7 @@ public class BuildQueue implements Serializable {
     public Lease(PackageNode node) {
       this.node = node;
     }
-    
+
     public PackageNode getNode() {
       return node;
     }
@@ -72,30 +72,26 @@ public class BuildQueue implements Serializable {
     }
 
     public void completed(TaskListener listener, long buildNumber, BuildOutcome outcome) {
-    
+
       synchronized (graph) {
 
         listener.getLogger().println("Marking " + node.getId() + " as " + outcome);
 
         node.buildCompleted(buildNumber, outcome);
-        
+
         for (PackageNode dependant : node.getDependants()) {
-          if(dependant.getState() == NodeState.BLOCKED &&
+          if (dependant.getState() == NodeState.BLOCKED &&
               dependant.transitionToReady()) {
 
             listener.getLogger().println(dependant.getId() + " transitioned to READY");
 
             ready.add(dependant);
-            blockedPackages --;
+            blockedPackages--;
           } else {
             listener.getLogger().println(dependant.getId() + " still " + dependant.getState());
           }
         }
       }
     }
-
-   
   }
-  
-  
 }

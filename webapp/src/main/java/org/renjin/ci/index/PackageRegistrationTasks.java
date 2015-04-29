@@ -17,8 +17,7 @@ import org.renjin.ci.archive.SourceArchiveProvider;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
-import org.renjin.ci.index.dependencies.DependencyResolver;
-import org.renjin.ci.model.DependencySet;
+import org.renjin.ci.datastore.PackageVersionDescription;
 import org.renjin.ci.model.InvalidPackageException;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
@@ -118,11 +117,15 @@ public class PackageRegistrationTasks {
 
       // create the new entity for this packageVersion
       PackageVersion packageVersion = register(pvid, descriptionSource);
-
-      ObjectifyService.ofy().save().entity(packageVersion);
+      
+      // save the description in a seperate entity
+      PackageVersionDescription description =
+          new PackageVersionDescription(packageVersion.getPackageVersionId(), descriptionSource);
+      
+      ObjectifyService.ofy().save().entities(packageVersion, description);
       
       // Update the package entity if this is the latest version
-      maybeUpdatePackage(packageVersion);
+      maybeUpdatePackage(packageVersion, description.parse());
 
     } catch(InvalidPackageException e) {
       LOGGER.log(Level.SEVERE, "Could not accept package " + pvid, e);
@@ -131,7 +134,7 @@ public class PackageRegistrationTasks {
     return Response.ok().build();
   }
 
-  private void maybeUpdatePackage(final PackageVersion packageVersion) {
+  private void maybeUpdatePackage(final PackageVersion packageVersion, final PackageDescription description) {
     ObjectifyService.ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
@@ -146,7 +149,6 @@ public class PackageRegistrationTasks {
           
           LOGGER.info("Updating package entry with new latest version...");
           
-          PackageDescription description = packageVersion.parseDescription();
           packageEntity.setTitle(description.getTitle());
           packageEntity.setLatestVersion(newPvid.getVersionString());
           
@@ -168,16 +170,15 @@ public class PackageRegistrationTasks {
 
     PackageDescription description = PackageDescription.fromString(descriptionSource);
 
-    // Resolve (versioned) dependencies
-    DependencySet dependencySet = new DependencyResolver()
-        .basedOnPublicationDateFrom(description)
-        .resolveAll(description);
-
     // Create a new PackageVersion entity
     PackageVersion packageVersion = new PackageVersion(packageVersionId);
-    packageVersion.setPublicationDate(description.getPublicationDate());
-    packageVersion.setDescription(descriptionSource);
-    packageVersion.setDependencies(dependencySet);
+    packageVersion.setTitle(description.getTitle());
+
+    try {
+      packageVersion.setPublicationDate(description.getPublicationDate().toDate());
+
+    } catch (Exception ignored) {
+    }
 
     return packageVersion;
   }

@@ -29,20 +29,32 @@ public class PackageNode implements Serializable {
   private Set<PackageNode> dependencies = Sets.newHashSet();
   
   private Set<PackageNode> dependants = Sets.newHashSet();
-  
 
+  /**
+   * True if we have begun resolving dependencies for this 
+   * node. Resolution may still not be complete.
+   */
+  private boolean dependenciesResolved;
+  
   public PackageNode(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
   }
 
-  public long getBuildNumber() {
-    return buildNumber;
+
+  public void resolveAsBuild(long buildNumber) {
+    this.buildNumber = buildNumber;
+    this.buildOutcome = BuildOutcome.SUCCESS;
+    this.state = NodeState.BUILT;
   }
 
-  public void setBuildNumber(long buildNumber) {
-    this.buildNumber = buildNumber;
+  public boolean isDependenciesResolved() {
+    return dependenciesResolved;
   }
-  
+
+  public void setDependenciesResolved(boolean dependenciesResolved) {
+    this.dependenciesResolved = dependenciesResolved;
+  }
+
   public boolean isBuilt() {
     return buildNumber != 0;
   }
@@ -69,6 +81,8 @@ public class PackageNode implements Serializable {
   }
   
   boolean transitionToReady() {
+    assertState(NodeState.BLOCKED);
+    
     for (PackageNode dependency : dependencies) {
       if(dependency.state != NodeState.BUILT) {
         return false;
@@ -133,4 +147,5 @@ public class PackageNode implements Serializable {
   public Set<PackageNode> getDependencies() {
     return ImmutableSet.copyOf(dependencies);
   }
+
 }

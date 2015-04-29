@@ -1,4 +1,4 @@
-package org.renjin.ci.qa;
+package org.renjin.ci.stats;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.common.base.Optional;

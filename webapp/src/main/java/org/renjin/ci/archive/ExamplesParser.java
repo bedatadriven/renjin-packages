@@ -1,4 +1,4 @@
-package org.renjin.ci.index.dependencies;
+package org.renjin.ci.archive;
 
 import org.renjin.sexp.*;
 

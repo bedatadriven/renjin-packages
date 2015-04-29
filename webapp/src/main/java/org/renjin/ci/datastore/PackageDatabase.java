@@ -1,11 +1,13 @@
 package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.appengine.tools.mapreduce.impl.shardedjob.IncrementalTaskState;
 import com.google.common.base.Optional;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Result;
 import com.googlecode.objectify.Work;
+import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
@@ -33,6 +35,7 @@ public class PackageDatabase {
     register(PackageBuild.class);
     register(Package.class);
     register(PackageVersion.class);
+    register(PackageVersionDescription.class);
     register(PackageTestResult.class);
     register(PackageTestRun.class);
     register(RenjinVersionStat.class);
@@ -163,6 +166,11 @@ public class PackageDatabase {
 
   public static List<PackageVersion> getPackageVersions(String groupId, String name) {
     return getPackageVersions(new PackageId(groupId, name));
+  }
+
+
+  public static Loader load() {
+    return ObjectifyService.ofy().load();
   }
   
   

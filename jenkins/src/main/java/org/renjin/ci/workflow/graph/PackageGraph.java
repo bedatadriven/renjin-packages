@@ -17,12 +17,12 @@ import java.util.Map;
  */
 public class PackageGraph implements Serializable {
 
-  
-  /**
-   * Set of PackageNodes that are to be built during this run. 
-   */
-  private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
 
+  private final Map<PackageVersionId, PackageNode> nodes;
+
+  public PackageGraph(Map<PackageVersionId, PackageNode> nodes) {
+    this.nodes = nodes;
+  }
 
   public Collection<PackageNode> getNodes() {
     return nodes.values();
@@ -33,32 +33,7 @@ public class PackageGraph implements Serializable {
     return nodes.size();
   }
 
-  public void add(TaskListener listener, PackageVersionId packageVersionId) {
-    getOrAddNode(listener, packageVersionId);
-  }
 
-
-  private PackageNode getOrAddNode(TaskListener taskListener, PackageVersionId packageVersionId) {
-    PackageNode node = nodes.get(packageVersionId);
-    if(node == null) {
-      taskListener.getLogger().println("Adding package node " + packageVersionId);
-
-      node = new PackageNode(packageVersionId);
-      nodes.put(node.getId(), node);
-
-      // Add dependencies 
-      for (ResolvedDependency resolvedDependency : WebApp.resolveDependencies(packageVersionId)) {
-        taskListener.getLogger().println(packageVersionId + " depends on " + resolvedDependency.getPackageVersionId());
-        PackageNode adjacent = getOrAddNode(taskListener, resolvedDependency.getPackageVersionId());
-        if(resolvedDependency.hasBuild()) {
-          node.setBuildNumber(resolvedDependency.getBuildNumber());
-        }
-        node.dependsOn( adjacent);
-      }
-    }
-    return node;
-  }
-  
   @Whitelisted
   public BuildQueue newBuildQueue() {
     return new BuildQueue(this);

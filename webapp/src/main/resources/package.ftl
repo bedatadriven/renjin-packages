@@ -13,7 +13,7 @@
 <p>${version.descriptionText}</p>
 
 <h2>Versions</h2>
-<table>
+<table class="table table-striped">
     <thead>
     <tr>
         <th>Version</th>
@@ -25,7 +25,7 @@
         <tr>
             <td>${v.version}</td>
             <td><#if v.publicationDate?? >
-                ${v.publicationDate}
+                ${v.publicationDate?date}
             </#if></td>
         </tr>
         </#list>

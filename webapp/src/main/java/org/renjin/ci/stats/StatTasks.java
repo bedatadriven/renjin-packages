@@ -11,6 +11,7 @@ import com.google.appengine.tools.pipeline.PipelineServiceFactory;
 import org.renjin.ci.datastore.LastEventTime;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -61,7 +62,6 @@ public class StatTasks {
     
     LOGGER.info("Scheduled deferred task " + taskHandle);
   }
-
 
   private static MapReduceJob<Entity, String, Integer, Entity, Void> countBuildDeltas() {
     DatastoreInput input = new DatastoreInput("PackageBuild", 10);

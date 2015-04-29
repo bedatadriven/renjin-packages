@@ -5,7 +5,9 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.mapreduce.Mapper;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -14,7 +16,8 @@ import java.util.logging.Logger;
 public class BuildDeltaMapper extends Mapper<Entity, String, Integer> {
   
   private static final Logger LOGGER = Logger.getLogger(BuildDeltaMapper.class.getName());
-  
+
+
   @Override
   public void map(Entity entity) {
     if(entity.getParent() == null) {
@@ -22,7 +25,8 @@ public class BuildDeltaMapper extends Mapper<Entity, String, Integer> {
       return;
     }
 
-    PackageBuild build = ObjectifyService.ofy().load().fromEntity(entity);
+    PackageBuild build = PackageDatabase.load().fromEntity(entity);
+    
     if(build.getRenjinVersion() == null) {
       LOGGER.severe("PackageBuild " + entity.getKey() + " is missing RenjinVersion");
       return;

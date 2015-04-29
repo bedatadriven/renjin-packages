@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.ResourceTest;
 import org.renjin.ci.datastore.PackageVersion;
-import org.renjin.ci.index.dependencies.DependencyResolver;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.tasks.Fixtures;
 
@@ -20,9 +19,6 @@ public class PackageResourceTest extends AbstractDatastoreTest {
 
     PackageVersionId surveyId = new PackageVersionId("org.renjin.cran", "survey", "3.29-5");
     PackageVersion survey = new PackageVersion(surveyId);
-    survey.setDescription(Fixtures.getSurveyPackageDescriptionSource());
-    DependencyResolver.update(survey);
-
 
     ofy().save().entities(survey).now();
 

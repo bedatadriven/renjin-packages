@@ -1,4 +1,4 @@
-package org.renjin.ci.index;
+package org.renjin.ci.archive;
 
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;

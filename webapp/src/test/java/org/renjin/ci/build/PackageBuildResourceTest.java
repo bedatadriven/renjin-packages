@@ -1,13 +1,14 @@
 package org.renjin.ci.build;
 
+import com.googlecode.objectify.ObjectifyService;
 import freemarker.template.TemplateException;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.ResourceTest;
-import org.renjin.ci.index.dependencies.DependencyResolver;
-import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.datastore.PackageVersionDescription;
+import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.packages.PackageBuildResource;
 import org.renjin.ci.tasks.Fixtures;
@@ -25,10 +26,10 @@ public class PackageBuildResourceTest extends AbstractDatastoreTest {
 
     PackageVersionId surveyId = new PackageVersionId("org.renjin.cran", "survey", "3.29-5");
     PackageVersion survey = new PackageVersion(surveyId);
-    survey.setDescription(Fixtures.getSurveyPackageDescriptionSource());
 
-    DependencyResolver.update(survey);
-
+    ObjectifyService.ofy().save().entity(
+        new PackageVersionDescription(surveyId, Fixtures.getSurveyPackageDescriptionSource())).now();
+    
     PackageBuild build15 = new PackageBuild(surveyId, 15);
     build15.setOutcome(BuildOutcome.TIMEOUT);
     build15.setRenjinVersion("0.7.0-RC7");

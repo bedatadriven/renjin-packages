@@ -24,10 +24,14 @@ public class QaResources {
   @GET
   @Path("updateBuildDeltas")
   public Response updateBuildDeltas() {
-    
-    
-    
     return Pipelines.redirectToStatus(Pipelines.forEach(new ReComputeBuildDeltas()));  
+  }
+
+
+  @GET
+  @Path("updateLast")
+  public Response updateLast() {
+    return Pipelines.redirectToStatus(Pipelines.forEach(new UpdateLastSuccessful()));
   }
 
   @GET

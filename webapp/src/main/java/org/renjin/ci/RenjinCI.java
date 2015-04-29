@@ -12,7 +12,7 @@ import org.renjin.ci.index.PackageRegistrationTasks;
 import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.packages.PackageResource;
-import org.renjin.ci.packages.PackageSearch;
+import org.renjin.ci.packages.PackageListResource;
 import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
 
@@ -39,7 +39,7 @@ public class RenjinCI extends Application {
 
     classes.add(IndexTasks.class);
     classes.add(PackageRegistrationTasks.class);
-    classes.add(PackageSearch.class);
+    classes.add(PackageListResource.class);
     classes.add(WebHooks.class);
     classes.add(QaResources.class);
     classes.add(BenchmarksResource.class);

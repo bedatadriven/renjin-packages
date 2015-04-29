@@ -57,8 +57,9 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
         buildNumber, step.getLeasedBuild().getPackageVersionId());
 
     for (PackageNode packageNode : step.getLeasedBuild().getNode().getDependencies()) {
-      listener.getLogger().printf("Dependency: %s", packageNode.getId());
+      listener.getLogger().printf("Dependency: %s\n", packageNode.getId());
     }
+    listener.getLogger().flush();
     
     
 

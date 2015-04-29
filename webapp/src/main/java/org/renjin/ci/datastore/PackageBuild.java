@@ -45,9 +45,6 @@ public class PackageBuild {
   @JsonProperty
   private String renjinVersion;
 
-  @Unindex
-  @JsonProperty
-  private Set<String> dependencies;
 
   @IgnoreSave(IfNull.class)
   private String pom;
@@ -158,16 +155,6 @@ public class PackageBuild {
 
   public void setRenjinVersion(RenjinVersionId release) {
     this.renjinVersion = release.toString();
-  }
-
-  @JsonProperty
-  public Set<String> getDependencies() {
-    return dependencies;
-  }
-
-  @JsonSetter
-  public void setDependencies(Set<String> dependencies) {
-    this.dependencies = dependencies;
   }
 
   public String getPom() {

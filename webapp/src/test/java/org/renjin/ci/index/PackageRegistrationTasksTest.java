@@ -25,7 +25,7 @@ public class PackageRegistrationTasksTest extends AbstractDatastoreTest {
 
     assertThat(survey.getId(), equalTo("org.renjin.cran:survey:3.29-5"));
     assertThat(survey.getGroupId(), equalTo("org.renjin.cran"));
-    assertThat(survey.getPublicationDate(), equalTo(new LocalDateTime(2013,6,12, 17,40,8)));
+    assertThat(survey.getPublicationDate(), equalTo(new LocalDateTime(2013,6,12, 17,40,8).toDate()));
 
   }
 
@@ -41,7 +41,7 @@ public class PackageRegistrationTasksTest extends AbstractDatastoreTest {
 
     assertThat(survey.getId(), equalTo("org.renjin.cran:survey:3.29-5"));
     assertThat(survey.getGroupId(), equalTo("org.renjin.cran"));
-    assertThat(survey.getPublicationDate(), equalTo(new LocalDateTime(2013,6,12, 17,40,8)));
+    assertThat(survey.getPublicationDate(), equalTo(new LocalDateTime(2013,6,12, 17,40,8).toDate()));
 
   }
 }

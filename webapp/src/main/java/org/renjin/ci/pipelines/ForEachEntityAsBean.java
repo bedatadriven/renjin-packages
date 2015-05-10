@@ -1,15 +1,10 @@
 package org.renjin.ci.pipelines;
 
 import com.google.appengine.api.datastore.Entity;
-import org.renjin.ci.datastore.PackageDatabase;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 public abstract class ForEachEntityAsBean<T> extends ForEachEntity {
-
-  static {
-    PackageDatabase.init();
-  }
 
   private final Class<T> clazz;
 

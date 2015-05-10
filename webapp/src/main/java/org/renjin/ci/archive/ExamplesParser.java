@@ -1,5 +1,6 @@
 package org.renjin.ci.archive;
 
+import org.renjin.ci.datastore.PackageExampleSource;
 import org.renjin.sexp.*;
 
 public class ExamplesParser extends SexpVisitor<String> {
@@ -39,5 +40,10 @@ public class ExamplesParser extends SexpVisitor<String> {
   @Override
   public String getResult() {
     return code.toString();
+  }
+
+  
+  public PackageExampleSource getSource() {
+    return new PackageExampleSource(code.toString());
   }
 }

@@ -1,14 +1,10 @@
 package org.renjin.ci.workflow.graph;
 
-import hudson.model.TaskListener;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.ResolvedDependency;
-import org.renjin.ci.workflow.tools.WebApp;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

@@ -1,23 +1,18 @@
 package org.renjin.ci.model;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
-import org.apache.maven.artifact.versioning.VersionRange;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
+
+import java.io.*;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class PackageDescription {
 
@@ -82,7 +77,7 @@ public class PackageDescription {
     public String getVersionRange() {
 			return versionRange;
 		}
-
+		
     /**
      *
      * @return the precise version specified in the description file, or null if no single
@@ -96,8 +91,8 @@ public class PackageDescription {
 		public String toString() {
 			return (name + "  " + versionRange).trim();
 		}
-
-
+		
+		
 	}
 
 	private static class PackageDependencyParser implements Function<String, PackageDependency> {
@@ -234,6 +229,10 @@ public class PackageDescription {
 
 	public String getVersion() {
 		return getFirstProperty("Version");
+	}
+	
+	public boolean isNeedsCompilation() {
+		return "yes".equals(getFirstProperty("NeedsCompilation"));
 	}
 
 	public Iterable<Person> getAuthors() {

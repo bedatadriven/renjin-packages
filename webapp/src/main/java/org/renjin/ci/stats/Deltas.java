@@ -6,7 +6,7 @@ package org.renjin.ci.stats;
 public class Deltas {
   
   
-  public static final int BUILD_REGRESSION = -1;
-  public static final int BUILD_PROGRESSION = +1;
+  public static final int REGRESSION = -1;
+  public static final int PROGRESSION = +1;
 
 }

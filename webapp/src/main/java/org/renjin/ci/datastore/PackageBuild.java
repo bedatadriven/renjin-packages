@@ -11,7 +11,6 @@ import org.renjin.ci.model.*;
 
 import javax.annotation.Nullable;
 import java.util.Date;
-import java.util.Set;
 
 /**
  * Records metadata about an individual package
@@ -25,6 +24,8 @@ import java.util.Set;
     isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PackageBuild {
+  
+  
 
   @Parent
   private Key<PackageVersion> versionKey;
@@ -43,12 +44,9 @@ public class PackageBuild {
    * package was built
    */
   @JsonProperty
+  @Index(IfNonZeroDelta.class)
   private String renjinVersion;
-
-
-  @IgnoreSave(IfNull.class)
-  private String pom;
-
+  
   @Index
   @IgnoreSave(IfNull.class)
   private Long startTime;
@@ -64,8 +62,12 @@ public class PackageBuild {
   @Index
   @IgnoreSave(IfZero.class)
   private byte buildDelta;
-  
-  
+
+  @Index
+  @IgnoreSave(IfZero.class)
+  private byte compilationDelta;
+
+
   public PackageBuild() {
   }
 
@@ -155,14 +157,6 @@ public class PackageBuild {
 
   public void setRenjinVersion(RenjinVersionId release) {
     this.renjinVersion = release.toString();
-  }
-
-  public String getPom() {
-    return pom;
-  }
-
-  public void setPom(String pom) {
-    this.pom = pom;
   }
 
   /**
@@ -284,5 +278,13 @@ public class PackageBuild {
       default:
         return false;
     }
+  }
+
+  public void setCompilationDelta(byte compilationDelta) {
+    this.compilationDelta = compilationDelta;
+  }
+
+  public byte getCompilationDelta() {
+    return compilationDelta;
   }
 }

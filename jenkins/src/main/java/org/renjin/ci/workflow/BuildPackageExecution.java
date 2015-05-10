@@ -1,5 +1,6 @@
 package org.renjin.ci.workflow;
 
+import hudson.AbortException;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.cps.persistence.PersistIn;
@@ -9,10 +10,13 @@ import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
-import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.PackageBuildResult;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.workflow.graph.PackageNode;
-import org.renjin.ci.workflow.tools.*;
+import org.renjin.ci.workflow.tools.GoogleCloudStorage;
+import org.renjin.ci.workflow.tools.LogFileParser;
+import org.renjin.ci.workflow.tools.Maven;
+import org.renjin.ci.workflow.tools.WebApp;
 
 import javax.inject.Inject;
 
@@ -44,14 +48,7 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
     flowNode.save();
     
     
-    /**
-     * First, get the next build sequence number of this package from renjinci.appspot.com
-     * and save it with the node so that if we are restarted, we retain the same build number
-     */
-    if(buildNumber == null) {
-      buildNumber = WebApp.startBuild(step);
-      flowNode.save();
-    }
+
 
     listener.getLogger().printf("Starting build #%d of %s...\n",
         buildNumber, step.getLeasedBuild().getPackageVersionId());
@@ -60,12 +57,24 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
       listener.getLogger().printf("Dependency: %s\n", packageNode.getId());
     }
     listener.getLogger().flush();
-    
+
+
+
+
+    /**
+     * Get the next build sequence number of this package from renjinci.appspot.com
+     * and save it with the node so that if we are restarted, we retain the same build number
+     */
+    if(buildNumber == null) {
+      buildNumber = WebApp.startBuild(step);
+      flowNode.save();
+    }
     
 
     PackageBuildResult result;
 
     try {
+
 
       PackageBuildContext build = new PackageBuildContext(getContext(), step, buildNumber);
 
@@ -98,8 +107,14 @@ public final class BuildPackageExecution extends AbstractSynchronousStepExecutio
        * Report the build result to ci.renjin.org
        */
       WebApp.reportBuildResult(build, result);
+
+    } catch (ConfigException e) {
+      // In the event of a configuration problem, rethrow and stop the whole build
+      listener.fatalError(e.getMessage());
+      throw new AbortException(e.getMessage());
       
     } catch (Exception e) {
+      listener.getLogger().println("ERROR: " + e.getMessage());
       result = new PackageBuildResult(BuildOutcome.ERROR);
     }
 

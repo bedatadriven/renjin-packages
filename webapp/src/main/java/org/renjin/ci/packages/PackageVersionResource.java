@@ -1,20 +1,21 @@
 
 package org.renjin.ci.packages;
 
-import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.stats.ReComputeBuildDeltas;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Specific version of a package

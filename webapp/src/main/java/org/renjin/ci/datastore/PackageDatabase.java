@@ -1,7 +1,6 @@
 package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
-import com.google.appengine.tools.mapreduce.impl.shardedjob.IncrementalTaskState;
 import com.google.common.base.Optional;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
@@ -38,6 +37,8 @@ public class PackageDatabase {
     register(PackageVersionDescription.class);
     register(PackageTestResult.class);
     register(PackageTestRun.class);
+    register(PackageExample.class);
+    register(PackageExampleSource.class);
     register(RenjinVersionStat.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);

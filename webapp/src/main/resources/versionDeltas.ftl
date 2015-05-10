@@ -25,6 +25,8 @@
             <td>
                 <#if b.buildDelta == -1><a href="${b.resultURL}" class="label label-danger">Build broken</a></#if>
                 <#if b.buildDelta == +1><a href="${b.resultURL}" class="label label-success">Build fixed</a></#if>
+                <#if b.compilationDelta == -1><a href="${b.resultURL}" class="label label-danger">Compilation broken</a></#if>
+                <#if b.compilationDelta == +1><a href="${b.resultURL}" class="label label-success">Compilation fixed</a></#if>
             </td>
         </tr>
         </#list>

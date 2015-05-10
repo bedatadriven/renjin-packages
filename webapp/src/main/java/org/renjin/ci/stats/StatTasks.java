@@ -1,17 +1,12 @@
 package org.renjin.ci.stats;
 
-import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.taskqueue.*;
-import com.google.appengine.tools.mapreduce.*;
-import com.google.appengine.tools.mapreduce.inputs.DatastoreInput;
-import com.google.appengine.tools.mapreduce.outputs.DatastoreOutput;
 import com.google.appengine.tools.pipeline.Job;
 import com.google.appengine.tools.pipeline.PipelineService;
 import com.google.appengine.tools.pipeline.PipelineServiceFactory;
 import org.renjin.ci.datastore.LastEventTime;
 
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -24,12 +19,12 @@ public class StatTasks {
 
   /**
    * Schedules a map-reduce job to update the package build deltas counts, with a quiet period 
-   * of {@link org.renjin.ci.stats.StatTasks#DEBOUNCE_PERIOD_MINUTES} minutes.
+   * of {@link org.renjin.ci.stats.StatTasks#QUIET_PERIOD_MILLIS} milliseconds.
    *
    * <p>If another update is scheduled before 
    */
   public static void scheduleBuildDeltaCountUpdate() {
-    triggerUpdate("buildDeltas", countBuildDeltas());
+    triggerUpdate("buildDeltas", StatPipelines.updateBuildStats());
   }
 
   private static void triggerUpdate(final String taskName, final Job<?> job) {
@@ -63,28 +58,4 @@ public class StatTasks {
     LOGGER.info("Scheduled deferred task " + taskHandle);
   }
 
-  private static MapReduceJob<Entity, String, Integer, Entity, Void> countBuildDeltas() {
-    DatastoreInput input = new DatastoreInput("PackageBuild", 10);
-    BuildDeltaMapper mapper = new BuildDeltaMapper();
-    Marshaller<String> intermediateKeyMarshaller = Marshallers.getStringMarshaller();
-    Marshaller<Integer> intermediateValueMarshaller = Marshallers.getIntegerMarshaller();
-    Reducer<String, Integer, Entity> reducer = new DeltaReducer();
-
-    Output<Entity, Void> output = new DatastoreOutput();
-
-    MapReduceSpecification<Entity, String, Integer, Entity, Void>
-        spec = new MapReduceSpecification.Builder<>(input, mapper, reducer, output)
-        .setKeyMarshaller(intermediateKeyMarshaller)
-        .setValueMarshaller(intermediateValueMarshaller)
-        .setJobName("Update Build Delta Counts")
-        .setNumReducers(10)
-        .build();
-
-
-    MapReduceSettings settings = new MapReduceSettings.Builder()
-        .setBucketName("renjinci-map-reduce")
-        .build();
-
-    return new MapReduceJob<>(spec, settings);
-  }
 }

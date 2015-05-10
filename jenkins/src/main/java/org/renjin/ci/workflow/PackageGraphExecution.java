@@ -1,6 +1,5 @@
 package org.renjin.ci.workflow;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
@@ -12,8 +11,10 @@ import org.renjin.ci.workflow.graph.PackageNode;
 import org.renjin.ci.workflow.tools.WebApp;
 
 import javax.inject.Inject;
-import javax.sql.rowset.Predicate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import static java.lang.String.format;
 
@@ -34,12 +35,13 @@ public class PackageGraphExecution extends AbstractSynchronousStepExecution<Pack
     
     nodes = Maps.newHashMap();
     
-    if("not built".equals(step.getFilter())) {
-      addAll("unbuilt");
-    } else if(step.getFilter().contains(":")) {
+    if(step.getFilter().contains(":")) {
       // consider as packageId
       PackageVersionId packageVersionId = PackageVersionId.fromTriplet(step.getFilter());
       add(packageVersionId);
+    } else {
+      addAll(step.getFilter(), step.getFilterParameters());
+      
     }
     
     taskListener.getLogger().printf("Dependency graph built with %d nodes.\n", nodes.size());
@@ -47,9 +49,9 @@ public class PackageGraphExecution extends AbstractSynchronousStepExecution<Pack
     return new PackageGraph(nodes);
   }
 
-  private void addAll(String filter) throws InterruptedException {
+  private void addAll(String filter, Map<String, String> filterParameters) throws InterruptedException {
     taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
-    List<PackageVersionId> packageVersionIds = WebApp.queryPackageList(filter);
+    List<PackageVersionId> packageVersionIds = WebApp.queryPackageList(filter, filterParameters);
     taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
 
     List<PackageVersionId> sampled = sample(packageVersionIds);
@@ -59,9 +61,7 @@ public class PackageGraphExecution extends AbstractSynchronousStepExecution<Pack
     
     for (PackageVersionId packageVersionId : sampled) {
       add(packageVersionId);
-      if (Thread.interrupted()) {
-        throw new InterruptedException();
-      }
+     
     }
   }
 
@@ -91,7 +91,7 @@ public class PackageGraphExecution extends AbstractSynchronousStepExecution<Pack
     }
   }
 
-  private void add(PackageVersionId packageVersionId) {
+  private void add(PackageVersionId packageVersionId) throws InterruptedException {
     PackageNode node = nodes.get(packageVersionId);
     if(node == null) {
       node = new PackageNode(packageVersionId);
@@ -101,7 +101,7 @@ public class PackageGraphExecution extends AbstractSynchronousStepExecution<Pack
     }
   }
 
-  private PackageNode getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) {
+  private PackageNode getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) throws InterruptedException {
     PackageVersionId pvid = resolvedDependency.getPackageVersionId();
     PackageNode node = nodes.get(pvid);
     if(node == null) {
@@ -119,7 +119,10 @@ public class PackageGraphExecution extends AbstractSynchronousStepExecution<Pack
     return node;
   }
 
-  private void resolveDependencies(PackageNode node) {
+  private void resolveDependencies(PackageNode node) throws InterruptedException {
+    if (Thread.interrupted()) {
+      throw new InterruptedException();
+    }
     taskListener.getLogger().println(format("Resolving dependencies of %s...", node.getId()));
     
     for (ResolvedDependency resolvedDependency : WebApp.resolveDependencies(node.getId())) {

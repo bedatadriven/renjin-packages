@@ -5,7 +5,6 @@ import freemarker.template.TemplateException;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.datastore.PackageBuild;
-import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.datastore.PackageVersionDescription;
 import org.renjin.ci.model.PackageVersionId;
@@ -44,8 +43,6 @@ public class PackageVersionResourceTest  extends AbstractDatastoreTest {
 
   @Test
   public void dependencyResolution() throws IOException, TemplateException {
-
-    PackageDatabase.init();
     
     PackageVersionId surveyId = new PackageVersionId("org.renjin.cran", "survey", "3.29-5");
     PackageVersion survey = new PackageVersion(surveyId);

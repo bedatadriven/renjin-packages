@@ -3,17 +3,16 @@ package org.renjin.ci.stats;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.mapreduce.Mapper;
-import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.model.DeltaType;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Maps a PackageBuild -> [RenjinVersionId: +/-]
  */
-public class BuildDeltaMapper extends Mapper<Entity, String, Integer> {
+public class BuildDeltaMapper extends Mapper<Entity, DeltaKey, DeltaValue> {
   
   private static final Logger LOGGER = Logger.getLogger(BuildDeltaMapper.class.getName());
 
@@ -33,9 +32,15 @@ public class BuildDeltaMapper extends Mapper<Entity, String, Integer> {
     }
     
     if(build.getBuildDelta() < 0) {
-      emit(build.getRenjinVersion(), Deltas.BUILD_REGRESSION);
+      emit(new DeltaKey(build.getRenjinVersionId(), DeltaType.BUILD), new DeltaValue(build.getPackageId(), Deltas.REGRESSION));
     } else if(build.getBuildDelta() > 0) {
-      emit(build.getRenjinVersion(), Deltas.BUILD_PROGRESSION);
+      emit(new DeltaKey(build.getRenjinVersionId(), DeltaType.BUILD), new DeltaValue(build.getPackageId(), Deltas.PROGRESSION));
+    }
+    
+    if(build.getCompilationDelta() < 0) {
+      emit(new DeltaKey(build.getRenjinVersionId(), DeltaType.COMPILATION), new DeltaValue(build.getPackageId(), Deltas.REGRESSION));
+    } else if(build.getCompilationDelta() > 0) {
+      emit(new DeltaKey(build.getRenjinVersionId(), DeltaType.COMPILATION), new DeltaValue(build.getPackageId(), Deltas.PROGRESSION));
     }
   }
 }

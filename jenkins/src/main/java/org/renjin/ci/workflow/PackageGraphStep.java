@@ -7,11 +7,15 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.util.Map;
+
 public class PackageGraphStep extends AbstractStepImpl {
 
   private String filter;
+  private Map filterParameters;
   private Double sample;
 
+  
   @DataBoundConstructor
   public PackageGraphStep() {
   }
@@ -32,6 +36,15 @@ public class PackageGraphStep extends AbstractStepImpl {
   @DataBoundSetter
   public void setSample(Double sample) {
     this.sample = sample;
+  }
+
+  public Map getFilterParameters() {
+    return filterParameters;
+  }
+
+  @DataBoundSetter
+  public void setFilterParameters(Map filterParameters) {
+    this.filterParameters = filterParameters;
   }
 
   @Override

@@ -2,9 +2,9 @@ package org.renjin.ci.workflow.tools;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import hudson.AbortException;
+import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.ResolvedDependency;
-import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.workflow.BuildPackageStep;
 import org.renjin.ci.workflow.PackageBuild;
 import org.renjin.ci.workflow.PackageBuildContext;
@@ -14,11 +14,11 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -75,18 +75,19 @@ public class WebApp {
   }
 
   private static WebTarget rootTarget() {
-    Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
+    return client().target(ROOT_URL);
+  }
 
-    return client.target(ROOT_URL);
+  private static Client client() {
+    return ClientBuilder.newClient().register(JacksonJsonProvider.class);
   }
 
   private static void postResult(PackageBuildContext build, PackageBuildResult result) {
     build.getLogger().println("Native source compilation result: " + result.getNativeOutcome());
     build.getLogger().println("Posting build result " + result.getOutcome() + "...");
 
-    Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
     PackageVersionId packageVersionId = build.getPackageVersionId();
-    WebTarget buildResource = client.target(ROOT_URL)
+    WebTarget buildResource = client().target(ROOT_URL)
         .path("package")
         .path(packageVersionId.getGroupId())
         .path(packageVersionId.getPackageName())
@@ -97,8 +98,15 @@ public class WebApp {
     buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
   }
 
-  public static List<PackageVersionId> queryPackageList(String filter) {
-    String[] ids = rootTarget().path("packages").path(filter).request().get(String[].class);
+  public static List<PackageVersionId> queryPackageList(String filter, Map<?, ?> filterParameters) {
+    WebTarget target = rootTarget().path("packages").path(filter);
+    if(filterParameters != null) {
+      for (Map.Entry<?, ?> parameter : filterParameters.entrySet()) {
+        target = target.queryParam(parameter.getKey().toString(), parameter.getValue());
+      }
+    }
+    String[] ids = target.request().get(String[].class);
+    
     List<PackageVersionId> packageVersionIds = new ArrayList<PackageVersionId>();
     for (String id : ids) {
       packageVersionIds.add(PackageVersionId.fromTriplet(id));

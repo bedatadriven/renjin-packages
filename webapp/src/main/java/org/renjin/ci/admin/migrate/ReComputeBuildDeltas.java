@@ -1,4 +1,4 @@
-package org.renjin.ci.stats;
+package org.renjin.ci.admin.migrate;
 
 import com.google.common.base.Optional;
 import com.googlecode.objectify.ObjectifyService;

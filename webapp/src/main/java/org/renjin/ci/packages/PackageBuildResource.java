@@ -1,36 +1,28 @@
 package org.renjin.ci.packages;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Resources;
-import com.googlecode.objectify.*;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.NotFoundException;
+import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.archive.BuildLogs;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.stats.StatTasks;
-import org.renjin.ci.storage.StorageKeys;
-import org.renjin.ci.model.PackageBuildResult;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.io.*;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.IOException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
-import static java.nio.channels.Channels.newInputStream;
 
 public class PackageBuildResource {
 
@@ -53,7 +45,7 @@ public class PackageBuildResource {
     Iterable<PackageBuild> builds = PackageDatabase.getBuilds(packageVersionId).iterable();
 
     // Start fetching log text
-    String logText = tryFetchLog();
+    String logText = BuildLogs.tryFetchLog(new PackageBuildId(packageVersionId, buildNumber));
 
     Map<String, Object> model = Maps.newHashMap();
     model.put("groupId", packageVersionId.getGroupId());
@@ -74,24 +66,6 @@ public class PackageBuildResource {
       }
     }
     throw new WebApplicationException(Response.Status.NOT_FOUND);
-  }
-
-  private String tryFetchLog() {
-
-    String logUrl = "http://storage.googleapis.com/renjinci-logs/" + StorageKeys.buildLog(packageVersionId, buildNumber);
-    try {
-      byte[] bytes = Resources.toByteArray(new URL(logUrl));
-      if(bytes.length >= 2 && bytes[0] == (byte)0x1f && bytes[1] == (byte)0x8b) {
-        try(Reader reader = new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(bytes)), Charsets.UTF_8)) {
-          return CharStreams.toString(reader);
-        }
-      } else {
-        return new String(bytes, Charsets.UTF_8);
-      }
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Error reading " + logUrl, e);
-      return null;
-    }
   }
 
   @POST
@@ -195,7 +169,7 @@ public class PackageBuildResource {
       return false;
     }
 
-    List<Object> toSave = new ArrayList<>();
+    Set<Object> toSave = new HashSet<>();
 
 
     // Build a simplified list, mapping each renjin version in order to a build
@@ -211,8 +185,6 @@ public class PackageBuildResource {
     }
 
     // Walk the Renjin versions and tag regressions/improvements
-
-
     PackageBuild lastBuild = null;
 
     for (PackageBuild build : buildMap.values()) {
@@ -224,24 +196,62 @@ public class PackageBuildResource {
       } else {
         newDelta = +1;
       }
+      
       if (build.getBuildDelta() != newDelta) {
         build.setBuildDelta(newDelta);
         toSave.add(build);
       }
 
-      LOGGER.info(String.format("Renjin %s: Build %d (%+d)",
+      LOGGER.info(String.format("%s @ Renjin %s: Build %d (%+d)",
+          packageVersionId,
           build.getRenjinVersion(),
           build.getBuildNumber(),
           build.getBuildDelta()));
 
       lastBuild = build;
     }
+    
+    // Walk the sequence of versions again and tag regressions/improvements in compilation
+   
+    lastBuild = null;
+    
+    for (PackageBuild build : buildMap.values()) {
+      if(build.getNativeOutcome() != null && build.getNativeOutcome() != NativeOutcome.NA) {
+        byte newDelta;
 
-    // Clear the deltas of any builds that have been superceded and ignored here
+        if(lastBuild == null || lastBuild.getNativeOutcome() == build.getNativeOutcome()) {
+          newDelta = 0;
+        } else if(lastBuild.getNativeOutcome() == NativeOutcome.SUCCESS && build.getNativeOutcome() == NativeOutcome.FAILURE) {
+          newDelta = -1;
+        } else {
+          newDelta = 1;
+        }
+        
+        if(build.getCompilationDelta() != newDelta) {
+          build.setCompilationDelta(newDelta);
+          toSave.add(build);
+        }
+
+
+        LOGGER.info(String.format("%s @ Renjin %s: Compilation %d (%+d)",
+            packageVersionId,
+            build.getRenjinVersion(),
+            build.getBuildNumber(),
+            build.getCompilationDelta()));
+        
+        lastBuild = build;
+      }
+    }
+
+      // Clear the deltas of any builds that have been superceded and ignored here
     for (PackageBuild build : builds) {
       if(!buildMap.containsValue(build)) {
         if(build.getBuildDelta() != 0) {
           build.setBuildDelta((byte)0);
+          toSave.add(build);
+        }
+        if(build.getCompilationDelta() != 0) {
+          build.setCompilationDelta((byte)0);
           toSave.add(build);
         }
       }

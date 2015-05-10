@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.CorePackages;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;

@@ -33,7 +33,6 @@
     </div>
     <div class="col-md-9">
 
-
         <h2>Build #${buildNumber}</h2>
 
         <p>${build.outcome!"Started"} <#if startTime??>on ${startTime?datetime} </#if>against Renjin ${build.renjinVersion}</p>
@@ -43,8 +42,6 @@
         <#else>
             <div class="alert alert-warning">Build log is not available.</div>
         </#if>
-        
     </div>
-
 </div>
 </@scaffolding>

@@ -1,11 +1,12 @@
 package org.renjin.ci.model;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 
 /**
  * Combination of groupId and packageName that uniquely identifies a package
  */
-public class PackageId {
+public class PackageId implements Serializable {
     
     private final String groupId;
     private final String packageName;

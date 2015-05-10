@@ -173,6 +173,7 @@ public class PackageRegistrationTasks {
     // Create a new PackageVersion entity
     PackageVersion packageVersion = new PackageVersion(packageVersionId);
     packageVersion.setTitle(description.getTitle());
+    packageVersion.setNeedsCompilation(description.isNeedsCompilation());
 
     try {
       packageVersion.setPublicationDate(description.getPublicationDate().toDate());

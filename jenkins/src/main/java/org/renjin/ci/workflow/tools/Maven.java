@@ -2,18 +2,23 @@ package org.renjin.ci.workflow.tools;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.google.common.base.Charsets;
-import hudson.*;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.Proc;
 import hudson.model.EnvironmentSpecific;
+import hudson.model.JDK;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.util.ArgumentListBuilder;
+import jenkins.model.Jenkins;
 import org.jenkinsci.lib.configprovider.ConfigProvider;
 import org.jenkinsci.lib.configprovider.model.Config;
 import org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig;
 import org.jenkinsci.plugins.configfiles.maven.security.CredentialsHelper;
-import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.workflow.ConfigException;
 import org.renjin.ci.workflow.PackageBuildContext;
 
 import java.io.File;
@@ -62,8 +67,12 @@ public class Maven {
             arguments.add("clean");
             arguments.add("deploy");
 
+            EnvVars environmentOverrides = new EnvVars();
+            setupJdk17(context, environmentOverrides);
+            
             Proc proc = context.launch().cmds(arguments)
                     .pwd(context.getWorkspace())
+                    .envs(environmentOverrides)
                     .stdout(context.getListener())
                     .start();
 
@@ -82,6 +91,7 @@ public class Maven {
         
     }
 
+    
     private static FilePath fetchMavenConfig(PackageBuildContext context) throws IOException, InterruptedException {
 
         MavenSettingsConfig config = getMavenConfig();
@@ -94,7 +104,7 @@ public class Maven {
             try {
                 fileContent = CredentialsHelper.fillAuthentication(fileContent, resolvedCredentials);
             } catch (Exception e) {
-                throw new AbortException("Exception resolving credentials for maven settings file: " + e.getMessage());
+                throw new ConfigException("Exception resolving credentials for maven settings file: " + e.getMessage());
             }
         }
 
@@ -118,6 +128,24 @@ public class Maven {
         return new File(getMavenHome(context) + "/bin/mvn");
     }
 
+    private static void setupJdk17(PackageBuildContext context, EnvVars environmentOverrides) throws IOException, InterruptedException {
+        JDK jdk = findJdk17(context)
+            .forNode(context.getNode(), context.getListener())
+            .forEnvironment(context.getEnv());
+        
+        jdk.buildEnvVars(environmentOverrides);
+    }
+
+    private static JDK findJdk17(PackageBuildContext context) {
+        context.getLogger().println("Looking for JDK 1.7...");
+        for (JDK jdk : Jenkins.getInstance().getJDKs()) {
+            if(jdk.getName().contains("1.7")) {
+                return jdk;
+            }
+        }
+        throw new ConfigException("Couldn't find JDK containing '1.7' in its name.");
+    }
+    
     public static String getMavenHome(PackageBuildContext context) throws IOException, InterruptedException {
 
         for (ToolDescriptor<?> desc : ToolInstallation.all()) {

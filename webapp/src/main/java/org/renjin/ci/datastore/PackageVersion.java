@@ -39,6 +39,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @Unindex
   private long lastBuildNumber;
   
+  @Index
+  private boolean needsCompilation;
+  
   @Unindex
   @IgnoreSave(IfZero.class)
   private long lastSuccessfulBuildNumber;
@@ -185,7 +188,14 @@ public class PackageVersion implements Comparable<PackageVersion> {
     return thisVersion.compareTo(thatVersion);
   }
 
-  
+  public boolean isNeedsCompilation() {
+    return needsCompilation;
+  }
+
+  public void setNeedsCompilation(boolean needsCompilation) {
+    this.needsCompilation = needsCompilation;
+  }
+
   public static Ordering<PackageVersion> orderByVersion() {
     return Ordering.natural().onResultOf(new Function<PackageVersion, Comparable>() {
       @Nullable

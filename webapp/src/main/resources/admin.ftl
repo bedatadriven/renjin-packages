@@ -16,5 +16,10 @@
     </form>
 </#list>
 
+<h2>Statistics</h2>
+
+<form action="/admin/updateDeltaCounts" method="post">
+    <input type="submit" class="btn btn-default" value="Update delta counts">
+</form>
 
 </@scaffolding>

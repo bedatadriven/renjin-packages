@@ -7,6 +7,7 @@ import org.renjin.ci.admin.migrate.ReIndexBuild;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 import org.renjin.ci.pipelines.Pipelines;
+import org.renjin.ci.stats.StatPipelines;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -30,6 +31,7 @@ public class AdminResources {
     
     return new Viewable("/admin.ftl", model);
   }
+  
 
   @POST
   @Path("migrate")
@@ -63,5 +65,11 @@ public class AdminResources {
     }
     
     return Pipelines.redirectToStatus(jobId);
+  }
+
+  @POST
+  @Path("updateDeltaCounts")
+  public Response updateBuildDeltaCounts() {
+    return Pipelines.redirectToStatus(StatPipelines.startUpdateBuildStats());
   }
 }

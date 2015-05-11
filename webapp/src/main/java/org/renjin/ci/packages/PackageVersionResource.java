@@ -44,6 +44,17 @@ public class PackageVersionResource {
   public PackageBuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
     return new PackageBuildResource(packageVersion.getPackageVersionId(), buildNumber);
   }
+  
+  @GET
+  @Path("lastSuccessfulBuild")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response getLastSuccessfulBuild() {
+    if(packageVersion.hasSuccessfulBuild()) {
+      return Response.ok().entity(packageVersion.getLastSuccessfulBuildVersion()).build();
+    } else {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+  }
 
   /**
    * Allocate a new build number for this package version

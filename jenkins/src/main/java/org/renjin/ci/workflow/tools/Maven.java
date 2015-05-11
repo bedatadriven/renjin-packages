@@ -18,87 +18,98 @@ import org.jenkinsci.lib.configprovider.model.Config;
 import org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig;
 import org.jenkinsci.plugins.configfiles.maven.security.CredentialsHelper;
 import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.workflow.BuildContext;
 import org.renjin.ci.workflow.ConfigException;
-import org.renjin.ci.workflow.PackageBuildContext;
+import org.renjin.ci.workflow.PackageBuild;
+import org.renjin.ci.workflow.WorkerContext;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
 
 
 public class Maven {
     public static final long TIMEOUT_MINUTES = 20;
 
     public static final String MAVEN_CONFIG_NAME = "Renjin Package Build Settings";
+    
+    private final WorkerContext workerContext;
+    private final File binaryPath;
+    private final FilePath configFile;
+    private final JDK jdk;
 
-    public static void writePom(PackageBuildContext context) throws IOException, InterruptedException {
+    public Maven(WorkerContext workerContext) throws IOException, InterruptedException {
+        this.workerContext = workerContext;
+        this.binaryPath = findMavenBinary();
+        this.configFile = fetchMavenConfig(workerContext);
+        this.jdk = findJdk17();
+    }
+
+    public void writePom(BuildContext context, PackageBuild build) throws IOException, InterruptedException {
 
         // Load package description from unpacked sources
-        PackageDescription description = PackageDescription.fromString(context.workspaceChild("DESCRIPTION").readToString());
+        PackageDescription description = PackageDescription.fromString(context.getBuildDir().child("DESCRIPTION").readToString());
 
         // Write the POM to the workspace
-        MavenPomBuilder pomBuilder = new MavenPomBuilder(context.getPackageBuild(), description, context.getPackageNode());
-        context.workspaceChild("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
+        MavenPomBuilder pomBuilder = new MavenPomBuilder(build, description, context.getPackageNode());
+        context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
     }
 
-    public static void build(PackageBuildContext context) throws IOException, InterruptedException {
+    public void build(BuildContext buildContext) throws IOException, InterruptedException {
 
-        context.getLogger().println("Executing maven...");
+        ArgumentListBuilder arguments = new ArgumentListBuilder();
+        arguments.add(binaryPath);
 
-        FilePath configFile = fetchMavenConfig(context);
+        arguments.add("-s");
+        arguments.add(configFile.getRemote());
 
-        try {
+        arguments.add("-e"); // show full stack traces
 
-            ArgumentListBuilder arguments = new ArgumentListBuilder();
-            arguments.add(getMavenBinary(context));
+        arguments.add("-DenvClassifier=linux-x86_64");
+        arguments.add("-Dignore.gnur.compilation.failure=true");
 
-            arguments.add("-s");
-            arguments.add(configFile.getRemote());
+        arguments.add("-DskipTests");
+        arguments.add("-B"); // run in batch mode
 
-            arguments.add("-e"); // show full stack traces
+        arguments.add("clean");
+        arguments.add("deploy");
 
-            arguments.add("-DenvClassifier=linux-x86_64");
-            arguments.add("-Dignore.gnur.compilation.failure=true");
+        EnvVars environmentOverrides = new EnvVars();
+        jdk.buildEnvVars(environmentOverrides);
 
-            arguments.add("-DskipTests");
-            arguments.add("-B"); // run in batch mode
-
-            arguments.add("clean");
-            arguments.add("deploy");
-
-            EnvVars environmentOverrides = new EnvVars();
-            setupJdk17(context, environmentOverrides);
-            
-            Proc proc = context.launch().cmds(arguments)
-                    .pwd(context.getWorkspace())
-                    .envs(environmentOverrides)
-                    .stdout(context.getListener())
-                    .start();
-
-            int exitCode;
-            try {
-                exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, context.getListener());
-                context.getLogger().println("Maven exited with " + exitCode);
-
-            } catch(InterruptedException e) {
-                context.getLogger().println(String.format("Timed out after %d minutes.", TIMEOUT_MINUTES)); 
-            }
-            
-        } finally {
-            configFile.delete();
-        }
+        GZIPOutputStream logOut = new GZIPOutputStream(new FileOutputStream(buildContext.getLogFile()));
         
-    }
+        Proc proc = buildContext.getWorkerContext().getLauncher().launch()
+                .cmds(arguments)
+                .pwd(buildContext.getBuildDir())
+                .envs(environmentOverrides)
+                .stderr(logOut)
+                .stdout(logOut)
+                .start();
 
+        int exitCode;
+        try {
+            exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, buildContext.getListener());
+        } catch(InterruptedException e) {
+            buildContext.log("Timed out after %d minutes.", TIMEOUT_MINUTES); 
+        } finally {
+            try {
+                logOut.close();
+            } catch (Exception ignored) {
+            }
+        }
+    }
     
-    private static FilePath fetchMavenConfig(PackageBuildContext context) throws IOException, InterruptedException {
+    private static FilePath fetchMavenConfig(WorkerContext workerContext) throws IOException, InterruptedException {
 
         MavenSettingsConfig config = getMavenConfig();
         String fileContent = config.content;
 
         final Map<String, StandardUsernameCredentials> resolvedCredentials =
-                CredentialsHelper.resolveCredentials(context.getRun().getParent(), config.getServerCredentialMappings());
+                CredentialsHelper.resolveCredentials(workerContext.getJob(), config.getServerCredentialMappings());
 
         if (!resolvedCredentials.isEmpty()) {
             try {
@@ -108,7 +119,7 @@ public class Maven {
             }
         }
 
-        return context.getWorkspace().createTextTempFile("settings", ".xml", fileContent, false);
+        return workerContext.getWorkspace().createTextTempFile("settings", ".xml", fileContent, false);
     }
 
 
@@ -124,20 +135,19 @@ public class Maven {
     }
 
 
-    public static File getMavenBinary(PackageBuildContext context) throws IOException, InterruptedException {
-        return new File(getMavenHome(context) + "/bin/mvn");
+    public File findMavenBinary() throws IOException, InterruptedException {
+        return new File(findMavenHome() + "/bin/mvn");
     }
 
-    private static void setupJdk17(PackageBuildContext context, EnvVars environmentOverrides) throws IOException, InterruptedException {
-        JDK jdk = findJdk17(context)
+    private static void setupJdk17(WorkerContext context, EnvVars environmentOverrides) throws IOException, InterruptedException {
+        JDK jdk = findJdk17()
             .forNode(context.getNode(), context.getListener())
             .forEnvironment(context.getEnv());
         
         jdk.buildEnvVars(environmentOverrides);
     }
 
-    private static JDK findJdk17(PackageBuildContext context) {
-        context.getLogger().println("Looking for JDK 1.7...");
+    private static JDK findJdk17() {
         for (JDK jdk : Jenkins.getInstance().getJDKs()) {
             if(jdk.getName().contains("1.7")) {
                 return jdk;
@@ -146,17 +156,17 @@ public class Maven {
         throw new ConfigException("Couldn't find JDK containing '1.7' in its name.");
     }
     
-    public static String getMavenHome(PackageBuildContext context) throws IOException, InterruptedException {
+    public String findMavenHome() throws IOException, InterruptedException {
 
         for (ToolDescriptor<?> desc : ToolInstallation.all()) {
             if (desc.getId().equals("hudson.tasks.Maven$MavenInstallation")) {
                 for (ToolInstallation tool : desc.getInstallations()) {
                     if (tool.getName().equals("M3")) {
                         if (tool instanceof NodeSpecific) {
-                            tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(context.getNode(), context.getListener());
+                            tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(workerContext.getNode(), workerContext.getListener());
                         }
                         if (tool instanceof EnvironmentSpecific) {
-                            tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(context.getEnv());
+                            tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(workerContext.getEnv());
                         }
                         return tool.getHome();
                     }
@@ -165,6 +175,5 @@ public class Maven {
         }
         throw new AbortException("Cannot find maven installation");
     }
-
 
 }

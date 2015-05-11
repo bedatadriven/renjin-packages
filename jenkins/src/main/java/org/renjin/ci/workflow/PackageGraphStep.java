@@ -14,7 +14,8 @@ public class PackageGraphStep extends AbstractStepImpl {
   private String filter;
   private Map filterParameters;
   private Double sample;
-
+  private Integer workerCount;
+  private String renjinVersion;
   
   @DataBoundConstructor
   public PackageGraphStep() {
@@ -51,7 +52,26 @@ public class PackageGraphStep extends AbstractStepImpl {
   public StepDescriptor getDescriptor() {
     return super.getDescriptor();
   }
+
   
+  public String getRenjinVersion() {
+    return renjinVersion;
+  }
+
+  @DataBoundSetter
+  public void setRenjinVersion(String renjinVersion) {
+    this.renjinVersion = renjinVersion;
+  }
+
+  public Integer getWorkerCount() {
+    return workerCount;
+  }
+
+  @DataBoundSetter
+  public void setWorkerCount(Integer workerCount) {
+    this.workerCount = workerCount;
+  }
+
   @Extension
   public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
@@ -61,12 +81,12 @@ public class PackageGraphStep extends AbstractStepImpl {
 
     @Override
     public String getFunctionName() {
-      return "packageGraph";
+      return "buildPackages";
     }
 
     @Override
     public String getDisplayName() {
-      return "Construct a graph of package dependencies";
+      return "Build a set of interdependent packages";
     }
   }
   

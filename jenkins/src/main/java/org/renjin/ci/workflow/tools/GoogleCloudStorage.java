@@ -13,17 +13,19 @@ import com.google.jenkins.plugins.credentials.oauth.GoogleRobotPrivateKeyCredent
 import com.google.jenkins.plugins.credentials.oauth.JsonServiceAccountConfig;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.jenkinsci.plugins.workflow.actions.LogAction;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
+import org.renjin.ci.workflow.BuildContext;
 import org.renjin.ci.workflow.ConfigException;
-import org.renjin.ci.workflow.PackageBuildContext;
+import org.renjin.ci.workflow.PackageBuild;
+import org.renjin.ci.workflow.WorkerContext;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import static java.lang.String.format;
 
@@ -37,7 +39,7 @@ public class GoogleCloudStorage {
      * Fetches credentials from the Google OAuth Plugin.
      * @param context
      */
-    public static Credential fetchCredentials(PackageBuildContext context) throws IOException {
+    public static Credential fetchCredentials(WorkerContext context) throws IOException {
         GoogleRobotCredentials credentials = GoogleRobotCredentials.getById(PROJECT_ID);
         if(credentials == null) {
             throw new ConfigException(format("No service key credential available for project %s", PROJECT_ID));
@@ -70,7 +72,7 @@ public class GoogleCloudStorage {
         }
     }
 
-    public static Storage newClient(PackageBuildContext context) throws IOException {
+    public static Storage newClient(WorkerContext context) throws IOException {
         return new Storage.Builder(new NetHttpTransport(), new JacksonFactory(),
                 fetchCredentials(context))
                 .setApplicationName("Renjin CI")
@@ -78,13 +80,13 @@ public class GoogleCloudStorage {
     }
 
 
-    private static TarArchiveInputStream fetchSource(PackageBuildContext context) throws IOException {
-        Storage storage = GoogleCloudStorage.newClient(context);
+    private static TarArchiveInputStream fetchSource(BuildContext context, PackageVersionId packageVersionId) throws IOException {
+        Storage storage = GoogleCloudStorage.newClient(context.getWorkerContext());
         Storage.Objects.Get request = storage.objects().get(
                 StorageKeys.PACKAGE_SOURCE_BUCKET,
-                StorageKeys.packageSource(context.getPackageVersionId()));
+                StorageKeys.packageSource(packageVersionId));
 
-        context.getLogger().println(format("Retrieving sources from gs://%s/%s...", request.getBucket(), request.getObject()));
+        context.log("Retrieving sources from gs://%s/%s...", request.getBucket(), request.getObject());
 
         try {
             InputStream inputStream = request.executeMediaAsInputStream();
@@ -98,8 +100,7 @@ public class GoogleCloudStorage {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error downloading sources", e);
 
-            context.getLogger().println(format("ERROR: %s downloading sources: %s",
-                e.getClass().getName(), e.getMessage()));
+            context.log("ERROR: %s downloading sources: %s", e.getClass().getName(), e.getMessage());
 
             throw new IOException(e);
         }
@@ -112,20 +113,20 @@ public class GoogleCloudStorage {
     }
 
 
-    public static void downloadAndUnpackSources(PackageBuildContext context) throws IOException, InterruptedException {
+    public static void downloadAndUnpackSources(BuildContext context, PackageVersionId packageVersionId) throws IOException, InterruptedException {
 
         Closer closer = Closer.create();
-        TarArchiveInputStream tarIn = closer.register(fetchSource(context));
+        TarArchiveInputStream tarIn = closer.register(fetchSource(context, packageVersionId));
         try {
 
             TarArchiveEntry entry;
             while((entry=tarIn.getNextTarEntry())!=null) {
                 if(entry.isFile()) {
-                    context.workspaceChild(stripPackageDir(entry.getName())).copyFrom(tarIn);
+                    context.getBuildDir().child(stripPackageDir(entry.getName())).copyFrom(tarIn);
                 }
             }
         } catch(Exception e) {
-            context.getLogger().println("ERROR: Failed to fetch package sources: " + e.getMessage());
+            context.log("Failed to fetch package sources: " + e.getMessage());
             throw closer.rethrow(e);
         } finally {
             closer.close();
@@ -133,9 +134,9 @@ public class GoogleCloudStorage {
     }
 
 
-    public static void archiveLogFile(PackageBuildContext build) throws IOException, InterruptedException {
+    public static void archiveLogFile(BuildContext buildContext, PackageBuild build) throws IOException, InterruptedException {
 
-        Storage storage = GoogleCloudStorage.newClient(build);
+        Storage storage = GoogleCloudStorage.newClient(buildContext.getWorkerContext());
 
         String objectName = StorageKeys.buildLog(build.getPackageVersionId(), build.getBuildNumber());
         StorageObject objectMetadata = new StorageObject()
@@ -143,39 +144,17 @@ public class GoogleCloudStorage {
                 .setContentType("text/plain")
                 .setContentEncoding("gzip");
 
-        LogAction logAction = build.getFlowNode().getAction(LogAction.class);
-        File tempFile = File.createTempFile("build", ".log");
-        try {
-            build.getListener().getLogger().printf("Writing log to temp file: " + tempFile);
+        Storage.Objects.Insert request = storage.objects().insert(
+                StorageKeys.BUILD_LOG_BUCKET,
+                objectMetadata,
+                new FileContent("text/plain", buildContext.getLogFile()));
 
-            OutputStream out = new GZIPOutputStream(new FileOutputStream(tempFile));
-            logAction.getLogText().writeLogTo(0, out);
-            out.close();
+        request.setPredefinedAcl("publicread");
+        request.setContentEncoding("gzip");
 
-            Storage.Objects.Insert request = storage.objects().insert(
-                    StorageKeys.BUILD_LOG_BUCKET,
-                    objectMetadata,
-                    new FileContent("text/plain", tempFile));
-
-            request.setPredefinedAcl("publicread");
-            request.setContentEncoding("gzip");
-
-            request.execute();
-        } finally {
-            try {
-                boolean deleted = tempFile.delete();
-                if(!deleted) {
-                    build.getListener().getLogger().println("Failed to remove temporary log file");
-                }
-            } catch (Exception e) {
-                build.getListener().getLogger().println("Exception removing temporary log file: " + e.getMessage());
-            }
-        }
-
-        build.getListener().getLogger().print("Archived build log to ");
-        build.getListener().hyperlink(StorageKeys.buildLogUrl(build.getPackageBuild().getId()), StorageKeys.PACKAGE_SOURCE_BUCKET);
-        build.getListener().getLogger().println();
-
+        request.execute();
+   
+        buildContext.log("Successfully archived log file");
     }
 
 }

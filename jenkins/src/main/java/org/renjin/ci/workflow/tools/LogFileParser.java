@@ -1,10 +1,9 @@
 package org.renjin.ci.workflow.tools;
 
-import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageBuildResult;
-import org.renjin.ci.workflow.PackageBuildContext;
+import org.renjin.ci.workflow.BuildContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,13 +17,13 @@ public class LogFileParser {
     private static final String BUILD_FAILURE = "[INFO] BUILD FAILURE";
 
 
-    public static PackageBuildResult parse(PackageBuildContext build) throws IOException {
+    public static PackageBuildResult parse(BuildContext build) throws IOException {
 
         BuildOutcome outcome = BuildOutcome.FAILURE;
         NativeOutcome nativeOutcome = NativeOutcome.NA;
-
-        LogAction action = build.getFlowNode().getAction(LogAction.class);
-        BufferedReader reader = new BufferedReader(action.getLogText().readAll());
+        
+        
+        BufferedReader reader = build.getLogAsCharSource().openBufferedStream();
         try {
             String line;
             while ((line = reader.readLine()) != null) {

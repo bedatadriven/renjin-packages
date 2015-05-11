@@ -1,134 +1,197 @@
 package org.renjin.ci.workflow;
 
-import com.google.common.collect.Maps;
+import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import hudson.AbortException;
+import hudson.model.Queue;
+import hudson.model.Run;
 import hudson.model.TaskListener;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
+import hudson.model.queue.QueueTaskFuture;
+import jenkins.util.Timer;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.ResolvedDependency;
-import org.renjin.ci.workflow.graph.PackageGraph;
-import org.renjin.ci.workflow.graph.PackageNode;
-import org.renjin.ci.workflow.tools.WebApp;
+import org.renjin.ci.model.BuildOutcome;
+import org.renjin.ci.workflow.graph.*;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.ListIterator;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
 
-public class PackageGraphExecution extends AbstractSynchronousStepExecution<PackageGraph> {
+public class PackageGraphExecution extends AbstractStepExecutionImpl {
   
   @Inject
-  private PackageGraphStep step;
+  private transient PackageGraphStep step;
 
   @StepContextParameter
   private transient TaskListener taskListener;
 
-  private transient Map<PackageVersionId, PackageNode> nodes;
+  @StepContextParameter
+  private transient Run<?, ?> run;
   
+  
+  private PackageGraph graph;
+
+  /**
+   * Our internal queue of packages to build
+   */
+  private transient BuildQueue buildQueue;
+
+  /**
+   * Workers running as seperate tasks to handle build tasks
+   */
+  private transient List<QueueTaskFuture<Queue.Executable>> workers;
+  
+  private transient ScheduledFuture<?> timer;
+  
+  private transient int nextWorkerId;
+
 
   @Override
-  protected PackageGraph run() throws Exception {
+  public boolean start() throws Exception {
     
-    nodes = Maps.newHashMap();
-    
-    if(step.getFilter().contains(":")) {
-      // consider as packageId
-      PackageVersionId packageVersionId = PackageVersionId.fromTriplet(step.getFilter());
-      add(packageVersionId);
-    } else {
-      addAll(step.getFilter(), step.getFilterParameters());
-      
+    if(Strings.isNullOrEmpty(step.getRenjinVersion())) {
+      getContext().onFailure(new AbortException("renjinVersion must be specified"));
+      return true;
     }
+
+    graph = new PackageGraphBuilder(taskListener)
+        .add(step.getFilter(), step.getFilterParameters(), step.getSample());
     
-    taskListener.getLogger().printf("Dependency graph built with %d nodes.\n", nodes.size());
     
-    return new PackageGraph(nodes);
+    // Save the state of our internal queue
+    getContext().saveState();
+    
+    startWorkers();
+
+    return false;
   }
 
-  private void addAll(String filter, Map<String, String> filterParameters) throws InterruptedException {
-    taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
-    List<PackageVersionId> packageVersionIds = WebApp.queryPackageList(filter, filterParameters);
-    taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
+  @Override
+  public void onResume() {
+    super.onResume();
 
-    List<PackageVersionId> sampled = sample(packageVersionIds);
-    
-    taskListener.getLogger().println("Building dependency graph...");
-    taskListener.getLogger().flush();
-    
-    for (PackageVersionId packageVersionId : sampled) {
-      add(packageVersionId);
-     
-    }
+    startWorkers();
   }
 
-  private List<PackageVersionId> sample(List<PackageVersionId> packageVersionIds) {
-    if(step.getSample() == null) {
-      return packageVersionIds;
-    } else {
-      double fraction;
-      if(step.getSample() > 1) {
-        taskListener.getLogger().println(format("Sampling %.0f packages randomly", step.getSample()));
-        fraction = step.getSample() / (double)packageVersionIds.size();
-      } else {
-        fraction = step.getSample();
-        taskListener.getLogger().println(format("Sampling %7.6f of packages randomly", step.getSample()));
-      }
-      
-      List<PackageVersionId> sampled = new ArrayList<PackageVersionId>();
-      Random random = new Random();
-      for (PackageVersionId packageVersionId : packageVersionIds) {
-        if(random.nextDouble() < fraction) {
-          sampled.add(packageVersionId);
+  private void startWorkers() {
+
+    buildQueue = graph.newBuildQueue();
+    
+    taskListener.getLogger().println(format("Build queue initialized with %d packages to build.", 
+        buildQueue.getTotalLength()));
+    
+    workers = Lists.newArrayList();
+    nextWorkerId = 1;
+
+    timer = Timer.get().scheduleWithFixedDelay(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          checkWorkerHealth();
+        } catch (InterruptedException e) {
+          taskListener.getLogger().println("Interrupted...");
+        } catch (Exception e) {
+          e.printStackTrace(taskListener.getLogger());
         }
       }
-      taskListener.getLogger().println(format("Sampled %d packages", sampled.size()));
-
-      return sampled;
-    }
+    }, 1, 15, TimeUnit.SECONDS);
   }
 
-  private void add(PackageVersionId packageVersionId) throws InterruptedException {
-    PackageNode node = nodes.get(packageVersionId);
-    if(node == null) {
-      node = new PackageNode(packageVersionId);
-      nodes.put(node.getId(), node);
-      
-      resolveDependencies(node);
-    }
-  }
-
-  private PackageNode getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) throws InterruptedException {
-    PackageVersionId pvid = resolvedDependency.getPackageVersionId();
-    PackageNode node = nodes.get(pvid);
-    if(node == null) {
-      node = new PackageNode(pvid);
-      nodes.put(node.getId(), node);
-
-      // Add dependencies
-      if(resolvedDependency.hasBuild()) {
-        resolvedDependency.setBuildNumber(resolvedDependency.getBuildNumber());
-      } else {
-        // We will need to build this one as well...
-        resolveDependencies(node);
+  private void checkWorkerHealth() throws InterruptedException {
+    taskListener.getLogger().println(format("%d Packages remaining in queue, %d workers active...",
+        buildQueue.getTotalLength(), workers.size()));
+    
+    // Have any of our workers crashed or completed?
+    ListIterator<QueueTaskFuture<Queue.Executable>> it = workers.listIterator();
+    while(it.hasNext()) {
+      QueueTaskFuture<Queue.Executable> worker = it.next();
+      if(worker.isDone()) {
+        it.remove();
       }
     }
-    return node;
+    
+    int workerCount = 2;
+    if(step.getWorkerCount() != null) {
+      workerCount = step.getWorkerCount();
+    }
+    
+    // Now enqueue additional tasks to meet our concurrency requirement
+    while(workers.size() < workerCount && !buildQueue.isEmpty()) {
+      WorkerTask newWorker = new WorkerTask(nextWorkerId++, run, taskListener, buildQueue, step.getRenjinVersion());
+      taskListener.getLogger().println("Starting new worker #" + newWorker.getId() + "...");
+
+      Queue.WaitingItem item = Queue.getInstance().schedule2(newWorker, 0).getCreateItem();
+      if(item == null) {
+        throw new IllegalStateException("Failed to enqueue " + newWorker);
+      }
+      workers.add(item.getFuture());
+    }
+    
+    if(buildQueue.isEmpty() && workers.isEmpty()) {
+      finish();
+    }
+    
+    // Save our progress so far...
+    getContext().saveState();
+  }
+  
+  private void finish() {
+    timer.cancel(true);
+    
+    summarizeResults();
+    
+    getContext().onSuccess(null);
   }
 
-  private void resolveDependencies(PackageNode node) throws InterruptedException {
-    if (Thread.interrupted()) {
-      throw new InterruptedException();
-    }
-    taskListener.getLogger().println(format("Resolving dependencies of %s...", node.getId()));
+  private void summarizeResults() {
     
-    for (ResolvedDependency resolvedDependency : WebApp.resolveDependencies(node.getId())) {
-      node.dependsOn(getOrCreateNodeForDependency(resolvedDependency) );
+    int succeeded = 0;
+    int failed = 0;
+    int orphaned = 0;
+
+    for (PackageNode packageNode : graph.getNodes()) {
+      taskListener.getLogger().println(packageNode.getId() + ": " + packageNode.getDebugLabel());
+      if (!packageNode.isProvided()) {
+        if (packageNode.getState() == NodeState.BUILT) {
+          if (packageNode.getBuildOutcome() == BuildOutcome.SUCCESS) {
+            succeeded++;
+          } else {
+            failed++;
+          }
+        } else if (packageNode.getState() == NodeState.ORPHANED) {
+          orphaned++;
+        }
+      }
+    }
+    
+    taskListener.getLogger().println(format("Build complete: %d succeeded, %d failed, %d orphaned.", 
+        succeeded, failed, orphaned));
+    
+    
+  }
+
+  @Override
+  public void stop(Throwable cause) throws Exception {
+    
+    summarizeResults();
+    
+    // cancel
+    if(timer != null) {
+      timer.cancel(false);
+    }
+    
+    // cancel any pending tasks
+    if(workers != null) {
+      for (QueueTaskFuture<Queue.Executable> worker : workers) {
+        worker.cancel(true);
+      }
     }
 
-    node.setDependenciesResolved(true);
+    getContext().onFailure(cause);
   }
 }

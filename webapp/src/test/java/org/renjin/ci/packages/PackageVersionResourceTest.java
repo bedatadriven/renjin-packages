@@ -8,11 +8,10 @@ import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.datastore.PackageVersionDescription;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.ResolvedDependency;
+import org.renjin.ci.model.ResolvedDependencySet;
 import org.renjin.ci.tasks.Fixtures;
 
 import java.io.IOException;
-import java.util.List;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -59,10 +58,10 @@ public class PackageVersionResourceTest  extends AbstractDatastoreTest {
     PackageVersionResource version = resource.getVersion("0.94");
 
 
-    List<ResolvedDependency> resolve = version.resolveDependencies().resolve();
+    ResolvedDependencySet resolution = version.resolveDependencies().resolve();
     
     ObjectMapper objectMapper = new ObjectMapper();
-    String json = objectMapper.writeValueAsString(resolve);
+    String json = objectMapper.writeValueAsString(resolution);
 
 
     System.out.println(json);

@@ -2,6 +2,7 @@ package org.renjin.ci.admin;
 
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.FixBuildKeys;
+import org.renjin.ci.admin.migrate.FixBuildRenjinVersion;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.admin.migrate.ReIndexBuild;
 import org.renjin.ci.pipelines.ForEachEntity;
@@ -27,7 +28,9 @@ public class AdminResources {
   public Viewable get() {
     
     Map<String, Object> model = new HashMap<>();
-    model.put("migrations", Arrays.asList(FixBuildKeys.class, ReComputeBuildDeltas.class, ReIndexBuild.class));
+    model.put("migrations", Arrays.asList(FixBuildKeys.class, ReComputeBuildDeltas.class,
+        FixBuildRenjinVersion.class,
+        ReIndexBuild.class));
     
     return new Viewable("/admin.ftl", model);
   }

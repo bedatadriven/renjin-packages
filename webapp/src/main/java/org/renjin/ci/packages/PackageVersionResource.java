@@ -1,6 +1,7 @@
 
 package org.renjin.ci.packages;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -64,6 +65,11 @@ public class PackageVersionResource {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
   public PackageBuild startBuild(@FormParam("renjinVersion") final String renjinVersion) {
+    
+    if(Strings.isNullOrEmpty(renjinVersion)) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+    
     return ObjectifyService.ofy().transactNew(new Work<PackageBuild>() {
       @Override
       public PackageBuild run() {

@@ -35,7 +35,13 @@ public class PackageNode implements Serializable {
    * node. Resolution may still not be complete.
    */
   private boolean dependenciesResolved;
+
+  /**
+   * true if we are reusing an existing build.
+   */
+  private boolean provided;
   
+
   public PackageNode(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
   }
@@ -80,8 +86,18 @@ public class PackageNode implements Serializable {
     this.state = NodeState.BUILT;
   }
   
-  boolean transitionToReady() {
+  boolean tryUnblock() {
     assertState(NodeState.BLOCKED);
+    
+    for (PackageNode dependency : dependencies) {
+      if(  dependency.state == NodeState.ORPHANED ||
+          (dependency.state == NodeState.BUILT &&
+              dependency.buildOutcome != BuildOutcome.SUCCESS)) {
+        
+        state = NodeState.ORPHANED;
+        return true;
+      }
+    }
     
     for (PackageNode dependency : dependencies) {
       if(dependency.state != NodeState.BUILT) {
@@ -134,6 +150,17 @@ public class PackageNode implements Serializable {
     
     return buildOutcome;
   }
+  
+  public void provideBuild(long buildNumber) {
+    this.state = NodeState.BUILT;
+    this.buildOutcome = BuildOutcome.SUCCESS;
+    this.buildNumber = buildNumber;
+    this.provided = true;
+  }
+
+  public boolean isProvided() {
+    return provided;
+  }
 
   public String getBuildVersion() {
     assertState(NodeState.BUILT);
@@ -148,4 +175,19 @@ public class PackageNode implements Serializable {
     return ImmutableSet.copyOf(dependencies);
   }
 
+  public void orphan() {
+    state = NodeState.ORPHANED;
+  }
+
+  public String getDebugLabel() {
+    StringBuilder label = new StringBuilder();
+    label.append(state.name());
+    if(provided) {
+      label.append(" [provided]");
+    } else if(state == NodeState.BUILT) {
+      label.append(" [").append(buildOutcome).append("]");
+    }
+
+    return label.toString();
+  }
 }

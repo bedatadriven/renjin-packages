@@ -8,15 +8,18 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
-import org.renjin.ci.datastore.*;
 import org.renjin.ci.datastore.Package;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,7 +40,7 @@ public class DependencyResolution {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public List<ResolvedDependency> resolve() {
+  public ResolvedDependencySet resolve() {
 
 
     // Extract the declared dependencies from the DESCRIPTION file
@@ -55,17 +58,23 @@ public class DependencyResolution {
     }
 
     // Now find candidates that meet both declared criteria and availability of builds
-    Map<String, ResolvedDependency> resolved = new HashMap<>();
+    ResolvedDependencySet result = new ResolvedDependencySet();
+    result.setComplete(true);
+
     for (String packageName : declared.keySet()) {
       ResolvedDependency selected = select(declared.get(packageName), candidates.get(packageName));
-      if(selected != null) {
-        resolved.put(packageName, selected);
+      
+      if(selected == null) {
+        result.setComplete(false);
+        result.getMissingPackages().add(packageName);
+      } else {
+        result.getDependencies().add(selected);
       }
     }
     
-    LOGGER.info("Resolution: " + resolved);
+    LOGGER.info("Resolution: " + result.getDependencies());
 
-    return Lists.newArrayList(resolved.values());
+    return result;
   }
 
   /**

@@ -1,10 +1,7 @@
 package org.renjin.ci.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Set of package names resolved to fully qualified source names
@@ -12,18 +9,26 @@ import java.util.Map;
  */
 public class ResolvedDependencySet {
   
-  private Map<String, ResolvedDependency> packages = new HashMap<>();
+  private boolean complete = true;
+  private List<String> missingPackages = new ArrayList<>();
+  private List<ResolvedDependency> dependencies = new ArrayList<>();
 
   public ResolvedDependencySet() {
   }
 
-  @JsonCreator
-  public ResolvedDependencySet(Map<String, ResolvedDependency> packages) {
-    this.packages = packages;
+  public List<ResolvedDependency> getDependencies() {
+    return dependencies;
   }
 
-  @JsonValue
-  public Map<String, ResolvedDependency> getPackages() {
-    return packages;
+  public List<String> getMissingPackages() {
+    return missingPackages;
+  }
+
+  public boolean isComplete() {
+    return complete;
+  }
+
+  public void setComplete(boolean complete) {
+    this.complete = complete;
   }
 }

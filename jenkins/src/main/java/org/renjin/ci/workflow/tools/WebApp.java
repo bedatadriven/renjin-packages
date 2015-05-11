@@ -1,13 +1,12 @@
 package org.renjin.ci.workflow.tools;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.base.Preconditions;
 import hudson.AbortException;
 import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.ResolvedDependency;
-import org.renjin.ci.workflow.BuildPackageStep;
+import org.renjin.ci.model.ResolvedDependencySet;
 import org.renjin.ci.workflow.PackageBuild;
-import org.renjin.ci.workflow.PackageBuildContext;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -22,8 +21,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.util.Arrays.asList;
-
 
 public class WebApp {
 
@@ -31,26 +28,36 @@ public class WebApp {
 
   public static final String ROOT_URL = "https://renjinci.appspot.com";
 
-  public static long startBuild(BuildPackageStep step) throws IOException, InterruptedException {
 
-    return postBuild(step, step.getPackageVersionId());
+  private static WebTarget rootTarget() {
+    return client().target(ROOT_URL);
   }
 
-  public static void reportBuildResult(PackageBuildContext context, PackageBuildResult result) throws IOException {
-    postResult(context, result);
+  private static Client client() {
+    return ClientBuilder.newClient().register(JacksonJsonProvider.class);
+  }
+  
+  
+  public static PackageBuild startBuild(PackageVersionId packageVersionId, String renjinVersion) throws IOException, InterruptedException {
+    long buildNumber = postBuild(packageVersionId, renjinVersion);
+    PackageBuild build = new PackageBuild(packageVersionId, buildNumber);
+    build.setRenjinVersion(renjinVersion);
+    return build;
   }
 
-  public static List<ResolvedDependency> resolveDependencies(PackageVersionId packageVersionId) {
-    return asList(packageVersion(packageVersionId)
+  public static ResolvedDependencySet resolveDependencies(PackageVersionId packageVersionId) {
+    return packageVersion(packageVersionId)
         .path("resolveDependencies")
-        .request().get(ResolvedDependency[].class));
+        .request().get(ResolvedDependencySet.class);
     
   }
 
 
-  private static long postBuild(BuildPackageStep step, PackageVersionId packageVersionId) throws AbortException {
+  public static long postBuild(PackageVersionId packageVersionId, String renjinVersion) throws AbortException {
+    Preconditions.checkNotNull(renjinVersion, "renjinVersion cannot be null");
+    
     PackageBuild build;Form form = new Form();
-    form.param("renjinVersion", step.getRenjinVersion());
+    form.param("renjinVersion", renjinVersion);
 
     WebTarget builds = packageVersion(packageVersionId).path("builds");
     try {
@@ -74,18 +81,8 @@ public class WebApp {
         .path(packageVersionId.getVersionString());
   }
 
-  private static WebTarget rootTarget() {
-    return client().target(ROOT_URL);
-  }
 
-  private static Client client() {
-    return ClientBuilder.newClient().register(JacksonJsonProvider.class);
-  }
-
-  private static void postResult(PackageBuildContext build, PackageBuildResult result) {
-    build.getLogger().println("Native source compilation result: " + result.getNativeOutcome());
-    build.getLogger().println("Posting build result " + result.getOutcome() + "...");
-
+  public static void postResult(PackageBuild build, PackageBuildResult result) {
     PackageVersionId packageVersionId = build.getPackageVersionId();
     WebTarget buildResource = client().target(ROOT_URL)
         .path("package")

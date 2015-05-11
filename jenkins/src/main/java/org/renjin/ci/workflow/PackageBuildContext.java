@@ -5,10 +5,8 @@ import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.Node;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import hudson.model.*;
+import hudson.slaves.WorkspaceList;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.workflow.graph.PackageNode;
@@ -17,28 +15,46 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 public class PackageBuildContext {
-    private final FlowNode flowNode;
     private Run<?, ?> run;
     private TaskListener listener;
     private EnvVars env;
     private FilePath workspace;
     private PackageBuild packageBuild;
-    private Node node;
+    private final Node node;
     private final Launcher launcher;
     private PackageNode packageNode;
         
 
-    public PackageBuildContext(StepContext context, BuildPackageStep step, long buildNumber) throws IOException, InterruptedException {
-        this.packageBuild = new PackageBuild(step.getLeasedBuild().getPackageVersionId(), buildNumber);
-        this.packageBuild.setRenjinVersion(step.getRenjinVersion());
-        this.run = getInstance(context, Run.class);
-        this.listener = getInstance(context, TaskListener.class);
-        this.env = getInstance(context, EnvVars.class);
-        this.workspace = getInstance(context, FilePath.class);
-        this.launcher = getInstance(context, Launcher.class);
-        this.node = getInstance(context, Node.class);
-        this.flowNode = getInstance(context, FlowNode.class);
-        this.packageNode = step.getLeasedBuild().getNode();
+    
+    public PackageBuildContext(Run<?,?> run, TaskListener listener, PackageBuild build) throws InterruptedException, IOException {
+        this.run = run;
+        this.listener = listener;
+        
+        Executor exec = Executor.currentExecutor();
+        if (exec == null) {
+            throw new IllegalStateException("running task without associated executor thread");
+        }
+        Computer computer = exec.getOwner();
+        
+        env = computer.getEnvironment();
+
+        node = computer.getNode();
+        if (node == null) {
+            throw new IllegalStateException("running computer lacks a node");
+        }
+        launcher = node.createLauncher(listener);
+        
+        // Create a workspace for this build
+        Job<?,?> j = run.getParent();
+        if (!(j instanceof TopLevelItem)) {
+            throw new IllegalStateException(j + " must be a top-level job");
+        }
+        FilePath p = node.getWorkspaceFor((TopLevelItem) j);
+        if (p == null) {
+            throw new IllegalStateException(node + " is offline");
+        }
+        WorkspaceList.Lease lease = computer.getWorkspaceList().allocate(p);
+        workspace = lease.path;
     }
 
     private <T> T getInstance(StepContext context, Class<T> clazz) throws IOException, InterruptedException {
@@ -98,7 +114,4 @@ public class PackageBuildContext {
         return launcher.launch();
     }
 
-    public FlowNode getFlowNode() {
-        return flowNode;
-    }
 }

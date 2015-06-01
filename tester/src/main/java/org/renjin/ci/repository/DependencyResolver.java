@@ -1,4 +1,4 @@
-package org.renjin.ci.tester;
+package org.renjin.ci.repository;
 
 import com.google.common.collect.Lists;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -11,6 +11,7 @@ import org.eclipse.aether.connector.file.FileRepositoryConnectorFactory;
 import org.eclipse.aether.connector.wagon.WagonProvider;
 import org.eclipse.aether.connector.wagon.WagonRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -18,6 +19,8 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.renjin.ci.model.PackageBuildId;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,9 +43,10 @@ public class DependencyResolver {
     session = newRepositorySystemSession(system);
   }
 
-  public List<URL> resolveRenjin(String renjinVersion) throws Exception {
-    DefaultArtifact renjinArtifact = new DefaultArtifact("org.renjin", "renjin-cli", "jar", renjinVersion);
-    return resolveArtifact(renjinArtifact);
+  public List<URL> resolveRenjin(RenjinVersionId renjinVersion) throws Exception {
+    DefaultArtifact renjinArtifact = new DefaultArtifact(
+        "org.renjin", "renjin-cli", "jar", renjinVersion.toString());
+    return resolveArtifact(renjinArtifact, null);
   }
 
   /**
@@ -51,17 +55,25 @@ public class DependencyResolver {
    * @throws Exception
    * @param artifact
    */
-  public List<URL> resolvePackage(DefaultArtifact artifact) throws Exception {
-    return resolveArtifact(artifact);
+  public List<URL> resolvePackage(PackageBuildId buildId) throws Exception {
+    
+    DefaultArtifact packageArtifact = new DefaultArtifact(
+        buildId.getGroupId(), 
+        buildId.getPackageName(), "jar", 
+        buildId.getBuildVersion());
+    
+    return resolveArtifact(packageArtifact, new RenjinExclusionFilter());
   }
 
-  private List<URL> resolveArtifact(DefaultArtifact renjinArtifact) throws Exception {
+  private List<URL> resolveArtifact(DefaultArtifact renjinArtifact, DependencyFilter filter) throws Exception {
     List<URL> artifacts = Lists.newArrayList();
 
     Dependency renjinDependency = new Dependency(renjinArtifact, "runtime");
     CollectRequest collectRequest = new CollectRequest(renjinDependency, repositories);
+    
     DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, null);
-
+    dependencyRequest.setFilter(filter);
+    
     DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
 
     for(ArtifactResult artifactResult : dependencyResult.getArtifactResults()) {

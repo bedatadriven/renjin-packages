@@ -1,4 +1,4 @@
-package org.renjin.ci.tester;
+package org.renjin.ci.repository;
 
 
 /*******************************************************************************

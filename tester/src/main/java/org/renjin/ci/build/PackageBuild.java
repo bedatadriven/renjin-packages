@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.build;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

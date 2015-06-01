@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.renjin.ci.tester;
+package org.renjin.ci.repository;
 
 import org.apache.maven.wagon.Wagon;
 import org.eclipse.aether.connector.wagon.WagonProvider;

@@ -17,7 +17,7 @@
                 <#list builds?reverse as build>
                     <a href="${build.buildNumber}" class="list-group-item">#${build.buildNumber}
                         <small class="text-muted"> with Renjin ${build.renjinVersion}</small>
-                        <#if build.succeeded>
+                        <#if build.passed>
                             <span class="glyphicon glyphicon-ok-sign text-success pull-right" aria-hidden="true"></span>
                         <#else>
                             <span class="glyphicon glyphicon-remove-sign text-danger pull-right" aria-hidden="true"></span>

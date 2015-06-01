@@ -17,10 +17,10 @@ import org.jenkinsci.lib.configprovider.ConfigProvider;
 import org.jenkinsci.lib.configprovider.model.Config;
 import org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig;
 import org.jenkinsci.plugins.configfiles.maven.security.CredentialsHelper;
+import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.workflow.BuildContext;
 import org.renjin.ci.workflow.ConfigException;
-import org.renjin.ci.workflow.PackageBuild;
 import org.renjin.ci.workflow.WorkerContext;
 
 import java.io.File;

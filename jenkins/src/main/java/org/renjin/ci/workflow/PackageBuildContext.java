@@ -8,6 +8,7 @@ import hudson.Launcher;
 import hudson.model.*;
 import hudson.slaves.WorkspaceList;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.workflow.graph.PackageNode;
 

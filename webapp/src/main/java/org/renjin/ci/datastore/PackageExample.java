@@ -22,6 +22,8 @@ public class PackageExample {
   @IgnoreSave(IfNull.class)
   private String parsingError;
 
+  public PackageExample() {
+  }
 
   public PackageExample(PackageVersionId id, String name) {
     this.packageVersionKey = PackageVersion.key(id);
@@ -59,4 +61,9 @@ public class PackageExample {
   public void setParsingError(String parsingError) {
     this.parsingError = parsingError;
   }
+  
+  public static Key<PackageExample> key(PackageVersionId packageVersionId, String exampleId) {
+    return Key.create(PackageVersion.key(packageVersionId), PackageExample.class, exampleId);
+  }
+  
 }

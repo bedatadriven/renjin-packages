@@ -4,12 +4,13 @@ import com.google.common.base.Optional;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.model.queue.SubTask;
+import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.workflow.graph.BuildQueue;
 import org.renjin.ci.workflow.tools.GoogleCloudStorage;
 import org.renjin.ci.workflow.tools.LogFileParser;
 import org.renjin.ci.workflow.tools.Maven;
-import org.renjin.ci.workflow.tools.WebApp;
+import org.renjin.ci.workflow.tools.RenjinCiClient;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -83,7 +84,7 @@ public class WorkerExecutable implements Queue.Executable {
     
     try {
       
-      PackageBuild build = WebApp.startBuild(lease.getPackageVersionId(), parent.getRenjinVersion());
+      PackageBuild build = RenjinCiClient.startBuild(lease.getPackageVersionId(), parent.getRenjinVersion());
 
       buildContext.log("Starting build #%d...", build.getBuildNumber());
       
@@ -104,7 +105,7 @@ public class WorkerExecutable implements Queue.Executable {
       /**
        * Report the build result to ci.renjin.org
        */
-      WebApp.postResult(build, result);
+      RenjinCiClient.postResult(build, result);
       
       lease.completed(taskListener, build.getBuildNumber(), result.getOutcome());
       

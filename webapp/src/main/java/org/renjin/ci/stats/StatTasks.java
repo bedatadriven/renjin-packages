@@ -24,7 +24,7 @@ public class StatTasks {
    * <p>If another update is scheduled before 
    */
   public static void scheduleBuildDeltaCountUpdate() {
-    triggerUpdate("buildDeltas", StatPipelines.updateBuildStats());
+    //triggerUpdate("buildDeltas", StatPipelines.updateBuildStats());
   }
 
   private static void triggerUpdate(final String taskName, final Job<?> job) {

@@ -13,11 +13,11 @@ import com.google.jenkins.plugins.credentials.oauth.GoogleRobotPrivateKeyCredent
 import com.google.jenkins.plugins.credentials.oauth.JsonServiceAccountConfig;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
 import org.renjin.ci.workflow.BuildContext;
 import org.renjin.ci.workflow.ConfigException;
-import org.renjin.ci.workflow.PackageBuild;
 import org.renjin.ci.workflow.WorkerContext;
 
 import java.io.IOException;

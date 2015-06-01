@@ -1,7 +1,7 @@
 package org.renjin.ci.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
 
 /**
  * Identifies a build by packageId:renjinVersion:buildNumber
@@ -22,7 +22,22 @@ public class PackageBuildId {
     this.packageVersionId = packageVersionId;
     this.buildNumber = buildNumber;
   }
-  
+
+  public PackageBuildId(PackageVersionId packageVersionId, String buildVersion) {
+    this.packageVersionId = packageVersionId;
+    this.buildNumber = parseBuildNumber(packageVersionId, buildVersion);
+  }
+
+  private static long parseBuildNumber(PackageVersionId packageVersionId, String buildVersion) {
+    String[] versionParts = buildVersion.split("-b");
+    Preconditions.checkArgument(
+        versionParts.length == 2 && versionParts[0].equals(packageVersionId.getVersionString()),
+        "Expected build version in the format %s-b000, found: '%s'", packageVersionId.getVersionString(), buildVersion);
+    
+    return Long.parseLong(versionParts[1]);
+  }
+
+
   public PackageId getPackageId() {
     return packageVersionId.getPackageId();
   }

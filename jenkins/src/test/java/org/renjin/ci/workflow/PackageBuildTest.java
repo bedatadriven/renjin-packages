@@ -2,6 +2,7 @@ package org.renjin.ci.workflow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.renjin.ci.build.PackageBuild;
 
 import java.io.IOException;
 

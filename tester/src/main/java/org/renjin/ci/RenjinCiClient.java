@@ -1,12 +1,9 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Preconditions;
-import hudson.AbortException;
-import org.renjin.ci.model.PackageBuildResult;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.ResolvedDependencySet;
-import org.renjin.ci.workflow.PackageBuild;
+import org.renjin.ci.build.PackageBuild;
+import org.renjin.ci.model.*;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -16,15 +13,16 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class WebApp {
+public class RenjinCiClient {
 
-  private static final Logger LOGGER = Logger.getLogger(WebApp.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RenjinCiClient.class.getName());
 
   public static final String ROOT_URL = "https://renjinci.appspot.com";
 
@@ -51,9 +49,23 @@ public class WebApp {
         .request().get(ResolvedDependencySet.class);
     
   }
+  
+  public static PackageBuildId queryLastSuccessfulBuild(PackageVersionId packageVersionId) {
+    String buildVersion = packageVersion(packageVersionId)
+        .path("lastSuccessfulBuild")
+        .request().get(String.class);
+    
+    return new PackageBuildId(packageVersionId, buildVersion);
+  }
 
+  public static List<TestCase> queryPackageTestCases(PackageVersionId packageVersionId) {
+    return Arrays.asList(packageVersion(packageVersionId)
+        .path("examples")
+        .request().get(TestCase[].class));
+  }
+  
 
-  public static long postBuild(PackageVersionId packageVersionId, String renjinVersion) throws AbortException {
+  public static long postBuild(PackageVersionId packageVersionId, String renjinVersion) {
     Preconditions.checkNotNull(renjinVersion, "renjinVersion cannot be null");
     
     PackageBuild build;Form form = new Form();
@@ -68,7 +80,7 @@ public class WebApp {
 
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Exception getting build number", e);
-      throw new AbortException("Failed to get next build number from " + builds.getUri() + ": " + e.getMessage());
+      throw new RuntimeException("Failed to get next build number from " + builds.getUri() + ": " + e.getMessage());
     }
     return build.getBuildNumber();
   }
@@ -110,4 +122,5 @@ public class WebApp {
     }
     return packageVersionIds;
   }
+
 }

@@ -2,21 +2,21 @@
 package org.renjin.ci.packages;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
-import org.renjin.ci.datastore.PackageBuild;
-import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.TestCase;
+import org.renjin.ci.model.TestResult;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Specific version of a package
@@ -88,6 +88,76 @@ public class PackageVersionResource {
         return packageBuild;
       }
     });
+  }
+
+  @GET
+  @Path("examples")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<TestCase> getExamples() {
+    List<PackageExample> examples = ObjectifyService.ofy().load().type(PackageExample.class)
+        .ancestor(PackageVersion.key(packageVersionId))
+        .chunk(1000)
+        .list();
+
+    List<Key<PackageExampleSource>> sources = new ArrayList<>();
+    for (PackageExample example : examples) {
+      if(example.getSource() != null) {
+        sources.add(example.getSource().getKey());
+      }
+    }
+
+    Map<Key<PackageExampleSource>, PackageExampleSource> sourceMap = ObjectifyService.ofy().load().keys(sources);
+    
+    List<TestCase> cases = new ArrayList<>();
+    for (PackageExample example : examples) {
+      if(example.getSource() != null) {
+        PackageExampleSource source = sourceMap.get(example.getSource().getKey());
+        if (source != null) {
+          TestCase testCase = new TestCase();
+          testCase.setId(example.getName());
+          testCase.setSource(source.getSource());
+          cases.add(testCase);
+        }
+      }
+    }
+    
+    return cases;
+  }
+  
+  @POST
+  @Path("examples/results")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response postExampleTestResult(@PathParam("exampleId") String exampleId, TestResult testResult) {
+
+    Key<PackageExample> exampleKey = PackageExample.key(packageVersionId, exampleId);
+
+    PackageBuildId buildId = new PackageBuildId(packageVersionId, testResult.getPackageBuildVersion());
+    
+    // Verify that the example exists
+    PackageExample example = ObjectifyService.ofy().load().key(exampleKey).now();
+    if(example == null) {
+      return Response
+          .status(Response.Status.BAD_REQUEST)
+          .entity(String.format("No such example '%s'", exampleId))
+          .build();
+    }
+    
+    // Log the results
+    PackageExampleResult result = new PackageExampleResult();
+    result.setExampleKey(exampleKey);
+    result.setPackageBuildNumber(buildId.getBuildNumber());
+    result.setRenjinVersion(testResult.getRenjinVersion());
+    result.setDuration(testResult.getDuration());
+    result.setRunTime(new Date());
+    result.setPassed(testResult.isPassed());
+    ObjectifyService.ofy().save().entity(result).now();
+    
+    // Now we need to...
+    // (1) Determine whether this test is a regression/progression
+    // (2) Update the status of the package version --  
+    // (3) Update the 
+
+    return Response.ok().build();
   }
   
 

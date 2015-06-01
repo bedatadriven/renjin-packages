@@ -15,17 +15,40 @@
   <name>Renjin CI Tester</name>
 
   <properties>
-    <mavenVersion>3.1.0</mavenVersion>
-    <wagonVersion>1.2.1</wagonVersion>
     <aetherVersion>0.9.0.M2</aetherVersion>
+    <mavenVersion>3.1.0</mavenVersion>
+    <wagonVersion>1.0</wagonVersion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <dependencies>
+
     <dependency>
-      <groupId>io.tesla.maven</groupId>
-      <artifactId>maven-aether-provider</artifactId>
-      <version>${mavenVersion}</version>
+      <groupId>org.renjin.ci</groupId>
+      <artifactId>renjin-ci-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <!--  Aether  -->
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-api</artifactId>
+      <version>${aetherVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-spi</artifactId>
+      <version>${aetherVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-util</artifactId>
+      <version>${aetherVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.aether</groupId>
+      <artifactId>aether-impl</artifactId>
+      <version>${aetherVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.aether</groupId>
@@ -38,9 +61,70 @@
       <version>${aetherVersion}</version>
     </dependency>
     <dependency>
+      <groupId>io.tesla.maven</groupId>
+      <artifactId>maven-aether-provider</artifactId>
+      <version>${mavenVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.wagon</groupId>
+      <artifactId>wagon-provider-api</artifactId>
+      <version>${wagonVersion}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-settings-builder</artifactId>
+      <version>${mavenVersion}</version>
+    </dependency>
+    <dependency>
       <groupId>org.sonatype.maven</groupId>
       <artifactId>wagon-ahc</artifactId>
-      <version>${wagonVersion}</version>
+      <version>1.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.sisu</groupId>
+      <artifactId>org.eclipse.sisu.plexus</artifactId>
+      <version>0.0.0.M1</version>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>asm</groupId>
+          <artifactId>asm</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.sonatype.sisu</groupId>
+          <artifactId>sisu-guice</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-guice</artifactId>
+      <version>3.1.0</version>
+      <classifier>no_aop</classifier>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>aopalliance</groupId>
+          <artifactId>aopalliance</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>2.11</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-json-jackson</artifactId>
+      <version>2.9.1</version>
     </dependency>
   </dependencies>
 
@@ -58,7 +142,7 @@
               <attachToBuild>true</attachToBuild>
               <!-- Optional, default is "onejar" -->
               <classifier>onejar</classifier>
-              <mainClass>org.renjin.ci.tester.Main</mainClass>
+              <mainClass>org.renjin.ci.test.Main</mainClass>
             </configuration>
             <goals>
               <goal>one-jar</goal>

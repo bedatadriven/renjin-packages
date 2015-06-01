@@ -4,7 +4,7 @@ import hudson.model.TaskListener;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.ResolvedDependency;
 import org.renjin.ci.model.ResolvedDependencySet;
-import org.renjin.ci.workflow.tools.WebApp;
+import org.renjin.ci.workflow.tools.RenjinCiClient;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +43,7 @@ public class PackageGraphBuilder {
 
   private void addAll(String filter, Map<String, String> filterParameters, Double sample) throws InterruptedException {
     taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
-    List<PackageVersionId> packageVersionIds = WebApp.queryPackageList(filter, filterParameters);
+    List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter, filterParameters);
     taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
 
     List<PackageVersionId> sampled = sample(packageVersionIds, sample);
@@ -117,7 +117,7 @@ public class PackageGraphBuilder {
     }
     taskListener.getLogger().println(format("Resolving dependencies of %s...", node.getId()));
 
-    ResolvedDependencySet resolution = WebApp.resolveDependencies(node.getId());
+    ResolvedDependencySet resolution = RenjinCiClient.resolveDependencies(node.getId());
     if(!resolution.isComplete()) {
       taskListener.getLogger().println(node.getId() + " is has unknown dependencies " + resolution.getMissingPackages());
       node.orphan();

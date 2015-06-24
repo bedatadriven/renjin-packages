@@ -5,6 +5,7 @@ import org.renjin.ci.admin.migrate.FixBuildKeys;
 import org.renjin.ci.admin.migrate.FixBuildRenjinVersion;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.admin.migrate.ReIndexBuild;
+import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 import org.renjin.ci.pipelines.Pipelines;
@@ -35,6 +36,11 @@ public class AdminResources {
     return new Viewable("/admin.ftl", model);
   }
   
+  @POST
+  @Path("rebuildExamples")
+  public Response rebuildExamples() {
+    return Pipelines.redirectToStatus(Pipelines.forEach(new ExamplesExtractor()));
+  }
 
   @POST
   @Path("migrate")

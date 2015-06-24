@@ -4,21 +4,23 @@ import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.search.*;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.index.PackageSearchIndex;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.util.*;
 
 @Path("/packages")
@@ -28,6 +30,15 @@ public class PackageListResource {
 
     private final SearchService searchService = SearchServiceFactory.getSearchService();
     
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getIndex() {
+        
+        Map<String, Object> model = new HashMap<>();
+        model.put("latestReleases", Lists.newArrayList(PackageDatabase.getLatestPackageReleases()));
+        
+        return new Viewable("/packageIndex.ftl", model);
+    }
     
     @GET
     @Path("/unbuilt")
@@ -113,6 +124,17 @@ public class PackageListResource {
             }
         }
         return results;
+    }
+
+
+
+    @GET
+    @Path("/{name}.html")
+    public Response getPackageLocation(@Context UriInfo uriInfo, @PathParam("name") String packageName) {
+        return Response
+            .status(Response.Status.MOVED_PERMANENTLY)
+            .location(uriInfo.getBaseUriBuilder().path("package").path("org.renjin.cran").path(packageName).build())
+            .build();
     }
 
 

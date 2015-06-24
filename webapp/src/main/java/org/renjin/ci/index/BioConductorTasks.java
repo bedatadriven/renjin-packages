@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.appengine.api.taskqueue.*;
 import com.google.common.base.Optional;
+import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
@@ -112,6 +113,9 @@ public class BioConductorTasks {
 
             PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
             PackageRegistrationTasks.enqueue(packageVersionId);
+
+            // Extract examples for testing purposes
+            new ExamplesExtractor().map(PackageVersion.key(packageVersionId).getRaw());
         }
 
         return Response.ok().build();

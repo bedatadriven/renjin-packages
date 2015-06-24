@@ -1,10 +1,10 @@
 package org.renjin.ci.workflow.graph;
 
 import hudson.model.TaskListener;
+import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.ResolvedDependency;
 import org.renjin.ci.model.ResolvedDependencySet;
-import org.renjin.ci.workflow.tools.RenjinCiClient;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;

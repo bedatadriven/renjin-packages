@@ -2,10 +2,7 @@ package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.common.base.Optional;
-import com.googlecode.objectify.Key;
-import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.Result;
-import com.googlecode.objectify.Work;
+import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.PackageId;
@@ -37,8 +34,12 @@ public class PackageDatabase {
     register(PackageVersionDescription.class);
     register(PackageTestResult.class);
     register(PackageTestRun.class);
+    register(TestOutput.class);
+
     register(PackageExample.class);
     register(PackageExampleSource.class);
+    register(PackageExampleRun.class);
+    register(PackageExampleResult.class);
     register(RenjinVersionStat.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
@@ -54,6 +55,14 @@ public class PackageDatabase {
 
   public static Optional<PackageVersion> getPackageVersion(String packageVersionId) {
     return getPackageVersion(PackageVersionId.fromTriplet(packageVersionId));
+  }
+  
+  public static QueryResultIterable<PackageVersion> getLatestPackageReleases() {
+
+    return ObjectifyService.ofy().load()
+        .type(PackageVersion.class)
+        .order("-publicationDate")
+        .limit(20);
   }
 
   public static long newBuildNumber(final PackageVersionId packageVersionId) {
@@ -147,6 +156,17 @@ public class PackageDatabase {
     
   }
 
+
+
+  public static QueryResultIterable<PackageExampleResult> getExampleResults(PackageVersionId packageVersionId) {
+
+    return ObjectifyService.ofy()
+        .load()
+        .type(PackageExampleResult.class)
+        .ancestor(PackageVersion.key(packageVersionId))
+        .iterable();
+  }
+
   public static QueryResultIterable<PackageTestResult> getTestResults(PackageVersionId packageVersionId) {
     
     return ObjectifyService.ofy()
@@ -173,6 +193,26 @@ public class PackageDatabase {
   public static Loader load() {
     return ObjectifyService.ofy().load();
   }
-  
-  
+
+
+  public static String getExampleOutput(String outputKey) {
+    return  ObjectifyService.ofy().load().key(Key.create(TestOutput.class, outputKey)).safe().getOutput();
+  }
+
+  public static Query<PackageExampleResult> getExampleResults(PackageVersionId packageVersionId, long runNumber) {
+    Key<PackageExampleRun> runKey = Key.create(PackageVersion.key(packageVersionId), PackageExampleRun.class, runNumber);
+
+    return ObjectifyService.ofy()
+        .load()
+        .type(PackageExampleResult.class)
+        .ancestor(runKey);
+  }
+
+  public static LoadResult<PackageExampleRun> getExampleRun(PackageVersionId packageVersionId, long testRunNumber) {
+    Key<PackageExampleRun> runKey = Key.create(PackageVersion.key(packageVersionId), PackageExampleRun.class, testRunNumber);
+
+    return ObjectifyService.ofy()
+        .load()
+        .key(runKey);
+  }
 }

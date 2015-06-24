@@ -107,6 +107,20 @@ public class RenjinCiClient {
     buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
   }
 
+
+  public static void postTestResults(PackageVersionId packageVersionId, List<TestResult> results) {
+    WebTarget versionResource = client().target(ROOT_URL)
+        .path("package")
+        .path(packageVersionId.getGroupId())
+        .path(packageVersionId.getPackageName())
+        .path(packageVersionId.getVersionString())
+        .path("examples/results");
+
+    versionResource
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(results, MediaType.APPLICATION_JSON_TYPE));
+  }
+  
   public static List<PackageVersionId> queryPackageList(String filter, Map<?, ?> filterParameters) {
     WebTarget target = rootTarget().path("packages").path(filter);
     if(filterParameters != null) {

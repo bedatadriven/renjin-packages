@@ -45,6 +45,12 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @Unindex
   @IgnoreSave(IfZero.class)
   private long lastSuccessfulBuildNumber;
+  
+  @Unindex
+  private long lastExampleRun;
+  
+  @Unindex
+  private int testFailures;
 
   /**
    * True if there is a build of this PackageVersion available. (Used for searching
@@ -126,6 +132,14 @@ public class PackageVersion implements Comparable<PackageVersion> {
   }
 
 
+  public long getLastExampleRun() {
+    return lastExampleRun;
+  }
+
+  public void setLastExampleRun(long lastExampleRun) {
+    this.lastExampleRun = lastExampleRun;
+  }
+
   public String getLastSuccessfulBuildVersion() {
     if(lastSuccessfulBuildNumber > 0) {
       return version + "-b" + lastSuccessfulBuildNumber;
@@ -206,6 +220,13 @@ public class PackageVersion implements Comparable<PackageVersion> {
     });
   }
 
+  public int getTestFailures() {
+    return testFailures;
+  }
+
+  public void setTestFailures(int testFailures) {
+    this.testFailures = testFailures;
+  }
 
   public String getPackageName() {
     return getPackageVersionId().getPackageName();

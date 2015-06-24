@@ -17,6 +17,6 @@
   <threadsafe>true</threadsafe>
   
   <static-files>
-    <include path="/assets/**.css" />
+    <include path="/assets/**.*" expiration="0s" />
   </static-files>
 </appengine-web-app>

@@ -63,9 +63,9 @@ public class CompatibilityAlert {
   
   public String getAlertStyle() {
     if(style == null) {
-      return "alert";
+      return "note";
     } else {
-      return "alert alert-" + style;
+      return "note note-" + style;
     }
   }
   

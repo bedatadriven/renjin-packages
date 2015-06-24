@@ -4,11 +4,20 @@ package org.renjin.ci.model;
  * The result of a test run
  */
 public class TestResult {
+  private String id;
   private String output;
   private boolean passed;
   private long duration;
   private String renjinVersion;
   private String packageBuildVersion;
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
 
   public String getOutput() {
     return output;

@@ -10,10 +10,10 @@ import java.util.Date;
 public class PackageExampleResult {
 
   @Parent
-  private Key<PackageExample> exampleKey;
+  private Key<PackageExampleRun> run;
   
   @Id
-  private long resultId;
+  private String name;
   
   @Unindex
   private String renjinVersion;
@@ -29,21 +29,20 @@ public class PackageExampleResult {
   
   @Unindex
   private boolean passed;
+  
+  @Unindex
+  private String outputKey;
 
+  public PackageExampleResult() {
+  }
+
+  public PackageExampleResult(PackageExampleRun run, String exampleName) {
+    this.run = Key.create(run);
+    this.name = exampleName;
+  }
+  
   public Key<PackageExample> getExampleKey() {
-    return exampleKey;
-  }
-
-  public void setExampleKey(Key<PackageExample> exampleKey) {
-    this.exampleKey = exampleKey;
-  }
-
-  public long getResultId() {
-    return resultId;
-  }
-
-  public void setResultId(long resultId) {
-    this.resultId = resultId;
+    return Key.create(run.getParent(), PackageExample.class, name);
   }
 
   public String getRenjinVersion() {
@@ -84,5 +83,34 @@ public class PackageExampleResult {
 
   public void setPassed(boolean passed) {
     this.passed = passed;
+  }
+
+  public String getOutputKey() {
+    return outputKey;
+  }
+
+  public String fetchOutput() {
+    return PackageDatabase.getExampleOutput(outputKey);
+  }
+  
+  public void setOutputKey(String outputKey) {
+    this.outputKey = outputKey;
+  }
+
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public Key<PackageExampleRun> getRun() {
+    return run;
+  }
+
+  public void setRun(Key<PackageExampleRun> run) {
+    this.run = run;
   }
 }

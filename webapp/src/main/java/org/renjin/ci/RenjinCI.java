@@ -15,6 +15,7 @@ import org.renjin.ci.index.PackageRegistrationTasks;
 import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.packages.PackageListResource;
 import org.renjin.ci.packages.PackageResource;
+import org.renjin.ci.packages.RootResource;
 import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
 
@@ -36,9 +37,9 @@ public class RenjinCI extends Application {
 
     classes.add(JacksonFeature.class);
     classes.add(FreemarkerMvcFeature.class);
-    
-    classes.add(PackageResource.class);
 
+    classes.add(RootResource.class);
+    classes.add(PackageResource.class);
     classes.add(IndexTasks.class);
     classes.add(PackageRegistrationTasks.class);
     classes.add(PackageListResource.class);

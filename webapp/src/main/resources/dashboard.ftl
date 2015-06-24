@@ -2,7 +2,7 @@
 
 <#include "base.ftl">
 
-<@scaffolding>
+<@scaffolding title="Dashboard">
 
 <h1>Renjin Dashboard</h1>
 

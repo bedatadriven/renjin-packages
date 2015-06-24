@@ -1,5 +1,6 @@
 package org.renjin.ci.repository;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -93,12 +94,20 @@ public class DependencyResolver {
     locator.addService(RepositoryConnectorFactory.class, WagonRepositoryConnectorFactory.class);
     locator.setServices(WagonProvider.class, new ManualWagonProvider());
 
-    return locator.getService(RepositorySystem.class);
+    RepositorySystem service = locator.getService(RepositorySystem.class);
+    if(service == null) {
+      throw new IllegalStateException("Failed to locate RepositorySystem service");
+    }
+    return service;
   }
 
 
   public static DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system) throws IOException {
+    Preconditions.checkNotNull(system, "system");
+    
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+    Preconditions.checkNotNull(system, "session");
+
 
     File tempDir = new File(System.getProperty("java.io.tmpdir"));
     if(!tempDir.exists()) {

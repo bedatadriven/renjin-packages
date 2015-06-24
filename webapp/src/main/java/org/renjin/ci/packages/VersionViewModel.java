@@ -1,14 +1,13 @@
 package org.renjin.ci.packages;
 
+import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.renjin.ci.datastore.PackageBuild;
-import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.datastore.PackageVersion;
+import com.googlecode.objectify.LoadResult;
+import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class VersionViewModel {
 
@@ -17,7 +16,9 @@ public class VersionViewModel {
   private Map<String, PackageVersionId> dependencyMap = Maps.newHashMap();
   private List<PackageBuild> builds;
   private CompatibilityAlert compatibilityAlert;
-  
+  private QueryResultIterable<PackageExampleResult> exampleResults;
+  private LoadResult<PackageExampleRun> exampleRun;
+
   public VersionViewModel(PackageVersion packageVersion) {
     this.packageVersion = packageVersion;
     this.description = packageVersion.loadDescription();
@@ -107,6 +108,17 @@ public class VersionViewModel {
     return xml.toString();
   }
   
+  public String getLatestBuildUrl() {
+    return "/package/" + packageVersion.getGroupId() + "/" + packageVersion.getPackageName() + "/" + 
+        packageVersion.getVersion() + "/build/" + packageVersion.getLastSuccessfulBuildNumber();
+  }
+
+
+  public String getLatestTestRunUrl() {
+    return "/package/" + packageVersion.getGroupId() + "/" + packageVersion.getPackageName() + "/" +
+        packageVersion.getVersion() + "/examples/run/" + packageVersion.getLastExampleRun();
+  }
+
   public String getRenjinLibraryCall() {
     return String.format("library('%s:%s')", packageVersion.getGroupId(), packageVersion.getPackageName());
   }
@@ -116,5 +128,26 @@ public class VersionViewModel {
     code.append(String.format("install.packages('%s')\n", packageVersion.getPackageName()));
     code.append(String.format("library('%s')\n", packageVersion.getPackageName()));
     return code.toString();
-  }  
+  }
+
+  public void setExampleResults(QueryResultIterable<PackageExampleResult> testResults) {
+    this.exampleResults = testResults;
+  }
+  
+  
+  public List<PackageExampleResult> getExampleResults() {
+    if(exampleResults == null) {
+      return Collections.emptyList();
+    } else {
+      return Lists.newArrayList(exampleResults);
+    }
+  }
+
+  public void setExampleRun(LoadResult<PackageExampleRun> exampleRun) {
+    this.exampleRun = exampleRun;
+  }
+  
+  public PackageExampleRun getExampleRun() {
+    return exampleRun.safe();
+  }
 }

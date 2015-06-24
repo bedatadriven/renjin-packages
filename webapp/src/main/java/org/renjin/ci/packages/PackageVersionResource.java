@@ -2,6 +2,7 @@
 package org.renjin.ci.packages;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
@@ -17,11 +18,15 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Specific version of a package
  */
 public class PackageVersionResource {
+  
+  private static final Logger LOGGER = Logger.getLogger(PackageVersionResource.class.getName());
+  
   private final PackageVersion packageVersion;
   private PackageVersionId packageVersionId;
 
@@ -35,6 +40,10 @@ public class PackageVersionResource {
   public Viewable getPage() {
     VersionViewModel viewModel = new VersionViewModel(packageVersion);
     viewModel.setBuilds(PackageDatabase.getBuilds(packageVersionId).list());
+    if(packageVersion.getLastExampleRun() > 0) {
+      viewModel.setExampleRun(PackageDatabase.getExampleRun(packageVersionId, packageVersion.getLastExampleRun()));
+      viewModel.setExampleResults(PackageDatabase.getExampleResults(packageVersionId, packageVersion.getLastExampleRun()));
+    }
     Map<String, Object> model = new HashMap<>();
     model.put("version", viewModel);
 
@@ -44,6 +53,17 @@ public class PackageVersionResource {
   @Path("build/{buildNumber}")
   public PackageBuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
     return new PackageBuildResource(packageVersion.getPackageVersionId(), buildNumber);
+  }
+
+  @GET
+  @Path("examples/run/{runNumber}")
+  public Viewable getExampleRunResults(@PathParam("runNumber") int testRunNumber) {
+    Map<String, Object> model = new HashMap<>();
+    model.put("version", packageVersion);
+    model.put("run", PackageDatabase.getExampleRun(packageVersionId, testRunNumber).safe());
+    model.put("results", Lists.newArrayList(PackageDatabase.getExampleResults(packageVersionId, testRunNumber)));
+    
+    return new Viewable("/exampleRun.ftl", model);
   }
   
   @GET
@@ -112,7 +132,7 @@ public class PackageVersionResource {
     for (PackageExample example : examples) {
       if(example.getSource() != null) {
         PackageExampleSource source = sourceMap.get(example.getSource().getKey());
-        if (source != null) {
+        if (source != null && !Strings.isNullOrEmpty(source.getSource())) {
           TestCase testCase = new TestCase();
           testCase.setId(example.getName());
           testCase.setSource(source.getSource());
@@ -127,30 +147,60 @@ public class PackageVersionResource {
   @POST
   @Path("examples/results")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response postExampleTestResult(@PathParam("exampleId") String exampleId, TestResult testResult) {
+  public Response postExampleTestResult(List<TestResult> testResults) {
 
-    Key<PackageExample> exampleKey = PackageExample.key(packageVersionId, exampleId);
+    // Get the next sequence number
+    long runNumber = ObjectifyService.ofy().transact(new Work<Long>() {
+      @Override
+      public Long run() {
+        PackageVersion pv = PackageDatabase.getPackageVersion(packageVersionId).get();
+        long lastExampleRun = pv.getLastExampleRun();
+        long exampleRun = lastExampleRun + 1;
+        pv.setLastExampleRun(exampleRun);
+        ObjectifyService.ofy().save().entity(pv);
+        return exampleRun;
+      }
+    });
 
-    PackageBuildId buildId = new PackageBuildId(packageVersionId, testResult.getPackageBuildVersion());
+    // Log the results
     
-    // Verify that the example exists
-    PackageExample example = ObjectifyService.ofy().load().key(exampleKey).now();
-    if(example == null) {
-      return Response
-          .status(Response.Status.BAD_REQUEST)
-          .entity(String.format("No such example '%s'", exampleId))
-          .build();
+    List<Object> toSave = new ArrayList<>();
+
+    PackageExampleRun run = new PackageExampleRun(packageVersion, runNumber);
+    run.setRenjinVersion(testResults.get(0).getRenjinVersion());
+    toSave.add(run);
+    
+    for (TestResult testResult : testResults) {
+      
+      LOGGER.info("Recording results for " + testResult.getId());
+
+      PackageBuildId buildId = new PackageBuildId(packageVersionId, testResult.getPackageBuildVersion());
+      PackageExampleResult result = new PackageExampleResult(run, testResult.getId());
+
+      // Verify that the example exists
+      PackageExample example = ObjectifyService.ofy().load().key(result.getExampleKey()).now();
+      if(example == null) {
+        return Response
+            .status(Response.Status.BAD_REQUEST)
+            .entity(String.format("No such example '%s'", testResult.getId()))
+            .build();
+      }
+      
+      TestOutput output = new TestOutput(testResult.getOutput());
+      toSave.add(output);
+      
+      result.setPackageBuildNumber(buildId.getBuildNumber());
+      result.setRenjinVersion(testResult.getRenjinVersion());
+      result.setDuration(testResult.getDuration());
+      result.setRunTime(new Date());
+      result.setPassed(testResult.isPassed());
+      result.setOutputKey(output.getSha1());
+      toSave.add(result);
     }
     
-    // Log the results
-    PackageExampleResult result = new PackageExampleResult();
-    result.setExampleKey(exampleKey);
-    result.setPackageBuildNumber(buildId.getBuildNumber());
-    result.setRenjinVersion(testResult.getRenjinVersion());
-    result.setDuration(testResult.getDuration());
-    result.setRunTime(new Date());
-    result.setPassed(testResult.isPassed());
-    ObjectifyService.ofy().save().entity(result).now();
+    ObjectifyService.ofy().save().entities(toSave).now();
+    
+    LOGGER.info("Saved " + toSave.size() + " entities.");
     
     // Now we need to...
     // (1) Determine whether this test is a regression/progression

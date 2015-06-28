@@ -10,7 +10,9 @@ import hudson.model.queue.QueueTaskFuture;
 import jenkins.util.Timer;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.BuildOutcome;
+import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.workflow.graph.*;
 
 import javax.inject.Inject;
@@ -32,7 +34,8 @@ public class PackageGraphExecution extends AbstractStepExecutionImpl {
 
   @StepContextParameter
   private transient Run<?, ?> run;
-  
+
+  private RenjinVersionId renjinVersion;
   
   private PackageGraph graph;
 
@@ -57,6 +60,12 @@ public class PackageGraphExecution extends AbstractStepExecutionImpl {
     if(Strings.isNullOrEmpty(step.getRenjinVersion())) {
       getContext().onFailure(new AbortException("renjinVersion must be specified"));
       return true;
+    }
+    
+    if(step.getRenjinVersion().equals("LATEST")) {
+      renjinVersion = RenjinCiClient.getLatestRenjinRelease();
+    } else {
+      renjinVersion = RenjinVersionId.valueOf(step.getRenjinVersion());
     }
 
     graph = new PackageGraphBuilder(taskListener)
@@ -122,7 +131,7 @@ public class PackageGraphExecution extends AbstractStepExecutionImpl {
     
     // Now enqueue additional tasks to meet our concurrency requirement
     while(workers.size() < workerCount && !buildQueue.isEmpty()) {
-      WorkerTask newWorker = new WorkerTask(nextWorkerId++, run, taskListener, buildQueue, step.getRenjinVersion());
+      WorkerTask newWorker = new WorkerTask(nextWorkerId++, run, taskListener, buildQueue, renjinVersion.toString());
       taskListener.getLogger().println("Starting new worker #" + newWorker.getId() + "...");
 
       Queue.WaitingItem item = Queue.getInstance().schedule2(newWorker, 0).getCreateItem();

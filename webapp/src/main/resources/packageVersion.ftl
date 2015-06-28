@@ -1,11 +1,11 @@
-<#-- @ftlvariable name="version" type="org.renjin.ci.packages.VersionViewModel" -->
+<#-- @ftlvariable name="version" type="org.renjin.ci.packages.PackageVersionPage" -->
 
 
 <#include "base.ftl">
 
 <@scaffolding title="${version.packageName} ${version.version}">
 <div class="grid">
-    <div class="medium-12 grid-item">
+    <div class="medium-8 grid-item">
         
         <#macro depLabel dependency>
         <#if dependency.url?? >
@@ -26,6 +26,9 @@
         
         <p class="lead">${version.title}</p>
         
+        <#if version.publicationDate??>
+        <p class="sec">Released ${version.publicationDate?date}</p>
+        </#if>
         
         <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
         
@@ -87,6 +90,16 @@
             </#list>
         </ul>
         </#if>
+    </div>
+    <div class="grid-item medium-4">
+        <div class="inset">
+        <h3>Other versions</h3>
+        <ul>
+            <#list version.otherVersions as other>
+            <li><a href="${other.path}">${other.version}</a></li>
+            </#list>
+        </ul>
+        </div>
     </div>
 </div>
 

@@ -8,6 +8,7 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
+import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
@@ -38,12 +39,8 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   public Viewable getPage() {
-    VersionViewModel viewModel = new VersionViewModel(packageVersion);
-    viewModel.setBuilds(PackageDatabase.getBuilds(packageVersionId).list());
-    if(packageVersion.getLastExampleRun() > 0) {
-      viewModel.setExampleRun(PackageDatabase.getExampleRun(packageVersionId, packageVersion.getLastExampleRun()));
-      viewModel.setExampleResults(PackageDatabase.getExampleResults(packageVersionId, packageVersion.getLastExampleRun()));
-    }
+    PackageVersionPage viewModel = new PackageVersionPage(packageVersion);
+  
     Map<String, Object> model = new HashMap<>();
     model.put("version", viewModel);
 
@@ -119,6 +116,10 @@ public class PackageVersionResource {
         .chunk(1000)
         .list();
 
+    if(examples.isEmpty()) {
+      examples = ExamplesExtractor.extract(packageVersionId);
+    }
+    
     List<Key<PackageExampleSource>> sources = new ArrayList<>();
     for (PackageExample example : examples) {
       if(example.getSource() != null) {

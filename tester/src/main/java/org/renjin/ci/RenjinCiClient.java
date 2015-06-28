@@ -137,4 +137,13 @@ public class RenjinCiClient {
     return packageVersionIds;
   }
 
+  public static RenjinVersionId getLatestRenjinRelease() {
+    String version = client().target(ROOT_URL)
+        .path("releases")
+        .path("latest")
+        .request(MediaType.TEXT_PLAIN)
+        .get(String.class);
+    return RenjinVersionId.valueOf(version);
+
+  }
 }

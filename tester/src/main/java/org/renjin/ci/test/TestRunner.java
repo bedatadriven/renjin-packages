@@ -56,12 +56,12 @@ public class TestRunner {
     PrintStream testPrintStream = new PrintStream(testBaos);
     System.setOut(testPrintStream);
     System.setErr(testPrintStream);
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    long startTime = System.currentTimeMillis();
+    long stopTime;
     
     boolean passed = true;
     try {
       cli.run(source);
-      stopwatch.stop();
     } catch (Exception ignored) {
       // exception is printed by CLI
       passed = false;
@@ -70,7 +70,8 @@ public class TestRunner {
       System.setErr(oldErr);
       testPrintStream.flush();
     }
-    
+
+    stopTime = System.currentTimeMillis();
     
     String testOutput = new String(testBaos.toByteArray());
     System.out.println("############## " + testCase.getId() + "#######################");
@@ -92,7 +93,7 @@ public class TestRunner {
     result.setOutput(testOutput);
     result.setPassed(passed);
     if(passed) {
-      result.setDuration(stopwatch.elapsed(TimeUnit.MILLISECONDS));
+      result.setDuration(stopTime - startTime);
     }
     return result;
   }  

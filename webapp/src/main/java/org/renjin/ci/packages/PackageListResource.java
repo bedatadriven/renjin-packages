@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.joda.time.DateTime;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
@@ -55,6 +56,31 @@ public class PackageListResource {
 
         for (Key<PackageVersion> packageVersionKey : packages) {
             packageVersionIds.add(PackageVersion.idOf(packageVersionKey));
+        }
+        return packageVersionIds;
+    }
+    
+    @GET
+    @Path("/new")
+    @Produces(MediaType.APPLICATION_JSON) 
+    public List<PackageVersionId> getNew() {
+        List<PackageVersionId> packageVersionIds = new ArrayList<>();
+        QueryResultIterable<PackageVersion> packages = ObjectifyService.ofy()
+            .load()
+            .type(PackageVersion.class)
+            .order("-publicationDate")
+            .chunk(1000)
+            .iterable();
+
+        DateTime cutoff = new DateTime().minusDays(60);
+
+        for (PackageVersion packageVersion : packages) {
+            if(!packageVersion.isBuilt()) {
+                packageVersionIds.add(packageVersion.getPackageVersionId());    
+            }
+            if(cutoff.isAfter(packageVersion.getPublicationDate().getTime())) {
+                break;
+            }
         }
         return packageVersionIds;
     }

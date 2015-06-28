@@ -1,10 +1,14 @@
 package org.renjin.ci.packages;
 
+import org.renjin.ci.datastore.PackageExampleResult;
 import org.renjin.ci.model.CompatibilityFlags;
 import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.model.PackageBuildId;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.String.format;
 
 
 public class CompatibilityAlert {
@@ -12,11 +16,13 @@ public class CompatibilityAlert {
   private String message;
   private String style;
   
-  public CompatibilityAlert(PackageVersion packageVersion) {
+  public CompatibilityAlert(PackageVersion packageVersion, Iterable<PackageExampleResult> results) {
     if(packageVersion.getLastSuccessfulBuildNumber() == 0) {
-      if(packageVersion.getCompatibilityFlag(CompatibilityFlags.BUILD_FAILURE)) {
+      if(packageVersion.getLastBuildNumber() != 0) {
+        PackageBuildId lastBuild = packageVersion.getLastBuildId();
         style = "danger";
-        message = "There was a problem building this package.";
+        message = format("There was a problem building this package. <a href=\"" + 
+              lastBuild.getPath() + "\">");
       } else {
         style = null;
         message = "This package is not yet available for use with Renjin";

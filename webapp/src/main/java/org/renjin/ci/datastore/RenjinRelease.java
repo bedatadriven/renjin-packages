@@ -14,6 +14,9 @@ public class RenjinRelease {
 
   @Id
   private String version;
+  
+  @Index
+  private long buildNumber;
 
   @Index
   private Date date;
@@ -59,5 +62,13 @@ public class RenjinRelease {
 
   public void setRenjinCommit(Ref<RenjinCommit> renjinCommit) {
     this.renjinCommit = renjinCommit;
+  }
+
+  public long getBuildNumber() {
+    return buildNumber;
+  }
+
+  public void setBuildNumber(long buildNumber) {
+    this.buildNumber = buildNumber;
   }
 }

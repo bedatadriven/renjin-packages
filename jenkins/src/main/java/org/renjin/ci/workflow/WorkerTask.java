@@ -7,7 +7,9 @@ import org.renjin.ci.workflow.graph.BuildQueue;
 
 import java.io.IOException;
 
-
+/**
+ * 
+ */
 public class WorkerTask extends AbstractQueueTask {
 
   private int id;

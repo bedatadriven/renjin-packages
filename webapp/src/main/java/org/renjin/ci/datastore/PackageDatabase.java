@@ -1,13 +1,20 @@
 package org.renjin.ci.datastore;
 
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.appengine.api.datastore.QueryResultIterator;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
+import com.googlecode.objectify.cmd.QueryKeys;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.packages.results.RenjinResults;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +107,21 @@ public class PackageDatabase {
 
   }
 
+  public static Iterable<PackageVersionId> getPackageVersionIds(PackageId packageId) {
+    QueryResultIterable<Key<PackageVersion>> versions = ObjectifyService.ofy()
+        .load()
+        .type(PackageVersion.class)
+        .ancestor(Package.key(packageId))
+        .keys()
+        .iterable();
+    
+    return Iterables.transform(versions, new Function<Key<PackageVersion>, PackageVersionId>() {
+      @Override
+      public PackageVersionId apply(Key<PackageVersion> key) {
+        return PackageVersion.idOf(key);
+      }
+    });
+  }
 
   public static Query<PackageBuild> getBuilds(PackageId packageId) {
 
@@ -215,4 +237,21 @@ public class PackageDatabase {
         .load()
         .key(runKey);
   }
+
+  public static RenjinVersionId getLatestRelease() {
+    QueryResultIterator<Key<RenjinRelease>> results = ObjectifyService.ofy()
+        .load()
+        .type(RenjinRelease.class)
+        .order("-buildNumber")
+        .limit(1)
+        .keys()
+        .iterator();
+    
+    if(!results.hasNext()) {
+      throw new IllegalStateException("No releases");
+    }
+    return RenjinVersionId.valueOf(results.next().getName());
+  }
+
+  
 }

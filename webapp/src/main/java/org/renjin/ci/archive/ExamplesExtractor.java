@@ -1,5 +1,6 @@
 package org.renjin.ci.archive;
 
+import com.google.common.collect.Iterables;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Ref;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -35,11 +36,22 @@ public class ExamplesExtractor extends ForEachPackageVersion {
     ObjectifyService.ofy().transactionless().save().entities(sourceVisitor.toSave);
   }
 
+  public static List<PackageExample> extract(PackageVersionId packageVersionId) {
+    Visitor sourceVisitor = new Visitor(packageVersionId);
+    sourceVisitor.accept(packageVersionId);
+
+    ObjectifyService.ofy().transactionless().save().entities(sourceVisitor.toSave);
+
+    return sourceVisitor.getExamples();
+    
+  }
+  
   private static class Visitor extends SourceVisitor {
 
     private final PackageVersionId packageVersionId;
     private final String expectedPrefix;
     private final List<Object> toSave = new ArrayList<>();
+    private final List<PackageExample> examples = new ArrayList<>();
 
     private Visitor(PackageVersionId packageVersionId) {
       this.packageVersionId = packageVersionId;
@@ -63,6 +75,7 @@ public class ExamplesExtractor extends ForEachPackageVersion {
 
         toSave.add(source);
         toSave.add(example);
+        examples.add(example);
 
       } catch(Exception e) {
         LOGGER.log(Level.SEVERE, format("Exception parsing %s in %s: %s",
@@ -108,6 +121,10 @@ public class ExamplesExtractor extends ForEachPackageVersion {
       rd.accept(examples);
 
       return examples.getSource();
+    }
+
+    public List<PackageExample> getExamples() {
+      return examples;
     }
   }
 

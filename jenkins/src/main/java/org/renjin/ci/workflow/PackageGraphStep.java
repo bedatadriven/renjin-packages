@@ -10,12 +10,14 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.util.Map;
 
 public class PackageGraphStep extends AbstractStepImpl {
-
+  
   private String filter;
   private Map filterParameters;
   private Double sample;
   private Integer workerCount;
   private String renjinVersion;
+  private boolean build = true;
+  private boolean test = false;
   
   @DataBoundConstructor
   public PackageGraphStep() {

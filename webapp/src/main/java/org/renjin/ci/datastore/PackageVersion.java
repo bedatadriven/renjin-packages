@@ -2,8 +2,11 @@ package org.renjin.ci.datastore;
 
 import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfTrue;
@@ -118,9 +121,23 @@ public class PackageVersion implements Comparable<PackageVersion> {
         .safe()
         .parse();
   }
+  
+  public Supplier<PackageDescription> getDescription() {
+    // start loading asynchronously
+    final LoadResult<PackageVersionDescription> description = ObjectifyService.ofy()
+        .load()
+        .key(Key.create(packageKey, PackageVersionDescription.class, version));
+    
+    return Suppliers.memoize(new Supplier<PackageDescription>() {
+      @Override
+      public PackageDescription get() {
+        return description.safe().parse();
+      }
+    });
+  }
 
   public long getLastBuildNumber() {
-    return Math.max(lastBuildNumber, 200);
+    return lastBuildNumber;
   }
 
   public void setLastBuildNumber(long lastBuildNumber) {
@@ -129,6 +146,10 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   public long getLastSuccessfulBuildNumber() {
     return lastSuccessfulBuildNumber;
+  }
+  
+  public PackageBuildId getLastBuildId() {
+    return new PackageBuildId(getPackageVersionId(), lastBuildNumber);
   }
 
 

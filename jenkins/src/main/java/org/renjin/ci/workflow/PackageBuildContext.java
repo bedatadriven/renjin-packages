@@ -25,7 +25,6 @@ public class PackageBuildContext {
     private final Launcher launcher;
     private PackageNode packageNode;
         
-
     
     public PackageBuildContext(Run<?,?> run, TaskListener listener, PackageBuild build) throws InterruptedException, IOException {
         this.run = run;

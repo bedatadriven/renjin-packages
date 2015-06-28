@@ -14,9 +14,13 @@ import org.renjin.ci.workflow.tools.Maven;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class WorkerExecutable implements Queue.Executable {
+
+  private static final Logger LOGGER = Logger.getLogger(WorkerExecutable.class.getName());
   
   private final WorkerTask parent;
   private final TaskListener taskListener;
@@ -43,6 +47,8 @@ public class WorkerExecutable implements Queue.Executable {
       maven = new Maven(workerContext);
 
     } catch (InterruptedException e) {
+      LOGGER.log(Level.SEVERE, "Package graph worker interrupted");
+
       // Cancelled
       return;
     } catch (IOException e) {
@@ -65,6 +71,7 @@ public class WorkerExecutable implements Queue.Executable {
       } catch (Exception e) {
         // something's wrong with the executor/jenkins/node, 
         // exit now, and we'll be replaced by PackageGraphExecution if there is more work to be done
+        LOGGER.log(Level.SEVERE, "Package graph worker crashed: " + e.getMessage(), e);
         return;
       }
     }

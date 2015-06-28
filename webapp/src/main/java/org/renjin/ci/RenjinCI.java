@@ -10,6 +10,7 @@ import org.renjin.ci.admin.AdminResources;
 import org.renjin.ci.archive.SourceTasks;
 import org.renjin.ci.benchmarks.BenchmarksResource;
 import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.RenjinRelease;
 import org.renjin.ci.index.IndexTasks;
 import org.renjin.ci.index.PackageRegistrationTasks;
 import org.renjin.ci.index.WebHooks;
@@ -18,6 +19,7 @@ import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.RootResource;
 import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
+import org.renjin.ci.releases.ReleasesResource;
 
 import javax.ws.rs.core.Application;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class RenjinCI extends Application {
     classes.add(JacksonFeature.class);
     classes.add(FreemarkerMvcFeature.class);
 
+    classes.add(ReleasesResource.class);
+    
     classes.add(RootResource.class);
     classes.add(PackageResource.class);
     classes.add(IndexTasks.class);

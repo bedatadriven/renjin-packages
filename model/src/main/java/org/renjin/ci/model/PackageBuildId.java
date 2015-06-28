@@ -36,6 +36,10 @@ public class PackageBuildId {
     
     return Long.parseLong(versionParts[1]);
   }
+  
+  public String getPath() {
+    return getPackageVersionId().getPath() + "/build/" + buildNumber;
+  }
 
 
   public PackageId getPackageId() {

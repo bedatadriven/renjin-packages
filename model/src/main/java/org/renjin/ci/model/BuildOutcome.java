@@ -21,5 +21,10 @@ public enum BuildOutcome {
    */
   TIMEOUT,
 
+  /**
+   * The build could not be started because of a missing dependency.
+   */
+  BLOCKED,
+  
   CANCELLED;
 }

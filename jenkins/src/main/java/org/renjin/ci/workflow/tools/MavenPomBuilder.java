@@ -8,10 +8,10 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.CorePackages;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
-import org.renjin.ci.workflow.graph.NodeState;
 import org.renjin.ci.workflow.graph.PackageNode;
 
 import java.io.IOException;
@@ -30,13 +30,13 @@ public class MavenPomBuilder {
 
   private final PackageBuild build;
   private final PackageDescription description;
-  private PackageNode node;
+  private PackageNode packageNode;
 
 
-  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription, PackageNode node) {
+  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription, PackageNode packageNode) {
     this.build = build;
     this.description = packageDescription;
-    this.node = node;
+    this.packageNode = packageNode;
   }
 
   private Model buildPom() throws IOException {
@@ -80,13 +80,15 @@ public class MavenPomBuilder {
 
         } else {
 
-          PackageNode dependencyNode = node.getDependency(packageDep.getName());
-          dependencyNode.assertState(NodeState.BUILT);
+          PackageBuildId dependencyBuild = packageNode.getDependency(packageDep.getName());
+          if(dependencyBuild == null) {
+            throw new RuntimeException("Cannot build due to upstream failure of " + packageDep.getName());
+          }
 
           Dependency mavenDep = new Dependency();
-          mavenDep.setGroupId(dependencyNode.getId().getGroupId());
+          mavenDep.setGroupId(dependencyBuild.getGroupId());
           mavenDep.setArtifactId(packageDep.getName());
-          mavenDep.setVersion(dependencyNode.getBuildVersion());
+          mavenDep.setVersion(dependencyBuild.getBuildVersion());
           model.addDependency(mavenDep);
         }
       }

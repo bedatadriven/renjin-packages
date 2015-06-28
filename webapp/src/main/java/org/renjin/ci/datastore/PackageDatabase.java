@@ -8,13 +8,10 @@ import com.google.common.collect.Iterables;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
-import com.googlecode.objectify.cmd.QueryKeys;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
-import org.renjin.ci.packages.results.RenjinResults;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -155,8 +152,8 @@ public class PackageDatabase {
   }
 
 
-  public static PackageBuild getBuild(PackageVersionId packageVersionId, long buildNumber) {
-    return ObjectifyService.ofy().load().key(PackageBuild.key(packageVersionId, buildNumber)).safe();
+  public static LoadResult<PackageBuild> getBuild(PackageVersionId packageVersionId, long buildNumber) {
+    return ObjectifyService.ofy().load().key(PackageBuild.key(packageVersionId, buildNumber));
   }
 
   public static Result<Map<Key<PackageVersion>,PackageVersion>> save(PackageVersion... packageVersions) {

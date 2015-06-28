@@ -1,14 +1,13 @@
 package org.renjin.ci.packages;
 
-import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.LoadResult;
-import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.datastore.*;
-import org.renjin.ci.model.*;
+import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.util.*;
 
@@ -19,11 +18,11 @@ public class PackageVersionPage {
 
   private final PackageVersionId id;
   private final Supplier<PackageDescription> description;
+  private final LoadResult<PackageBuild> latestBuild;
   private PackageVersion packageVersion;
   private Map<String, PackageVersionId> dependencyMap = Maps.newHashMap();
-  private QueryResultIterable<PackageBuild> builds;
   private CompatibilityAlert compatibilityAlert;
-  private QueryResultIterable<PackageExampleResult> exampleResults;
+  private Iterable<PackageExampleResult> exampleResults;
   private LoadResult<PackageExampleRun> exampleRun;
   private Iterable<PackageVersionId> otherVersions;
 
@@ -34,14 +33,21 @@ public class PackageVersionPage {
     this.id = packageVersion.getPackageVersionId();
     this.packageVersion = packageVersion;
     this.description = packageVersion.getDescription();
-    this.compatibilityAlert = new CompatibilityAlert(packageVersion);
 
-    this.builds = PackageDatabase.getBuilds(id).iterable();
     this.otherVersions = PackageDatabase.getPackageVersionIds(packageVersion.getPackageId());
     if(packageVersion.getLastExampleRun() > 0) {
       this.exampleRun = PackageDatabase.getExampleRun(id, packageVersion.getLastExampleRun());
       this.exampleResults = PackageDatabase.getExampleResults(id, packageVersion.getLastExampleRun());
+    } else {
+      this.exampleResults = Collections.emptyList();
     }
+    if(packageVersion.getLastBuildNumber() > 0) {
+      this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastBuildNumber());
+    } else {
+      this.latestBuild = null;
+    }
+    this.compatibilityAlert = new CompatibilityAlert(packageVersion, latestBuild, this.exampleResults);
+
   }
   
 
@@ -106,9 +112,6 @@ public class PackageVersionPage {
     return getDependencies(description.get().getSuggests());
   }
 
-  public List<PackageBuild> getBuilds() {
-    return Lists.newArrayList(builds);
-  }
 
   public boolean isAvailable() {
     return packageVersion.getLastSuccessfulBuildNumber() > 0;

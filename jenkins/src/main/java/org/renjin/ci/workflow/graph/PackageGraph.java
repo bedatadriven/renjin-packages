@@ -1,6 +1,5 @@
 package org.renjin.ci.workflow.graph;
 
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.Serializable;
@@ -24,14 +23,8 @@ public class PackageGraph implements Serializable {
     return nodes.values();
   }
 
-  @Whitelisted
   public int size() {
     return nodes.size();
   }
-
-
-  @Whitelisted
-  public BuildQueue newBuildQueue() {
-    return new BuildQueue(this);
-  }
+  
 }

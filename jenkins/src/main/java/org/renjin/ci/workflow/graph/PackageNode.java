@@ -1,26 +1,24 @@
 package org.renjin.ci.workflow.graph;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+
+import static java.lang.String.format;
 
 
 public class PackageNode implements Serializable {
   
   private final PackageVersionId packageVersionId;
   
-  private BuildOutcome buildOutcome = null;
-  
-  private NodeState state = NodeState.READY;
-  
-  private long buildNumber;
+  private PackageNodeState buildResult = PackageNodeState.NOT_BUILT;
 
   /**
    * Dependencies of this node that are to be built during
@@ -45,149 +43,116 @@ public class PackageNode implements Serializable {
   public PackageNode(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
   }
-
-
-  public void resolveAsBuild(long buildNumber) {
-    this.buildNumber = buildNumber;
-    this.buildOutcome = BuildOutcome.SUCCESS;
-    this.state = NodeState.BUILT;
-  }
-
-  public boolean isDependenciesResolved() {
-    return dependenciesResolved;
-  }
-
-  public void setDependenciesResolved(boolean dependenciesResolved) {
-    this.dependenciesResolved = dependenciesResolved;
-  }
-
+  
+  
   public boolean isBuilt() {
-    return buildNumber != 0;
+    return buildResult.isBuilt();
   }
   
   public void dependsOn(PackageNode node) {
     dependencies.add(node);
     node.dependants.add(this);
-    
-    if(node.getState() != NodeState.BUILT) {
-      state = NodeState.BLOCKED;
-    }
   }
-
+  
   public Set<PackageNode> getDependants() {
     return dependants;
   }
 
-  void buildCompleted(long buildNumber, BuildOutcome outcome) {
-    assertState(NodeState.READY);
-    
-    this.buildOutcome = outcome;
-    this.buildNumber = buildNumber;
-    this.state = NodeState.BUILT;
-  }
-  
-  boolean tryUnblock() {
-    assertState(NodeState.BLOCKED);
-    
-    for (PackageNode dependency : dependencies) {
-      if(  dependency.state == NodeState.ORPHANED ||
-          (dependency.state == NodeState.BUILT &&
-              dependency.buildOutcome != BuildOutcome.SUCCESS)) {
-        
-        state = NodeState.ORPHANED;
-        return true;
-      }
-    }
-    
-    for (PackageNode dependency : dependencies) {
-      if(dependency.state != NodeState.BUILT) {
-        return false;
-      }
-    }
-    state = NodeState.READY;
-    return true;
-  }
   
   public PackageVersionId getId() {
     return packageVersionId;
   }
 
-  @Whitelisted
   public String getLabel() {
     return packageVersionId.toString();
   }
   
-  @Whitelisted
-  public NodeState getState() {
-    return state;
-  }
-
   @Override
   public String toString() {
-    return packageVersionId + "@" + state;
+    return packageVersionId.toString();
   }
 
-
-  public void assertState(NodeState expectedState) {
-    Preconditions.checkState(state == expectedState, "%s: Expected state to be %s, but was %s",
-        packageVersionId, expectedState, state);
-  }
-
-  public PackageNode getDependency(String packageName) {
-    for (PackageNode dependency : dependencies) {
-      if(dependency.getId().getPackageName().equals(packageName)) {
-        return dependency;
-      }
-    }
-    throw new IllegalArgumentException(
-      String.format("Cannot find dependency name '%s' of node '%s'. Dependencies include: %s", 
-          packageName, packageVersionId, dependencies.toString()));
-  }
-
-  public BuildOutcome getBuildOutcome() {
-    assertState(NodeState.BUILT);
-    Preconditions.checkState(buildOutcome != null, "Build outcome in node %s was null", getId());
-    
-    return buildOutcome;
-  }
-  
   public void provideBuild(long buildNumber) {
-    this.state = NodeState.BUILT;
-    this.buildOutcome = BuildOutcome.SUCCESS;
-    this.buildNumber = buildNumber;
+    this.buildResult = PackageNodeState.success(buildNumber);
     this.provided = true;
   }
 
   public boolean isProvided() {
     return provided;
   }
-
-  public String getBuildVersion() {
-    assertState(NodeState.BUILT);
-    Preconditions.checkState(buildOutcome == BuildOutcome.SUCCESS, "%s: No successfully build, outcome was %s",
-        getId(), buildOutcome);
-    Preconditions.checkState(buildNumber != 0, "%s: Build number is unset");
-    
-    return new PackageBuildId(packageVersionId, buildNumber).getBuildVersion();
-  }
-
+  
   public Set<PackageNode> getDependencies() {
     return ImmutableSet.copyOf(dependencies);
   }
 
-  public void orphan() {
-    state = NodeState.ORPHANED;
+  public String getDebugLabel() {
+    return packageVersionId + "[" + buildResult + "]";
   }
 
-  public String getDebugLabel() {
-    StringBuilder label = new StringBuilder();
-    label.append(state.name());
-    if(provided) {
-      label.append(" [provided]");
-    } else if(state == NodeState.BUILT) {
-      label.append(" [").append(buildOutcome).append("]");
-    }
+  public void orphan() {
+    this.buildResult = PackageNodeState.ORPHANED;
+  }
 
-    return label.toString();
+  public PackageNodeState getBuildResult() {
+    return buildResult;
+  }
+
+  public PackageBuildId getDependency(String name) {
+    for (PackageNode dependency : dependencies) {
+      if(dependency.getId().getPackageName().equals(name)) {
+        return dependency.getBuildId();
+      }
+    }
+    throw new IllegalStateException(format("Package %s has no dependency named '%s'", getId(), name));
+  }
+
+  private PackageBuildId getBuildId() {
+    PackageNodeState result = this.buildResult;
+    if(result.getOutcome() == BuildOutcome.SUCCESS) {
+      return new PackageBuildId(packageVersionId, result.getBuildNumber());
+    } else {
+      throw new IllegalStateException(format("Cannot return build id for %s, state is %s", 
+          packageVersionId, buildResult));
+    }
+  }
+
+  public void completed(long buildNumber, BuildOutcome outcome) {
+    this.buildResult = new PackageNodeState(buildNumber, outcome);
+  }
+
+  public void cancelled() {
+    this.buildResult = PackageNodeState.CANCELLED;
+  }
+
+  public void crashed() {
+    this.buildResult = new PackageNodeState(-1, BuildOutcome.ERROR);
+  }
+
+  public List<String> resolvedDependencies() {
+    List<String> list = new ArrayList<String>();
+    for (PackageNode dependency : dependencies) {
+      list.add(dependency.getId().toString());
+    }
+    return list;
+  }
+
+  public void blocked(long buildNumber) {
+    this.buildResult = new PackageNodeState(buildNumber, BuildOutcome.BLOCKED);
+  }
+
+  public List<String> blockingDependencies() {
+    List<String> list = new ArrayList<String>();
+    for (PackageNode dependencyNode : dependencies) {
+      PackageNodeState upstreamResult = dependencyNode.getBuildResult();
+      if(upstreamResult.getOutcome() != BuildOutcome.SUCCESS) {
+        if(upstreamResult.getBuildNumber() > 0) {
+          PackageBuildId upstreamBuildId = new PackageBuildId(dependencyNode.getId(), upstreamResult.getBuildNumber());
+          list.add(upstreamBuildId.toString());
+        } else {
+          list.add(dependencyNode.getId().toString());
+        }
+      }
+    }
+    return list;
   }
 }

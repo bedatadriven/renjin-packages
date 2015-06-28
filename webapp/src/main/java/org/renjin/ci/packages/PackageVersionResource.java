@@ -19,6 +19,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -223,6 +224,11 @@ public class PackageVersionResource {
   
   @Path("resolveDependencies")
   public DependencyResolution resolveDependencies() {
-    return new DependencyResolution(packageVersion);
+    try {
+      return new DependencyResolution(packageVersion);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception thrown while resolving dependencies: " + e.getMessage(), e);
+      throw e;
+    }
   }
 }

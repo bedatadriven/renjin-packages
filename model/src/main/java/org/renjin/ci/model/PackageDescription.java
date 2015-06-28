@@ -13,6 +13,8 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PackageDescription {
 
@@ -110,7 +112,9 @@ public class PackageDescription {
 		private String name;
 		private String email;
 
-		private Person(String spec) {
+		private static final Pattern ROLE_PATTERN = Pattern.compile("\\s*'(.+)'\\s+\\[(.+)\\]\\s*");
+		
+		Person(String spec) {
 			int bracketStart = spec.indexOf('<');
 			if(bracketStart == -1) {
 				this.name = spec.trim();
@@ -127,6 +131,11 @@ public class PackageDescription {
 				} catch(Exception e) {
 					throw new RuntimeException("Error parsing '" + spec + "'");
 				}
+			}
+
+			Matcher roleMatcher = ROLE_PATTERN.matcher(this.name);
+			if(roleMatcher.matches()) {
+				this.name = roleMatcher.group(1);
 			}
 		}
 

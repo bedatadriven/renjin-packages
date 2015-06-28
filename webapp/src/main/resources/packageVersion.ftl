@@ -27,7 +27,7 @@
         <p class="lead">${version.title}</p>
         
         <#if version.publicationDate??>
-        <p class="sec">Released ${version.publicationDate?date}</p>
+        <p class="sec">Released ${version.publicationDate?date} by ${version.authorList}</p>
         </#if>
         
         <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
@@ -70,7 +70,7 @@
         <a href="http://docs.renjin.org/en/latest/introduction.html#setting-up-a-java-project-for-renjin">Read more</a> 
         about embedding Renjin in JVM-based projects.</p>
         <pre>${version.pomReference?html}</pre>
-        <p><a href="${version.latestBuildUrl}">View build log</a></p>
+        <p><a href="/${version.latestBuildUrl}">View build log</a></p>
         
         <h3>Renjin CLI</h3>
         <p>If you're using Renjin from the command line, you load this library by invoking:</p>

@@ -8,8 +8,10 @@ import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersion;
-import org.renjin.ci.model.*;
-import org.renjin.ci.packages.CompatibilityAlert;
+import org.renjin.ci.model.CompatibilityFlags;
+import org.renjin.ci.model.NativeOutcome;
+import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 
 import java.util.*;
@@ -88,7 +90,6 @@ public class PackageVersionCheck extends ForEachPackageVersion {
                         }
 
                     }
-                    LOGGER.info("Compatibility: " + new CompatibilityAlert(packageVersion).getMessage());
                 }
                 
                 ObjectifyService.ofy().save().entity(packageVersion);

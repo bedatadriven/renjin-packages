@@ -21,6 +21,7 @@ import org.renjin.ci.model.PackageVersionId;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 public class PackageVersion implements Comparable<PackageVersion> {
@@ -54,6 +55,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
   
   @Unindex
   private int testFailures;
+  
+  @Index
+  private List<String> blockingDependencies;
 
   /**
    * True if there is a build of this PackageVersion available. (Used for searching

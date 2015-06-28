@@ -7,8 +7,6 @@ import org.renjin.ci.model.ResolvedDependency;
 import org.renjin.ci.model.ResolvedDependencySet;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
@@ -18,13 +16,13 @@ public class PackageGraphBuilder {
 
   private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
 
-  private final ExecutorService executorService;
-  
   public PackageGraphBuilder(TaskListener taskListener) {
     this.taskListener = taskListener;
-    this.executorService = Executors.newFixedThreadPool(4);
   }
-
+  
+  public PackageGraph add(String filter, Double sample) throws Exception {
+    return add(filter, Collections.<String, String>emptyMap(), sample);
+  }
   
   public PackageGraph add(String filter, Map<String, String> filterParameters, Double sample) throws Exception {
 
@@ -117,9 +115,17 @@ public class PackageGraphBuilder {
     }
     taskListener.getLogger().println(format("Resolving dependencies of %s...", node.getId()));
 
-    ResolvedDependencySet resolution = RenjinCiClient.resolveDependencies(node.getId());
+    ResolvedDependencySet resolution;
+    try {
+      resolution = RenjinCiClient.resolveDependencies(node.getId());
+
+    } catch (Exception e) {
+      taskListener.getLogger().println(format("Failed to resolve dependencies of %s: %s", node.getId(), e.getMessage()));
+      node.orphan();
+      return;
+    }
     if(!resolution.isComplete()) {
-      taskListener.getLogger().println(node.getId() + " is has unknown dependencies " + resolution.getMissingPackages());
+      taskListener.getLogger().println(node.getId() + " has unknown dependencies " + resolution.getMissingPackages());
       node.orphan();
 
     } else {
@@ -127,7 +133,5 @@ public class PackageGraphBuilder {
         node.dependsOn(getOrCreateNodeForDependency(resolvedDependency) );
       }
     }
-
-    node.setDependenciesResolved(true);
   }
 }

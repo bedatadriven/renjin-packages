@@ -6,21 +6,24 @@
 
 <div class="grid">
 
+    <div class="grid-item medium-12">
     <h1>${packageName} ${version}</h1>
+    </div>
     
     <div class="grid-item medium-3">
         <h3>Build History</h3>
+        <ul>
         <#list builds?reverse as build>
-            <a href="${build.buildNumber}" class="list-group-item">#${build.buildNumber}
-                <small class="text-muted"> with Renjin ${build.renjinVersion}</small>
+            <li><a href="${build.buildNumber}" class="list-group-item">#${build.buildNumber}</a>
+                <small>with Renjin ${build.renjinVersion}
                 <#if build.succeeded>
-                    <span class="glyphicon glyphicon-ok-sign text-success pull-right" aria-hidden="true"></span>
+                    [OK]
                 <#else>
-                    <span class="glyphicon glyphicon-remove-sign text-danger pull-right" aria-hidden="true"></span>
-                </#if>
-            </a>
+                    [FAILED]
+                </#if></small>
+            </li>
         </#list>
-        
+        </ul>
     </div>
     <div class="grid-item medium-9">
 
@@ -28,10 +31,20 @@
 
         <p>${build.outcome!"Started"} <#if startTime??>on ${startTime?datetime} </#if>against Renjin ${build.renjinVersion}</p>
 
-        <#if log??>
-            <pre class="log">${log}</pre>
+        <#if build.outcome == "BLOCKED">
+            <h3>Blocked by Upstream Failures</h3>
+            <#if build.blockingDependencies??>
+                <#list build.blockingDependencies as blocker>
+                    <p>${blocker}</p>
+                </#list>
+            </#if>
+
         <#else>
-            <div class="alert alert-warning">Build log is not available.</div>
+            <#if log??>
+                <pre class="log">${log}</pre>
+            <#else>
+                <div class="alert alert-warning">Build log is not available.</div>
+            </#if>
         </#if>
         
     </div>

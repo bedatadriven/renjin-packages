@@ -1,9 +1,12 @@
 package org.renjin.ci.packages;
 
+import com.googlecode.objectify.LoadResult;
+import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageExampleResult;
-import org.renjin.ci.model.CompatibilityFlags;
 import org.renjin.ci.datastore.PackageVersion;
-import org.renjin.ci.model.PackageBuildId;
+import org.renjin.ci.model.BuildOutcome;
+import org.renjin.ci.model.CompatibilityFlags;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +19,19 @@ public class CompatibilityAlert {
   private String message;
   private String style;
   
-  public CompatibilityAlert(PackageVersion packageVersion, Iterable<PackageExampleResult> results) {
+  public CompatibilityAlert(PackageVersion packageVersion, LoadResult<PackageBuild> latestBuild, Iterable<PackageExampleResult> results) {
     if(packageVersion.getLastSuccessfulBuildNumber() == 0) {
       if(packageVersion.getLastBuildNumber() != 0) {
-        PackageBuildId lastBuild = packageVersion.getLastBuildId();
+        PackageBuild lastBuild = latestBuild.safe();
         style = "danger";
-        message = format("There was a problem building this package. <a href=\"" + 
-              lastBuild.getPath() + "\">");
+        if(lastBuild.getOutcome() == BuildOutcome.BLOCKED) {
+          message = "This package cannot yet be used with Renjin it depends on other packages" +
+              "which are not available: " + blockingDependencyLinkList(lastBuild);
+         
+        } else {
+          message = format("This package cannot yet be used with Renjin because there was a problem building " +
+              "the package using Renjin's toolchain. <a href=\"%s\">View Build Log</a>", lastBuild.getPath());
+        }
       } else {
         style = null;
         message = "This package is not yet available for use with Renjin";
@@ -40,7 +49,31 @@ public class CompatibilityAlert {
       }
     }
   }
-  
+
+  private String blockingDependencyLinkList(PackageBuild lastBuild) {
+    StringBuilder sb = new StringBuilder();
+    List<PackageVersionId> blockers = lastBuild.getBlockingDependencyVersions();
+    for (int i = 0; i < blockers.size(); i++) {
+      if(i > 0) {
+        if(blockers.size() > 2) {
+          sb.append(", ");
+        }
+        if(i+1 == blockers.size()) {
+          sb.append(" and ");
+        }
+      }
+      PackageVersionId blocker = blockers.get(i);
+      sb.append("<a href=\"")
+          .append(blocker.getPath())
+          .append("\">")
+          .append(blocker.getPackageName())
+          .append("&nbsp;")
+          .append(blocker.getVersion())
+          .append("</a>");
+    }
+    return sb.toString();
+  }
+
   private static String composeWarningMessage(PackageVersion packageVersion) {
     List<String> issues = new ArrayList<>();
     if(packageVersion.getCompatibilityFlag(CompatibilityFlags.NATIVE_COMPILATION_FAILURE)) {

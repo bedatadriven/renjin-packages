@@ -1,6 +1,8 @@
 package org.renjin.ci.model;
 
 
+import java.util.List;
+
 public class PackageBuildResult {
 
   private String id;
@@ -8,6 +10,10 @@ public class PackageBuildResult {
   private BuildOutcome outcome;
 
   private NativeOutcome nativeOutcome;
+  
+  private List<String> blockingDependencies;
+  
+  private List<String> resolvedDependencies;
 
   private PackageBuildResult() {
   }
@@ -50,5 +56,21 @@ public class PackageBuildResult {
 
   public NativeOutcome getNativeOutcome() {
     return nativeOutcome;
+  }
+
+  public List<String> getBlockingDependencies() {
+    return blockingDependencies;
+  }
+
+  public void setBlockingDependencies(List<String> blockingDependencies) {
+    this.blockingDependencies = blockingDependencies;
+  }
+
+  public List<String> getResolvedDependencies() {
+    return resolvedDependencies;
+  }
+
+  public void setResolvedDependencies(List<String> resolvedDependencies) {
+    this.resolvedDependencies = resolvedDependencies;
   }
 }

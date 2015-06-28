@@ -47,13 +47,16 @@ public class PackageBuildResource {
     // Start fetching log text
     String logText = BuildLogs.tryFetchLog(new PackageBuildId(packageVersionId, buildNumber));
 
+    PackageBuild theBuild = findBuild(builds);
+
+
     Map<String, Object> model = Maps.newHashMap();
     model.put("groupId", packageVersionId.getGroupId());
     model.put("packageName", packageVersionId.getPackageName());
     model.put("version", packageVersionId.getVersionString());
     model.put("buildNumber", buildNumber);
     model.put("builds", Lists.newArrayList(builds));
-    model.put("build", findBuild(builds));
+    model.put("build", theBuild);
     model.put("log", logText);
 
     return new Viewable("/buildResult.ftl", model);
@@ -101,6 +104,8 @@ public class PackageBuildResource {
           build.setEndTime(System.currentTimeMillis());
           build.setDuration(build.getEndTime() - build.getStartTime());
           build.setNativeOutcome(buildResult.getNativeOutcome());
+          build.setResolvedDependencies(buildResult.getResolvedDependencies());
+          build.setBlockingDependencies(buildResult.getBlockingDependencies());
           ObjectifyService.ofy().save().entity(build);
 
           maybeUpdateLastSuccessfulBuild(build);

@@ -5,7 +5,6 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import hudson.FilePath;
 import hudson.model.TaskListener;
-import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.workflow.graph.PackageNode;
 import org.renjin.ci.workflow.tools.Maven;
 
@@ -53,14 +52,7 @@ public class BuildContext {
   public PrintStream getLogger() {
     return workerContext.getLogger();
   }
-
-  public PackageNode getPackageNode() {
-    return packageNode;
-  }
   
-  public PackageVersionId getPackageVersionId() {
-    return packageNode.getId();
-  }
 
   public TaskListener getListener() {
     return workerContext.getListener();
@@ -77,7 +69,7 @@ public class BuildContext {
   }
 
   public void log(String message, Object... arguments) {
-    workerContext.getLogger().println(packageNode.getId() + ": " + String.format(message, arguments));
+    workerContext.getLogger().println(packageNode.getLabel() + ": " + String.format(message, arguments));
   }
   
   public ByteSource getLogAsByteSource() {
@@ -95,5 +87,9 @@ public class BuildContext {
   
   public CharSource getLogAsCharSource() {
     return getLogAsByteSource().asCharSource(Charsets.UTF_8);
+  }
+
+  public PackageNode getPackageNode() {
+    return packageNode;
   }
 }

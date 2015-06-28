@@ -2,6 +2,8 @@ package org.renjin.ci;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.*;
 
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,6 +51,16 @@ public class RenjinCiClient {
         .path("resolveDependencies")
         .request().get(ResolvedDependencySet.class);
     
+  }
+  
+  public static ListenableFuture<ResolvedDependencySet> resolveDependencies(ListeningExecutorService service, 
+                                                                            final PackageVersionId id) {
+    return service.submit(new Callable<ResolvedDependencySet>() {
+      @Override
+      public ResolvedDependencySet call() throws Exception {
+        return resolveDependencies(id);
+      }
+    });
   }
   
   public static PackageBuildId queryLastSuccessfulBuild(PackageVersionId packageVersionId) {

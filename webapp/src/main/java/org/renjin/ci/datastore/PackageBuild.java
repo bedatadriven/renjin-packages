@@ -10,7 +10,10 @@ import com.googlecode.objectify.condition.IfZero;
 import org.renjin.ci.model.*;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Records metadata about an individual package
@@ -25,7 +28,6 @@ import java.util.Date;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PackageBuild {
   
-  
 
   @Parent
   private Key<PackageVersion> versionKey;
@@ -38,7 +40,13 @@ public class PackageBuild {
 
   @JsonProperty
   private NativeOutcome nativeOutcome;
+  
+  @Unindex
+  private List<String> blockingDependencies;
 
+  @Unindex
+  private List<String> resolvedDependencies;
+  
   /**
    * The Renjin version against which the
    * package was built
@@ -102,7 +110,7 @@ public class PackageBuild {
 
   @JsonIgnore
   public String getPath() {
-    return getId().toString().replaceAll(":", "/");
+    return getPackageVersionId().getPath() + "/build/" + getBuildNumber();
   }
 
 
@@ -240,6 +248,35 @@ public class PackageBuild {
         return input.getBuildNumber();
       }
     });
+  }
+
+  public List<String> getBlockingDependencies() {
+    return blockingDependencies;
+  }
+  
+  public List<PackageVersionId> getBlockingDependencyVersions() {
+    if(blockingDependencies == null) {
+      return Collections.emptyList();
+    } else {
+      List<PackageVersionId> list = new ArrayList<>();
+      for (String blockingDependency : blockingDependencies) {
+        String[] coordinates = blockingDependency.split(":");
+        list.add(new PackageVersionId(coordinates[0], coordinates[1], coordinates[2]));
+      }
+      return list;
+    }
+  }
+
+  public void setBlockingDependencies(List<String> blockingDependencies) {
+    this.blockingDependencies = blockingDependencies;
+  }
+
+  public List<String> getResolvedDependencies() {
+    return resolvedDependencies;
+  }
+  
+  public void setResolvedDependencies(List<String> resolvedDependencies) {
+    this.resolvedDependencies = resolvedDependencies;
   }
 
   /**

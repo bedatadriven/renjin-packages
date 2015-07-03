@@ -1,10 +1,9 @@
 package org.renjin.ci.datastore;
 
-import com.google.appengine.api.datastore.Key;
-import com.google.appengine.api.datastore.KeyFactory;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
-import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
@@ -12,20 +11,17 @@ import org.renjin.ci.model.RenjinVersionId;
 public class PackageTestResult {
   
   @Parent
-  private Key parentKey;
+  private Key<PackageBuild> buildKey;
 
 
   /**
-   * Composite key consisting of testRunNumber:testName
+   * The name of the test
    */
   @Id
   private String name;
 
   @Unindex
   private String renjinVersion;
-  
-  @Unindex
-  private long packageBuildNumber;
   
   @Index
   private boolean passed;
@@ -35,37 +31,26 @@ public class PackageTestResult {
   private String output;
   
   @Unindex
+  private Long duration;
+  
+  @Unindex
   @IgnoreSave(IfNull.class)
   private String error;
 
   public PackageTestResult() {
   }
 
-
-  public PackageTestResult(PackageVersionId packageVersionId, long testRunNumber, String testName) {
-    Key versionKey = PackageVersion.key(packageVersionId).getRaw();
-    
-    this.parentKey = KeyFactory.createKey(versionKey, "TestRun", testRunNumber);
-    this.name = testName;
+  public PackageTestResult(Key<PackageBuild> buildKey, String name) {
+    this.buildKey = buildKey;
+    this.name = name;
   }
 
-  public Key getParentKey() {
-    return parentKey;
-  }
-
-  public void setParentKey(Key parentKey) {
-    this.parentKey = parentKey;
-  }
-  
   public PackageVersionId getPackageVersionId() {
-    Key versionKey = parentKey.getParent();
-    Key packageKey = versionKey.getParent();
-    PackageId packageId = PackageId.valueOf(packageKey.getName());
-    return new PackageVersionId(packageId, versionKey.getName());
+    return getBuildId().getPackageVersionId();
   }
 
-  public long getTestRunNumber() {
-    return parentKey.getId();
+  private PackageBuildId getBuildId() {
+    return PackageBuild.idOf(buildKey);
   }
 
   public String getName() {
@@ -77,11 +62,7 @@ public class PackageTestResult {
   }
 
   public long getPackageBuildNumber() {
-    return packageBuildNumber;
-  }
-
-  public void setPackageBuildNumber(long packageBuildNumber) {
-    this.packageBuildNumber = packageBuildNumber;
+    return getBuildId().getBuildNumber();
   }
 
   public RenjinVersionId getRenjinVersionId() {
@@ -120,5 +101,11 @@ public class PackageTestResult {
     this.error = error;
   }
 
+  public Long getDuration() {
+    return duration;
+  }
 
+  public void setDuration(Long duration) {
+    this.duration = duration;
+  }
 }

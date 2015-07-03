@@ -57,7 +57,7 @@ public class PackageVersionCheck extends ForEachPackageVersion {
                     }
 
 
-                    Collection<PackageTestResult> tests = lastTestSetAgainst(testResults, renjinVersionId);
+                    Collection<PackageTestResult> tests = Collections.emptySet();
 
                     int testCount = tests.size();
                     int passCount = passCount(tests);
@@ -134,34 +134,34 @@ public class PackageVersionCheck extends ForEachPackageVersion {
         }
         return Optional.fromNullable(lastBuild);
     }
-
-
-    /**
-     * 
-     * @return the results of the last test run against a given version of renjin
-     */
-    private List<PackageTestResult> lastTestSetAgainst(
-        Iterable<PackageTestResult> testResults,
-        RenjinVersionId renjinVersionId) {
-
-        List<PackageTestResult> list = new ArrayList<>();
-        long lastTestRun = 0;
-
-        for (PackageTestResult testResult : testResults) {
-            if(renjinVersionId.equals(testResult.getRenjinVersionId())) {
-
-                if(testResult.getTestRunNumber() == lastTestRun) {
-                    list.add(testResult);
-                } else if(testResult.getTestRunNumber() > lastTestRun) {
-                    lastTestRun = testResult.getTestRunNumber();
-                    list.clear();
-
-                    list.add(testResult);
-                }
-            }
-        }
-        return list;
-    }
+//
+//
+//    /**
+//     * 
+//     * @return the results of the last test run against a given version of renjin
+//     */
+//    private List<PackageTestResult> lastTestSetAgainst(
+//        Iterable<PackageTestResult> testResults,
+//        RenjinVersionId renjinVersionId) {
+//
+//        List<PackageTestResult> list = new ArrayList<>();
+//        long lastTestRun = 0;
+//
+//        for (PackageTestResult testResult : testResults) {
+//            if(renjinVersionId.equals(testResult.getRenjinVersionId())) {
+//
+//                if(testResult.getTestRunNumber() == lastTestRun) {
+//                    list.add(testResult);
+//                } else if(testResult.getTestRunNumber() > lastTestRun) {
+//                    lastTestRun = testResult.getTestRunNumber();
+//                    list.clear();
+//
+//                    list.add(testResult);
+//                }
+//            }
+//        }
+//        return list;
+//    }
 
 
     private int passCount(Collection<PackageTestResult> tests) {

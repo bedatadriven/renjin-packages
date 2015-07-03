@@ -8,6 +8,7 @@ import com.google.common.collect.Iterables;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
@@ -37,7 +38,6 @@ public class PackageDatabase {
     register(PackageVersion.class);
     register(PackageVersionDescription.class);
     register(PackageTestResult.class);
-    register(PackageTestRun.class);
     register(TestOutput.class);
 
     register(PackageExample.class);
@@ -175,14 +175,12 @@ public class PackageDatabase {
     
   }
 
-
-
-  public static QueryResultIterable<PackageExampleResult> getExampleResults(PackageVersionId packageVersionId) {
+  public static QueryResultIterable<PackageTestResult> getTestResults(PackageBuildId packageBuildId) {
 
     return ObjectifyService.ofy()
         .load()
-        .type(PackageExampleResult.class)
-        .ancestor(PackageVersion.key(packageVersionId))
+        .type(PackageTestResult.class)
+        .ancestor(PackageBuild.key(packageBuildId))
         .iterable();
   }
 

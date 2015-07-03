@@ -32,9 +32,9 @@
 
   <modules>
     <module>model</module>
-    <module>tester</module>
     <module>webapp</module>
     <module>jenkins</module>
+    <module>client</module>
   </modules>
 
   <properties>

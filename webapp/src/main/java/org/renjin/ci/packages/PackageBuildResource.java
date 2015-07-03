@@ -3,15 +3,11 @@ package org.renjin.ci.packages;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.googlecode.objectify.Key;
+import com.googlecode.objectify.*;
 import com.googlecode.objectify.NotFoundException;
-import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.archive.BuildLogs;
-import org.renjin.ci.datastore.PackageBuild;
-import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.*;
 import org.renjin.ci.stats.StatTasks;
 
@@ -55,6 +51,7 @@ public class PackageBuildResource {
     model.put("packageName", packageVersionId.getPackageName());
     model.put("version", packageVersionId.getVersionString());
     model.put("buildNumber", buildNumber);
+    model.put("testResults", Lists.newArrayList(PackageDatabase.getTestResults(theBuild.getId())));
     model.put("builds", Lists.newArrayList(builds));
     model.put("build", theBuild);
     model.put("log", logText);
@@ -98,6 +95,7 @@ public class PackageBuildResource {
 
         } else {
 
+          List<Object> toSave = Lists.newArrayList();
           LOGGER.log(Level.INFO, "Marking " + build.getId() + " as " + buildResult.getOutcome());
 
           build.setOutcome(buildResult.getOutcome());
@@ -106,18 +104,37 @@ public class PackageBuildResource {
           build.setNativeOutcome(buildResult.getNativeOutcome());
           build.setResolvedDependencies(buildResult.getResolvedDependencies());
           build.setBlockingDependencies(buildResult.getBlockingDependencies());
-          ObjectifyService.ofy().save().entity(build);
+          toSave.add(build);
 
-          maybeUpdateLastSuccessfulBuild(build);
+          if (buildResult.getTestResults() != null) {
+            for (TestResult result : buildResult.getTestResults()) {
+              PackageTestResult test = new PackageTestResult(buildKey, result.getName());
+              test.setDuration(result.getDuration());
+              test.setPassed(result.isPassed());
+              test.setOutput(result.getOutput());
+              test.setRenjinVersion(build.getRenjinVersion());
+              if(result.getDuration() > 0) {
+                test.setDuration(result.getDuration());
+              }
+              toSave.add(test);
+            }
 
-          // Update the delta (regression/progression) flags for this build
-          if(updateDeltaFlags(packageVersionId, Optional.<PackageBuild>absent())) {
-            StatTasks.scheduleBuildDeltaCountUpdate();
+            ObjectifyService.ofy().save().entities(toSave);
+
+
+            maybeUpdateLastSuccessfulBuild(build);
+
+            // Update the delta (regression/progression) flags for this build
+            if (updateDeltaFlags(packageVersionId, Optional.<PackageBuild>absent())) {
+              StatTasks.scheduleBuildDeltaCountUpdate();
+            }
           }
         }
       }
     });
   }
+
+
 
 
   /**

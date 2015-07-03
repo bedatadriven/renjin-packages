@@ -88,6 +88,16 @@ public class PackageBuild {
     return Key.create(PackageVersion.key(packageVersionId), PackageBuild.class, buildNumber);
   }
 
+  public static Key<PackageBuild> key(PackageBuildId packageBuildId) {
+    return key(packageBuildId.getPackageVersionId(), packageBuildId.getBuildNumber());
+  }
+  
+  public static PackageBuildId idOf(Key<PackageBuild> key) {
+    long buildNumber = key.getId();
+    PackageVersionId packageVersionId = PackageVersion.idOf(key.<PackageVersion>getParent());
+    return new PackageBuildId(packageVersionId, buildNumber);
+  }
+
   public String getLogPath() {
     return getPackageVersionId().getGroupId() + "/" + getPackageName() + "/" +
         getPackageVersionId().getVersionString() + "-b" + buildNumber + ".log";
@@ -324,4 +334,6 @@ public class PackageBuild {
   public byte getCompilationDelta() {
     return compilationDelta;
   }
+
+ 
 }

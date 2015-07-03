@@ -30,7 +30,7 @@ public class PackageBuildTask extends AbstractQueueTask {
 
   @Override
   public Label getAssignedLabel() {
-    return null;
+    return Label.get("renjin-package-builder");
   }
 
   @Override

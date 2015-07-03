@@ -14,6 +14,8 @@ public class PackageBuildResult {
   private List<String> blockingDependencies;
   
   private List<String> resolvedDependencies;
+  
+  private List<TestResult> testResults;
 
   private PackageBuildResult() {
   }
@@ -72,5 +74,13 @@ public class PackageBuildResult {
 
   public void setResolvedDependencies(List<String> resolvedDependencies) {
     this.resolvedDependencies = resolvedDependencies;
+  }
+
+  public List<TestResult> getTestResults() {
+    return testResults;
+  }
+
+  public void setTestResults(List<TestResult> testResults) {
+    this.testResults = testResults;
   }
 }

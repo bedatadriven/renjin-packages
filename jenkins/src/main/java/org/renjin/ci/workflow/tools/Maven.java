@@ -47,7 +47,7 @@ public class Maven {
         this.configFile = fetchMavenConfig(workerContext);
         this.jdk = findJdk17();
     }
-
+    
     public void writePom(BuildContext context, PackageBuild build) throws IOException, InterruptedException {
 
         // Load package description from unpacked sources
@@ -57,7 +57,7 @@ public class Maven {
         MavenPomBuilder pomBuilder = new MavenPomBuilder(build, description, context.getPackageNode());
         context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
     }
-
+    
     public void build(BuildContext buildContext) throws IOException, InterruptedException {
 
         ArgumentListBuilder arguments = new ArgumentListBuilder();
@@ -69,9 +69,9 @@ public class Maven {
         arguments.add("-e"); // show full stack traces
 
         arguments.add("-DenvClassifier=linux-x86_64");
+        arguments.add("-Dmaven.test.failure.ignore=true");
         arguments.add("-Dignore.gnur.compilation.failure=true");
-
-        arguments.add("-DskipTests");
+      //  arguments.add("-DskipTests");
         arguments.add("-B"); // run in batch mode
 
         arguments.add("clean");

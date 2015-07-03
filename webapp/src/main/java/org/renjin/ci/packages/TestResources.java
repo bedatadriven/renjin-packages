@@ -59,12 +59,12 @@ public class TestResources {
       RenjinCommit commit = ObjectifyService.ofy().load().key(Key.create(RenjinCommit.class, renjinSha1)).now();
       commit.setRelease(Ref.create(release));
 
-    
-      PackageTestRun run = new PackageTestRun(runNumber);
-      run.setRenjinVersion(renjinVersion);
-      run.setTestDate(renjinDate);
-
-      ObjectifyService.ofy().save().entities(release, commit, run);
+//    
+//      PackageTestRun run = new PackageTestRun(runNumber);
+//      run.setRenjinVersion(renjinVersion);
+//      run.setTestDate(renjinDate);
+//
+//      ObjectifyService.ofy().save().entities(release, commit, run);
     }
     
     List<PackageTestResult> toSave = new ArrayList<>();
@@ -85,13 +85,13 @@ public class TestResources {
             PackageVersionId packageVersionId = PackageVersionId.fromTriplet(resultSet.getString("pvid"));
             String testName = resultSet.getString("name");
 
-            PackageTestResult testResult = new PackageTestResult(packageVersionId, runNumber, testName);
-            testResult.setRenjinVersion(resultSet.getString("version"));
-            testResult.setPassed(resultSet.getBoolean("passed"));
-            testResult.setPackageBuildNumber(18);
-            testResult.setOutput(resultSet.getString("output"));
-            testResult.setError(resultSet.getString("errorMessage"));
-            toSave.add(testResult);
+//            PackageTestResult testResult = new PackageTestResult(packageVersionId, runNumber, testName);
+//            testResult.setRenjinVersion(resultSet.getString("version"));
+//            testResult.setPassed(resultSet.getBoolean("passed"));
+//            testResult.setPackageBuildNumber(18);
+//            testResult.setOutput(resultSet.getString("output"));
+//            testResult.setError(resultSet.getString("errorMessage"));
+//            toSave.add(testResult);
           }
         }
       }

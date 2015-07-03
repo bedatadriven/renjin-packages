@@ -101,6 +101,7 @@ public class MavenPomBuilder {
 
     PluginExecution compileExecution = compileExecution();
     renjinPlugin.addExecution(compileExecution);
+    renjinPlugin.addExecution(testExecution());
     renjinPlugin.addExecution(legacyCompileExecution());
 
     Extension wagon = new Extension();
@@ -191,6 +192,32 @@ public class MavenPomBuilder {
     return compileExecution;
   }
 
+  private PluginExecution testExecution() {
+    PluginExecution testExecution = new PluginExecution();
+    testExecution.setId("renjin-test");
+    testExecution.addGoal("test");
+
+    Xpp3Dom testSourceDirectory = new Xpp3Dom
+        ("testSourceDirectory");
+    testSourceDirectory.setValue("${basedir}/tests");
+
+    Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");
+    for(String defaultPackage : DEFAULT_PACKAGES) {
+      Xpp3Dom pkg = new Xpp3Dom("package");
+      pkg.setValue(defaultPackage);
+      defaultPackages.addChild(pkg);
+    }
+
+    Xpp3Dom configuration = new Xpp3Dom("configuration");
+    configuration.addChild(testSourceDirectory);
+    configuration.addChild(defaultPackages);
+
+
+    testExecution.setConfiguration(configuration);
+
+    return testExecution;
+  }
+  
   private void addCoreModule(Model model, String name) {
     Dependency mavenDep = new Dependency();
     mavenDep.setGroupId("org.renjin");

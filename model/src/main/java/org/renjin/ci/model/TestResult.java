@@ -4,19 +4,17 @@ package org.renjin.ci.model;
  * The result of a test run
  */
 public class TestResult {
-  private String id;
+  private String name;
   private String output;
   private boolean passed;
   private long duration;
-  private String renjinVersion;
-  private String packageBuildVersion;
 
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
-  public void setId(String id) {
-    this.id = id;
+  public void setName(String id) {
+    this.name = id;
   }
 
   public String getOutput() {
@@ -41,21 +39,5 @@ public class TestResult {
 
   public void setDuration(long duration) {
     this.duration = duration;
-  }
-
-  public String getRenjinVersion() {
-    return renjinVersion;
-  }
-
-  public void setRenjinVersion(String renjinVersion) {
-    this.renjinVersion = renjinVersion;
-  }
-
-  public String getPackageBuildVersion() {
-    return packageBuildVersion;
-  }
-
-  public void setPackageBuildVersion(String packageBuildVersion) {
-    this.packageBuildVersion = packageBuildVersion;
   }
 }

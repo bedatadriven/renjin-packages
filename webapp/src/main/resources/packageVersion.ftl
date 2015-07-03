@@ -77,15 +77,16 @@
         <pre>${version.renjinLibraryCall?html}</pre>
         </#if>
 
-        <#if (version.exampleResults?size > 0) >
+        <#if (version.testResults?size > 0) >
         <h2>Test Results</h2>
         
-        <p>This package was last tested against Renjin ${version.exampleRun.renjinVersion} on ${version.exampleRun.time?date}.</p>
+        <p>This package was last tested against Renjin ${version.latestBuild.renjinVersion}
+            <#if version.latestBuild.startDate??> on ${version.latestBuild.startDate?date}</#if>.</p>
         
         <ul class="test-results">
-            <#list version.exampleResults as test>
+            <#list version.testResults as test>
             <li>
-                <a href="${version.latestTestRunUrl}#${test.name}-example" class="<#if test.passed>btn btn-success<#else>btn btn-danger</#if>">${test.name}</a>
+                <a href="${version.latestBuildUrl}#test-${test.name}" class="<#if test.passed>btn btn-success<#else>btn btn-danger</#if>">${test.name}</a>
             </li>
             </#list>
         </ul>
@@ -93,7 +94,7 @@
     </div>
     <div class="grid-item medium-4">
         <div class="inset">
-        <h3>Other versions</h3>
+        <h3>Release History</h3>
         <ul>
             <#list version.otherVersions as other>
             <li><a href="${other.path}">${other.version}</a></li>

@@ -7,6 +7,8 @@ import org.renjin.ci.model.ResolvedDependency;
 import org.renjin.ci.model.ResolvedDependencySet;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
@@ -16,8 +18,12 @@ public class PackageGraphBuilder {
 
   private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
 
+  private ExecutorService executor;
+  
+
   public PackageGraphBuilder(TaskListener taskListener) {
     this.taskListener = taskListener;
+    this.executor = Executors.newFixedThreadPool(4);
   }
   
   public PackageGraph add(String filter, Double sample) throws Exception {
@@ -29,7 +35,7 @@ public class PackageGraphBuilder {
     if(filter.contains(":")) {
       // consider as packageId
       PackageVersionId packageVersionId = PackageVersionId.fromTriplet(filter);
-      add(packageVersionId);
+      addToBuildQueue(packageVersionId);
     } else {
       addAll(filter, filterParameters, sample);
     }
@@ -50,8 +56,7 @@ public class PackageGraphBuilder {
     taskListener.getLogger().flush();
 
     for (PackageVersionId packageVersionId : sampled) {
-      add(packageVersionId);
-
+      addToBuildQueue(packageVersionId);
     }
   }
 
@@ -81,12 +86,17 @@ public class PackageGraphBuilder {
     }
   }
 
-  private void add(PackageVersionId packageVersionId) throws InterruptedException {
+  /**
+   * Adds a package to the graph as 
+   * @param packageVersionId
+   * @throws InterruptedException
+   */
+  private void addToBuildQueue(PackageVersionId packageVersionId) throws InterruptedException {
     PackageNode node = nodes.get(packageVersionId);
     if(node == null) {
       node = new PackageNode(packageVersionId);
       nodes.put(node.getId(), node);
-
+      
       resolveDependencies(node);
     }
   }

@@ -23,14 +23,25 @@ import org.renjin.ci.workflow.graph.PackageNodeState;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 
 public class PackageBuildStep extends Builder implements SimpleBuildStep {
 
+  private String filter;
+  private Double sample;
 
   @DataBoundConstructor
-  public PackageBuildStep() {
+  public PackageBuildStep(String filter, Double sample) {
+    this.filter = filter;
+    this.sample = sample;
+  }
+
+  public String getFilter() {
+    return filter;
+  }
+
+  public Double getSample() {
+    return sample;
   }
 
   @Override
@@ -41,7 +52,7 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     listener.getLogger().println("Building package graph...");
     PackageGraph graph;
     try {
-      graph = new PackageGraphBuilder(listener).add("new", null);
+      graph = new PackageGraphBuilder(listener).add(filter, sample);
     } catch (Exception e) {
       throw new AbortException("Failed to build package graph: " + e.getMessage());
     }
@@ -54,26 +65,7 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
         queueItems.add(Jenkins.getInstance().getQueue().schedule(task, 0));
       }
     }
-    
-    // Wait for everything to complete!
-    try {
-      for (Queue.WaitingItem queueItem : queueItems) {
-        try {
-          queueItem.getFuture().get();
-        } catch (ExecutionException e) {
-          listener.fatalError(queueItem.task.getName() + " failed: " + e.getMessage());
-        }
-      }
-      listener.getLogger().println("Queue complete.");
-
-    } catch (InterruptedException e) {
-      for (Queue.WaitingItem waitingItem : queueItems) {
-        if(!waitingItem.getFuture().isDone()) {
-          Jenkins.getInstance().getQueue().cancel(waitingItem);
-        }
-      }      
-    }
-    
+    Tasks.waitForTasks(listener, queueItems);
   }
 
   @Override

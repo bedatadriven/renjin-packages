@@ -82,7 +82,7 @@
     </dependency>
     <dependency>
       <groupId>org.renjin.ci</groupId>
-      <artifactId>renjin-ci-tester</artifactId>
+      <artifactId>renjin-ci-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

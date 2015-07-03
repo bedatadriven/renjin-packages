@@ -22,8 +22,7 @@ public class PackageVersionPage {
   private PackageVersion packageVersion;
   private Map<String, PackageVersionId> dependencyMap = Maps.newHashMap();
   private CompatibilityAlert compatibilityAlert;
-  private Iterable<PackageExampleResult> exampleResults;
-  private LoadResult<PackageExampleRun> exampleRun;
+  private Iterable<PackageTestResult> testResults;
   private Iterable<PackageVersionId> otherVersions;
 
   /**
@@ -35,18 +34,15 @@ public class PackageVersionPage {
     this.description = packageVersion.getDescription();
 
     this.otherVersions = PackageDatabase.getPackageVersionIds(packageVersion.getPackageId());
-    if(packageVersion.getLastExampleRun() > 0) {
-      this.exampleRun = PackageDatabase.getExampleRun(id, packageVersion.getLastExampleRun());
-      this.exampleResults = PackageDatabase.getExampleResults(id, packageVersion.getLastExampleRun());
-    } else {
-      this.exampleResults = Collections.emptyList();
-    }
+
     if(packageVersion.getLastBuildNumber() > 0) {
       this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastBuildNumber());
+      this.testResults = PackageDatabase.getTestResults(packageVersion.getLastBuildId());
     } else {
       this.latestBuild = null;
+      this.testResults = Collections.emptyList();
     }
-    this.compatibilityAlert = new CompatibilityAlert(packageVersion, latestBuild, this.exampleResults);
+    this.compatibilityAlert = new CompatibilityAlert(packageVersion, latestBuild, Collections.<PackageExampleResult>emptyList());
 
   }
   
@@ -149,19 +145,13 @@ public class PackageVersionPage {
     return code.toString();
   }
 
-  public List<PackageExampleResult> getExampleResults() {
-    if(exampleResults == null) {
-      return Collections.emptyList();
-    } else {
-      return Lists.newArrayList(exampleResults);
-    }
+  public List<PackageTestResult> getTestResults() {
+    return Lists.newArrayList(testResults);
   }
 
-  
-  public PackageExampleRun getExampleRun() {
-    return exampleRun.safe();
+  public PackageBuild getLatestBuild() {
+    return latestBuild.now();
   }
-
 
   public List<PackageVersionId> getOtherVersions() {
     List<PackageVersionId> others = Lists.newArrayList(otherVersions);

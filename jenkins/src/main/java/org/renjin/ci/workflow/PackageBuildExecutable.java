@@ -10,10 +10,12 @@ import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.TestResult;
 import org.renjin.ci.workflow.graph.PackageNode;
 import org.renjin.ci.workflow.tools.GoogleCloudStorage;
 import org.renjin.ci.workflow.tools.LogFileParser;
 import org.renjin.ci.workflow.tools.Maven;
+import org.renjin.ci.workflow.tools.TestResultParser;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -95,42 +97,60 @@ public class PackageBuildExecutable implements Queue.Executable {
       Maven maven = new Maven(workerContext);
 
       BuildContext buildContext = new BuildContext(workerContext, maven, parentTask.getPackageNode());
-  
-      /*
-       * Download and unpack the original source of this package
-       */
-      GoogleCloudStorage.downloadAndUnpackSources(buildContext, pvid);
 
-      PackageBuildResult result;
 
-      PackageBuild build = RenjinCiClient.startBuild(pvid, parentTask.getRenjinVersion());
-
-      buildContext.log("Starting build #%d...", build.getBuildNumber());
-
-      maven.writePom(buildContext, build);
-
-      maven.build(buildContext);
-
-      /**
-       * Parse the result of the build from the log files
-       */
-      result = LogFileParser.parse(buildContext);
-      result.setResolvedDependencies(buildContext.getPackageNode().resolvedDependencies());
+      try {
       
-      /**
-       * Archive the build log file permanently to Google Cloud Storage
-       */
-      GoogleCloudStorage.archiveLogFile(buildContext, build);
+        /*
+         * Download and unpack the original source of this package
+         */
+        GoogleCloudStorage.downloadAndUnpackSources(buildContext, pvid);
 
-      /**
-       * Report the build result to ci.renjin.org
-       */
-      RenjinCiClient.postResult(build, result);
+        PackageBuildResult result;
 
-      listener.getLogger().println(pvid + ": " + result.getOutcome());
+        /*
+         * Register a new build with the Renjin CI Server and save the build number.
+         */
+        PackageBuild build = RenjinCiClient.startBuild(pvid, parentTask.getRenjinVersion());
 
-      parentTask.getPackageNode().completed(build.getBuildNumber(), result.getOutcome());
+        buildContext.log("Starting build #%d on %s...", build.getBuildNumber(), workerContext.getNode().getDisplayName());
 
+        maven.writePom(buildContext, build);
+
+        maven.build(buildContext);
+
+        /**
+         * Parse the result of the build from the log files
+         */
+        result = LogFileParser.parse(buildContext);
+        result.setResolvedDependencies(buildContext.getPackageNode().resolvedDependencies());
+
+        /**
+         * Archive the build log file permanently to Google Cloud Storage
+         */
+        GoogleCloudStorage.archiveLogFile(buildContext, build);
+
+        /**
+         * Test results
+         */
+        result.setTestResults(TestResultParser.parseResults(buildContext));
+
+        /**
+         * Report the build result to ci.renjin.org
+         */
+        RenjinCiClient.postResult(build, result);
+
+        listener.hyperlink("https://renjinci.appspot.com" + build.getId().getPath(), pvid + ": " + result.getOutcome());
+        listener.getLogger().println();
+
+        parentTask.getPackageNode().completed(build.getBuildNumber(), result.getOutcome());
+
+      } finally {
+        /*
+         * Make sure we clean up our workspace so we don't fill the builder's storage
+         */
+        buildContext.getBuildDir().deleteRecursive();
+      }
     } catch (InterruptedException e) {
       parentTask.getPackageNode().cancelled();
       throw new RuntimeException("Cancelled", e);

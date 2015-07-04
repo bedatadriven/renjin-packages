@@ -5,10 +5,7 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskHandle;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import org.joda.time.LocalDate;
-import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.datastore.PackageExampleSource;
-import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.*;
@@ -115,9 +112,5 @@ public class CranTasks {
             LOGGER.severe("Error fetching source: " + responseCode);
             throw new WebApplicationException(Response.Status.ACCEPTED);
         }
-
-        // Extract examples for testing purposes
-        new ExamplesExtractor().map(PackageVersion.key(pvid).getRaw());
     }
-
 }

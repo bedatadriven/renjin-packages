@@ -4,15 +4,18 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.googlecode.objectify.*;
-import com.googlecode.objectify.NotFoundException;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.archive.BuildLogs;
-import org.renjin.ci.datastore.*;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageTestResult;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.stats.StatTasks;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Produces;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -24,13 +27,15 @@ public class PackageBuildResource {
 
   private static final Logger LOGGER = Logger.getLogger(PackageBuildResource.class.getName());
 
-  private PackageVersionId packageVersionId;
-  private long buildNumber;
+  private final PackageVersionId packageVersionId;
+  private final PackageBuildId buildId;
+  private final long buildNumber;
 
 
   public PackageBuildResource(PackageVersionId packageVersionId, long buildNumber) {
     this.packageVersionId = packageVersionId;
     this.buildNumber = buildNumber;
+    this.buildId = new PackageBuildId(packageVersionId, buildNumber);
   }
 
   @GET
@@ -38,34 +43,17 @@ public class PackageBuildResource {
   public Viewable get() throws IOException {
 
     // Start fetching list of builds
-    Iterable<PackageBuild> builds = PackageDatabase.getBuilds(packageVersionId).iterable();
+    PackageBuildPage page = ObjectifyService.ofy().transact(new Work<PackageBuildPage>() {
+      @Override
+      public PackageBuildPage run() {
+        return new PackageBuildPage(buildId);
+      }
+    });
 
-    // Start fetching log text
-    String logText = BuildLogs.tryFetchLog(new PackageBuildId(packageVersionId, buildNumber));
-
-    PackageBuild theBuild = findBuild(builds);
-
-
-    Map<String, Object> model = Maps.newHashMap();
-    model.put("groupId", packageVersionId.getGroupId());
-    model.put("packageName", packageVersionId.getPackageName());
-    model.put("version", packageVersionId.getVersionString());
-    model.put("buildNumber", buildNumber);
-    model.put("testResults", Lists.newArrayList(PackageDatabase.getTestResults(theBuild.getId())));
-    model.put("builds", Lists.newArrayList(builds));
-    model.put("build", theBuild);
-    model.put("log", logText);
+    Map<String, Object> model = new HashMap<>();
+    model.put("build", page);
 
     return new Viewable("/buildResult.ftl", model);
-  }
-
-  private PackageBuild findBuild(Iterable<PackageBuild> builds) {
-    for (PackageBuild build : builds) {
-      if(build.getBuildNumber() == buildNumber) {
-        return build;
-      }
-    }
-    throw new WebApplicationException(Response.Status.NOT_FOUND);
   }
 
   @POST
@@ -113,22 +101,23 @@ public class PackageBuildResource {
               test.setPassed(result.isPassed());
               test.setOutput(result.getOutput());
               test.setRenjinVersion(build.getRenjinVersion());
-              if(result.getDuration() > 0) {
+              if (result.getDuration() > 0) {
                 test.setDuration(result.getDuration());
               }
               toSave.add(test);
             }
-
-            ObjectifyService.ofy().save().entities(toSave);
-
-
-            maybeUpdateLastSuccessfulBuild(build);
-
-            // Update the delta (regression/progression) flags for this build
-            if (updateDeltaFlags(packageVersionId, Optional.<PackageBuild>absent())) {
-              StatTasks.scheduleBuildDeltaCountUpdate();
-            }
           }
+
+          ObjectifyService.ofy().save().entities(toSave);
+
+
+          maybeUpdateLastSuccessfulBuild(build);
+
+          // Update the delta (regression/progression) flags for this build
+          if (updateDeltaFlags(packageVersionId, Optional.<PackageBuild>absent())) {
+            StatTasks.scheduleBuildDeltaCountUpdate();
+          }
+
         }
       }
     });
@@ -141,7 +130,7 @@ public class PackageBuildResource {
    *
    * If the given {@code build} was successful, set it as the last successful build 
    * of the corresponding PackageVersion.
-   *  
+   *
    */
   private void maybeUpdateLastSuccessfulBuild(PackageBuild build) {
 
@@ -166,10 +155,10 @@ public class PackageBuildResource {
   /**
    * Examine the results of builds of this package version against sequential versions of Renjin and identify
    * builds that represent "regressions" and "progressions".
-   * 
+   *
    * A regression is evidence that a change in Renjin has led to a failure in package building. A progression
    * is evidence that a change in Renjin has fixed an existing defect in the Renjin build process.
-   * 
+   *
    * For example, if survey:2.5 fails to build against
    * Renjin 0.7.1514, but successfully builds against Renjin 0.7.1534, then this is an improvement
    * we want to highlight. 
@@ -199,14 +188,16 @@ public class PackageBuildResource {
     TreeMap<RenjinVersionId, PackageBuild> buildMap = Maps.newTreeMap();
     for (PackageBuild build : builds) {
       RenjinVersionId rv = build.getRenjinVersionId();
-      PackageBuild lastBuild = buildMap.get(rv);
+      if(isValidRenjinVersion(rv)) {
+        PackageBuild lastBuild = buildMap.get(rv);
 
-      if (lastBuild == null || build.getBuildNumber() > lastBuild.getBuildNumber()) {
-        buildMap.put(rv, build);
+        if (lastBuild == null || build.getBuildNumber() > lastBuild.getBuildNumber()) {
+          buildMap.put(rv, build);
+        }
       }
     }
 
-    // Walk the Renjin versions and tag regressions/improvements
+    // Walk the Renjin versions and tag improvements
     PackageBuild lastBuild = null;
 
     for (PackageBuild build : buildMap.values()) {
@@ -218,7 +209,7 @@ public class PackageBuildResource {
       } else {
         newDelta = +1;
       }
-      
+
       if (build.getBuildDelta() != newDelta) {
         build.setBuildDelta(newDelta);
         toSave.add(build);
@@ -232,11 +223,11 @@ public class PackageBuildResource {
 
       lastBuild = build;
     }
-    
+
     // Walk the sequence of versions again and tag regressions/improvements in compilation
-   
+
     lastBuild = null;
-    
+
     for (PackageBuild build : buildMap.values()) {
       if(build.getNativeOutcome() != null && build.getNativeOutcome() != NativeOutcome.NA) {
         byte newDelta;
@@ -248,7 +239,7 @@ public class PackageBuildResource {
         } else {
           newDelta = 1;
         }
-        
+
         if(build.getCompilationDelta() != newDelta) {
           build.setCompilationDelta(newDelta);
           toSave.add(build);
@@ -260,12 +251,12 @@ public class PackageBuildResource {
             build.getRenjinVersion(),
             build.getBuildNumber(),
             build.getCompilationDelta()));
-        
+
         lastBuild = build;
       }
     }
 
-      // Clear the deltas of any builds that have been superceded and ignored here
+    // Clear the deltas of any builds that have been superceded and ignored here
     for (PackageBuild build : builds) {
       if(!buildMap.containsValue(build)) {
         if(build.getBuildDelta() != 0) {
@@ -281,6 +272,16 @@ public class PackageBuildResource {
 
     ObjectifyService.ofy().save().entities(toSave);
 
+    return true;
+  }
+
+  private static boolean isValidRenjinVersion(RenjinVersionId rv) {
+    if(rv.toString().contains("SNAPSHOT")) {
+      return false;
+    }
+    if(rv.toString().equals("LATEST")) {
+      return false;
+    }
     return true;
   }
 }

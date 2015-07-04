@@ -14,7 +14,6 @@ import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.index.PackageSearchIndex;
-import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
@@ -23,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.*;
 
 @Path("/packages")
@@ -40,6 +40,15 @@ public class PackageListResource {
         model.put("latestReleases", Lists.newArrayList(PackageDatabase.getLatestPackageReleases()));
         
         return new Viewable("/packageIndex.ftl", model);
+    }
+    
+    @GET
+    @Path("{name}.html")
+    public Response getOldPage(@Context UriInfo uriInfo, String packageName) {
+
+        URI newUri = uriInfo.getAbsolutePathBuilder().path("package").path("org.renjin.cran").path(packageName).build();
+
+        return Response.status(Response.Status.MOVED_PERMANENTLY).location(newUri).build();
     }
     
     @GET

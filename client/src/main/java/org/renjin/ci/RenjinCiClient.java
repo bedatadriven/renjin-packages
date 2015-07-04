@@ -159,4 +159,18 @@ public class RenjinCiClient {
     return RenjinVersionId.valueOf(version);
 
   }
+
+  public static void postRenjinRelease(String renjinVersion, String commitId) {
+    
+    // assume last part of version is build number
+    String versionParts[] = renjinVersion.split("\\.");
+    String buildNumber = versionParts[versionParts.length-1];
+    
+    Form form = new Form();
+    form.param("renjinVersion", renjinVersion);
+    form.param("sha1", commitId);
+    form.param("buildNumber", buildNumber);
+
+    client().target(ROOT_URL).path("releases").request().post(Entity.form(form));
+  }
 }

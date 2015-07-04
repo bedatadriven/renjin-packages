@@ -4,22 +4,19 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenModule;
+import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildBadgeAction;
 import hudson.model.BuildListener;
-import hudson.plugins.git.GitChangeSet;
-import hudson.plugins.git.GitTagAction;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.renjin.ci.RenjinCiClient;
-import org.renjin.ci.workflow.tools.MavenPomBuilder;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -28,34 +25,43 @@ import java.util.Map;
 
 
 public class RenjinCiNotifier extends Notifier {
+
+  @DataBoundConstructor
+  public RenjinCiNotifier() {
+  }
+
   @Override
   public BuildStepMonitor getRequiredMonitorService() {
-    return null;
+    return BuildStepMonitor.NONE;
   }
 
   @Override
   public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
     
-    if(build instanceof hudson.maven.MavenBuild) {
-      MavenBuild mavenBuild = (MavenBuild) build;
-      Map<MavenModule, List<MavenBuild>> moduleBuilds = mavenBuild.getModuleSetBuild().getModuleBuilds();
+    listener.getLogger().println("Renjin ci starting on " + build.getClass().getName());
+    
+    if(build instanceof hudson.maven.MavenModuleSetBuild) {
+      MavenModuleSetBuild mavenBuild = (MavenModuleSetBuild) build;
+      Map<MavenModule, List<MavenBuild>> moduleBuilds = mavenBuild.getModuleBuilds();
 
       for (Map.Entry<MavenModule, List<MavenBuild>> entry : moduleBuilds.entrySet()) {
         MavenModule module = entry.getKey();
+        listener.getLogger().println("RENJIN CI: " + module.getGroupId() + ":" + module.getArtifactId());
         if(module.getGroupId().equals("org.renjin") && module.getArtifactId().equals("renjin-core")) {
-          notifyRenjinRelease(mavenBuild, module);
+          notifyRenjinRelease(listener, mavenBuild, module);
         }
       }
     }
     return true;
   }
 
-  private void notifyRenjinRelease(MavenBuild mavenBuild, MavenModule module) throws IOException {
+  private void notifyRenjinRelease(BuildListener listener, MavenModuleSetBuild mavenBuild, MavenModule module) throws IOException {
     String renjinVersion = module.getVersion();
     String commitId = ObjectId.toString(getCommitSHA1(mavenBuild));
 
-    //RenjinCiClient.postRenjinRelease()
-    
+    listener.getLogger().println("Registering new Renjin Version " + renjinVersion + " @ " + commitId);
+
+    RenjinCiClient.postRenjinRelease(renjinVersion, commitId);
   }
 
 

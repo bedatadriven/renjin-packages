@@ -4,8 +4,14 @@ import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskHandle;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.common.collect.Lists;
+import com.googlecode.objectify.Key;
+import com.googlecode.objectify.ObjectifyService;
 import org.joda.time.LocalDate;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.*;
@@ -14,6 +20,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 
@@ -86,8 +93,68 @@ public class CranTasks {
         }
         return Response.ok().build();
     }
+    
+    @POST
+    @Path("fetchArchives")
+    public Response fetchArchives() {
+        Iterable<Key<Package>> packages = ObjectifyService.ofy().load().type(Package.class)
+            .chunk(1000)
+            .keys()
+            .iterable();
+
+        Queue cranFetchQueue = QueueFactory.getQueue(CRAN_FETCH_QUEUE);
+
+        for (Key<Package> aPackage : packages) {
+            PackageId id = PackageId.valueOf(aPackage.getName());
+            if(id.getGroupId().equals("org.renjin.cran")) {
+                cranFetchQueue.add(TaskOptions.Builder
+                    .withUrl("/tasks/index/cran/fetchArchivedVersions")
+                    .param("packageName", id.getPackageName()));
+            }
+        }
+        return Response.ok().entity("QUEUED.").build();
+    }
 
 
+    @POST
+    @Path("fetchArchivedVersions") 
+    public Response fetchCranArchives(@FormParam("packageName") String packageName) throws IOException {
+        PackageId packageId = new PackageId("org.renjin.cran", packageName);
+        List<PackageVersionId> versionList = CRAN.getArchivedVersionList(packageId.getPackageName());
+
+        // See which versions we're missing
+        List<Key<PackageVersion>> keys = Lists.newArrayList();
+        for (PackageVersionId packageVersionId : versionList) {
+            keys.add(PackageVersion.key(packageVersionId));
+        }
+        Map<Key<PackageVersion>, PackageVersion> packageVersions = ObjectifyService.ofy().load().keys(keys);
+
+        Queue cranFetchQueue = QueueFactory.getQueue(CRAN_FETCH_QUEUE);
+
+        for (Key<PackageVersion> key : keys) {
+            PackageVersionId packageVersionId = PackageVersion.idOf(key);
+            if(packageVersions.containsKey(key)) {
+                LOGGER.info(packageVersionId + ": already loaded.");
+            } else {
+                LOGGER.info(packageVersionId + ": queuing package fetch.");
+                cranFetchQueue.add(TaskOptions.Builder
+                    .withUrl("/tasks/index/cran/fetchArchivedVersion")
+                    .param("packageVersion", packageVersionId.toString()));
+            }
+        }
+        
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("fetchArchivedVersion")
+    public Response fetchCranArchive(@FormParam("packageVersion") String packageVersion) throws IOException {
+        PackageVersionId packageVersionId = new PackageVersionId(packageVersion);
+        archiveCranSourceToGcs(packageVersionId);
+        PackageRegistrationTasks.enqueue(packageVersionId);
+        return Response.ok().build();
+    }
+    
     private void archiveCranSourceToGcs(PackageVersionId pvid) throws IOException {
         URL url = CRAN.sourceUrl(pvid.getPackageName(), pvid.getVersionString());
         LOGGER.info("Fetching source from " + url);

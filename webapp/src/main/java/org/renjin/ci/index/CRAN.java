@@ -1,5 +1,6 @@
 package org.renjin.ci.index;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSource;
@@ -7,6 +8,7 @@ import com.google.common.io.Resources;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.*;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -151,5 +154,30 @@ public class CRAN {
 
   public static String packageVersionId(String packageName, String version) {
     return packageId(packageName) + ":" + version;
+  }
+
+  public static List<PackageVersionId> getArchivedVersionList(String packageName) throws IOException {
+    String indexUrl = CRAN_MIRROR + "src/contrib/Archive/" + packageName;
+    System.out.println("Fetching from " + indexUrl);
+    URL url = null;
+    try {
+      url = new URL(indexUrl);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+    List<PackageVersionId> versions = new ArrayList<>();
+    Document document = fetchAsDom(Resources.asByteSource(url));
+    NodeList links = document.getElementsByTagName("a");
+    int packagePrefix = (packageName + "_").length();
+
+    for (int i = 0; i < links.getLength(); i++) {
+      Element link = (Element) links.item(i);
+      String href = link.getAttribute("href");
+      if(!Strings.isNullOrEmpty(href) && href.endsWith(".tar.gz")) {
+        String version = href.substring(packagePrefix, href.length() - ".tar.gz".length());
+        versions.add(new PackageVersionId("org.renjin.cran", packageName, version));
+      }
+    }
+    return versions;
   }
 }

@@ -143,7 +143,7 @@ public class DependencyResolution {
     // but we DO know that it could not have been a package from the future!
     for (PackageVersion version : candidateList) {
       if(publishedBefore.apply(version) && versionRange.apply(version)) {
-        return new ResolvedDependency(version.getLastSuccessfulBuildId());
+        return resolution(version);
       }
     }
     
@@ -155,12 +155,20 @@ public class DependencyResolution {
 
     for (PackageVersion version : candidateList) {
       if(versionRange.apply(version)) {
-        return new ResolvedDependency(version.getLastSuccessfulBuildId());
+        return resolution(version);
       }
     }
     
     // No beans...
     return null;
+  }
+
+  private ResolvedDependency resolution(PackageVersion version) {
+    if(version.hasSuccessfulBuild()) {
+      return new ResolvedDependency(version.getLastSuccessfulBuildId());
+    } else {
+      return new ResolvedDependency(version.getPackageVersionId());
+    }
   }
 
 

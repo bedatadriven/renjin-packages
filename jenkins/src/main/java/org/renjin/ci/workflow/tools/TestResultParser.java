@@ -27,7 +27,14 @@ public class TestResultParser {
     if(reportDir.exists()) {
       for (FilePath file : reportDir.list()) {
         if (file.getName().startsWith("TEST-") && file.getName().endsWith(".xml")) {
-          testResults.addAll(parseResult(file));
+          try {
+            testResults.addAll(parseResult(file));
+          } catch (InterruptedException e) {
+            throw e;
+          } catch(Exception e) {
+            context.log("Error parsing test file %s: %s", file.getRemote(), e.getMessage());
+            e.printStackTrace(context.getLogger());
+          }
         }
       }
     }
@@ -35,10 +42,9 @@ public class TestResultParser {
     return testResults;
   }
 
-  public static List<TestResult> parseResult(FilePath xmlFile) {
+  public static List<TestResult> parseResult(FilePath xmlFile) throws IOException, InterruptedException {
 
     List<TestResult> results = new ArrayList<TestResult>();
-
 
     Document doc = parseXml(xmlFile);
     String output = parseOutput(xmlFile);
@@ -47,6 +53,7 @@ public class TestResultParser {
     for(int i=0;i!=testCases.getLength();++i) {
       Element testCase = (Element) testCases.item(i);
       String className = testCase.getAttribute("classname");
+
       String name = testCase.getAttribute("name");
       String time = testCase.getAttribute("time");
 
@@ -68,14 +75,10 @@ public class TestResultParser {
     return results;
   }
 
-  private static String parseOutput(FilePath xmlFile) {
-    try {
-      String fileName = xmlFile.getName().substring("TEST-".length(), xmlFile.getName().length() - ".xml".length());
-      FilePath outputFile = xmlFile.getParent().child(fileName + "-output.txt");
-      return outputFile.readToString();
-    } catch (Exception e) {
-      throw new RuntimeException("Exception reading test output at " + xmlFile.getRemote(), e);
-    }
+  private static String parseOutput(FilePath xmlFile) throws IOException, InterruptedException {
+    String fileName = xmlFile.getName().substring("TEST-".length(), xmlFile.getName().length() - ".xml".length());
+    FilePath outputFile = xmlFile.getParent().child(fileName + "-output.txt");
+    return outputFile.readToString();
   }
 
   private static Document parseXml(FilePath xmlFile) {
@@ -89,7 +92,7 @@ public class TestResultParser {
   }
 
   private static String formatName(String className, String name) {
-    if(name.equals("root")) {
+    if(name.equals("(root)")) {
       return className; 
     } else {
       return className + "." + name;

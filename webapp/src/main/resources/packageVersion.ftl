@@ -21,7 +21,6 @@
             </#list>
         </#macro>
         
-        
         <h1>${version.packageName} ${version.version}</h1>
         
         <p class="lead">${version.title}</p>
@@ -31,6 +30,14 @@
         </#if>
         
         <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
+
+        <#if (version.dependencies?size > 0)>
+        <p><strong>Dependencies:</strong>
+        <#list version.dependencies as dependency>
+            <a href="${dependency.url}" class="${dependency.style}">${dependency.label}</a>
+        </#list>
+        </p>
+        </#if>
         
         <p>${version.descriptionText}</p>
         
@@ -70,7 +77,7 @@
         <a href="http://docs.renjin.org/en/latest/introduction.html#setting-up-a-java-project-for-renjin">Read more</a> 
         about embedding Renjin in JVM-based projects.</p>
         <pre>${version.pomReference?html}</pre>
-        <p><a href="/${version.latestBuildUrl}">View build log</a></p>
+        <p><a href="${version.latestBuildUrl}">View build log</a></p>
         
         <h3>Renjin CLI</h3>
         <p>If you're using Renjin from the command line, you load this library by invoking:</p>

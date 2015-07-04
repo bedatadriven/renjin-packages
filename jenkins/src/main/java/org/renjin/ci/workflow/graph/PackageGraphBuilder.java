@@ -1,5 +1,8 @@
 package org.renjin.ci.workflow.graph;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import hudson.model.TaskListener;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.PackageVersionId;
@@ -7,45 +10,63 @@ import org.renjin.ci.model.ResolvedDependency;
 import org.renjin.ci.model.ResolvedDependencySet;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static java.lang.String.format;
 
 public class PackageGraphBuilder {
-  
+
   private TaskListener taskListener;
 
   private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
 
-  private ExecutorService executor;
-  
+  /**
+   * Queue of packages for which we must resolve dependencies
+   */
+  private final Map<PackageNode, Future<ResolvedDependencySet>> toResolve = Maps.newHashMap();
+
 
   public PackageGraphBuilder(TaskListener taskListener) {
     this.taskListener = taskListener;
-    this.executor = Executors.newFixedThreadPool(4);
   }
-  
-  public PackageGraph add(String filter, Double sample) throws Exception {
-    return add(filter, Collections.<String, String>emptyMap(), sample);
-  }
-  
-  public PackageGraph add(String filter, Map<String, String> filterParameters, Double sample) throws Exception {
 
+
+  public PackageGraph build(String filter, Double sample) throws Exception {
+    return build(filter, Collections.<String, String>emptyMap(), sample);
+  }
+
+  public PackageGraph build(String filter, Map<String, String> filterParameters, Double sample) throws Exception {
+
+    /*
+     * Step 1: Enqueue all packages that MUST be (re)built, even if there is an existing built
+     */
     if(filter.contains(":")) {
       // consider as packageId
       PackageVersionId packageVersionId = PackageVersionId.fromTriplet(filter);
-      addToBuildQueue(packageVersionId);
+      enqueueForBuild(packageVersionId);
     } else {
-      addAll(filter, filterParameters, sample);
+      enqueueForBuild(filter, filterParameters, sample);
+    }
+
+    /*
+     * Step 2: For all packages that we WANT to build, determine their dependencies and either resolve
+     * to an existing build or schedule a new one.
+     */
+    List<PackageNode> toResolve = Lists.newArrayList(nodes.values());
+    for (PackageNode packageNode : toResolve) {
+      resolveDependencies(packageNode);
     }
 
     taskListener.getLogger().printf("Dependency graph built with %d nodes.\n", nodes.size());
 
+    for (PackageNode packageNode : nodes.values()) {
+      packageNode.computeDownstream();
+    }
+
     return new PackageGraph(nodes);
   }
 
-  private void addAll(String filter, Map<String, String> filterParameters, Double sample) throws InterruptedException {
+  private void enqueueForBuild(String filter, Map<String, String> filterParameters, Double sample) throws InterruptedException {
     taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
     List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter, filterParameters);
     taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
@@ -56,7 +77,8 @@ public class PackageGraphBuilder {
     taskListener.getLogger().flush();
 
     for (PackageVersionId packageVersionId : sampled) {
-      addToBuildQueue(packageVersionId);
+      taskListener.getLogger().println(packageVersionId);
+      enqueueForBuild(packageVersionId);
     }
   }
 
@@ -87,18 +109,26 @@ public class PackageGraphBuilder {
   }
 
   /**
-   * Adds a package to the graph as 
-   * @param packageVersionId
-   * @throws InterruptedException
+   * Creates a packageNode for a specific packageVersion, and queues it for dependency resolution
    */
-  private void addToBuildQueue(PackageVersionId packageVersionId) throws InterruptedException {
-    PackageNode node = nodes.get(packageVersionId);
-    if(node == null) {
-      node = new PackageNode(packageVersionId);
-      nodes.put(node.getId(), node);
-      
-      resolveDependencies(node);
+  private void enqueueForBuild(PackageVersionId packageVersionId) throws InterruptedException {
+
+    Preconditions.checkState(!nodes.containsKey(packageVersionId),
+        "%s has already been added to the graph.", packageVersionId);
+
+    PackageNode node = new PackageNode(packageVersionId);
+    nodes.put(node.getId(), node);
+
+    scheduleDependencyResolution(node);
+  }
+
+  private void scheduleDependencyResolution(PackageNode packageNode) {
+    // is resolution already in progress?
+    if(toResolve.containsKey(packageNode)) {
+      return;
     }
+    
+    // otherwise, schedule 
   }
 
   private PackageNode getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) throws InterruptedException {

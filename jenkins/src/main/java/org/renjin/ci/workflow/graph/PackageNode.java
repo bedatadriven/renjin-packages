@@ -8,6 +8,7 @@ import org.renjin.ci.model.PackageVersionId;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +39,9 @@ public class PackageNode implements Serializable {
    * true if we are reusing an existing build.
    */
   private boolean provided;
-  
+
+  private int downstreamCount;
+
 
   public PackageNode(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
@@ -154,5 +157,26 @@ public class PackageNode implements Serializable {
       }
     }
     return list;
+  }
+
+  /**
+   * Computes the number of downstream builds 
+   */
+  public void computeDownstream() {
+    Set<PackageNode> visited = new HashSet<PackageNode>();
+    computeDownstream(visited);
+    this.downstreamCount = visited.size() - 1;
+  }
+
+  private void computeDownstream(Set<PackageNode> visited) {
+    if(visited.add(this)) {
+      for (PackageNode dependant : dependants) {
+        dependant.computeDownstream(visited);
+      }
+    }
+  }
+
+  public int getDownstreamCount() {
+    return downstreamCount;
   }
 }

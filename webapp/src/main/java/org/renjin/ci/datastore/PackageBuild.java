@@ -282,7 +282,11 @@ public class PackageBuild {
   }
 
   public List<String> getResolvedDependencies() {
-    return resolvedDependencies;
+    if(resolvedDependencies != null) {
+      return resolvedDependencies;
+    } else {
+      return Collections.emptyList();
+    }
   }
   
   public void setResolvedDependencies(List<String> resolvedDependencies) {

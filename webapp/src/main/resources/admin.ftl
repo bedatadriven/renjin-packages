@@ -25,6 +25,16 @@
         <form action="/admin/rebuildExamples" method="post">
             <input type="submit" class="btn btn-default" value="Rebuild examples index">
         </form>
+        
+        <h2>CRAN Archiving Fetching</h2>
+
+        <form action="/tasks/index/cran/fetchArchives" method="post">
+            <input type="submit" class="btn btn-default" value="Fetch all archives">
+        </form>
+        
+        <form action="/tasks/index/cran/fetchArchivedVersions" method="post">
+            <input name="packageName"> <input type="submit" class="btn btn-default" value="Fetch archives">
+        </form>
     </div>
 </div>
 </@scaffolding>

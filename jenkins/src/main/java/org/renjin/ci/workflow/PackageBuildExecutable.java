@@ -10,7 +10,6 @@ import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.TestResult;
 import org.renjin.ci.workflow.graph.PackageNode;
 import org.renjin.ci.workflow.tools.GoogleCloudStorage;
 import org.renjin.ci.workflow.tools.LogFileParser;
@@ -71,7 +70,7 @@ public class PackageBuildExecutable implements Queue.Executable {
     // Mark the node as failed.
     
     // Report the failure immediately, we can't proceed with the build
-    PackageBuild packageBuild = null;
+      PackageBuild packageBuild = null;
     try {
       packageBuild = RenjinCiClient.startBuild(node.getId(), parentTask.getRenjinVersion());
     } catch (Exception e) {

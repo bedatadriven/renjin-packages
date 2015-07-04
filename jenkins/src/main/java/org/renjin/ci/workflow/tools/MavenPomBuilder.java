@@ -197,9 +197,11 @@ public class MavenPomBuilder {
     testExecution.setId("renjin-test");
     testExecution.addGoal("test");
 
-    Xpp3Dom testSourceDirectory = new Xpp3Dom
-        ("testSourceDirectory");
+    Xpp3Dom testSourceDirectory = new Xpp3Dom("testSourceDirectory");
     testSourceDirectory.setValue("${basedir}/tests");
+    
+    Xpp3Dom timeout = new Xpp3Dom("timeoutInSeconds");
+    timeout.setValue("90");
 
     Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");
     for(String defaultPackage : DEFAULT_PACKAGES) {
@@ -209,6 +211,7 @@ public class MavenPomBuilder {
     }
 
     Xpp3Dom configuration = new Xpp3Dom("configuration");
+    configuration.addChild(timeout);
     configuration.addChild(testSourceDirectory);
     configuration.addChild(defaultPackages);
 

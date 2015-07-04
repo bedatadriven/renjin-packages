@@ -119,6 +119,10 @@ public class DependencyResolution {
   }
 
 
+  /**
+   * Selects a dependency version based on any explicit criteria in the DESCRIPTION file as well
+   * as taking into account publication dates.
+   */
   private ResolvedDependency select(PackageDependency declared, Iterable<PackageVersion> candidates) {
 
     List<PackageVersion> candidateList = Lists.newArrayList(candidates);
@@ -126,31 +130,44 @@ public class DependencyResolution {
     // Sort in descending order, so we can look from most recent to the oldest
     Collections.sort(candidateList, PackageVersion.orderByVersion().reverse());
 
+    // Create a predicate based on the explicit version range specified in the DESCRIPTION file
     Predicate<PackageVersion> versionRange = versionConstraint(declared);
+
+    Predicate<PackageVersion> publishedBefore = publishedBeforeConstraint();
 
     LOGGER.info(String.format("Resolving dependency %s satisfying %s from among: %s",
         declared, versionRange, candidateList));
 
-
-    // First find the most recent meeting the declared criteria with a successful build...
+    // FIRST: try to match a package that was PUBLISHED BEFORE this package
+    // We can't know for sure which version the package author tested against
+    // but we DO know that it could not have been a package from the future!
     for (PackageVersion version : candidateList) {
-      if(version.hasSuccessfulBuild() && versionRange.apply(version)) {
+      if(publishedBefore.apply(version) && versionRange.apply(version)) {
         return new ResolvedDependency(version.getLastSuccessfulBuildId());
       }
     }
+    
+    // FALLBACK: if we don't have a package that fulfills both the published-before
+    // criteria and the version range criteria, (possibly because our archive is incomplete)
+    // then search from oldest to newest to find the dependency version closest in 
+    // time to this package.
+    Collections.reverse(candidateList);    
 
-    // Failing that, return the latest as unresolved dependency
     for (PackageVersion version : candidateList) {
       if(versionRange.apply(version)) {
-        return new ResolvedDependency(version.getPackageVersionId());
+        return new ResolvedDependency(version.getLastSuccessfulBuildId());
       }
     }
-
+    
     // No beans...
     return null;
   }
 
 
+  /**
+   * Create a predicate for selecting candidates based on the explicit version range specified by the 
+   * DESCRIPTION file, if there is one.
+   */
   private Predicate<PackageVersion> versionConstraint(PackageDependency dependency) {
     if(!Strings.isNullOrEmpty(dependency.getVersionSpec())) {
       try {
@@ -171,5 +188,34 @@ public class DependencyResolution {
     }
     return Predicates.alwaysTrue();
   }
+
+  /**
+   * Create a predicate for selecting candidates that were published BEFORE this package.
+   * We can't know what version of the dependency this package was tested against, but we 
+   * DO know that it could NOT have been tested on a package from the future.
+   */
+  private Predicate<PackageVersion> publishedBeforeConstraint() {
+
+    if(packageVersion.getPublicationDate() == null) {
+      return Predicates.alwaysTrue();
+    } else {
+      return new Predicate<PackageVersion>() {
+        @Override
+        public boolean apply(PackageVersion input) {
+          // we are missing publication dates from some packages....
+          // we will be strict here and refuse, if there are no matching criteria
+          // we fallback above to the oldest version matching the version range criteria
+          if(input.getPublicationDate() == null) {
+            return false;
+          }
+          
+          return packageVersion.getPublicationDate().after(input.getPublicationDate());
+          
+        }
+      };
+    }
+    
+  }
+
 
 }

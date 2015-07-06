@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 import com.google.common.collect.Iterables;
 import hudson.model.Queue;
@@ -10,11 +10,11 @@ import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.workflow.graph.PackageNode;
-import org.renjin.ci.workflow.tools.GoogleCloudStorage;
-import org.renjin.ci.workflow.tools.LogFileParser;
-import org.renjin.ci.workflow.tools.Maven;
-import org.renjin.ci.workflow.tools.TestResultParser;
+import org.renjin.ci.jenkins.graph.PackageNode;
+import org.renjin.ci.jenkins.tools.GoogleCloudStorage;
+import org.renjin.ci.jenkins.tools.LogFileParser;
+import org.renjin.ci.jenkins.tools.Maven;
+import org.renjin.ci.jenkins.tools.TestResultParser;
 
 import javax.annotation.Nonnull;
 import java.util.List;

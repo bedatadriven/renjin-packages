@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow.graph;
+package org.renjin.ci.jenkins.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

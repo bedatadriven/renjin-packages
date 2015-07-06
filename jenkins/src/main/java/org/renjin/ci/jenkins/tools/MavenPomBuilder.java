@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci.jenkins.tools;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -12,7 +12,7 @@ import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
-import org.renjin.ci.workflow.graph.PackageNode;
+import org.renjin.ci.jenkins.graph.PackageNode;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -104,14 +104,8 @@ public class MavenPomBuilder {
     renjinPlugin.addExecution(testExecution());
     renjinPlugin.addExecution(legacyCompileExecution());
 
-    Extension wagon = new Extension();
-    wagon.setGroupId("net.anzix.aws");
-    wagon.setArtifactId("s3-maven-wagon");
-    wagon.setVersion("3.2");
-
     Build build = new Build();
     build.addPlugin(renjinPlugin);
-    build.addExtension(wagon);
 
     DeploymentRepository deploymentRepo = new DeploymentRepository();
     deploymentRepo.setId("renjin-packages");

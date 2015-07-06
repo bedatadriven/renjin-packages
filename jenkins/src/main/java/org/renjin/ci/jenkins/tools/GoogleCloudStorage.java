@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci.jenkins.tools;
 
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -16,9 +16,9 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
-import org.renjin.ci.workflow.BuildContext;
-import org.renjin.ci.workflow.ConfigException;
-import org.renjin.ci.workflow.WorkerContext;
+import org.renjin.ci.jenkins.BuildContext;
+import org.renjin.ci.jenkins.ConfigException;
+import org.renjin.ci.jenkins.WorkerContext;
 
 import java.io.IOException;
 import java.io.InputStream;

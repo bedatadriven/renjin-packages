@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci.jenkins.tools;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.google.common.base.Charsets;
@@ -19,9 +19,9 @@ import org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig;
 import org.jenkinsci.plugins.configfiles.maven.security.CredentialsHelper;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.PackageDescription;
-import org.renjin.ci.workflow.BuildContext;
-import org.renjin.ci.workflow.ConfigException;
-import org.renjin.ci.workflow.WorkerContext;
+import org.renjin.ci.jenkins.BuildContext;
+import org.renjin.ci.jenkins.ConfigException;
+import org.renjin.ci.jenkins.WorkerContext;
 
 import java.io.File;
 import java.io.FileOutputStream;

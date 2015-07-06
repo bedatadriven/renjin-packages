@@ -1,11 +1,11 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci.jenkins.tools;
 
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import hudson.FilePath;
 import org.renjin.ci.model.TestResult;
-import org.renjin.ci.workflow.BuildContext;
+import org.renjin.ci.jenkins.BuildContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

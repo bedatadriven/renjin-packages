@@ -4,7 +4,7 @@
 
 <#include "base.ftl">
 
-<@scaffolding title="Package Search '${queryString}'">
+<@scaffolding title="Package Search ${pageTitle}">
 
 <div id="search-results" class="grid">
     <div class="grid-item medium-12">

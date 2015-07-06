@@ -3,14 +3,14 @@ package org.renjin.ci.packages;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.googlecode.objectify.*;
+import com.googlecode.objectify.Key;
+import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Ref;
 import org.joda.time.LocalDateTime;
 import org.renjin.ci.datastore.PackageTestResult;
-import org.renjin.ci.datastore.PackageTestRun;
 import org.renjin.ci.datastore.RenjinCommit;
 import org.renjin.ci.datastore.RenjinRelease;
-import org.renjin.ci.model.*;
+import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -18,8 +18,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
 
 @Path("/tasks/migrate/tests")

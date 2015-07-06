@@ -15,7 +15,7 @@
 <body>
 <nav id="nav" role="navigation">
     <a href="#nav" title="Show navigation">Show navigation</a>
-    <a href="#" title="Hide navigation">Hide navigation</a>
+    <a href="#" title="Hide navigation">Hide navigation</a> 
     <ul>
 
         <li><a href="http://www.renjin.org/index.html">Home</a></li>
@@ -65,7 +65,7 @@
     <div class="grid">
         <div class="medium-4 grid-item">
             <h3>Downloads</h3>
-            <p>Take a look at our <a href="/downloads.html">download page</a>, or choose one of our downloads directly. </p>
+            <p>Take a look at our <a href="http://www.renjin.org/downloads.html">download page</a>, or choose one of our downloads directly. </p>
             <ul>
                 <li><a href="http://nexus.bedatadriven.com/service/local/artifact/maven/redirect?r=renjin-release&g=org.renjin&a=renjin-debian-package&v=RELEASE&e=deb" onclick="ga('send', 'event', 'download', 'debian');">Renjin CLI for Debian/Ubuntu [.deb]</a></li>
                 <li><a href="http://nexus.bedatadriven.com/service/local/artifact/maven/redirect?r=renjin-release&g=org.renjin&a=renjin-studio&v=RELEASE&e=jar" onclick="ga('send', 'event', 'download', 'studio');">Renjin Studio (GUI) for all platforms [.jar]</a></li>
@@ -90,7 +90,9 @@
         </div>
         <div class="medium-4 grid-item">
             <h3>Support</h3>
-            <p>This project is an initiative of <a href="http://www.bedatadriven.com">BeDataDriven</a>, a company providing consulting in analytics and decision support systems. Read about our <a href="/support.html">support options for Renjin</a>. </p>
+            <p>This project is an initiative of <a href="http://www.bedatadriven.com">BeDataDriven</a>, 
+                a company providing consulting in analytics and decision support systems. 
+                Read about our <a href="http://www.renjin.org/support.html">support options for Renjin</a>. </p>
         </div>
     </div>
 </footer>

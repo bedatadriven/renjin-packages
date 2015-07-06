@@ -180,7 +180,11 @@ public class PackageListResource {
         Map<String, Object> model = new HashMap<>();
         model.put("queryString", queryString);
 
-        if(!Strings.isNullOrEmpty(queryString)) {
+        if(Strings.isNullOrEmpty(queryString)) {
+            model.put("resultCount", 0);
+            model.put("pageTitle", "Package Search");
+            model.put("results", Collections.emptyList());
+        } else {
             Index index = searchService.getIndex(IndexSpec.newBuilder().setName(PackageSearchIndex.INDEX_NAME));
 
             Query query = Query.newBuilder()
@@ -197,6 +201,7 @@ public class PackageListResource {
             for (ScoredDocument scoredDocument : results.getResults()) {
                 resultList.add(new SearchResult(scoredDocument));
             }
+            model.put("pageTitle", String.format("Package Search Results for '%s'", queryString));
             model.put("results", resultList);
             model.put("resultCount", results.getNumberFound());
         }

@@ -168,11 +168,6 @@ public class PackageVersionPage {
   }
 
 
-  public String getLatestTestRunUrl() {
-    return "/package/" + packageVersion.getGroupId() + "/" + packageVersion.getPackageName() + "/" +
-        packageVersion.getVersion() + "/examples/run/" + packageVersion.getLastExampleRun();
-  }
-
   public String getRenjinLibraryCall() {
     return String.format("library('%s:%s')", packageVersion.getGroupId(), packageVersion.getPackageName());
   }

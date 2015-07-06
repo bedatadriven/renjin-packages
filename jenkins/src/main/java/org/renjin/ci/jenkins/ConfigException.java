@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 /**
  * Thrown when something is wrong with the configuration of 

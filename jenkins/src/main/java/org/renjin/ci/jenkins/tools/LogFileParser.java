@@ -1,9 +1,9 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci.jenkins.tools;
 
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageBuildResult;
-import org.renjin.ci.workflow.BuildContext;
+import org.renjin.ci.jenkins.BuildContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,12 +1,12 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import hudson.FilePath;
 import hudson.model.TaskListener;
-import org.renjin.ci.workflow.graph.PackageNode;
-import org.renjin.ci.workflow.tools.Maven;
+import org.renjin.ci.jenkins.graph.PackageNode;
+import org.renjin.ci.jenkins.tools.Maven;
 
 import java.io.*;
 import java.util.zip.GZIPInputStream;

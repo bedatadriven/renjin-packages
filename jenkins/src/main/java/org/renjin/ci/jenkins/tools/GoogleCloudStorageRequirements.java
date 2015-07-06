@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow.tools;
+package org.renjin.ci.jenkins.tools;
 
 import com.google.api.services.storage.StorageScopes;
 import com.google.jenkins.plugins.credentials.oauth.GoogleOAuth2ScopeRequirement;

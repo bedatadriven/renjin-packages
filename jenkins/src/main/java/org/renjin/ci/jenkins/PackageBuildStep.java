@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.base.Function;
@@ -20,10 +20,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.RenjinVersionId;
-import org.renjin.ci.workflow.graph.PackageGraph;
-import org.renjin.ci.workflow.graph.PackageGraphBuilder;
-import org.renjin.ci.workflow.graph.PackageNode;
-import org.renjin.ci.workflow.graph.PackageNodeState;
+import org.renjin.ci.jenkins.graph.PackageGraph;
+import org.renjin.ci.jenkins.graph.PackageGraphBuilder;
+import org.renjin.ci.jenkins.graph.PackageNode;
+import org.renjin.ci.jenkins.graph.PackageNodeState;
 
 import java.io.IOException;
 import java.util.Collections;

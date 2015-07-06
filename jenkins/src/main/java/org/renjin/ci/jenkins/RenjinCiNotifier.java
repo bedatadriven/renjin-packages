@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 import hudson.Extension;
 import hudson.Launcher;

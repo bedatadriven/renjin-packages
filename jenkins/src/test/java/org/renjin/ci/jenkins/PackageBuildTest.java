@@ -1,4 +1,4 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;

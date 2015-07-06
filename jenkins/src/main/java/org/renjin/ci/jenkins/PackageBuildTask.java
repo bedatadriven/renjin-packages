@@ -1,12 +1,12 @@
-package org.renjin.ci.workflow;
+package org.renjin.ci.jenkins;
 
 import hudson.model.*;
 import hudson.model.queue.AbstractQueueTask;
 import hudson.model.queue.CauseOfBlockage;
 import hudson.security.Permission;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.workflow.graph.PackageNode;
-import org.renjin.ci.workflow.graph.PackageNodeState;
+import org.renjin.ci.jenkins.graph.PackageNode;
+import org.renjin.ci.jenkins.graph.PackageNodeState;
 
 import java.io.IOException;
 import java.util.ArrayList;

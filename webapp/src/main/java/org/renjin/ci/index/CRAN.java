@@ -1,10 +1,14 @@
 package org.renjin.ci.index;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -14,12 +18,14 @@ import org.w3c.dom.CharacterData;
 import org.w3c.dom.*;
 import org.w3c.tidy.Tidy;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -156,7 +162,9 @@ public class CRAN {
     return packageId(packageName) + ":" + version;
   }
 
-  public static List<PackageVersionId> getArchivedVersionList(String packageName) throws IOException {
+  public static Map<PackageVersionId, DateTime> getArchivedVersionList(String packageName) throws IOException {
+
+    
     String indexUrl = CRAN_MIRROR + "src/contrib/Archive/" + packageName;
     System.out.println("Fetching from " + indexUrl);
     URL url = null;
@@ -165,19 +173,56 @@ public class CRAN {
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }
-    List<PackageVersionId> versions = new ArrayList<>();
-    Document document = fetchAsDom(Resources.asByteSource(url));
-    NodeList links = document.getElementsByTagName("a");
-    int packagePrefix = (packageName + "_").length();
 
-    for (int i = 0; i < links.getLength(); i++) {
-      Element link = (Element) links.item(i);
-      String href = link.getAttribute("href");
-      if(!Strings.isNullOrEmpty(href) && href.endsWith(".tar.gz")) {
-        String version = href.substring(packagePrefix, href.length() - ".tar.gz".length());
-        versions.add(new PackageVersionId("org.renjin.cran", packageName, version));
+    URLFetchService fetchService = URLFetchServiceFactory.getURLFetchService();
+    HTTPRequest request = new HTTPRequest(url, HTTPMethod.GET, FetchOptions.Builder.withDeadline(90));
+    HTTPResponse response = fetchService.fetch(request);
+    if(response.getResponseCode() != 200) {
+      throw new RuntimeException("Response code: " + response.getResponseCode());
+    }
+    
+    Map<PackageVersionId, DateTime> versions = Maps.newHashMap();
+    Document document = fetchAsDom(ByteSource.wrap(response.getContent()));
+        NodeList rows = document.getElementsByTagName("tr");
+    String packagePrefix = (packageName + "_");
+
+    for (int i = 0; i < rows.getLength(); i++) {
+      Element row = (Element) rows.item(i);
+      Optional<String> version = parsePackageVersionFromRow(packagePrefix, row);
+      if(version.isPresent()) {
+        DateTime time = parseReleaseDateFromRow(row);
+        versions.put(new PackageVersionId("org.renjin.cran", packageName, version.get()), time);
       }
     }
     return versions;
   }
+  
+  private static Optional<String> parsePackageVersionFromRow(String packagePrefix, Element tableRow) {
+    NodeList links = tableRow.getElementsByTagName("a");
+    if(links.getLength() == 1) {
+      Element link = (Element) links.item(0);
+      String href = link.getAttribute("href");
+      if(!Strings.isNullOrEmpty(href) && href.startsWith(packagePrefix) && href.endsWith(".tar.gz")) {
+        String version = href.substring(packagePrefix.length(), href.length() - ".tar.gz".length());
+        return Optional.of(version);
+      }
+    }
+    return Optional.absent();
+  }
+  
+  private static DateTime parseReleaseDateFromRow(Element tableRow) {
+    NodeList tdList = tableRow.getElementsByTagName("td");
+    for (int i = 0; i < tdList.getLength(); i++) {
+      Element td = (Element) tdList.item(i);
+      String dateString = innerText(td);
+      try {
+        return DateTime.parse(dateString.trim(), DateTimeFormat.forPattern("dd-MMM-YYYY HH:mm"));
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+    throw new IllegalStateException("Can't find date in row: " + tableRow.toString());
+  }
+  
+  
 }

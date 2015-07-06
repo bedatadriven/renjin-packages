@@ -54,17 +54,6 @@ public class PackageVersionResource {
   }
 
   @GET
-  @Path("examples/run/{runNumber}")
-  public Viewable getExampleRunResults(@PathParam("runNumber") int testRunNumber) {
-    Map<String, Object> model = new HashMap<>();
-    model.put("version", packageVersion);
-    model.put("run", PackageDatabase.getExampleRun(packageVersionId, testRunNumber).safe());
-    model.put("results", Lists.newArrayList(PackageDatabase.getExampleResults(packageVersionId, testRunNumber)));
-    
-    return new Viewable("/exampleRun.ftl", model);
-  }
-  
-  @GET
   @Path("lastSuccessfulBuild")
   @Produces(MediaType.TEXT_PLAIN)
   public Response getLastSuccessfulBuild() {

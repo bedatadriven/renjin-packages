@@ -7,9 +7,7 @@ import jenkins.model.Jenkins;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Created by alex on 29-6-15.
- */
+
 public class Tasks {
   static void waitForTasks(TaskListener listener, List<Queue.WaitingItem> queueItems) {
     // Wait for everything to complete!

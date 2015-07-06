@@ -1,6 +1,4 @@
 <#-- @ftlvariable name="version" type="org.renjin.ci.packages.PackageVersionPage" -->
-
-
 <#include "base.ftl">
 
 <@scaffolding title="${version.packageName} ${version.version}">
@@ -32,7 +30,8 @@
         <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
 
         <#if (version.dependencies?size > 0)>
-        <p><strong>Dependencies:</strong>
+        <h3>Dependencies</h3>
+        <p>
         <#list version.dependencies as dependency>
             <a href="${dependency.url}" class="${dependency.style}">${dependency.label}</a>
         </#list>

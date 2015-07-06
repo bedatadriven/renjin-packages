@@ -11,12 +11,12 @@ import org.renjin.ci.datastore.PackageTestRun;
 import org.renjin.ci.datastore.RenjinCommit;
 import org.renjin.ci.datastore.RenjinRelease;
 import org.renjin.ci.model.*;
-import org.renjin.ci.pipelines.Pipelines;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -31,11 +31,13 @@ public class TestResources {
 
   @GET
   @Path("/start")
-  public void start() {
+  public Response start() {
     Queue queue = QueueFactory.getDefaultQueue();
     queue.add(TaskOptions.Builder
         .withUrl("/tasks/migrate/tests")
         .param("offset", "0"));
+    
+    return Response.ok().build();
   }
   
   @POST

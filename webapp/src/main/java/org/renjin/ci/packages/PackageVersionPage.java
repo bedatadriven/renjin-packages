@@ -145,11 +145,20 @@ public class PackageVersionPage {
 
   public String getPomReference() {
     StringBuilder xml = new StringBuilder();
-    xml.append("<dependency>\n");
-    xml.append("  <groupId>").append(packageVersion.getGroupId()).append("</groupId>\n");
-    xml.append("  <artifactId>").append(packageVersion.getPackageName()).append("</artifactId>\n");
-    xml.append("  <version>").append(packageVersion.getLastSuccessfulBuildVersion()).append("</version>\n");
-    xml.append("</dependency>");
+    xml.append("<dependencies>\n");
+    xml.append("  <dependency>\n");
+    xml.append("    <groupId>").append(packageVersion.getGroupId()).append("</groupId>\n");
+    xml.append("    <artifactId>").append(packageVersion.getPackageName()).append("</artifactId>\n");
+    xml.append("    <version>").append(packageVersion.getLastSuccessfulBuildVersion()).append("</version>\n");
+    xml.append("  </dependency>\n");
+    xml.append("</dependencies>\n");
+    xml.append("<repositories>\n");
+    xml.append("  <repository>\n");
+    xml.append("    <id>bedatadriven</id>\n");
+    xml.append("    <name>bedatadriven public repo</name>\n");
+    xml.append("    <url>http://nexus.bedatadriven.com/content/groups/public/</url>\n");
+    xml.append("  </repository>\n");
+    xml.append("</repositories>");
     return xml.toString();
   }
 

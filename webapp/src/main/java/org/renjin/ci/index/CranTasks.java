@@ -1,12 +1,12 @@
 package org.renjin.ci.index;
 
+import com.google.appengine.api.taskqueue.*;
 import com.google.appengine.api.taskqueue.Queue;
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskHandle;
-import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.VoidWork;
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
@@ -19,8 +19,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 
@@ -109,6 +108,7 @@ public class CranTasks {
             if(id.getGroupId().equals("org.renjin.cran")) {
                 cranFetchQueue.add(TaskOptions.Builder
                     .withUrl("/tasks/index/cran/fetchArchivedVersions")
+                    .retryOptions(RetryOptions.Builder.withTaskRetryLimit(3))
                     .param("packageName", id.getPackageName()));
             }
         }
@@ -119,28 +119,70 @@ public class CranTasks {
     @POST
     @Path("fetchArchivedVersions") 
     public Response fetchCranArchives(@FormParam("packageName") String packageName) throws IOException {
-        PackageId packageId = new PackageId("org.renjin.cran", packageName);
-        List<PackageVersionId> versionList = CRAN.getArchivedVersionList(packageId.getPackageName());
+        final PackageId packageId = new PackageId("org.renjin.cran", packageName);
+        final Map<PackageVersionId, DateTime> publicationDates = CRAN.getArchivedVersionList(packageId.getPackageName());
+        
+        // ensure that dates are increasing
+        List<PackageVersionId> versions = new ArrayList<>();
+        versions.addAll(publicationDates.keySet());
+        Collections.sort(versions);
+        
+        DateTime lastDate = null;
+        for (int i = 0; i < versions.size(); i++) {
+            DateTime publicationDate = publicationDates.get(versions.get(i));
+            LOGGER.info(versions.get(i) + " = " + publicationDate);
+            if(i > 0 && publicationDate.isBefore(lastDate)) {
+                LOGGER.severe(packageName + " has non-monotonically increasing version numbers: " + publicationDate);
+                return Response.ok().build();
+            }
+            lastDate = publicationDate;
+        }
+        
 
         // See which versions we're missing
-        List<Key<PackageVersion>> keys = Lists.newArrayList();
-        for (PackageVersionId packageVersionId : versionList) {
-            keys.add(PackageVersion.key(packageVersionId));
-        }
-        Map<Key<PackageVersion>, PackageVersion> packageVersions = ObjectifyService.ofy().load().keys(keys);
+//        List<Key<PackageVersion>> keys = Lists.newArrayList();
+//        for (PackageVersionId packageVersionId : versionList) {
+//            keys.add(PackageVersion.key(packageVersionId));
+//        }
+//        Map<Key<PackageVersion>, PackageVersion> packageVersions = ObjectifyService.ofy().load().keys(keys);
+//
+//    //    Queue cranFetchQueue = QueueFactory.getQueue(CRAN_FETCH_QUEUE);
+//
+//        for (Key<PackageVersion> key : keys) {
+//            PackageVersionId packageVersionId = PackageVersion.idOf(key);
+//            if(packageVersions.containsKey(key)) {
+//                LOGGER.info(packageVersionId + ": already loaded.");
+//            } else {
+//                LOGGER.info(packageVersionId + ": queuing package fetch.");
+//                cranFetchQueue.add(TaskOptions.Builder
+//                    .withUrl("/tasks/index/cran/fetchArchivedVersion")
+//                    .param("packageVersion", packageVersionId.toString()));
+//            }
+//        }
 
-        Queue cranFetchQueue = QueueFactory.getQueue(CRAN_FETCH_QUEUE);
 
-        for (Key<PackageVersion> key : keys) {
-            PackageVersionId packageVersionId = PackageVersion.idOf(key);
-            if(packageVersions.containsKey(key)) {
-                LOGGER.info(packageVersionId + ": already loaded.");
-            } else {
-                LOGGER.info(packageVersionId + ": queuing package fetch.");
-                cranFetchQueue.add(TaskOptions.Builder
-                    .withUrl("/tasks/index/cran/fetchArchivedVersion")
-                    .param("packageVersion", packageVersionId.toString()));
-            }
+        for (final PackageVersionId versionId : versions) {
+            ObjectifyService.ofy().transact(new VoidWork() {
+                @Override
+                public void vrun() {
+                    PackageVersion packageVersion = ObjectifyService.ofy().load().key(PackageVersion.key(versionId)).now();
+                    if(packageVersion == null) {
+                        LOGGER.info(versionId + ": does not exist");
+                    } else {
+                        DateTime publicationDate = publicationDates.get(versionId);
+                        Date oldPublicationDate = packageVersion.getPublicationDate();
+                        if (oldPublicationDate == null) {
+                            LOGGER.info(versionId + ": Setting to " + publicationDate.toString("YYYY-MM-dd"));
+                            packageVersion.setPublicationDate(publicationDate.toDate());
+                            ObjectifyService.ofy().save().entity(packageVersion);
+                        } else {
+                            LOGGER.info(versionId + ": " + new DateTime(oldPublicationDate).toString("YYYY-MM-dd") +
+                                " = " + publicationDate.toString("YYYY-MM-dd"));
+                        }
+                    }
+                }
+            });
+         
         }
         
         return Response.ok().build();

@@ -4,7 +4,10 @@ import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
@@ -13,10 +16,10 @@ import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import javax.annotation.Nullable;
+import java.security.KeyFactory;
+import java.util.*;
+import java.util.logging.Logger;
 
 import static com.googlecode.objectify.ObjectifyService.register;
 
@@ -25,6 +28,8 @@ import static com.googlecode.objectify.ObjectifyService.register;
  * database of Packages
  */
 public class PackageDatabase {
+  
+  private static final Logger LOGGER = Logger.getLogger(PackageDatabase.class.getName());
 
   public static Random RANDOM = new Random();
 
@@ -43,7 +48,6 @@ public class PackageDatabase {
     register(PackageExample.class);
     register(PackageExampleSource.class);
     register(PackageExampleRun.class);
-    register(PackageExampleResult.class);
     register(RenjinVersionStat.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
@@ -67,6 +71,41 @@ public class PackageDatabase {
         .type(PackageVersion.class)
         .order("-publicationDate")
         .limit(20);
+  }
+
+  public static List<Package> getPackagesStartingWithLetter(char letter) {
+
+    Iterable<Package> lowerCase = getPackagesStartingWithCharacter(Character.toLowerCase(letter));
+    Iterable<Package> upperCase = getPackagesStartingWithCharacter(Character.toUpperCase(letter));
+    
+    List<Package> packages = Lists.newArrayList();
+    Iterables.addAll(packages, lowerCase);
+    Iterables.addAll(packages, upperCase);
+
+    Collections.sort(packages, Ordering.natural().onResultOf(new Function<Package, Comparable>() {
+      @Nullable
+      @Override
+      public Comparable apply(Package input) {
+        return input.getName().toLowerCase();
+      }
+    }));
+    
+    return packages;
+  }
+
+  public static QueryResultIterable<Package> getPackagesStartingWithCharacter(char letter) {
+    Key<Package> lowerKey = Key.create(Package.class, "org.renjin.cran:" + letter);
+    Key<Package> upperKey = Key.create(Package.class, "org.renjin.cran:" + ((char)(letter+1)));
+
+    LOGGER.info("Querying between " + lowerKey + " and " + upperKey);
+
+
+    return ObjectifyService.ofy().load()
+        .type(Package.class)
+        .filterKey(">=", lowerKey)
+        .filterKey("<", upperKey)
+        .chunk(1000)
+        .iterable();
   }
 
   public static long newBuildNumber(final PackageVersionId packageVersionId) {
@@ -212,27 +251,6 @@ public class PackageDatabase {
   }
 
 
-  public static String getExampleOutput(String outputKey) {
-    return  ObjectifyService.ofy().load().key(Key.create(TestOutput.class, outputKey)).safe().getOutput();
-  }
-
-  public static Query<PackageExampleResult> getExampleResults(PackageVersionId packageVersionId, long runNumber) {
-    Key<PackageExampleRun> runKey = Key.create(PackageVersion.key(packageVersionId), PackageExampleRun.class, runNumber);
-
-    return ObjectifyService.ofy()
-        .load()
-        .type(PackageExampleResult.class)
-        .ancestor(runKey);
-  }
-
-  public static LoadResult<PackageExampleRun> getExampleRun(PackageVersionId packageVersionId, long testRunNumber) {
-    Key<PackageExampleRun> runKey = Key.create(PackageVersion.key(packageVersionId), PackageExampleRun.class, testRunNumber);
-
-    return ObjectifyService.ofy()
-        .load()
-        .key(runKey);
-  }
-
   public static RenjinVersionId getLatestRelease() {
     QueryResultIterator<Key<RenjinRelease>> results = ObjectifyService.ofy()
         .load()
@@ -248,5 +266,5 @@ public class PackageDatabase {
     return RenjinVersionId.valueOf(results.next().getName());
   }
 
-  
+
 }

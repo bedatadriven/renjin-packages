@@ -38,9 +38,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
   private Date publicationDate;
   
   @Unindex
-  private int compatibilityFlags;
-  
-  @Unindex
   private long lastBuildNumber;
   
   @Index
@@ -84,19 +81,7 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public String getId() {
     return getPackageVersionId().toString();
   }
-
-
-  public int getCompatibilityFlags() {
-    return compatibilityFlags;
-  }
-
-  public void setCompatibilityFlags(int compatibilityFlags) {
-    this.compatibilityFlags = compatibilityFlags;
-  }
   
-  public void setCompatibilityFlag(int flag) {
-    this.compatibilityFlags |= flag;
-  }
   
   public PackageVersionId getPackageVersionId() {
     return new PackageVersionId(getPackageId(), version);
@@ -155,16 +140,7 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public PackageBuildId getLastBuildId() {
     return new PackageBuildId(getPackageVersionId(), lastBuildNumber);
   }
-
-
-  public long getLastExampleRun() {
-    return lastExampleRun;
-  }
-
-  public void setLastExampleRun(long lastExampleRun) {
-    this.lastExampleRun = lastExampleRun;
-  }
-
+  
   public String getLastSuccessfulBuildVersion() {
     if(lastSuccessfulBuildNumber > 0) {
       return version + "-b" + lastSuccessfulBuildNumber;
@@ -264,14 +240,6 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public static Key<PackageVersion> key(PackageVersionId id) {
     Key<Package> packageKey = Package.key(id.getPackageId());
     return Key.create(packageKey, PackageVersion.class, id.getVersionString());
-  }
-
-  public boolean getCompatibilityFlag(int flag) {
-    if( (this.compatibilityFlags & flag) != 0) {
-      return true;
-    } else {
-      return false;
-    }
   }
 
   @Override

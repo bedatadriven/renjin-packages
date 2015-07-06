@@ -35,21 +35,20 @@ public class PackageListResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable getIndex() {
-        
-        Map<String, Object> model = new HashMap<>();
-        model.put("latestReleases", Lists.newArrayList(PackageDatabase.getLatestPackageReleases()));
-        
-        return new Viewable("/packageIndex.ftl", model);
+        return getIndex("A");
     }
     
     @GET
-    @Path("{name}.html")
-    public Response getOldPage(@Context UriInfo uriInfo, String packageName) {
+    @Produces(MediaType.TEXT_HTML)
+    @Path("{letter:[A-Z]}")
+    public Viewable getIndex(@PathParam("letter") String letter) {
 
-        URI newUri = uriInfo.getAbsolutePathBuilder().path("package").path("org.renjin.cran").path(packageName).build();
-
-        return Response.status(Response.Status.MOVED_PERMANENTLY).location(newUri).build();
+        Map<String, Object> model = new HashMap<>();
+        model.put("letters", Lists.charactersOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+        model.put("packages", PackageDatabase.getPackagesStartingWithLetter(letter.charAt(0)));
+        return new Viewable("/packageIndex.ftl", model);
     }
+ 
     
     @GET
     @Path("/unbuilt")

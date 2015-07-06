@@ -1,4 +1,4 @@
-<#macro scaffolding title>
+<#macro scaffolding title description="">
 
 <!DOCTYPE html>
 <html lang="en">
@@ -6,9 +6,6 @@
     <meta charset="utf-8" />
     <title>Renjin.org | ${title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta property="og:title" content="Renjin.org | Support" />
-    <meta property="og:utl" content="http://www.renjin.org/support.html" />
-    <meta property="og:image" content="http://www.renjin.org/assets/img/renjin-logo-thumbnail.png" />
     <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>
     <![endif]-->

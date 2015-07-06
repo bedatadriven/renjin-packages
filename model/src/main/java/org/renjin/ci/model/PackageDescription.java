@@ -1,6 +1,7 @@
 package org.renjin.ci.model;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
@@ -248,12 +249,17 @@ public class PackageDescription {
 		return Iterables.transform(Arrays.asList(getFirstProperty("Author").split("\\s*,\\s*")), new PersonParser());
 	}
 
-	public Person getMaintainer() {
-		return new Person(getFirstProperty("Maintainer"));
+	public Optional<Person> getMaintainer() {
+		String maintainer = getFirstProperty("Maintainer");
+		if(Strings.isNullOrEmpty(maintainer)) {
+			return Optional.absent();
+		} else {
+			return Optional.of(new Person(getFirstProperty("Maintainer")));
+		}
 	}
 	
 	public Iterable<Person> getPeople() {
-		return Iterables.concat(Arrays.asList(getMaintainer()), getAuthors());
+		return Iterables.concat(getMaintainer().asSet(), getAuthors());
 	}
 	
 	public String getDescription() {

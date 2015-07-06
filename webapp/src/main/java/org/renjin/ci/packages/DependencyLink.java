@@ -30,7 +30,7 @@ public class DependencyLink {
   
   public String getStyle() {
     if(successful) {
-      return "btn btn-successful";
+      return "btn btn-success";
     } else {
       return "btn btn-danger";
     }

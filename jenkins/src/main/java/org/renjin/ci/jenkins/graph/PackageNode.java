@@ -30,6 +30,11 @@ public class PackageNode implements Serializable {
   private Set<PackageNode> dependants = Sets.newHashSet();
 
   /**
+   * Unqualified package names that could not be resolved to a package version
+   */
+  private Set<String> unresolvedDependencies = Sets.newHashSet();
+
+  /**
    * True if we have begun resolving dependencies for this 
    * node. Resolution may still not be complete.
    */
@@ -145,6 +150,7 @@ public class PackageNode implements Serializable {
 
   public List<String> blockingDependencies() {
     List<String> list = new ArrayList<String>();
+    list.addAll(unresolvedDependencies);
     for (PackageNode dependencyNode : dependencies) {
       PackageNodeState upstreamResult = dependencyNode.getBuildResult();
       if(upstreamResult.getOutcome() != BuildOutcome.SUCCESS) {
@@ -178,5 +184,9 @@ public class PackageNode implements Serializable {
 
   public int getDownstreamCount() {
     return downstreamCount;
+  }
+
+  public void addUnresolvedDependency(String name) {
+    unresolvedDependencies.add(name);
   }
 }

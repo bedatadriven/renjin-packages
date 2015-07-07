@@ -5,13 +5,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A package dependency resolved to a fully qualified {@code PackageVersionId} and 
+ * The resolution of an unqualified package dependency (e.g. "survey") to a fully qualified {@code PackageVersionId} and 
  * a build number, if one is available.
  */
 @JsonAutoDetect(
     isGetterVisibility = JsonAutoDetect.Visibility.NONE, 
     getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class ResolvedDependency {
+  
+  @JsonProperty 
+  private String name;
   
   @JsonProperty
   private String scope = "compile";
@@ -24,16 +27,36 @@ public class ResolvedDependency {
 
   public ResolvedDependency() {
   }
+
+  public ResolvedDependency(String name) {
+    this.name = name;
+  }
   
   public ResolvedDependency(PackageBuildId buildId) {
+    this.name = buildId.getPackageName();
     this.packageVersionId = buildId.getPackageVersionId();
     this.buildNumber = buildId.getBuildNumber();
   }
-
+  
   public ResolvedDependency(PackageVersionId packageVersionId) {
+    this.name = packageVersionId.getPackageName();
     this.packageVersionId = packageVersionId;
   }
-  
+
+
+  /**
+   *
+   * @return the original name of the dependency, as specified in the POM.
+   */
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+
   public String getScope() {
     return scope;
   }
@@ -60,7 +83,9 @@ public class ResolvedDependency {
 
   @Override
   public String toString() {
-    if(buildNumber == null) {
+    if(packageVersionId == null) {
+      return name;
+    } else if(buildNumber == null) {
       return packageVersionId.toString();
     } else {
       return packageVersionId + "-b" + buildNumber;
@@ -74,5 +99,9 @@ public class ResolvedDependency {
 
   public PackageBuildId getBuildId() {
     return new PackageBuildId(packageVersionId, buildNumber);
+  }
+
+  public boolean isVersionResolved() {
+    return packageVersionId != null;
   }
 }

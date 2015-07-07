@@ -7,18 +7,20 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.StorageObject;
+import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
 import com.google.jenkins.plugins.credentials.oauth.GoogleRobotCredentials;
 import com.google.jenkins.plugins.credentials.oauth.GoogleRobotPrivateKeyCredentials;
 import com.google.jenkins.plugins.credentials.oauth.JsonServiceAccountConfig;
+import hudson.FilePath;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.build.PackageBuild;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.storage.StorageKeys;
 import org.renjin.ci.jenkins.BuildContext;
 import org.renjin.ci.jenkins.ConfigException;
 import org.renjin.ci.jenkins.WorkerContext;
+import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.storage.StorageKeys;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -130,6 +132,12 @@ public class GoogleCloudStorage {
             throw closer.rethrow(e);
         } finally {
             closer.close();
+        }
+        
+        // Band-aid required for compiling older files:
+        FilePath namespaceFile = context.getBuildDir().child("NAMESPACE");
+        if(!namespaceFile.exists()) {
+            namespaceFile.write("exportPattern( \".\" )\n", Charsets.UTF_8.name());
         }
     }
 

@@ -59,17 +59,10 @@ public class DependencyResolution {
 
     // Now find candidates that meet both declared criteria and availability of builds
     ResolvedDependencySet result = new ResolvedDependencySet();
-    result.setComplete(true);
 
     for (String packageName : declared.keySet()) {
       ResolvedDependency selected = select(declared.get(packageName), candidates.get(packageName));
-      
-      if(selected == null) {
-        result.setComplete(false);
-        result.getMissingPackages().add(packageName);
-      } else {
-        result.getDependencies().add(selected);
-      }
+      result.getDependencies().add(selected);
     }
     
     LOGGER.info("Resolution: " + result.getDependencies());
@@ -160,7 +153,7 @@ public class DependencyResolution {
     }
     
     // No beans...
-    return null;
+    return new ResolvedDependency(declared.getName());
   }
 
   private ResolvedDependency resolution(PackageVersion version) {

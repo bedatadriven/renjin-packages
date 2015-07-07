@@ -84,7 +84,7 @@ public class CompatibilityAlert {
 
   private String blockingDependencyLinkList(PackageBuild lastBuild) {
     StringBuilder sb = new StringBuilder();
-    List<PackageVersionId> blockers = lastBuild.getBlockingDependencyVersions();
+    List<String> blockers = lastBuild.getBlockingDependencies();
     for (int i = 0; i < blockers.size(); i++) {
       if(i > 0) {
         if(blockers.size() > 2) {
@@ -94,14 +94,20 @@ public class CompatibilityAlert {
           sb.append(" and ");
         }
       }
-      PackageVersionId blocker = blockers.get(i);
-      sb.append("<a href=\"")
-          .append(blocker.getPath())
-          .append("\">")
-          .append(blocker.getPackageName())
-          .append("&nbsp;")
-          .append(blocker.getVersion())
-          .append("</a>");
+      String[] coordinates = blockers.get(i).split(":");
+      if(coordinates.length >= 3) {
+        PackageVersionId blocker = new PackageVersionId(coordinates[0], coordinates[1], coordinates[2]);
+        sb.append("<a href=\"")
+            .append(blocker.getPath())
+            .append("\">")
+            .append(blocker.getPackageName())
+            .append("&nbsp;")
+            .append(blocker.getVersion())
+            .append("</a>");
+      } else {
+        // unqualified package name
+        sb.append(coordinates[0]);
+      }
     }
     return sb.toString();
   }

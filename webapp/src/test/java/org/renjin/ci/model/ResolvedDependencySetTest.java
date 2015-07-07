@@ -9,7 +9,7 @@ public class ResolvedDependencySetTest {
 
   @Test
   public void json() throws IOException {
-    String json = "{\"complete\":true,\"dependencies\":[{\"scope\":\"compile\",\"packageVersionId\":\"org.renjin.cran:survey:3.29-5\",\"buildNumber\":null}]}";
+    String json = "{\"dependencies\":[{\"scope\":\"compile\",\"packageVersionId\":\"org.renjin.cran:survey:3.29-5\",\"buildNumber\":null}]}";
     ObjectMapper objectMapper = new ObjectMapper();
     ResolvedDependencySet set = objectMapper.readValue(json, ResolvedDependencySet.class);
   }

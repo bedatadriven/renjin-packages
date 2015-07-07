@@ -2,7 +2,10 @@
   <f:entry title="Filter" field="filter">
     <f:textbox/>
   </f:entry>
-    <f:entry title="Sampling" field="sample">
-      <f:textbox/>
-    </f:entry>
+  <f:entry title="Sampling" field="sample">
+    <f:textbox/>
+  </f:entry>
+  <f:entry title="Renjin Version" field="renjinVersion">
+    <f:textbox/>
+  </f:entry>
 </j:jelly>

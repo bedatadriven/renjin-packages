@@ -7,14 +7,14 @@ import hudson.model.TaskListener;
 import hudson.model.queue.SubTask;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.build.PackageBuild;
-import org.renjin.ci.model.BuildOutcome;
-import org.renjin.ci.model.PackageBuildResult;
-import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.jenkins.tools.GoogleCloudStorage;
 import org.renjin.ci.jenkins.tools.LogFileParser;
 import org.renjin.ci.jenkins.tools.Maven;
 import org.renjin.ci.jenkins.tools.TestResultParser;
+import org.renjin.ci.model.BuildOutcome;
+import org.renjin.ci.model.PackageBuildResult;
+import org.renjin.ci.model.PackageVersionId;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -70,7 +70,7 @@ public class PackageBuildExecutable implements Queue.Executable {
     // Mark the node as failed.
     
     // Report the failure immediately, we can't proceed with the build
-      PackageBuild packageBuild = null;
+    PackageBuild packageBuild = null;
     try {
       packageBuild = RenjinCiClient.startBuild(node.getId(), parentTask.getRenjinVersion());
     } catch (Exception e) {

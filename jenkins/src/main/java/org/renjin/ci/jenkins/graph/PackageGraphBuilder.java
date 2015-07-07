@@ -68,7 +68,7 @@ public class PackageGraphBuilder {
 
   private void enqueueForBuild(String filter, Map<String, String> filterParameters, Double sample) throws InterruptedException {
     taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
-    List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter, filterParameters);
+    List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter);
     taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
 
     List<PackageVersionId> sampled = sample(packageVersionIds, sample);
@@ -161,16 +161,16 @@ public class PackageGraphBuilder {
 
     } catch (Exception e) {
       taskListener.getLogger().println(format("Failed to resolve dependencies of %s: %s", node.getId(), e.getMessage()));
+      e.printStackTrace(taskListener.getLogger());
       node.orphan();
       return;
     }
-    if(!resolution.isComplete()) {
-      taskListener.getLogger().println(node.getId() + " has unknown dependencies " + resolution.getMissingPackages());
-      node.orphan();
 
-    } else {
-      for (ResolvedDependency resolvedDependency : resolution.getDependencies()) {
-        node.dependsOn(getOrCreateNodeForDependency(resolvedDependency) );
+    for (ResolvedDependency resolvedDependency : resolution.getDependencies()) {
+      if(resolvedDependency.isVersionResolved()) {
+        node.dependsOn(getOrCreateNodeForDependency(resolvedDependency));
+      } else {
+        node.addUnresolvedDependency(resolvedDependency.getName());
       }
     }
   }

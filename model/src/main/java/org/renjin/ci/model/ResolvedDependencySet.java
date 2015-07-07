@@ -1,5 +1,7 @@
 package org.renjin.ci.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,10 +9,9 @@ import java.util.List;
  * Set of package names resolved to fully qualified source names
  * or builds if available.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResolvedDependencySet {
   
-  private boolean complete = true;
-  private List<String> missingPackages = new ArrayList<>();
   private List<ResolvedDependency> dependencies = new ArrayList<>();
 
   public ResolvedDependencySet() {
@@ -19,16 +20,5 @@ public class ResolvedDependencySet {
   public List<ResolvedDependency> getDependencies() {
     return dependencies;
   }
-
-  public List<String> getMissingPackages() {
-    return missingPackages;
-  }
-
-  public boolean isComplete() {
-    return complete;
-  }
-
-  public void setComplete(boolean complete) {
-    this.complete = complete;
-  }
+  
 }

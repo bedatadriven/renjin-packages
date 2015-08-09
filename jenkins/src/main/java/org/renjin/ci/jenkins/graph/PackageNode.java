@@ -80,8 +80,8 @@ public class PackageNode implements Serializable {
     return packageVersionId.toString();
   }
 
-  public void provideBuild(long buildNumber) {
-    this.buildResult = PackageNodeState.success(buildNumber);
+  public void provideBuild(long buildNumber, BuildOutcome outcome) {
+    this.buildResult = PackageNodeState.build(buildNumber, outcome);
     this.provided = true;
   }
 

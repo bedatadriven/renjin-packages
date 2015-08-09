@@ -9,6 +9,8 @@ import com.googlecode.objectify.ObjectifyService;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.renjin.ci.datastore.Package;
+import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
@@ -29,7 +31,6 @@ import static com.google.common.collect.Iterables.concat;
 public class DependencyResolution {
 
   private static final Logger LOGGER = Logger.getLogger(DependencyResolution.class.getName());
-  public static final String OPEN_VERSION_RANGE = "[0,)";
 
   private PackageVersion packageVersion;
 
@@ -158,12 +159,20 @@ public class DependencyResolution {
 
   private ResolvedDependency resolution(PackageVersion version) {
     if(version.hasSuccessfulBuild()) {
-      return new ResolvedDependency(version.getLastSuccessfulBuildId());
-    } else {
-      return new ResolvedDependency(version.getPackageVersionId());
+      return new ResolvedDependency(version.getLastSuccessfulBuildId(), BuildOutcome.SUCCESS);
+    } 
+    
+    // If there has been a failed build attempt, then return this information so we can avoid
+    // attempting to build it again, unless explicitly requested.
+    if(version.hasBuild()) {
+      PackageBuild build = PackageDatabase.getBuild(version.getLastBuildId()).safe();
+      if (build.getOutcome() == BuildOutcome.FAILURE) {
+        return new ResolvedDependency(version.getLastBuildId(), BuildOutcome.FAILURE);
+      }
     }
+      
+    return new ResolvedDependency(version.getPackageVersionId());
   }
-
 
   /**
    * Create a predicate for selecting candidates based on the explicit version range specified by the 

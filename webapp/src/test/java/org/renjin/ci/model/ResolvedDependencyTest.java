@@ -3,11 +3,8 @@ package org.renjin.ci.model;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.renjin.ci.datastore.PackageVersion;
 
 import java.util.Arrays;
-
-import static org.junit.Assert.*;
 
 public class ResolvedDependencyTest {
 
@@ -16,7 +13,7 @@ public class ResolvedDependencyTest {
     
     ResolvedDependency dependency = new ResolvedDependency(PackageVersionId.fromTriplet("org.renjin.cran:xtable:1.0"));
     ResolvedDependency dependencyWithBuild = new ResolvedDependency(
-        new PackageBuildId(PackageVersionId.fromTriplet("org.renjin.cran:xtable:1.0"), 10));
+        new PackageBuildId(PackageVersionId.fromTriplet("org.renjin.cran:xtable:1.0"), 10), BuildOutcome.SUCCESS);
     
     
 

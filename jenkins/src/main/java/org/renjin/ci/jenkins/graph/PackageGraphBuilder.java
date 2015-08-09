@@ -140,7 +140,7 @@ public class PackageGraphBuilder {
 
       // Add dependencies
       if(resolvedDependency.hasBuild()) {
-        node.provideBuild(resolvedDependency.getBuildNumber());
+        node.provideBuild(resolvedDependency.getBuildNumber(), resolvedDependency.getBuildOutcome());
       } else {
         // We will need to build this one as well...
         resolveDependencies(node);

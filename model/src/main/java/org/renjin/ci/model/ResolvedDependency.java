@@ -24,6 +24,9 @@ public class ResolvedDependency {
   
   @JsonProperty
   private Long buildNumber;
+  
+  @JsonProperty
+  private BuildOutcome buildOutcome;
 
   public ResolvedDependency() {
   }
@@ -32,10 +35,11 @@ public class ResolvedDependency {
     this.name = name;
   }
   
-  public ResolvedDependency(PackageBuildId buildId) {
+  public ResolvedDependency(PackageBuildId buildId, BuildOutcome buildOutcome) {
     this.name = buildId.getPackageName();
     this.packageVersionId = buildId.getPackageVersionId();
     this.buildNumber = buildId.getBuildNumber();
+    this.buildOutcome = buildOutcome;
   }
   
   public ResolvedDependency(PackageVersionId packageVersionId) {
@@ -79,6 +83,14 @@ public class ResolvedDependency {
 
   public void setBuildNumber(Long buildNumber) {
     this.buildNumber = buildNumber;
+  }
+
+  public BuildOutcome getBuildOutcome() {
+    return buildOutcome;
+  }
+
+  public void setBuildOutcome(BuildOutcome buildOutcome) {
+    this.buildOutcome = buildOutcome;
   }
 
   @Override

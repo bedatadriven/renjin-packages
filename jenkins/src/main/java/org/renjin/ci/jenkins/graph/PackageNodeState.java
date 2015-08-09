@@ -47,4 +47,8 @@ public class PackageNodeState {
   public static PackageNodeState error() {
     return new PackageNodeState(-1, BuildOutcome.ERROR);
   }
+
+  public static PackageNodeState build(long buildNumber, BuildOutcome outcome) {
+    return new PackageNodeState(buildNumber, outcome);
+  }
 }

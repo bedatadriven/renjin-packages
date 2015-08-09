@@ -1,6 +1,9 @@
 package org.renjin.ci.packages;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.googlecode.objectify.*;
@@ -22,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
+import static org.renjin.ci.datastore.PackageBuild.*;
 
 public class PackageBuildResource {
 
@@ -66,7 +70,7 @@ public class PackageBuildResource {
       @Override
       public void vrun() {
 
-        Key<PackageBuild> buildKey = PackageBuild.key(packageVersionId, buildNumber);
+        Key<PackageBuild> buildKey = key(packageVersionId, buildNumber);
 
         // Retrieve the current status of this package version and the build itself
         PackageBuild build;
@@ -197,83 +201,112 @@ public class PackageBuildResource {
       }
     }
 
-    // Walk the Renjin versions and tag improvements
-    PackageBuild lastBuild = null;
+    // Find progressions/regressions in the overall build outcome
 
-    for (PackageBuild build : buildMap.values()) {
-      byte newDelta;
-      if (lastBuild == null || lastBuild.isSucceeded() == build.isSucceeded()) {
-        newDelta = 0; // no change            
-      } else if (lastBuild.isSucceeded() && build.isFailed()) {
-        newDelta = -1; // regression
-      } else {
+    PackageBuild buildRegression = findRegression(buildMap.values(), buildSucceeded());
+    PackageBuild buildProgression = findProgression(buildMap.values(), buildSucceeded());
+
+    // Consider only those builds where we have native compilation results and look for 
+    // progressions/regressions among those.
+    Iterable<PackageBuild> nativeCompilation = Iterables.filter(buildMap.values(), nativeCompilationAttempted());
+
+    PackageBuild nativeRegression = findRegression(nativeCompilation, nativeCompilationSucceeded());
+    PackageBuild nativeProgression = findProgression(nativeCompilation, nativeCompilationSucceeded());
+
+
+    for (PackageBuild build : builds) {
+      byte newDelta = 0;
+      if (build == buildRegression) {
+        newDelta = -1;
+      } else if (build == buildProgression) {
         newDelta = +1;
       }
-
       if (build.getBuildDelta() != newDelta) {
         build.setBuildDelta(newDelta);
         toSave.add(build);
       }
 
-      LOGGER.info(String.format("%s @ Renjin %s: Build %d (%+d)",
-          packageVersionId,
-          build.getRenjinVersion(),
-          build.getBuildNumber(),
-          build.getBuildDelta()));
-
-      lastBuild = build;
-    }
-
-    // Walk the sequence of versions again and tag regressions/improvements in compilation
-
-    lastBuild = null;
-
-    for (PackageBuild build : buildMap.values()) {
-      if(build.getNativeOutcome() != null && build.getNativeOutcome() != NativeOutcome.NA) {
-        byte newDelta;
-
-        if(lastBuild == null || lastBuild.getNativeOutcome() == build.getNativeOutcome()) {
-          newDelta = 0;
-        } else if(lastBuild.getNativeOutcome() == NativeOutcome.SUCCESS && build.getNativeOutcome() == NativeOutcome.FAILURE) {
-          newDelta = -1;
-        } else {
-          newDelta = 1;
-        }
-
-        if(build.getCompilationDelta() != newDelta) {
-          build.setCompilationDelta(newDelta);
-          toSave.add(build);
-        }
-
-
-        LOGGER.info(String.format("%s @ Renjin %s: Compilation %d (%+d)",
-            packageVersionId,
-            build.getRenjinVersion(),
-            build.getBuildNumber(),
-            build.getCompilationDelta()));
-
-        lastBuild = build;
+      byte nativeDelta = 0;
+      if(build == nativeRegression) {
+        nativeDelta = -1;
+      } else if(build == nativeProgression) {
+        nativeDelta = +1;
+      }
+      if(build.getCompilationDelta() != nativeDelta) {
+        build.setCompilationDelta(nativeDelta);
+        toSave.add(build);
       }
     }
-
-    // Clear the deltas of any builds that have been superceded and ignored here
-    for (PackageBuild build : builds) {
-      if(!buildMap.containsValue(build)) {
-        if(build.getBuildDelta() != 0) {
-          build.setBuildDelta((byte)0);
-          toSave.add(build);
-        }
-        if(build.getCompilationDelta() != 0) {
-          build.setCompilationDelta((byte)0);
-          toSave.add(build);
-        }
-      }
-    }
-
     ObjectifyService.ofy().save().entities(toSave);
 
     return true;
   }
+
+
+  @VisibleForTesting
+  static PackageBuild findRegression(Iterable<PackageBuild> builds, Predicate<PackageBuild> predicate) {
+
+    // Order the builds from the build against the most recent version of Renjin to the build
+    // against the oldest version of Renjin
+    if(!Iterables.isEmpty(builds)) {
+      List<PackageBuild> history = Lists.newArrayList(builds);
+      Collections.reverse(history);
+
+      ListIterator<PackageBuild> it = history.listIterator();
+
+      // Is the build currently failing? Than this is a regression that needs to be fixed.
+
+      PackageBuild mostRecent = it.next();
+      if (!predicate.apply(mostRecent)) {
+
+        PackageBuild previousBuild = mostRecent;
+        while (it.hasNext()) {
+
+          // Given a sequence that looks like this:
+          //   Present  ----------------------> PAST
+          // [ 0:FAILED, 1:FAILED, 2:SUCCESS, 3:SUCCESS, 4:FAILED, 5:FAILED, 6: SUCCESS]
+
+          // We want to tag the build at index 1 as a regression, because it is the first to
+          // break the sequence of successes. Build #5 could also be considered a regression,
+          // but we're ignoring it for this purpose because it's no longer actionable: we only
+          // want to tag essentially UNRESOLVED regressions that need to be fixed.
+
+          PackageBuild build = it.next();
+          if (predicate.apply(build)) {
+            return previousBuild;
+          }
+          previousBuild = build;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  @VisibleForTesting
+  static PackageBuild findProgression(Iterable<PackageBuild> builds, Predicate<PackageBuild> predicate) {
+
+    // IF the package was initially failing, then the first build to succeed is considered a progression,
+    // no matter what happens after that.
+
+    Iterator<PackageBuild> it = builds.iterator();
+
+    if(it.hasNext()) {
+      PackageBuild firstBuild = it.next();
+      if (!predicate.apply(firstBuild)) {
+        
+        // First build is failing, see if there's a subsequent success.
+        while (it.hasNext()) {
+          PackageBuild build = it.next();
+          if (predicate.apply(build)) {
+            return build;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
 
   private static boolean isValidRenjinVersion(RenjinVersionId rv) {
     if(rv.toString().contains("SNAPSHOT")) {

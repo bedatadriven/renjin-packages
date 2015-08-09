@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.LoadResult;
+import org.joda.time.DateTime;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
@@ -42,9 +43,14 @@ public class PackageVersionPage {
 
     this.otherVersions = PackageDatabase.getPackageVersionIds(packageVersion.getPackageId());
 
-    if(packageVersion.getLastBuildNumber() > 0) {
+    if(packageVersion.getLastSuccessfulBuildNumber() > 0) {
+      this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastSuccessfulBuildNumber());
+      this.testResults = PackageDatabase.getTestResults(packageVersion.getLastSuccessfulBuildId());
+
+    } else if(packageVersion.getLastBuildNumber() > 0) {
       this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastBuildNumber());
       this.testResults = PackageDatabase.getTestResults(packageVersion.getLastBuildId());
+      
     } else {
       this.latestBuild = null;
       this.testResults = Collections.emptyList();
@@ -53,6 +59,9 @@ public class PackageVersionPage {
 
   }
 
+  public String getGroupId() {
+    return packageVersion.getGroupId();
+  }
 
   public String getPackageName() {
     return packageVersion.getPackageVersionId().getPackageName();
@@ -66,6 +75,13 @@ public class PackageVersionPage {
     return description.get().getDescription();
   }
 
+  public String getPageDescription() {
+    StringBuilder meta = new StringBuilder();
+    meta.append(packageVersion.getTitle().replace("\"", "'")).append(". ");
+    meta.append("Released ").append(new DateTime(getPublicationDate()).toString("MMM d, YYYY")).append(".");
+    return meta.toString();
+  }
+  
   public PackageDescription getDescription() {
     return description.get();
   }

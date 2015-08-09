@@ -2,6 +2,7 @@ package org.renjin.ci.datastore;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
@@ -33,6 +34,7 @@ public class PackageBuild {
   private Key<PackageVersion> versionKey;
   
   @Id
+  @JsonProperty
   private long buildNumber;
 
   @JsonProperty
@@ -271,7 +273,9 @@ public class PackageBuild {
       List<PackageVersionId> list = new ArrayList<>();
       for (String blockingDependency : blockingDependencies) {
         String[] coordinates = blockingDependency.split(":");
-        list.add(new PackageVersionId(coordinates[0], coordinates[1], coordinates[2]));
+        if(coordinates.length >= 3) {
+          list.add(new PackageVersionId(coordinates[0], coordinates[1], coordinates[2]));
+        }
       }
       return list;
     }
@@ -339,5 +343,32 @@ public class PackageBuild {
     return compilationDelta;
   }
 
- 
+  public static Predicate<PackageBuild> buildSucceeded() {
+    return new Predicate<PackageBuild>() {
+      @Override
+      public boolean apply(@Nullable PackageBuild input) {
+        return input.isSucceeded();
+      }
+    };
+  }
+  
+  public static Predicate<PackageBuild> nativeCompilationSucceeded() {
+    return new Predicate<PackageBuild>() {
+      @Override
+      public boolean apply(PackageBuild input) {
+        return input.getNativeOutcome() == NativeOutcome.SUCCESS;
+      }
+    };
+  }
+  
+  public static Predicate<PackageBuild> nativeCompilationAttempted() {
+    return new Predicate<PackageBuild>() {
+      @Override
+      public boolean apply(PackageBuild input) {
+        return input.getNativeOutcome() == NativeOutcome.SUCCESS ||
+               input.getNativeOutcome() == NativeOutcome.FAILURE;
+      }
+    };
+  }
+
 }

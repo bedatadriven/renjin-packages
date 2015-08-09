@@ -4,7 +4,6 @@ import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -17,7 +16,6 @@ import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
 import javax.annotation.Nullable;
-import java.security.KeyFactory;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -267,4 +265,7 @@ public class PackageDatabase {
   }
 
 
+  public static LoadResult<PackageBuild> getBuild(PackageBuildId id) {
+    return getBuild(id.getPackageVersionId(), id.getBuildNumber());
+  }
 }

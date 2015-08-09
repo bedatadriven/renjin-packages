@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -134,15 +133,11 @@ public class RenjinCiClient {
         .post(Entity.entity(results, MediaType.APPLICATION_JSON_TYPE));
   }
   
-  public static List<PackageVersionId> queryPackageList(String filter, Map<?, ?> filterParameters) {
-    WebTarget target = rootTarget().path("packages").path(filter);
-    if(filterParameters != null) {
-      for (Map.Entry<?, ?> parameter : filterParameters.entrySet()) {
-        target = target.queryParam(parameter.getKey().toString(), parameter.getValue());
-      }
-    }
-    String[] ids = target.request().get(String[].class);
+  public static List<PackageVersionId> queryPackageList(String filter) {
     
+    String url = ROOT_URL + "/packages/" + filter;
+    String[] ids = client().target(url).request().get(String[].class);
+
     List<PackageVersionId> packageVersionIds = new ArrayList<PackageVersionId>();
     for (String id : ids) {
       packageVersionIds.add(PackageVersionId.fromTriplet(id));

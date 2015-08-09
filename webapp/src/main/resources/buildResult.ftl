@@ -3,36 +3,85 @@
 <#include "base.ftl">
 
 <@scaffolding title="${build.packageName} ${build.version}">
-
+<#-- Shows breadcrumbs in search results -->
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement":
+  [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "item":
+      {
+        "@id": "http://packages.renjin.org/packages",
+        "name": "Packages"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "item":
+      {
+        "@id": "http://packages.renjin.org/packages/${build.versionId.groupId}/${build.versionId.packageName}",
+        "name": "${build.versionId.packageName}"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "item":
+      {
+        "@id": "http://packages.renjin.org${build.versionId.path}",
+        "name": "${build.versionId.version}"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "item":
+      {
+        "@id": "http://packages.renjin.org${build.buildId.path}",
+        "name": "${build.buildId.buildNumber}"
+      }
+    }
+  ]
+}
+</script>
 <div class="grid">
 
     <div class="grid-item medium-12">
         
-    <h1><a href="${build.packageVersionId.path}">${build.packageName} ${build.version}</a></h1>
-    </div>
+        <h1><a href="${build.packageVersionId.path}">${build.packageName} ${build.version}</a></h1>
     
-    <div class="grid-item medium-3">
-        <h3>Build History</h3>
-        <ul>
-        <#list build.allBuilds?reverse as previousBuild>
-            <li><a href="${previousBuild.buildNumber}" class="list-group-item">#${previousBuild.buildNumber}</a>
-                <small>with Renjin ${previousBuild.renjinVersion}
-                <#if previousBuild.succeeded>
-                    [OK]
-                <#else>
-                    [FAILED]
-                </#if></small>
-            </li>
-        </#list>
-        </ul>
-    </div>
-    <div class="grid-item medium-9">
 
         <h2>Build #${build.buildNumber}</h2>
 
-        <p>${build.outcome!"Started"} <#if startTime??>on ${build.startTime?datetime} </#if>against Renjin ${build.renjinVersion}</p>
+        <p>${build.outcome!"Started"} <#if build.startTime??>on ${build.startTime?datetime} </#if>
+            against Renjin ${build.renjinVersion} </p>
 
-
+        <h3>History</h3>
+        
+        <table class="build-history">
+            <tr>
+                <#list build.renjinHistory as renjinVersion>
+                <th>${renjinVersion.label}</th>
+                </#list>
+            </tr>
+            <tr>
+                <#list build.renjinHistory as renjinVersion>
+                <td valign="top">
+                    <#list renjinVersion.builds as build>
+                    <a href="${build.path}" class="btn btn-small <#if build.succeeded>btn-success<#else>btn-danger</#if>">
+                        #${build.buildNumber}
+                    </a>
+                    </#list>
+                </td>
+                </#list>
+            </tr>
+        </table>
+        
         <#if (build.testResults?size > 0) >
 
             <h3>Test Results Summary</h3>

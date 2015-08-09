@@ -6,6 +6,9 @@
     <meta charset="utf-8" />
     <title>Renjin.org | ${title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <#if description?? >
+    <meta name="description" content="${description}">
+    </#if>
     <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>
     <![endif]-->

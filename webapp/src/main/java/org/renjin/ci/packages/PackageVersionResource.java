@@ -10,10 +10,8 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.*;
-import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.TestCase;
-import org.renjin.ci.model.TestResult;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -133,6 +131,13 @@ public class PackageVersionResource {
     }
     
     return cases;
+  }
+  
+  @GET
+  @Path("builds")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PackageBuild> getBuilds() {
+    return Lists.newArrayList(PackageDatabase.getBuilds(packageVersionId));
   }
   
   @GET

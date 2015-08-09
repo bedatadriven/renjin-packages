@@ -22,7 +22,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.net.URI;
 import java.util.*;
 
 @Path("/packages")
@@ -68,6 +67,26 @@ public class PackageListResource {
         }
         return packageVersionIds;
     }
+
+    @GET
+    @Path("/built")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PackageVersionId> getBuilt() {
+        List<PackageVersionId> packageVersionIds = new ArrayList<>();
+        QueryResultIterable<PackageVersion> versions = ObjectifyService.ofy()
+            .load()
+            .type(PackageVersion.class)
+            .chunk(1000)
+            .iterable();
+
+        for (PackageVersion version : versions) {
+            if(version.getLastBuildNumber() > 0) {
+                packageVersionIds.add(version.getPackageVersionId());
+            }
+        }
+
+        return packageVersionIds;
+    }
     
     @GET
     @Path("/new")
@@ -84,7 +103,7 @@ public class PackageListResource {
         DateTime cutoff = new DateTime().minusDays(60);
 
         for (PackageVersion packageVersion : packages) {
-            if(!packageVersion.isBuilt()) {
+            if(packageVersion.getLastBuildNumber() == 0) {
                 packageVersionIds.add(packageVersion.getPackageVersionId());    
             }
             if(cutoff.isAfter(packageVersion.getPublicationDate().getTime())) {
@@ -99,6 +118,7 @@ public class PackageListResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<PackageVersionId> getPackagesWithRegressions(@QueryParam("renjinVersion") String renjinVersion) {
 
+        
         QueryResultIterable<PackageBuild> builds = ObjectifyService.ofy()
             .load()
             .type(PackageBuild.class)

@@ -26,10 +26,10 @@
             <tr>
                 <td><a href="${b.packageVersionId.path}">${b.packageVersionId}</a></td>
                 <td>
-                    <#if b.buildDelta == -1><a href="${b.resultURL}" class="label label-danger">Build broken</a></#if>
-                    <#if b.buildDelta == +1><a href="${b.resultURL}" class="label label-success">Build fixed</a></#if>
-                    <#if b.compilationDelta == -1><a href="${b.resultURL}" class="label label-danger">Compilation broken</a></#if>
-                    <#if b.compilationDelta == +1><a href="${b.resultURL}" class="label label-success">Compilation fixed</a></#if>
+                    <#if b.buildDelta == -1><a href="${b.resultURL}" class="btn btn-small btn-danger">Build broken</a></#if>
+                    <#if b.buildDelta == +1><a href="${b.resultURL}" class="btn btn-small btn-success">Build fixed</a></#if>
+                    <#if b.compilationDelta == -1><a href="${b.resultURL}" class="btn btn-small btn-danger">Compilation broken</a></#if>
+                    <#if b.compilationDelta == +1><a href="${b.resultURL}" class="btn btn-small btn-success">Compilation fixed</a></#if>
                 </td>
             </tr>
             </#list>

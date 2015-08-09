@@ -21,7 +21,6 @@ import org.renjin.ci.model.PackageVersionId;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Date;
-import java.util.List;
 
 @Entity
 public class PackageVersion implements Comparable<PackageVersion> {
@@ -47,15 +46,14 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @IgnoreSave(IfZero.class)
   private long lastSuccessfulBuildNumber;
   
+  
   @Unindex
-  private long lastExampleRun;
+  @IgnoreSave(IfZero.class)
+  private long lastCompletedBuildNumber;
   
   @Unindex
   private int testFailures;
   
-  @Index
-  private List<String> blockingDependencies;
-
   /**
    * True if there is a build of this PackageVersion available. (Used for searching
    * for PackageVersions without a build)
@@ -136,7 +134,15 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public long getLastSuccessfulBuildNumber() {
     return lastSuccessfulBuildNumber;
   }
-  
+
+  public long getLastCompletedBuildNumber() {
+    return lastCompletedBuildNumber;
+  }
+
+  public void setLastCompletedBuildNumber(long lastCompletedBuildNumber) {
+    this.lastCompletedBuildNumber = lastCompletedBuildNumber;
+  }
+
   public PackageBuildId getLastBuildId() {
     return new PackageBuildId(getPackageVersionId(), lastBuildNumber);
   }
@@ -163,6 +169,10 @@ public class PackageVersion implements Comparable<PackageVersion> {
     return lastSuccessfulBuildNumber > 0;
   }
 
+  public boolean hasBuild() {
+    return lastBuildNumber > 0;
+  }
+  
   public Date getPublicationDate() {
     return publicationDate;
   }

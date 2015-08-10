@@ -74,6 +74,7 @@ public class PackageBuildExecutable implements Queue.Executable {
     try {
       packageBuild = RenjinCiClient.startBuild(node.getId(), parentTask.getRenjinVersion());
     } catch (Exception e) {
+      node.crashed();
       throw new RuntimeException("Could not post new build.", e);
     }
 

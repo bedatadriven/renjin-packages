@@ -18,10 +18,10 @@ import org.jenkinsci.lib.configprovider.model.Config;
 import org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig;
 import org.jenkinsci.plugins.configfiles.maven.security.CredentialsHelper;
 import org.renjin.ci.build.PackageBuild;
-import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.jenkins.BuildContext;
 import org.renjin.ci.jenkins.ConfigException;
 import org.renjin.ci.jenkins.WorkerContext;
+import org.renjin.ci.model.PackageDescription;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -113,7 +113,7 @@ public class Maven {
 
         if (!resolvedCredentials.isEmpty()) {
             try {
-                fileContent = CredentialsHelper.fillAuthentication(fileContent, resolvedCredentials);
+                fileContent = CredentialsHelper.fillAuthentication(fileContent, true, resolvedCredentials);
             } catch (Exception e) {
                 throw new ConfigException("Exception resolving credentials for maven settings file: " + e.getMessage());
             }

@@ -9,7 +9,7 @@ import java.util.Set;
 public class CorePackages {
   public static final Set<String> CORE_PACKAGES =
     Sets.newHashSet(
-      "stats", "stats4", "graphics", "grDevices",
+      "base", "stats", "stats4", "graphics", "grDevices",
       "utils", "methods", "datasets", "splines", "grid",
       "splines");
 

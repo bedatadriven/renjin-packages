@@ -7,12 +7,12 @@ import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.ci.build.PackageBuild;
+import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.model.CorePackages;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
-import org.renjin.ci.jenkins.graph.PackageNode;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -70,7 +70,7 @@ public class MavenPomBuilder {
 
     // Add dependencies on other core modules
     for(PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
-      if (!packageDep.getName().equals("R")) {
+      if (!packageDep.getName().equals("R") && !packageDep.getName().equals("base")) {
         if (CorePackages.CORE_PACKAGES.contains(packageDep.getName())) {
           Dependency mavenDep = new Dependency();
           mavenDep.setGroupId("org.renjin");

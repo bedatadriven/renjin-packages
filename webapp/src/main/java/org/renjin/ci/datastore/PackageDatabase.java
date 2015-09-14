@@ -132,6 +132,17 @@ public class PackageDatabase {
     return getPackageVersions(entity.getPackageId());
   }
 
+
+  public static QueryResultIterable<Key<PackageVersion>> getPackageVersionIds() {
+
+    return ObjectifyService.ofy().load()
+        .type(PackageVersion.class)
+        .chunk(1000)
+        .keys()
+        .iterable();
+
+  }
+
   public static List<PackageVersion> getPackageVersions(PackageId packageId) {
 
     // PackageVersions are keyed by groupId:packageName:versionXXX so we can use
@@ -280,6 +291,12 @@ public class PackageDatabase {
         .keys()
         .iterable();
   }
+
+  public static LoadResult<PackageSource> getPackageSource(PackageVersionId packageVersionId, String filename) {
+    return ObjectifyService.ofy()
+        .load()
+        .key(PackageSource.key(packageVersionId, filename));
+  }
   
   public static LoadResult<PackageSource> getSource(PackageVersionId packageVersionId, String filename) {
     Key<PackageVersion> parentKey = PackageVersion.key(packageVersionId);
@@ -296,4 +313,5 @@ public class PackageDatabase {
         .keys()
         .iterator();
   }
+
 }

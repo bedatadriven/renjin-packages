@@ -6,7 +6,8 @@
 <@scaffolding title="Uses of ${function}">
 <div class="grid">
     <div class="grid-item medium-12">
-        <h1>Uses of ${function}</h1>
+        <h1><a href="/source">Package Source Search</a></h1>
+        <h2>Uses of ${function}</h2>
         
         <ul>
         <#list results as result>

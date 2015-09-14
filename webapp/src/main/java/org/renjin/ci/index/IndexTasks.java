@@ -38,13 +38,6 @@ public class IndexTasks {
   }
   
   @GET
-  @Path("rebuildSourceIndex")
-  public Response rebuildSource() {
-    String jobId = Pipelines.forEach(new SourceIndexer());
-    return Pipelines.redirectToStatus(jobId);    
-  }
-  
-  @GET
   @Path("updateGit/{sha}")
   public Response updateGit(@PathParam("sha") String sha) {
     String jobId = pipelineService.startNewPipeline(new IndexCommit(), sha);

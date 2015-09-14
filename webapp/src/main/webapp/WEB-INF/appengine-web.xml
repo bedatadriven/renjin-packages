@@ -15,6 +15,7 @@
 
   <use-google-connector-j>true</use-google-connector-j>
   <threadsafe>true</threadsafe>
+  <instance-class>F4</instance-class>
   
   <static-files>
     <include path="/assets/**.*" expiration="0s" />

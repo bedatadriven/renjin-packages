@@ -1,4 +1,4 @@
-package org.renjin.ci.index;
+package org.renjin.ci.source.index;
 
 import org.renjin.sexp.*;
 

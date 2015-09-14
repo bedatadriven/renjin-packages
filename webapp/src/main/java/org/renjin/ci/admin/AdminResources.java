@@ -6,7 +6,6 @@ import org.renjin.ci.admin.migrate.FixBuildRenjinVersion;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.admin.migrate.ReIndexBuild;
 import org.renjin.ci.archive.ExamplesExtractor;
-import org.renjin.ci.index.SourceIndexer;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 import org.renjin.ci.pipelines.Pipelines;
@@ -32,7 +31,6 @@ public class AdminResources {
     Map<String, Object> model = new HashMap<>();
     model.put("migrations", Arrays.asList(FixBuildKeys.class, ReComputeBuildDeltas.class,
         FixBuildRenjinVersion.class,
-        SourceIndexer.class,
         ReIndexBuild.class));
     
     return new Viewable("/admin.ftl", model);

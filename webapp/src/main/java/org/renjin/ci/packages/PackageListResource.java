@@ -47,7 +47,24 @@ public class PackageListResource {
         model.put("packages", PackageDatabase.getPackagesStartingWithLetter(letter.charAt(0)));
         return new Viewable("/packageIndex.ftl", model);
     }
- 
+
+    @GET
+    @Path("/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PackageVersionId> getAll() {
+        List<PackageVersionId> packageVersionIds = new ArrayList<>();
+        QueryResultIterable<Key<PackageVersion>> packages = ObjectifyService.ofy()
+            .load()
+            .type(PackageVersion.class)
+            .chunk(1000)
+            .keys()
+            .iterable();
+
+        for (Key<PackageVersion> packageVersionKey : packages) {
+            packageVersionIds.add(PackageVersion.idOf(packageVersionKey));
+        }
+        return packageVersionIds;
+    }
     
     @GET
     @Path("/unbuilt")

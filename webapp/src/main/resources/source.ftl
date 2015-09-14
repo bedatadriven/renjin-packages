@@ -1,4 +1,6 @@
 <#-- @ftlvariable name="results" type="java.util.List<org.renjin.ci.source.SourceResult>" -->
+<#-- @ftlvariable name="stats" type="org.renjin.ci.source.SourceIndexStats" -->
+
 <#include "base.ftl">
 
 <@scaffolding title="Package Source Search">
@@ -6,6 +8,7 @@
     <div class="grid-item medium-12">
         <h1>Package Source Search</h1>
 
+        <p>Index of ${stats.gigabytes?string["0.0"]} G of R Sources in ${stats.count?string["0,000"]} files.</p>
         
         <div class="grid">
             <div class="grid-item medium-6">

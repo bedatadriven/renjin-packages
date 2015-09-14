@@ -1,4 +1,4 @@
-package org.renjin.ci.index;
+package org.renjin.ci.source.index;
 
 import com.google.common.collect.Sets;
 import org.renjin.sexp.*;

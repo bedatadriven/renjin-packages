@@ -9,6 +9,7 @@ import com.googlecode.objectify.cmd.Query;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.FunctionIndex;
 import org.renjin.ci.datastore.PackageSource;
+import org.renjin.ci.source.index.SourceIndexTasks;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,7 +30,11 @@ public class SourceResources {
   @GET
   @Produces("text/html")
   public Viewable getIndex() {
-    return new Viewable("/source.ftl");
+    
+    Map<String, Object> model = new HashMap<>();
+    model.put("stats", SourceIndexStats.get());
+    
+    return new Viewable("/source.ftl", model);
   }
   
   @GET
@@ -72,6 +77,11 @@ public class SourceResources {
       model.put("cursor", it.getCursor().toWebSafeString());
     }
     return new Viewable("/functionSearch.ftl", model);
+  }
+  
+  @Path("index")
+  public SourceIndexTasks getIndexTasks() {
+    return new SourceIndexTasks();
   }
 
 

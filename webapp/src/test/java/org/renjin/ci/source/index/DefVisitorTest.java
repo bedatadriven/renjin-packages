@@ -1,8 +1,9 @@
-package org.renjin.ci.index;
+package org.renjin.ci.source.index;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.renjin.parser.RParser;
 import org.renjin.sexp.ExpressionVector;
@@ -10,8 +11,6 @@ import org.renjin.sexp.SEXP;
 
 import java.io.IOException;
 import java.io.StringReader;
-
-import static org.junit.Assert.assertThat;
 
 
 public class DefVisitorTest {
@@ -24,7 +23,7 @@ public class DefVisitorTest {
     
     System.out.println(visitor.getResult());
     
-    assertThat(visitor.getResult(), Matchers.containsInAnyOrder(
+    Assert.assertThat(visitor.getResult(), Matchers.containsInAnyOrder(
         "readGAL",
         "strsplit2",
         "getLayout",

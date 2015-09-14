@@ -39,7 +39,11 @@ public class BuildContext {
       // sometimes this seems to randomly fail...
       // wait a moment and then try again...
       Thread.sleep(2000);
-      buildDir.mkdirs();
+      try {
+        buildDir.mkdirs();
+      } catch (Exception secondException) {
+        throw new IOException("Failed to create working directory on " + workerContext.getNode().getDisplayName(), e);
+      }
     }
     logFile = File.createTempFile("package", ".log.gz");
   }

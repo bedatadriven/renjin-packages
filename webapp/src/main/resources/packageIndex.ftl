@@ -16,7 +16,9 @@
     <div class="medium-4 grid-item">
         <a href="/package/${package.groupId}/${package.name}" class="blocklink">
         <h3>${package.name}</h3>
+        <#if package.title??>
         <p>${package.title?html}</p>
+        </#if>
         </a>
     </div>
     </#list>

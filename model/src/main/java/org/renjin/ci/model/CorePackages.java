@@ -11,7 +11,7 @@ public class CorePackages {
     Sets.newHashSet(
       "base", "stats", "stats4", "graphics", "grDevices",
       "utils", "methods", "datasets", "splines", "grid",
-      "splines", "parallel");
+      "splines", "parallel", "tools");
 
   public static final List<String> DEFAULT_PACKAGES =
     Lists.newArrayList("stats", "graphics", "grDevices",

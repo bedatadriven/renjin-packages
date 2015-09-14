@@ -1,5 +1,6 @@
-<#macro scaffolding title description="">
+<#setting url_escaping_charset='ISO-8859-1'>
 
+<#macro scaffolding title description="">
 <!DOCTYPE html>
 <html lang="en">
 <head>

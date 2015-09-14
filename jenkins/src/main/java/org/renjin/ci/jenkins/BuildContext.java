@@ -33,7 +33,14 @@ public class BuildContext {
     if(this.buildDir.exists()) {
       buildDir.deleteRecursive();
     }
-    buildDir.mkdirs();
+    try {
+      buildDir.mkdirs();
+    } catch (IOException e) {
+      // sometimes this seems to randomly fail...
+      // wait a moment and then try again...
+      Thread.sleep(2000);
+      buildDir.mkdirs();
+    }
     logFile = File.createTempFile("package", ".log.gz");
   }
 

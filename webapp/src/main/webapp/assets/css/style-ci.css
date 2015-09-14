@@ -144,3 +144,53 @@ input.search {
 .   box-shadow: 0 1px 2px 0px rgba(0, 0, 0, 0.3);
     background: #f6f5f5;
 }
+
+table.source-listing {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+div.source-wrapper {
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+}
+
+table.source-listing tr {
+    padding: 0;
+    background: transparent !important;
+}
+
+td.ln {
+    width: 1%;
+    min-width: 50px;
+    white-space: nowrap;
+    font-family: Monaco, Menlo, Consolas,"Courier New",monospace;
+    font-size: 12px;
+    line-height: 15px;
+    color: rgba(0,0,0,0.3);
+    vertical-align: top;
+    text-align: right;
+    border: solid #eee;
+    border-width: 0 1px 0 0;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    padding: 0 10px;
+}
+
+td.line {
+    font-family: Monaco, Menlo, Consolas,"Courier New",monospace;
+    font-size: 12px;
+    line-height: 15px;
+    color: #333;
+    white-space: pre;
+    overflow: visible;
+    word-wrap: normal;
+    position: relative;
+    padding: 0 10px;
+    box-sizing: border-box;
+}

@@ -53,6 +53,9 @@ public class PackageDatabase {
     register(Benchmark.class);
     register(BenchmarkEnvironment.class);
     register(BenchmarkResult.class);
+    
+    register(PackageSource.class);
+    register(FunctionIndex.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
@@ -93,7 +96,7 @@ public class PackageDatabase {
 
   public static QueryResultIterable<Package> getPackagesStartingWithCharacter(char letter) {
     Key<Package> lowerKey = Key.create(Package.class, "org.renjin.cran:" + letter);
-    Key<Package> upperKey = Key.create(Package.class, "org.renjin.cran:" + ((char)(letter+1)));
+    Key<Package> upperKey = Key.create(Package.class, "org.renjin.cran:" + ((char) (letter + 1)));
 
     LOGGER.info("Querying between " + lowerKey + " and " + upperKey);
 
@@ -113,7 +116,7 @@ public class PackageDatabase {
       public Long run() {
         PackageVersion pv = ObjectifyService.ofy().load().key(Key.create(PackageVersion.class, packageVersionId.toString())).safe();
         long number = pv.getLastBuildNumber();
-        if(number == 0) {
+        if (number == 0) {
           number = 200;
         }
         number++;
@@ -207,8 +210,8 @@ public class PackageDatabase {
   }
 
   public static Optional<Package> getPackageOf(PackageVersionId packageVersionId) {
-    return Optional.fromNullable(ObjectifyService.ofy().load().key(Key.create(Package.class, 
-            packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName())).now());
+    return Optional.fromNullable(ObjectifyService.ofy().load().key(Key.create(Package.class,
+        packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName())).now());
     
   }
 
@@ -267,5 +270,30 @@ public class PackageDatabase {
 
   public static LoadResult<PackageBuild> getBuild(PackageBuildId id) {
     return getBuild(id.getPackageVersionId(), id.getBuildNumber());
+  }
+
+  public static Iterable<Key<PackageSource>> getPackageSourceKeys(PackageVersionId packageVersionId) {
+    return ObjectifyService.ofy()
+        .load()
+        .type(PackageSource.class)
+        .ancestor(PackageVersion.key(packageVersionId))
+        .keys()
+        .iterable();
+  }
+  
+  public static LoadResult<PackageSource> getSource(PackageVersionId packageVersionId, String filename) {
+    Key<PackageVersion> parentKey = PackageVersion.key(packageVersionId);
+    return ObjectifyService.ofy()
+        .load()
+        .key(Key.create(parentKey, PackageSource.class, filename));
+  }
+  
+  public static QueryResultIterator<Key<FunctionIndex>> getFunctionUses(String functionName) {
+    return ObjectifyService.ofy()
+        .load()
+        .type(FunctionIndex.class)
+        .filter("use", functionName)
+        .keys()
+        .iterator();
   }
 }

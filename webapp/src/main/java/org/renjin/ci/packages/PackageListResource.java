@@ -228,8 +228,7 @@ public class PackageListResource {
 
         return new Viewable("/packageSearch.ftl", model);
     }
-
-
+ 
     public static class SearchResult {
         private final ScoredDocument document;
 
@@ -266,4 +265,5 @@ public class PackageListResource {
         }
     }
 
+    
 }

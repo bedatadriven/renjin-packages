@@ -49,7 +49,7 @@ public class Pipelines {
   public static <T> MapJob<Key, Void, Void> newMapPackageVersionJob(ForEachPackageVersion function) {
     MapSpecification<Key, Void, Void> spec =
         new MapSpecification.Builder<Key, Void, Void>(
-            new DatastoreKeyInput("PackageVersion", 10), function)
+            new DatastoreKeyInput("PackageVersion", 30), function)
             .setJobName(function.getJobName())
             .build();
 

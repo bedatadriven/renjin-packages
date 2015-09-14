@@ -188,6 +188,10 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public void setBuilt(boolean built) {
     this.built = built;
   }
+  
+  public String getPath() {
+    return getPackageVersionId().getPath();
+  }
 
   @OnLoad
   public void onLoad() {

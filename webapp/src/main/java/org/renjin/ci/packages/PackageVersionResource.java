@@ -4,6 +4,7 @@ package org.renjin.ci.packages;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -157,5 +158,31 @@ public class PackageVersionResource {
       LOGGER.log(Level.SEVERE, "Exception thrown while resolving dependencies: " + e.getMessage(), e);
       throw e;
     }
+  }
+
+  @GET
+  @Produces("text/html")
+  @Path("source")
+  public Viewable getSourceIndex() {
+    Map<String, Object> model = new HashMap<>();
+    model.put("version", packageVersion);
+    model.put("files", Lists.newArrayList(PackageDatabase.getPackageSourceKeys(packageVersionId)));
+    
+    return new Viewable("/packageSourceIndex.ftl", model);
+  }
+
+  @GET
+  @Produces("text/html")
+  @Path("source/{file:.+}")
+  public Viewable getSourceFile(@PathParam("file") String filename) {
+
+    LoadResult<PackageSource> source = PackageDatabase.getSource(packageVersionId, filename);
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("version", packageVersion);
+    model.put("filename", filename);
+    model.put("lines", source.safe().parseLines());
+    
+    return new Viewable("/packageSource.ftl", model);
   }
 }

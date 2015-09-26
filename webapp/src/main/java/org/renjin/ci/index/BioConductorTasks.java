@@ -8,6 +8,7 @@ import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.source.index.SourceIndexTasks;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -63,9 +64,6 @@ public class BioConductorTasks {
 
         Queue queue = QueueFactory.getQueue(BIO_CONDUCTOR_QUEUE);
 
-
-        int tasksEnqueued = 0;
-
         Iterator<String> packageIt = packageList.fieldNames();
         while(packageIt.hasNext()) {
             String packageName = packageIt.next();
@@ -79,13 +77,6 @@ public class BioConductorTasks {
                     .param("packageVersion", version)
                     .param("sourceUrl", sourceUrl)
                     .retryOptions(RetryOptions.Builder.withTaskRetryLimit(3)));
-
-
-            tasksEnqueued ++ ;
-
-            if(tasksEnqueued > 5) {
-                break;
-            }
 
         }
         return Response.ok().build();
@@ -113,6 +104,7 @@ public class BioConductorTasks {
 
             PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
             PackageRegistrationTasks.enqueue(packageVersionId);
+            SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
 
             // Extract examples for testing purposes
             new ExamplesExtractor().map(PackageVersion.key(packageVersionId).getRaw());

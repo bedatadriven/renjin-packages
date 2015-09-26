@@ -21,6 +21,7 @@ import org.renjin.ci.datastore.PackageVersionDescription;
 import org.renjin.ci.model.InvalidPackageException;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.source.index.SourceIndexTasks;
 import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.FormParam;
@@ -93,6 +94,8 @@ public class PackageRegistrationTasks {
       ByteStreams.copy(inputStream, outputStream);
 
     }
+
+    SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
   }
 
   /**

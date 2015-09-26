@@ -1,8 +1,7 @@
 package org.renjin.ci.index;
 
-import com.google.appengine.api.taskqueue.*;
 import com.google.appengine.api.taskqueue.Queue;
-import com.google.common.collect.Lists;
+import com.google.appengine.api.taskqueue.*;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.VoidWork;
@@ -13,6 +12,7 @@ import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.source.index.SourceIndexTasks;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -89,6 +89,7 @@ public class CranTasks {
             // archive the source to GCS
             archiveCranSourceToGcs(packageVersionId);
             PackageRegistrationTasks.enqueue(packageVersionId);
+            SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
         }
         return Response.ok().build();
     }

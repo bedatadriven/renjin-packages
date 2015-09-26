@@ -132,6 +132,7 @@ public class MavenPomBuilder {
     PluginExecution compileExecution = new PluginExecution();
     compileExecution.setId("renjin-compile");
     compileExecution.addGoal("namespace-compile");
+    compileExecution.setPhase("process-classes");
 
     Xpp3Dom sourceDirectory = new Xpp3Dom("sourceDirectory");
     sourceDirectory.setValue("${basedir}/R");
@@ -146,6 +147,8 @@ public class MavenPomBuilder {
       pkg.setValue(name);
       defaultPackages.addChild(pkg);
     }
+    
+    
 
     for(PackageDependency dep : description.getDepends()) {
       if(!dep.getName().equals("R") && !CorePackages.DEFAULT_PACKAGES.contains(dep.getName())) {
@@ -168,7 +171,8 @@ public class MavenPomBuilder {
     PluginExecution compileExecution = new PluginExecution();
     compileExecution.setId("gnur-compile");
     compileExecution.addGoal("gnur-sources-compile");
-
+    compileExecution.setPhase("compile");
+    
     Xpp3Dom sourceDirectory = new Xpp3Dom("sourceDirectory");
     sourceDirectory.setValue("${basedir}/src");
 
@@ -187,6 +191,7 @@ public class MavenPomBuilder {
     PluginExecution testExecution = new PluginExecution();
     testExecution.setId("renjin-test");
     testExecution.addGoal("test");
+    testExecution.setPhase("test");
 
     Xpp3Dom testSourceDirectory = new Xpp3Dom("testSourceDirectory");
     testSourceDirectory.setValue("${basedir}/tests");
@@ -205,7 +210,6 @@ public class MavenPomBuilder {
     configuration.addChild(timeout);
     configuration.addChild(testSourceDirectory);
     configuration.addChild(defaultPackages);
-
 
     testExecution.setConfiguration(configuration);
 

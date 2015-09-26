@@ -40,14 +40,21 @@ public class SourceResources {
   @GET
   @Produces("text/html")
   @Path("/search")
-  public Viewable searchSource(@QueryParam("uses") String functionName, @QueryParam("startAt") String startAt) {
+  public Viewable searchSource(@QueryParam("function") String functionName,
+                               @QueryParam("type") String queryType,
+                               @QueryParam("startAt") String startAt) {
 
 
     Query<FunctionIndex> query = ObjectifyService.ofy()
         .load()
         .type(FunctionIndex.class)
-        .filter("use", functionName)
         .chunk(100);
+    
+    if("uses".equals(queryType)) {
+      query = query.filter("use", functionName);
+    } else {
+      query = query.filter("def", functionName);
+    }
     
     if(startAt != null) {
       query = query.startAt(Cursor.fromWebSafeString(startAt));
@@ -71,6 +78,7 @@ public class SourceResources {
 
     Map<String, Object> model = new HashMap<>();
     model.put("results", results);
+    model.put("type", queryType);
     model.put("function", functionName);
 
     if(results.size() > 0) {

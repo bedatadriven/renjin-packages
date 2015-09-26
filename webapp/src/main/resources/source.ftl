@@ -9,7 +9,7 @@
         <h1>Package Source Search</h1>
 
         <p>Index of ${stats.gigabytes?string["0.0"]} G of R Sources in ${stats.count?string["0,000"]} files.</p>
-        
+
         <div class="grid">
             <div class="grid-item medium-6">
                 <h2>Function Uses</h2>
@@ -18,16 +18,31 @@
 
                 <form action="/source/search" method="get">
                     <label for="uses-input">
-                        <input type="text" value="" id="uses-input" name="uses" placeholder="Function Name">
+                        <input type="text" value="" id="uses-input" name="function" placeholder="Function Name">
+                        <input type="hidden" name="type" value="uses">
+                    </label>
+                    <div>
+                        <input type="submit" value="Search" class="button">
+                    </div>
+                </form>
+
+                <h2>Function Definitions</h2>
+
+                <p>Search for all top-level functions defined in packages, whether exported or not.</p>
+
+                <form action="/source/search" method="get">
+                    <label for="def-input">
+                        <input type="text" value="" id="def-input" name="function" placeholder="Function Name">
+                        <input type="hidden" name="type" value="def">
                     </label>
                     <div>
                         <input type="submit" value="Search" class="button">
                     </div>
                 </form>
             </div>
-            </div>
         </div>
-      
+    </div>
+
 </div>
 
 </@scaffolding>

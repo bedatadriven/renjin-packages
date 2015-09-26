@@ -35,13 +35,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SourceIndexTasks {
-  
+
   private static final Logger LOGGER = Logger.getLogger(SourceIndexTasks.class.getName());
   
   private static final DatastoreService DATASTORE = DatastoreServiceFactory.getDatastoreService();
   
   private static final int MAX_SOURCE_SIZE = 90 * 1024;
-  
+  public static final String QUEUE_NAME = "source-index";
+
   @GET
   @Path("enqueueRebuild")
   public Response enqueueRebuild() {
@@ -56,13 +57,17 @@ public class SourceIndexTasks {
 
     for (Key<PackageVersion> key : PackageDatabase.getPackageVersionIds()) {
       PackageVersionId id = PackageVersion.idOf(key);
-      queue.add(TaskOptions.Builder
-          .withUrl("/source/index/extract")
-          .param("packageVersionId", id.toString())
-          .retryOptions(RetryOptions.Builder.withTaskRetryLimit(10)));
+      enqueuePackageForSourceIndexing(id);
     }
 
     return Response.ok("Enqueued").build();
+  }
+
+  public static void enqueuePackageForSourceIndexing(PackageVersionId id) {
+    QueueFactory.getQueue(QUEUE_NAME).add(TaskOptions.Builder
+        .withUrl("/source/index/extract")
+        .param("packageVersionId", id.toString())
+        .retryOptions(RetryOptions.Builder.withTaskRetryLimit(10)));
   }
 
   /**
@@ -78,7 +83,7 @@ public class SourceIndexTasks {
 
     String packagePrefix = id.getPackageName() + "/";
 
-    Queue queue = QueueFactory.getDefaultQueue();
+    Queue queue = QueueFactory.getQueue(QUEUE_NAME);
 
     DatastoreMutationPool mutationPool = DatastoreMutationPool.create();
 

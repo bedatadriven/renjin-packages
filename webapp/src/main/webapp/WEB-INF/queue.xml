@@ -17,4 +17,8 @@
       <task-age-limit>2d</task-age-limit>
     </retry-parameters>
   </queue>
-</queue-entries>
+  <queue>
+    <name>source-index</name>
+    <rate>2400/m</rate>
+  </queue>
+</queue-entries>  

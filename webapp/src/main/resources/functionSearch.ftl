@@ -7,8 +7,11 @@
 <div class="grid">
     <div class="grid-item medium-12">
         <h1><a href="/source">Package Source Search</a></h1>
+        <#if type == "uses">
         <h2>Uses of ${function}</h2>
-        
+        <#else>
+        <h2>Definitions of ${function}</h2>
+        </#if>
         <ul>
         <#list results as result>
             <li><a href="${result.source.path}">${result.filename} in ${result.source.packageName} ${result.packageVersion}</a>
@@ -20,9 +23,11 @@
             </li>
         </#list>
         </ul>
+        <#if cursor??>
         <div>
-            <a href="?uses=${function?url}&startAt=${cursor}" class="btn">Next Page</a>
+            <a href="?function=${function?url}&type=${type}&startAt=${cursor}" class="btn">Next Page</a>
         </div>
+        </#if>
     </div>
 </div>
 

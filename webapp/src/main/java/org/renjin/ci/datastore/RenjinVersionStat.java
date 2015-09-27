@@ -15,8 +15,6 @@ public class RenjinVersionStat {
   @Id
   private String id;
   
-  
-
   @Unindex
   private int regressionCount;
  
@@ -38,7 +36,6 @@ public class RenjinVersionStat {
     String[] parts = id.split(":");
     return parts[0];
   }
-
 
   public String getName() {
     String[] parts = id.split(":");

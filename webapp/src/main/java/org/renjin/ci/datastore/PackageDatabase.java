@@ -40,6 +40,7 @@ public class PackageDatabase {
     register(Package.class);
     register(PackageVersion.class);
     register(PackageVersionDescription.class);
+    register(PackageVersionDelta.class);
     register(PackageTestResult.class);
     register(TestOutput.class);
 
@@ -233,6 +234,14 @@ public class PackageDatabase {
         .type(PackageTestResult.class)
         .ancestor(PackageBuild.key(packageBuildId))
         .iterable();
+  }
+
+  public static Iterable<PackageTestResult> getTestResults(Iterable<PackageBuild> builds) {
+    List<Iterable<PackageTestResult>> tests = Lists.newArrayList();
+    for (PackageBuild build : builds) {
+      tests.add(getTestResults(build.getId()));
+    }
+    return Iterables.concat(tests);
   }
 
   public static QueryResultIterable<PackageTestResult> getTestResults(PackageVersionId packageVersionId) {

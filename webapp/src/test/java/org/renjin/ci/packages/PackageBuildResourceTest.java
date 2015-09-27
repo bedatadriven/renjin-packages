@@ -13,17 +13,9 @@ import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.tasks.Fixtures;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.renjin.ci.datastore.PackageBuild.buildSucceeded;
-import static org.renjin.ci.packages.PackageBuildResource.findProgression;
-import static org.renjin.ci.packages.PackageBuildResource.findRegression;
 
 public class PackageBuildResourceTest extends AbstractDatastoreTest {
 
@@ -55,67 +47,5 @@ public class PackageBuildResourceTest extends AbstractDatastoreTest {
     ResourceTest.assertTemplateRenders(packageBuildResource.get());
   }
   
-  @Test
-  public void deltasOnEmptySets() {
-    Iterable<PackageBuild> builds = Collections.emptySet();
-    assertThat(findProgression(builds, buildSucceeded()), nullValue());
-    assertThat(findRegression(builds, buildSucceeded()), nullValue());
-  }
-  
-  @Test
-  public void deltasOnSingleItemSets() {
-    assertThat(findProgression(asList(build(true)), buildSucceeded()), nullValue());
-    assertThat(findRegression(asList(build(true)), buildSucceeded()), nullValue());
-    assertThat(findProgression(asList(build(false)), buildSucceeded()), nullValue());
-    assertThat(findRegression(asList(build(false)), buildSucceeded()), nullValue());
-  }
-
-  @Test
-  public void simpleRegression() {
-    PackageBuild succeeded = build(true);
-    PackageBuild failed = build(false);
-    assertThat(findRegression(asList(succeeded, failed), buildSucceeded()), is(failed));
-  }
-  
-  @Test
-  public void repeatedRegressions() {
-    PackageBuild badBuild = build(false);
-
-    
-    // Lots of regressions along the way, but we only care about the last one.
-    
-    Iterable<PackageBuild> sequence = asList(build(false), build(true), build(false), build(true), build(true), badBuild);
-    
-    assertThat(findRegression(sequence, buildSucceeded()), is(badBuild));
-  }
-  
-  @Test
-  public void simpleProgression() {
-    PackageBuild failed = build(false);
-    PackageBuild succeeded = build(true);
-    assertThat(findProgression(asList(failed, succeeded), buildSucceeded()), is(succeeded));
-  }
-
-
-  @Test
-  public void progressionFollowedByRegression() {
-    PackageBuild failed = build(false);
-    PackageBuild succeeded = build(true);
-    assertThat(findProgression(asList(failed, succeeded, build(false), build(false)), buildSucceeded()), is(succeeded));
-  }
-
-  @Test
-  public void progressionFollowedByRegressionThenFixed() {
-    PackageBuild failed = build(false);
-    PackageBuild succeeded = build(true);
-    assertThat(findProgression(asList(failed, succeeded, build(false), build(false), build(true)), buildSucceeded()), is(succeeded));
-  }
-
-
-  private PackageBuild build(boolean success) {
-    PackageBuild build = new PackageBuild();
-    build.setOutcome(success ? BuildOutcome.SUCCESS : BuildOutcome.FAILURE);
-    return build;
-  }
   
 }

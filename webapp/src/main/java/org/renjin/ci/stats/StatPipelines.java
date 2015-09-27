@@ -14,7 +14,7 @@ public class StatPipelines {
   }
 
   public static MapReduceJob<Entity, DeltaKey, DeltaValue, Entity, Void> updateBuildStats() {
-    DatastoreInput input = new DatastoreInput("PackageBuild", 10);
+    DatastoreInput input = new DatastoreInput("PackageVersionDelta", 10);
     BuildDeltaMapper mapper = new BuildDeltaMapper();
     Reducer<DeltaKey, DeltaValue, Entity> reducer = new DeltaReducer();
 

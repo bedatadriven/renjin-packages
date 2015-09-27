@@ -45,6 +45,10 @@ public class PackageTestResult {
     this.name = name;
   }
 
+  public Key<PackageBuild> getPackageBuildKey() {
+    return buildKey;
+  }
+
   public PackageVersionId getPackageVersionId() {
     return getBuildId().getPackageVersionId();
   }

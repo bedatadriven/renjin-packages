@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="builds" type="java.util.List<org.renjin.ci.datastore.PackageBuild>" -->
+<#-- @ftlvariable name="packageVersions" type="java.util.List<org.renjin.ci.qa.DeltaViewModel>" -->
 <#-- @ftlvariable name="renjinVersion" type="org.renjin.ci.model.RenjinVersionId" -->
 
 <#include "base.ftl">
@@ -22,14 +22,16 @@
         </tr>
         </thead>
         <tbody>
-            <#list builds as b>
+            <#list packageVersions as b>
             <tr>
                 <td><a href="${b.packageVersionId.path}">${b.packageVersionId}</a></td>
                 <td>
-                    <#if b.buildDelta == -1><a href="${b.resultURL}" class="btn btn-small btn-danger">Build broken</a></#if>
-                    <#if b.buildDelta == +1><a href="${b.resultURL}" class="btn btn-small btn-success">Build fixed</a></#if>
-                    <#if b.compilationDelta == -1><a href="${b.resultURL}" class="btn btn-small btn-danger">Compilation broken</a></#if>
-                    <#if b.compilationDelta == +1><a href="${b.resultURL}" class="btn btn-small btn-success">Compilation fixed</a></#if>
+                    <#if b.buildRegression><a href="${b.resultURL}" class="btn btn-small btn-danger">Build broken</a></#if>
+                    <#if b.buildProgression><a href="${b.resultURL}" class="btn btn-small btn-success">Build fixed</a></#if>
+                    <#if b.compilationRegression><a href="${b.resultURL}" class="btn btn-small btn-danger">Compilation broken</a></#if>
+                    <#if b.compilationProgression><a href="${b.resultURL}" class="btn btn-small btn-success">Compilation fixed</a></#if>
+                    <#if (b.testRegressionCount > 0)><a href="${b.resultURL}" class="btn btn-small btn-danger">${b.testRegressionCount} test regression(s)</a></#if>
+                    <#if (b.testProgressionCount > 0)><a href="${b.resultURL}" class="btn btn-small btn-success">${b.testProgressionCount} test(s) newly passing.</a></#if>
                 </td>
             </tr>
             </#list>

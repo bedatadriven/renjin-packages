@@ -5,7 +5,6 @@ import com.google.appengine.tools.mapreduce.Reducer;
 import com.google.appengine.tools.mapreduce.ReducerInput;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.RenjinVersionStat;
-import org.renjin.ci.model.PackageId;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,15 +16,15 @@ public class DeltaReducer extends Reducer<DeltaKey, DeltaValue, Entity> {
   @Override
   public void reduce(DeltaKey key, ReducerInput<DeltaValue> values) {
 
-    Set<PackageId> regressions = new HashSet<>();
-    Set<PackageId> progressions = new HashSet<>();
+    Set<String> regressions = new HashSet<>();
+    Set<String> progressions = new HashSet<>();
     
     while(values.hasNext()) {
       DeltaValue delta = values.next();
       if(delta.getDelta() < 0) {
-        regressions.add(delta.getPackageId());
+        regressions.add(delta.getKey());
       } else {
-        progressions.add(delta.getPackageId());
+        progressions.add(delta.getKey());
       }
     }
   

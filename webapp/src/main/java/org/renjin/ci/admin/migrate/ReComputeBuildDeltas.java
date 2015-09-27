@@ -5,7 +5,7 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.VoidWork;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.packages.PackageBuildResource;
+import org.renjin.ci.packages.DeltaBuilder;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 
 import java.util.logging.Logger;
@@ -32,7 +32,7 @@ public class ReComputeBuildDeltas extends ForEachPackageVersion {
     ObjectifyService.ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
-        PackageBuildResource.updateDeltaFlags(packageVersionId, Optional.<PackageBuild>absent());
+        DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent());
       }
     });
   }

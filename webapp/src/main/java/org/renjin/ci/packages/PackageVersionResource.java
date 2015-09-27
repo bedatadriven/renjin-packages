@@ -1,6 +1,7 @@
 
 package org.renjin.ci.packages;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
@@ -139,6 +140,14 @@ public class PackageVersionResource {
   @Produces(MediaType.APPLICATION_JSON)
   public List<PackageBuild> getBuilds() {
     return Lists.newArrayList(PackageDatabase.getBuilds(packageVersionId));
+  }
+  
+  @GET
+  @Path("updateDeltas")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String updateDeltas() {
+    DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent());
+    return "Done.";
   }
   
   @GET

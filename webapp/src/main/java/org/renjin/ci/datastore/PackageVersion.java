@@ -34,6 +34,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
   private String title;
   
   @Index
+  private String packageName;
+  
+  @Index
   private Date publicationDate;
   
   @Unindex
@@ -100,6 +103,11 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public void setTitle(String title) {
     this.title = title;
   }
+
+  public void setPackageName(String packageName) {
+    this.packageName = packageName;
+  }
+  
 
   public PackageDescription loadDescription() {
     return ObjectifyService.ofy()

@@ -4,7 +4,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.IgnoreSave;
 import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.condition.IfFalse;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
@@ -25,6 +27,10 @@ public class PackageVersionDelta {
   @Index
   private Set<String> renjinVersions;
   
+  @Index
+  @IgnoreSave(IfFalse.class)
+  private boolean regression;
+  
   private List<BuildDelta> builds;
 
   public PackageVersionDelta() {
@@ -37,6 +43,15 @@ public class PackageVersionDelta {
 
     for (BuildDelta build : builds) {
       renjinVersions.add(build.getRenjinVersion());
+      if(build.getBuildDelta() < 0) {
+        regression = true;
+      }
+      if(build.getCompilationDelta() < 0) {
+        regression = true;
+      }
+      if(build.getTestRegressions().size() > 0) {
+        regression = true;
+      }
     }
   }
 
@@ -61,6 +76,9 @@ public class PackageVersionDelta {
     return Optional.absent();
   }
 
+  public boolean isRegression() {
+    return regression;
+  }
 
   public PackageId getPackageId() {
     return getPackageVersionId().getPackageId();

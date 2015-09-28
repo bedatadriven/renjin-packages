@@ -96,16 +96,16 @@ public class PackageDatabase {
   }
 
   public static QueryResultIterable<Package> getPackagesStartingWithCharacter(char letter) {
-    Key<Package> lowerKey = Key.create(Package.class, "org.renjin.cran:" + letter);
-    Key<Package> upperKey = Key.create(Package.class, "org.renjin.cran:" + ((char) (letter + 1)));
+    String lowerKey = Character.toString(letter);
+    String upperKey = Character.toString((char) (letter + 1));
 
     LOGGER.info("Querying between " + lowerKey + " and " + upperKey);
 
 
     return ObjectifyService.ofy().load()
         .type(Package.class)
-        .filterKey(">=", lowerKey)
-        .filterKey("<", upperKey)
+        .filter("name >=", lowerKey)
+        .filter("name <", upperKey)
         .chunk(1000)
         .iterable();
   }

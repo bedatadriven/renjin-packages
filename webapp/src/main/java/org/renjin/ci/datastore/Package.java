@@ -1,10 +1,7 @@
 package org.renjin.ci.datastore;
 
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
-import com.googlecode.objectify.annotation.IgnoreSave;
-import com.googlecode.objectify.annotation.Unindex;
+import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfFalse;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
@@ -16,6 +13,9 @@ public class Package {
   private String id;
   private String latestVersion;
   private String title;
+  
+  @Index
+  private String name;
 
   /**
    * The level of renjin support for this package:
@@ -74,6 +74,7 @@ public class Package {
 
   public Package(String groupId, String packageName) {
     this.id = groupId + ":" + packageName;
+    this.name = packageName;
   }
 
   public String getId() {
@@ -81,7 +82,7 @@ public class Package {
   }
   
   public PackageId getPackageId() {
-    return new PackageId(getGroupId(), getName());
+    return PackageId.valueOf(id);
   }
 
   public void setId(String id) {
@@ -126,8 +127,11 @@ public class Package {
   }
 
   public String getName() {
-    String[] coordinates = id.split(":");
-    return coordinates[1];
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public int getRenjinSupport() {

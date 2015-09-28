@@ -10,9 +10,9 @@ import com.googlecode.objectify.ObjectifyService;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.joda.time.DateTime;
 import org.renjin.ci.datastore.Package;
-import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.index.PackageSearchIndex;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
@@ -133,22 +133,21 @@ public class PackageListResource {
     @GET
     @Path("/regressions")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<PackageVersionId> getPackagesWithRegressions(@QueryParam("renjinVersion") String renjinVersion) {
+    public List<PackageVersionId> getPackagesWithRegressions() {
 
         
-        QueryResultIterable<PackageBuild> builds = ObjectifyService.ofy()
+        QueryResultIterable<Key<PackageVersionDelta>> deltas = ObjectifyService.ofy()
             .load()
-            .type(PackageBuild.class)
-            .filter("renjinVersion", renjinVersion)
-            .chunk(1000)
+            .type(PackageVersionDelta.class)
+            .filter("regression", true)
+            .chunk(200)
+            .keys()
             .iterable();
 
 
         List<PackageVersionId> packageVersions = new ArrayList<>();
-        for (PackageBuild build : builds) {
-            if(build.getBuildDelta() < 0 || build.getCompilationDelta() < 0) {
-                packageVersions.add(build.getPackageVersionId());
-            }
+        for (Key<PackageVersionDelta> deltaKey : deltas) {
+            packageVersions.add(PackageVersionId.fromTriplet(deltaKey.getName()));
         }
 
         return packageVersions;

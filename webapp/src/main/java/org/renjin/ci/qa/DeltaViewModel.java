@@ -33,7 +33,7 @@ public class DeltaViewModel {
   }
   
   public boolean isCompilationProgression() {
-    return build.getCompilationDelta() < 0;
+    return build.getCompilationDelta() > 0;
   }
   
   public int getTestRegressionCount() {

@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
-import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
@@ -101,15 +100,13 @@ public class DependencyResolution {
   }
 
   private QueryResultIterable<PackageVersion> queryCandidates (String packageName) {
-    // Assume CRAN for now: need to consider bioConductor/third party later
-    PackageId packageId = new PackageId("org.renjin.cran", packageName);
 
     // Initiate a query for all the available SOURCE versions: this will
     // run asynchronously until we request the first result.
     return ObjectifyService.ofy()
         .load()
         .type(PackageVersion.class)
-        .ancestor(Package.key(packageId)).iterable();
+        .filter("packageName", packageName).iterable();
   }
 
 

@@ -7,7 +7,6 @@ import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
-import com.googlecode.objectify.condition.IfZero;
 import org.renjin.ci.model.*;
 
 import javax.annotation.Nullable;
@@ -54,7 +53,7 @@ public class PackageBuild {
    * package was built
    */
   @JsonProperty
-  @Index(IfNonZeroDelta.class)
+  @Unindex
   private String renjinVersion;
   
   @Index
@@ -69,14 +68,6 @@ public class PackageBuild {
   @IgnoreSave(IfNull.class)
   private Long duration;
   
-  @Index
-  @IgnoreSave(IfZero.class)
-  private byte buildDelta;
-
-  @Index
-  @IgnoreSave(IfZero.class)
-  private byte compilationDelta;
-
 
   public PackageBuild() {
   }
@@ -215,14 +206,6 @@ public class PackageBuild {
     this.nativeOutcome = nativeOutcome;
   }
 
-  public byte getBuildDelta() {
-    return buildDelta;
-  }
-
-  public void setBuildDelta(byte buildDelta) {
-    this.buildDelta = buildDelta;
-  }
-
   /**
    *
    * @return the start time of a build in progress, or null if the build is complete
@@ -333,14 +316,6 @@ public class PackageBuild {
       default:
         return false;
     }
-  }
-
-  public void setCompilationDelta(byte compilationDelta) {
-    this.compilationDelta = compilationDelta;
-  }
-
-  public byte getCompilationDelta() {
-    return compilationDelta;
   }
 
   public static Predicate<PackageBuild> buildSucceeded() {

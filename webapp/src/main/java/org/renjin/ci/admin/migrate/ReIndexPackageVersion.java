@@ -2,20 +2,22 @@ package org.renjin.ci.admin.migrate;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.googlecode.objectify.ObjectifyService;
-import org.renjin.ci.datastore.PackageBuild;
+import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.pipelines.ForEachEntityAsBean;
 
 
-public class ReIndexBuild extends ForEachEntityAsBean<PackageBuild> {
+public class ReIndexPackageVersion extends ForEachEntityAsBean<PackageVersion> {
 
   private transient DatastoreService datastoreService;
   
-  public ReIndexBuild() {
-    super(PackageBuild.class);
+  public ReIndexPackageVersion() {
+    super(PackageVersion.class);
   }
 
   @Override
-  public void apply(PackageBuild entity) {
+  public void apply(PackageVersion entity) {
+    
+    entity.setPackageName(entity.getPackageVersionId().getPackageName());
     
     ObjectifyService.ofy().transactionless().save().entity(entity);
       

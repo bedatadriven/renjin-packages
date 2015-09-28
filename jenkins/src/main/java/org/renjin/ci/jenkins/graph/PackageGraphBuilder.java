@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import hudson.model.TaskListener;
 import org.renjin.ci.RenjinCiClient;
+import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.ResolvedDependency;
 import org.renjin.ci.model.ResolvedDependencySet;
@@ -17,7 +18,8 @@ import static java.lang.String.format;
 public class PackageGraphBuilder {
 
   private TaskListener taskListener;
-
+  private boolean rebuildFailedDependencies;
+  
   private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
 
   /**
@@ -26,8 +28,9 @@ public class PackageGraphBuilder {
   private final Map<PackageNode, Future<ResolvedDependencySet>> toResolve = Maps.newHashMap();
 
 
-  public PackageGraphBuilder(TaskListener taskListener) {
+  public PackageGraphBuilder(TaskListener taskListener, boolean rebuildFailedDependencies) {
     this.taskListener = taskListener;
+    this.rebuildFailedDependencies = rebuildFailedDependencies;
   }
 
 
@@ -59,6 +62,10 @@ public class PackageGraphBuilder {
 
     taskListener.getLogger().printf("Dependency graph built with %d nodes.\n", nodes.size());
 
+    /**
+     * Step 3: Compute the number of ultimate dependencies of each node, and sort is descending order.
+     * This will allow use to take the greatest advantage of parallel executors.
+     */
     for (PackageNode packageNode : nodes.values()) {
       packageNode.computeDownstream();
     }
@@ -82,6 +89,9 @@ public class PackageGraphBuilder {
     }
   }
 
+  /**
+   * Samples a proportion or a fixed sample size of packages to build, generally for testing purposes.
+   */
   private List<PackageVersionId> sample(List<PackageVersionId> packageVersionIds, Double sample) {
     if(sample == null) {
       return packageVersionIds;
@@ -140,7 +150,13 @@ public class PackageGraphBuilder {
 
       // Add dependencies
       if(resolvedDependency.hasBuild()) {
-        node.provideBuild(resolvedDependency.getBuildNumber(), resolvedDependency.getBuildOutcome());
+        if(rebuildFailedDependencies && resolvedDependency.getBuildOutcome() != BuildOutcome.SUCCESS) {
+          // attempt to rebuild this failed dependency
+          resolveDependencies(node);
+        } else {
+          // mark it as already provided.
+          node.provideBuild(resolvedDependency.getBuildNumber(), resolvedDependency.getBuildOutcome());
+        }
       } else {
         // We will need to build this one as well...
         resolveDependencies(node);

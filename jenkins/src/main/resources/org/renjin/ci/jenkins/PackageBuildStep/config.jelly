@@ -8,4 +8,7 @@
   <f:entry title="Renjin Version" field="renjinVersion">
     <f:textbox/>
   </f:entry>
+  <f:entry title="Rebuild failed dependencies" field="rebuildDependencies">
+    <f:checkbox/>
+  </f:entry>
 </j:jelly>

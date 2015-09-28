@@ -67,6 +67,9 @@ public class MavenPomBuilder {
     for(String packageName : CorePackages.DEFAULT_PACKAGES) {
       addCoreModule(model, packageName);
     }
+    
+    // Add the tools package as it sometimes referenced in the namespace file
+    addCoreModule(model, "tools");
 
     // Add dependencies on other core modules
     for(PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {

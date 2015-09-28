@@ -19,11 +19,11 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.renjin.ci.RenjinCiClient;
-import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.jenkins.graph.PackageGraph;
 import org.renjin.ci.jenkins.graph.PackageGraphBuilder;
 import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.jenkins.graph.PackageNodeState;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -35,12 +35,14 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
   private String filter;
   private Double sample;
   private String renjinVersion;
+  private boolean rebuildDependencies;
   
   @DataBoundConstructor
-  public PackageBuildStep(String filter, Double sample, String renjinVersion) {
+  public PackageBuildStep(String filter, Double sample, String renjinVersion, boolean rebuildDependencies) {
     this.filter = filter;
     this.sample = sample;
     this.renjinVersion = renjinVersion;
+    this.rebuildDependencies = rebuildDependencies;
   }
 
   public String getFilter() {
@@ -49,6 +51,14 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
 
   public Double getSample() {
     return sample;
+  }
+
+  public String getRenjinVersion() {
+    return renjinVersion;
+  }
+
+  public boolean isRebuildDependencies() {
+    return rebuildDependencies;
   }
 
   @Override
@@ -65,7 +75,7 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     listener.getLogger().println("Building package graph...");
     PackageGraph graph;
     try {
-      graph = new PackageGraphBuilder(listener).build(filter, sample);
+      graph = new PackageGraphBuilder(listener, rebuildDependencies).build(filter, sample);
     } catch (Exception e) {
       throw new AbortException("Failed to build package graph: " + e.getMessage());
     }

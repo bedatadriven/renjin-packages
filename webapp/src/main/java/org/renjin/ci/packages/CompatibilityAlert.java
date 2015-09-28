@@ -113,7 +113,7 @@ public class CompatibilityAlert {
   }
 
   private static String composeWarningMessage(List<String> issues) {
-    StringBuilder sb = new StringBuilder("This package can be used with Renjin but");
+    StringBuilder sb = new StringBuilder("This package can be loaded by Renjin but");
     for(int i=0; i<issues.size();++i) {
       if(i > 0) {
         if(i+1 == issues.size()) {

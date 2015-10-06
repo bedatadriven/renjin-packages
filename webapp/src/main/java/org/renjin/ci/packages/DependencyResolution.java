@@ -84,7 +84,7 @@ public class DependencyResolution {
 
     for (PackageDependency dependency : declared) {
       if(!CorePackages.isCorePackage(dependency.getName()) &&
-          !"R".equals(dependency.getName())) {
+          !CorePackages.IGNORED_PACKAGES.contains(dependency.getName())) {
 
         if(map.containsKey(dependency.getName())) {
           LOGGER.log(Level.WARNING, String.format("Dependency '%s' is declared multiple times in %s",

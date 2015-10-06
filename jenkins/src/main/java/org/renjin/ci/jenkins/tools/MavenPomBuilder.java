@@ -16,6 +16,8 @@ import org.renjin.ci.model.PackageDescription.Person;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Constructs a Maven Project Object Model (POM) from a GNU-R style
@@ -62,35 +64,21 @@ public class MavenPomBuilder {
       model.addDeveloper(developer);
     }
 
-    // We assume that all CRAN packages require the
-    // default packages
-    for(String packageName : CorePackages.DEFAULT_PACKAGES) {
-      addCoreModule(model, packageName);
-    }
-    
-    // Add the tools package as it sometimes referenced in the namespace file
-    addCoreModule(model, "tools");
-
-    // Add dependencies on other core modules
-    for(PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
-      if (!packageDep.getName().equals("R") && !packageDep.getName().equals("base")) {
-        if (CorePackages.CORE_PACKAGES.contains(packageDep.getName())) {
-          Dependency mavenDep = new Dependency();
-          mavenDep.setGroupId("org.renjin");
-          mavenDep.setArtifactId(packageDep.getName());
-          mavenDep.setVersion(build.getRenjinVersionId().toString());
-          model.addDependency(mavenDep);
-
+    for(String dependencyName : dependencies()) {
+      if(!CorePackages.IGNORED_PACKAGES.contains(dependencyName)) {
+        
+        if(CorePackages.isPartOfRenjin(dependencyName)) {
+          addCoreModule(model, dependencyName);
+        
         } else {
-
-          PackageBuildId dependencyBuild = packageNode.getDependency(packageDep.getName());
+          PackageBuildId dependencyBuild = packageNode.getDependency(dependencyName);
           if(dependencyBuild == null) {
-            throw new RuntimeException("Cannot build due to upstream failure of " + packageDep.getName());
+            throw new RuntimeException("Cannot build due to upstream failure of " + dependencyName);
           }
 
           Dependency mavenDep = new Dependency();
           mavenDep.setGroupId(dependencyBuild.getGroupId());
-          mavenDep.setArtifactId(packageDep.getName());
+          mavenDep.setArtifactId(dependencyName);
           mavenDep.setVersion(dependencyBuild.getBuildVersion());
           model.addDependency(mavenDep);
         }
@@ -130,6 +118,23 @@ public class MavenPomBuilder {
 
     return model;
   }
+
+  private Set<String> dependencies() {
+    Set<String> included = new HashSet<String>();
+
+    // Add the "default" packages which are always meant to be on the search path
+    included.addAll(CorePackages.DEFAULT_PACKAGES);
+
+    // Add the "tools" package which is often referenced by the if() directive in the NAMESPACE file
+    included.add("tools");
+
+    // Add the packages specified in the Imports and Depends fields of the DESCRIPTION file
+    for (PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
+      included.add(packageDep.getName());
+    }
+    return included;
+  }
+
 
   private PluginExecution compileExecution() {
     PluginExecution compileExecution = new PluginExecution();

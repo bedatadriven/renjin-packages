@@ -17,6 +17,8 @@ public class CorePackages {
     Lists.newArrayList("stats", "graphics", "grDevices",
       "utils", "datasets", "methods");
 
+  
+  public static final Set<String> IGNORED_PACKAGES = Sets.newHashSet("R", "base");
 
   public static boolean isCorePackage(String name) {
     return CORE_PACKAGES.contains(name);
@@ -25,4 +27,5 @@ public class CorePackages {
   public static boolean isPartOfRenjin(String packageName) {
     return packageName.equals("R") || isCorePackage(packageName);
   }
+
 }

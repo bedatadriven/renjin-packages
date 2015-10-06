@@ -168,4 +168,14 @@ public class RenjinCiClient {
 
     client().target(ROOT_URL).path("releases").request().post(Entity.form(form));
   }
+
+  public static void postReplacementRelease(String groupId, String artifactId, String version) {
+    Form form = new Form();
+    form.param("version", version);
+    
+    client().target(ROOT_URL)
+        .path("package").path(groupId).path(artifactId).path("replacement")
+        .request()
+        .post(Entity.form(form));
+  }
 }

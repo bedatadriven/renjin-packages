@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.ObjectifyService;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
@@ -50,10 +51,11 @@ public class DependencyResolution {
 
 
     // Then fetch a list of all candidate PackageVersions
-    Map<String, Iterable<PackageVersion>> candidates = new HashMap<>();
+    Map<String, Iterable<PackageVersion>> candidateVersions = new HashMap<>();
+    
     for (String packageName : declared.keySet()) {
       if (!CorePackages.isCorePackage(packageName)) {
-        candidates.put(packageName, queryCandidates(packageName));
+        candidateVersions.put(packageName, queryCandidateVersions(packageName));
       }
     }
 
@@ -61,7 +63,7 @@ public class DependencyResolution {
     ResolvedDependencySet result = new ResolvedDependencySet();
 
     for (String packageName : declared.keySet()) {
-      ResolvedDependency selected = select(declared.get(packageName), candidates.get(packageName));
+      ResolvedDependency selected = select(declared.get(packageName), candidateVersions.get(packageName));
       result.getDependencies().add(selected);
     }
     
@@ -98,8 +100,15 @@ public class DependencyResolution {
     }
     return map;
   }
+  
+  private QueryResultIterable<Package> queryCandidatePackages(String packageName) {
+    return ObjectifyService.ofy()
+        .load()
+        .type(Package.class)
+        .filter("name", packageName).iterable();
+  }
 
-  private QueryResultIterable<PackageVersion> queryCandidates (String packageName) {
+  private QueryResultIterable<PackageVersion> queryCandidateVersions(String packageName) {
 
     // Initiate a query for all the available SOURCE versions: this will
     // run asynchronously until we request the first result.
@@ -114,8 +123,10 @@ public class DependencyResolution {
    * Selects a dependency version based on any explicit criteria in the DESCRIPTION file as well
    * as taking into account publication dates.
    */
-  private ResolvedDependency select(PackageDependency declared, Iterable<PackageVersion> candidates) {
+  private ResolvedDependency select(PackageDependency declared, 
+                                    Iterable<PackageVersion> candidates) {
 
+    
     List<PackageVersion> candidateList = Lists.newArrayList(candidates);
 
     // Sort in descending order, so we can look from most recent to the oldest
@@ -155,6 +166,15 @@ public class DependencyResolution {
   }
 
   private ResolvedDependency resolution(PackageVersion version) {
+    
+    // Check to see if this package is replaced by a Renjin-specific package
+    Package packageEntity = PackageDatabase.getPackageOf(version.getPackageVersionId()).get();
+    if(packageEntity.isReplaced()) {
+      ResolvedDependency dependency = new ResolvedDependency(version.getPackageVersionId());
+      dependency.setReplacementVersion(packageEntity.getLatestReplacementVersion());
+      return dependency;
+    }
+    
     if(version.hasSuccessfulBuild()) {
       return new ResolvedDependency(version.getLastSuccessfulBuildId(), BuildOutcome.SUCCESS);
     } 

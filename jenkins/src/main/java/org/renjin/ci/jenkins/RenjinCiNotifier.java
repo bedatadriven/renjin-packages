@@ -49,6 +49,8 @@ public class RenjinCiNotifier extends Notifier {
         listener.getLogger().println("RENJIN CI: " + module.getGroupId() + ":" + module.getArtifactId());
         if(module.getGroupId().equals("org.renjin") && module.getArtifactId().equals("renjin-core")) {
           notifyRenjinRelease(listener, mavenBuild, module);
+        } else if(module.getGroupId().equals("org.renjin.cran")) {
+          notifyReplacementRelease(listener, mavenBuild, module);
         }
       }
     }
@@ -64,6 +66,15 @@ public class RenjinCiNotifier extends Notifier {
     RenjinCiClient.postRenjinRelease(renjinVersion, commitId);
   }
 
+
+  private void notifyReplacementRelease(BuildListener listener, MavenModuleSetBuild mavenBuild, MavenModule module) {
+    if (module.getVersion().endsWith("-SNAPSHOT")) {
+      listener.getLogger().println("Ignoring SNAPSHOT build of " + module.getArtifactId() + " @ " + module.getVersion());
+    } else {
+      listener.getLogger().println("Registering new Renjin CRAN Replacement Release " + module.getArtifactId() + " @ " + module.getVersion());
+      RenjinCiClient.postReplacementRelease(module.getGroupId(), module.getArtifactId(), module.getVersion());
+    }
+  }
 
   public static @Nonnull ObjectId getCommitSHA1(@Nonnull AbstractBuild<?, ?> build) throws IOException {
     BuildData buildData = build.getAction(BuildData.class);

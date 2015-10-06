@@ -8,8 +8,8 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.graph.PackageNode;
+import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.CorePackages;
-import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
@@ -71,15 +71,15 @@ public class MavenPomBuilder {
           addCoreModule(model, dependencyName);
         
         } else {
-          PackageBuildId dependencyBuild = packageNode.getDependency(dependencyName);
-          if(dependencyBuild == null) {
+          PackageNode dependencyNode = packageNode.getDependency(dependencyName);
+          if(dependencyNode.getBuildResult().getOutcome() != BuildOutcome.SUCCESS) {
             throw new RuntimeException("Cannot build due to upstream failure of " + dependencyName);
           }
 
           Dependency mavenDep = new Dependency();
-          mavenDep.setGroupId(dependencyBuild.getGroupId());
-          mavenDep.setArtifactId(dependencyName);
-          mavenDep.setVersion(dependencyBuild.getBuildVersion());
+          mavenDep.setGroupId(dependencyNode.getId().getGroupId());
+          mavenDep.setArtifactId(dependencyNode.getId().getPackageName());
+          mavenDep.setVersion(dependencyNode.getBuildResult().getBuildVersion());
           model.addDependency(mavenDep);
         }
       }

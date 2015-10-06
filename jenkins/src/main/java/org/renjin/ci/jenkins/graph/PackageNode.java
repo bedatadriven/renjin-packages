@@ -3,7 +3,6 @@ package org.renjin.ci.jenkins.graph;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.renjin.ci.model.BuildOutcome;
-import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.Serializable;
@@ -81,7 +80,7 @@ public class PackageNode implements Serializable {
   }
 
   public void provideBuild(long buildNumber, BuildOutcome outcome) {
-    this.buildResult = PackageNodeState.build(buildNumber, outcome);
+    this.buildResult = PackageNodeState.build(packageVersionId, buildNumber, outcome);
     this.provided = true;
   }
 
@@ -105,27 +104,21 @@ public class PackageNode implements Serializable {
     return buildResult;
   }
 
-  public PackageBuildId getDependency(String name) {
+  public PackageNode getDependency(String name) {
     for (PackageNode dependency : dependencies) {
       if(dependency.getId().getPackageName().equals(name)) {
-        return dependency.getBuildId();
+        return dependency;
       }
     }
     throw new IllegalStateException(format("Package %s has no dependency named '%s'", getId(), name));
   }
-
-  private PackageBuildId getBuildId() {
-    PackageNodeState result = this.buildResult;
-    if(result.getOutcome() == BuildOutcome.SUCCESS) {
-      return new PackageBuildId(packageVersionId, result.getBuildNumber());
-    } else {
-      throw new IllegalStateException(format("Cannot return build id for %s, state is %s", 
-          packageVersionId, buildResult));
-    }
+  
+  public void replaced(String version) {
+    this.buildResult = new PackageNodeState(version, BuildOutcome.SUCCESS);
   }
-
+  
   public void completed(long buildNumber, BuildOutcome outcome) {
-    this.buildResult = new PackageNodeState(buildNumber, outcome);
+    this.buildResult = new PackageNodeState(packageVersionId, buildNumber, outcome);
   }
 
   public void cancelled() {
@@ -133,7 +126,7 @@ public class PackageNode implements Serializable {
   }
 
   public void crashed() {
-    this.buildResult = new PackageNodeState(-1, BuildOutcome.ERROR);
+    this.buildResult = PackageNodeState.ERROR;
   }
 
   public List<String> resolvedDependencies() {
@@ -145,7 +138,7 @@ public class PackageNode implements Serializable {
   }
 
   public void blocked(long buildNumber) {
-    this.buildResult = new PackageNodeState(buildNumber, BuildOutcome.BLOCKED);
+    this.buildResult = new PackageNodeState(packageVersionId, buildNumber, BuildOutcome.BLOCKED);
   }
 
   public List<String> blockingDependencies() {
@@ -154,12 +147,7 @@ public class PackageNode implements Serializable {
     for (PackageNode dependencyNode : dependencies) {
       PackageNodeState upstreamResult = dependencyNode.getBuildResult();
       if(upstreamResult.getOutcome() != BuildOutcome.SUCCESS) {
-        if(upstreamResult.getBuildNumber() > 0) {
-          PackageBuildId upstreamBuildId = new PackageBuildId(dependencyNode.getId(), upstreamResult.getBuildNumber());
-          list.add(upstreamBuildId.toString());
-        } else {
-          list.add(dependencyNode.getId().toString());
-        }
+        list.add(dependencyNode.getId().toString());
       }
     }
     return list;

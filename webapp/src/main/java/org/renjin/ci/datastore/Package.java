@@ -3,6 +3,7 @@ package org.renjin.ci.datastore;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfFalse;
+import com.googlecode.objectify.condition.IfNull;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
@@ -25,6 +26,8 @@ public class Package {
    * 3 = All tests pass
    */
   private int renjinSupport;
+  
+  
 
   /**
    * The last successful build of any version of this package
@@ -57,6 +60,9 @@ public class Package {
   @Unindex
   private boolean replaced;
   
+  @Unindex
+  @IgnoreSave(IfNull.class)
+  private String latestReplacementVersion;
   
   private boolean built;
 
@@ -120,7 +126,15 @@ public class Package {
   public void setReplaced(boolean replaced) {
     this.replaced = replaced;
   }
-  
+
+  public String getLatestReplacementVersion() {
+    return latestReplacementVersion;
+  }
+
+  public void setLatestReplacementVersion(String latestReplacementVersion) {
+    this.latestReplacementVersion = latestReplacementVersion;
+  }
+
   public String getGroupId() {
     String[] coordinates = id.split(":");
     return coordinates[0];

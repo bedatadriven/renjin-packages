@@ -149,7 +149,13 @@ public class PackageGraphBuilder {
       nodes.put(node.getId(), node);
 
       // Add dependencies
-      if(resolvedDependency.hasBuild()) {
+
+      if(resolvedDependency.isReplaced()) {
+        // There is a java replacement version for this library 
+        node.replaced(resolvedDependency.getReplacementVersion());
+     
+      } else if(resolvedDependency.hasBuild()) {
+        
         if(rebuildFailedDependencies && resolvedDependency.getBuildOutcome() != BuildOutcome.SUCCESS) {
           // attempt to rebuild this failed dependency
           resolveDependencies(node);

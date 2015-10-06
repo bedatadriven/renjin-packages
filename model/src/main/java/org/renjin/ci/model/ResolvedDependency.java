@@ -26,6 +26,9 @@ public class ResolvedDependency {
   private Long buildNumber;
   
   @JsonProperty
+  private String replacementVersion;
+  
+  @JsonProperty
   private BuildOutcome buildOutcome;
 
   public ResolvedDependency() {
@@ -46,8 +49,7 @@ public class ResolvedDependency {
     this.name = packageVersionId.getPackageName();
     this.packageVersionId = packageVersionId;
   }
-
-
+  
   /**
    *
    * @return the original name of the dependency, as specified in the POM.
@@ -115,5 +117,17 @@ public class ResolvedDependency {
 
   public boolean isVersionResolved() {
     return packageVersionId != null;
+  }
+
+  public String getReplacementVersion() {
+    return replacementVersion;
+  }
+
+  public void setReplacementVersion(String replacementVersion) {
+    this.replacementVersion = replacementVersion;
+  }
+
+  public boolean isReplaced() {
+    return this.replacementVersion != null;
   }
 }

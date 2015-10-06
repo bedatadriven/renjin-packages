@@ -47,6 +47,7 @@ public class PackageDatabase {
     register(PackageExample.class);
     register(PackageExampleSource.class);
     register(PackageExampleRun.class);
+    register(ReplacementRelease.class);
     register(RenjinVersionStat.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);

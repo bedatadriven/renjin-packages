@@ -167,7 +167,6 @@ public class PackageListResource {
 
         Map<PackageId, PackageVersionId> packageVersionIds = new HashMap<>();
 
-
         for (Key<PackageVersion> packageVersionKey : packages) {
             PackageVersionId newPvid = PackageVersion.idOf(packageVersionKey);
             PackageVersionId existingPvid = packageVersionIds.get(newPvid.getPackageId());
@@ -186,11 +185,11 @@ public class PackageListResource {
         QueryResultIterable<Package> packages = ObjectifyService.ofy()
             .load()
             .type(Package.class)
-            .chunk(1000)
+            .chunk(3000)
             .iterable();
 
         for (Package aPackage : packages) {
-            if(aPackage.getLatestVersion() != null) {
+            if(!aPackage.isReplaced() && aPackage.getLatestVersion() != null) {
                 results.add(aPackage.getLatestVersionId());
             }
         }

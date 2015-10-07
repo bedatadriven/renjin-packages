@@ -11,6 +11,7 @@ import org.joda.time.format.DateTimeFormat;
 
 import java.io.*;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -264,6 +265,37 @@ public class PackageDescription {
 	
 	public String getDescription() {
 		return getFirstProperty("Description");
+	}
+
+	public Optional<List<String>> getCollate() {
+		if(hasProperty("Collate")) {	
+			return Optional.of(parseCollateList(getFirstProperty("Collate")));
+		} else {
+			return Optional.absent();
+		}
+	}
+
+	private List<String> parseCollateList(String collate) {
+		List<String> files = new ArrayList<>();
+		StringBuilder file = new StringBuilder();
+		boolean quoted = false;
+		for (int i = 0; i < collate.length(); i++) {
+			char c = collate.charAt(i);
+			if(c == '\'') {
+				quoted = !quoted;
+			} else if(!quoted && Character.isWhitespace(c)) {
+				if(file.length() > 0) {
+					files.add(file.toString());
+					file.setLength(0);
+				}
+			} else {
+				file.append(c);
+			}
+		}
+		if(file.length() > 0) {
+			files.add(file.toString());
+		}
+		return files;
 	}
 
 	public Iterable<PackageDependency> getImports() {

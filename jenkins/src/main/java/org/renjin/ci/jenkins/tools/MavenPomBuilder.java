@@ -156,8 +156,6 @@ public class MavenPomBuilder {
       defaultPackages.addChild(pkg);
     }
     
-    
-
     for(PackageDependency dep : description.getDepends()) {
       if(!dep.getName().equals("R") && !CorePackages.DEFAULT_PACKAGES.contains(dep.getName())) {
         Xpp3Dom pkg = new Xpp3Dom("pkg");
@@ -168,11 +166,24 @@ public class MavenPomBuilder {
 
     Xpp3Dom configuration = new Xpp3Dom("configuration");
     configuration.addChild(sourceDirectory);
+    if(description.getCollate().isPresent()) {
+      configuration.addChild(sourceFiles());
+    }
     configuration.addChild(dataDirectory);
     configuration.addChild(defaultPackages);
     compileExecution.setConfiguration(configuration);
 
     return compileExecution;
+  }
+
+  private Xpp3Dom sourceFiles() {
+    Xpp3Dom sourceFiles = new Xpp3Dom("sourceFiles");
+    for (String filename : description.getCollate().get()) {
+      Xpp3Dom sourceFile = new Xpp3Dom("sourceFile");
+      sourceFile.setValue(filename);
+      sourceFiles.addChild(sourceFile);
+    }
+    return sourceFiles;
   }
 
   private PluginExecution legacyCompileExecution() {

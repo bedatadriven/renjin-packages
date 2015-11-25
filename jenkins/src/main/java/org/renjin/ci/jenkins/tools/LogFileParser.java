@@ -1,9 +1,9 @@
 package org.renjin.ci.jenkins.tools;
 
+import org.renjin.ci.jenkins.BuildContext;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageBuildResult;
-import org.renjin.ci.jenkins.BuildContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,8 +11,8 @@ import java.io.IOException;
 
 public class LogFileParser {
 
-    private static final String NATIVE_COMPILATION_SUCCESS = "Soot finished on ";
-    private static final String NATIVE_COMPILATION_FAILURE = "Compilation of GNU R sources failed";
+    private static final String NATIVE_COMPILATION_SUCCESS = "Compilation of GNU R sources succeeded.";
+    private static final String NATIVE_COMPILATION_FAILURE = "Compilation of GNU R sources failed.";
     private static final String BUILD_SUCCESS = "[INFO] BUILD SUCCESS";
     private static final String BUILD_FAILURE = "[INFO] BUILD FAILURE";
 

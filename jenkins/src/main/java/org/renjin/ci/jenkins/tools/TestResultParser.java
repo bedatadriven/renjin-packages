@@ -4,8 +4,8 @@ package org.renjin.ci.jenkins.tools;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import hudson.FilePath;
-import org.renjin.ci.model.TestResult;
 import org.renjin.ci.jenkins.BuildContext;
+import org.renjin.ci.model.TestResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -78,7 +78,11 @@ public class TestResultParser {
   private static String parseOutput(FilePath xmlFile) throws IOException, InterruptedException {
     String fileName = xmlFile.getName().substring("TEST-".length(), xmlFile.getName().length() - ".xml".length());
     FilePath outputFile = xmlFile.getParent().child(fileName + "-output.txt");
-    return outputFile.readToString();
+    if(outputFile.exists()) {
+      return outputFile.readToString();
+    } else {
+      return "";
+    }
   }
 
   private static Document parseXml(FilePath xmlFile) {

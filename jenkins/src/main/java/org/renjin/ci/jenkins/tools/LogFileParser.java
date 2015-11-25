@@ -11,8 +11,8 @@ import java.io.IOException;
 
 public class LogFileParser {
 
-    private static final String NATIVE_COMPILATION_SUCCESS = "Compilation of GNU R sources succeeded.";
-    private static final String NATIVE_COMPILATION_FAILURE = "Compilation of GNU R sources failed.";
+    private static final String NATIVE_COMPILATION_SUCCESS = "[INFO] Compilation of GNU R sources succeeded.";
+    private static final String NATIVE_COMPILATION_FAILURE = "[ERROR] Compilation of GNU R sources failed.";
     private static final String BUILD_SUCCESS = "[INFO] BUILD SUCCESS";
     private static final String BUILD_FAILURE = "[INFO] BUILD FAILURE";
 

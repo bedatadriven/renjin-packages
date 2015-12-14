@@ -279,6 +279,16 @@ public class PackageBuild {
   public void setResolvedDependencies(List<String> resolvedDependencies) {
     this.resolvedDependencies = resolvedDependencies;
   }
+  
+  public String getButtonStyle() {
+    if(outcome != BuildOutcome.SUCCESS) {
+      return "btn-danger";
+    } else if(nativeOutcome == NativeOutcome.FAILURE) {
+      return "btn-warning";
+    } else {
+      return "btn-success";
+    }
+  }
 
   /**
    *

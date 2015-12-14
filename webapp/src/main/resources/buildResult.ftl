@@ -73,7 +73,7 @@
                 <#list build.renjinHistory as renjinVersion>
                 <td valign="top">
                     <#list renjinVersion.builds as build>
-                    <a href="${build.path}" class="btn btn-small <#if build.succeeded>btn-success<#else>btn-danger</#if>">
+                    <a href="${build.path}" class="btn btn-small ${build.buttonStyle}">
                         #${build.buildNumber}
                     </a>
                     </#list>

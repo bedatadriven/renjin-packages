@@ -19,7 +19,8 @@ public class PackageGraphBuilder {
 
   private TaskListener taskListener;
   private boolean rebuildFailedDependencies;
-  
+  private boolean rebuildAllDependencies;
+
   private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
 
   /**
@@ -28,9 +29,10 @@ public class PackageGraphBuilder {
   private final Map<PackageNode, Future<ResolvedDependencySet>> toResolve = Maps.newHashMap();
 
 
-  public PackageGraphBuilder(TaskListener taskListener, boolean rebuildFailedDependencies) {
+  public PackageGraphBuilder(TaskListener taskListener, boolean rebuildFailedDependencies, boolean rebuildAllDependencies) {
     this.taskListener = taskListener;
     this.rebuildFailedDependencies = rebuildFailedDependencies;
+    this.rebuildAllDependencies = rebuildAllDependencies;
   }
 
 
@@ -156,7 +158,7 @@ public class PackageGraphBuilder {
      
       } else if(resolvedDependency.hasBuild()) {
         
-        if(rebuildFailedDependencies && resolvedDependency.getBuildOutcome() != BuildOutcome.SUCCESS) {
+        if(shouldRebuild(resolvedDependency)) {
           // attempt to rebuild this failed dependency
           resolveDependencies(node);
         } else {
@@ -169,6 +171,16 @@ public class PackageGraphBuilder {
       }
     }
     return node;
+  }
+
+  private boolean shouldRebuild(ResolvedDependency resolvedDependency) {
+    if(rebuildAllDependencies) {
+      return true;
+    }
+    if(rebuildFailedDependencies) {
+      return resolvedDependency.getBuildOutcome() != BuildOutcome.SUCCESS;
+    }
+    return false;
   }
 
   private void resolveDependencies(PackageNode node) throws InterruptedException {

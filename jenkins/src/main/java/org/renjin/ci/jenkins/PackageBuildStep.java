@@ -36,13 +36,15 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
   private Double sample;
   private String renjinVersion;
   private boolean rebuildDependencies;
+  private boolean rebuildSuccessfulDependencies;
   
   @DataBoundConstructor
-  public PackageBuildStep(String filter, Double sample, String renjinVersion, boolean rebuildDependencies) {
+  public PackageBuildStep(String filter, Double sample, String renjinVersion, boolean rebuildDependencies, boolean rebuildSuccessfulDependencies) {
     this.filter = filter;
     this.sample = sample;
     this.renjinVersion = renjinVersion;
     this.rebuildDependencies = rebuildDependencies;
+    this.rebuildSuccessfulDependencies = rebuildSuccessfulDependencies;
   }
 
   public String getFilter() {
@@ -61,6 +63,10 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     return rebuildDependencies;
   }
 
+  public boolean isRebuildSuccessfulDependencies() {
+    return rebuildSuccessfulDependencies;
+  }
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 
@@ -68,14 +74,14 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     RenjinVersionId renjinVersion;
     if(Strings.isNullOrEmpty(this.renjinVersion) || this.renjinVersion.equals("LATEST")) {
       renjinVersion = RenjinCiClient.getLatestRenjinRelease();
-    } else {
+    } else {  
       renjinVersion = RenjinVersionId.valueOf(this.renjinVersion);
     }
 
     listener.getLogger().println("Building package graph...");
     PackageGraph graph;
     try {
-      graph = new PackageGraphBuilder(listener, rebuildDependencies).build(filter, sample);
+      graph = new PackageGraphBuilder(listener, rebuildDependencies, rebuildSuccessfulDependencies).build(filter, sample);
     } catch (Exception e) {
       throw new AbortException("Failed to build package graph: " + e.getMessage());
     }

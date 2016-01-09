@@ -2,7 +2,7 @@
 
 <#include "base.ftl">
 
-<@scaffolding title="${build.packageName} ${build.version}">
+<@scaffolding title="${build.packageName} ${build.version} #${build.buildNumber}">
 <#-- Shows breadcrumbs in search results -->
 <script type="application/ld+json">
 {
@@ -82,6 +82,10 @@
             </tr>
         </table>
         
+        <#if build.gitHubCompareUrl?? >
+        <p><a href="${build.gitHubCompareUrl}">Compare with ${build.previousBuildRenjinVersion}</a></p>
+        </#if>
+        
         <#if (build.testResults?size > 0) >
 
             <h3>Test Results Summary</h3>
@@ -89,7 +93,7 @@
             <ul class="test-results">
                 <#list build.testResults as test>
                     <li>
-                        <a href="#test-${test.name}" class="<#if test.passed>btn btn-success<#else>btn btn-danger</#if>">${test.name}</a>
+                        <a href="#test-${test.name}" class="<#if test.passed>btn btn-success<#else>btn btn-danger</#if>">${test.name}<#if test.regression> &#x26a0;</#if></a>
                     </li>
                 </#list>
             </ul>
@@ -123,7 +127,7 @@
 
         <#list build.testResults as test>
             <h4 id="test-${test.name}">${test.name?html}</h4>
-            <p><#if test.passed>PASSED<#else>FAILED</#if> after ${test.duration} ms</p>
+            <p><#if test.passed>PASSED<#else>FAILED</#if> after ${test.duration} ms. <#if test.regression>[REGRESSION]</#if></p>
             <pre class="test-output">${test.output?html}</pre>
         </#list>
         </#if>

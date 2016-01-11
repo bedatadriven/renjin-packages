@@ -1,12 +1,15 @@
 package org.renjin.ci.model;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
+import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 
 import java.io.*;
@@ -333,10 +336,68 @@ public class PackageDescription {
 
 	public LocalDateTime getPublicationDate() throws ParseException {
 		List<String> dateStrings = properties.get("Date/Publication");
-		if(dateStrings.isEmpty()) {
+		if (!dateStrings.isEmpty()) {
+			String dateString = dateStrings.get(0);
+			return LocalDateTime.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss"));
+		}
+		return null;
+	}
+	
+	public LocalDate getDate() {
+		List<String> dateStrings = properties.get("Date");
+		if(!dateStrings.isEmpty()) {
+			String dateString = dateStrings.get(0);
+			if(dateString.contains("/")) {
+				return LocalDate.parse(dateString, DateTimeFormat.forPattern("YYYY/MM/dd"));
+			} else {
+				return LocalDate.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd"));
+			}
+		}
+		return null;
+	}
+	
+	public LocalDateTime getPackagedDate() {
+		List<String> strings = properties.get("Packaged");
+		if(strings.isEmpty()) {
 			return null;
 		}
-		String dateString = dateStrings.get(0);
-    return LocalDateTime.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss"));
+		
+		return parseTimeFromPackaged(strings.get(0));
+	}
+
+	/**
+	 * 
+	 * @return the date of the package release, using, in descending order, the {@code Date/Publication} field,
+	 *  the {@code Date} field, or the {@code Pacakged} field.
+	 */
+	public LocalDateTime findReleaseDate() throws ParseException {
+		LocalDateTime publicationDate = getPublicationDate();
+		if(publicationDate != null) {
+			return publicationDate;
+		}
+		
+		LocalDate date = getDate();
+		if(date != null) {
+			return date.toLocalDateTime(LocalTime.MIDNIGHT);
+		}
+		
+		return getPackagedDate();
+	}
+	
+	@VisibleForTesting
+	static LocalDateTime parseTimeFromPackaged(String packagedValue) {
+		// In the format of:
+		// Mon Nov 27 19:54:13 2006; warnes
+		
+		int dateEnd = packagedValue.indexOf(';');
+		if(dateEnd >= 0) {
+			packagedValue = packagedValue.substring(0, dateEnd);
+		}
+		
+		// Remove double spaces
+		packagedValue = packagedValue.replaceAll("\\s+", " ");
+		
+		return LocalDateTime.parse(packagedValue, 
+			DateTimeFormat.forPattern("E MMM d HH:mm:ss YYYY"));
 	}
 }

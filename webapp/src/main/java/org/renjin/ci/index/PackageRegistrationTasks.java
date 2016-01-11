@@ -179,7 +179,7 @@ public class PackageRegistrationTasks {
     packageVersion.setNeedsCompilation(description.isNeedsCompilation());
 
     try {
-      packageVersion.setPublicationDate(description.getPublicationDate().toDate());
+      packageVersion.setPublicationDate(description.findReleaseDate().toDate());
 
     } catch (Exception ignored) {
     }

@@ -4,6 +4,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.admin.migrate.ReIndexPackage;
 import org.renjin.ci.admin.migrate.ReIndexPackageVersion;
+import org.renjin.ci.admin.migrate.UpdatePubDates;
 import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
@@ -31,6 +32,7 @@ public class AdminResources {
     model.put("migrations", Arrays.asList(
         ReComputeBuildDeltas.class,
         ReIndexPackageVersion.class,
+        UpdatePubDates.class,
         ReIndexPackage.class));
     
     return new Viewable("/admin.ftl", model);

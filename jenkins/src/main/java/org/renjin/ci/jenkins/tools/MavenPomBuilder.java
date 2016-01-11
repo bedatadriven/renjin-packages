@@ -122,11 +122,9 @@ public class MavenPomBuilder {
   private Set<String> dependencies() {
     Set<String> included = new HashSet<String>();
 
-    // Add the "default" packages which are always meant to be on the search path
-    included.addAll(CorePackages.DEFAULT_PACKAGES);
-
-    // Add the "tools" package which is often referenced by the if() directive in the NAMESPACE file
-    included.add("tools");
+    // Add all "core" packages, it seems to be legal to import from these packages
+    // without explicitly declaring them in the DESCRIPTION file
+    included.addAll(CorePackages.CORE_PACKAGES);
 
     // Add the packages specified in the Imports and Depends fields of the DESCRIPTION file
     for (PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {

@@ -1,12 +1,12 @@
 package org.renjin.ci.packages;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
+import com.googlecode.objectify.LoadResult;
 import org.renjin.ci.archive.BuildLogs;
-import org.renjin.ci.datastore.PackageBuild;
-import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.datastore.PackageTestResult;
+import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
@@ -14,9 +14,7 @@ import org.renjin.ci.model.RenjinVersionId;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 
 public class PackageBuildPage {
@@ -25,14 +23,23 @@ public class PackageBuildPage {
   private final String logText;
   private PackageBuild build;
   
+  private LoadResult<PackageVersionDelta> deltas;
+  
   private List<RenjinBuildHistory> histories = new ArrayList<>();
 
+  private final LoadResult<RenjinRelease> renjinVersion;
+  private final LoadResult<RenjinRelease> previousRenjinVersion;
+
+  private List<Test> tests;
+  
   public PackageBuildPage(PackageBuildId buildId) {
     this.buildId = buildId;
     
     // Start queries running in background
     Iterable<PackageBuild> buildQuery = PackageDatabase.getBuilds(buildId.getPackageVersionId()).iterable();
     Iterable<PackageTestResult> testsQuery = PackageDatabase.getTestResults(buildId);
+    deltas = PackageDatabase.getDelta(buildId.getPackageVersionId());
+    
     logText = BuildLogs.tryFetchLog(buildId);
     
     // Aggregate query results together
@@ -53,6 +60,20 @@ public class PackageBuildPage {
     for (RenjinVersionId renjinVersion : buildMap.keySet()) {
       histories.add(new RenjinBuildHistory(renjinVersion, buildMap.get(renjinVersion)));
     }
+
+
+    // Fetch this Renjin release and the previous
+    this.renjinVersion = PackageDatabase.getRenjinRelease(build.getRenjinVersionId());
+    RenjinVersionId previousRenjinVersion = buildMap.keySet().lower(build.getRenjinVersionId());
+    if(previousRenjinVersion != null) {
+      this.previousRenjinVersion = PackageDatabase.getRenjinRelease(previousRenjinVersion);
+    } else {
+      this.previousRenjinVersion = null;
+    }
+  }
+  
+  public List<String> getUpstreamBuilds() {
+    return build.getResolvedDependencies();
   }
   
   public long getBuildNumber() {
@@ -108,8 +129,31 @@ public class PackageBuildPage {
     return build.getBlockingDependencyVersions();
   }
   
-  public List<PackageTestResult> getTestResults() {
-    return testResults;
+
+  public List<Test> getTestResults() {
+    
+    if(tests == null) {
+      
+      tests = new ArrayList<>();
+      
+      Set<String> regressions = Collections.emptySet();
+      Set<String> progressions = Collections.emptySet();
+
+      if (deltas.now() != null) {
+        Optional<BuildDelta> delta = deltas.now().getBuild(buildId);
+        if (delta.isPresent()) {
+          regressions = delta.get().getTestRegressions();
+          progressions = delta.get().getTestProgressions();
+        }
+      }
+
+      for (PackageTestResult testResult : testResults) {
+        Test test = new Test(testResult);
+        test.regression = regressions.contains(testResult.getName());
+        tests.add(test);
+      }
+    }
+    return tests;
   }
 
   public PackageBuildId getBuildId() {
@@ -122,5 +166,69 @@ public class PackageBuildPage {
 
   public List<RenjinBuildHistory> getRenjinHistory() {
     return histories;
+  }
+  
+  public String getPreviousBuildRenjinVersion() {
+    if(previousRenjinVersion == null) {
+      return null;
+    }
+
+    RenjinRelease version = previousRenjinVersion.now();
+    if(version == null) {
+      // missing record?
+      return null;
+    }
+    return version.getVersion();
+  }
+  
+  
+  public String getGitHubCompareUrl() {
+    if(previousRenjinVersion == null) {
+      return null;
+    }
+
+    RenjinRelease currentRelease = this.renjinVersion.now();
+    if(currentRelease == null) {
+      return null;
+    }
+    RenjinRelease previousRelease = previousRenjinVersion.now();
+    if(previousRelease == null) {
+      return null;
+    }
+    
+    String currentCommit = currentRelease.getCommitSha1();
+    String previousCommit = previousRelease.getCommitSha1();
+    
+    return "https://github.com/bedatadriven/renjin/compare/" + previousCommit + "..." + currentCommit;
+  }
+  
+  public class Test {
+    
+    private PackageTestResult result;
+    private boolean regression;
+
+    public Test(PackageTestResult testResult) {
+      this.result = testResult;
+    }
+    
+    public String getName() {
+      return result.getName();
+    }
+
+    public long getDuration() {
+      return result.getDuration();
+    }
+    
+    public boolean isPassed() {
+      return result.isPassed();
+    }
+
+    public boolean isRegression() {
+      return regression;
+    }
+    
+    public String getOutput() {
+      return result.getOutput();
+    }
   }
 }

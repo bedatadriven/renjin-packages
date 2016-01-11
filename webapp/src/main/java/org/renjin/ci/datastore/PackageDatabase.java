@@ -324,4 +324,15 @@ public class PackageDatabase {
         .iterator();
   }
 
+  public static LoadResult<RenjinRelease> getRenjinRelease(RenjinVersionId renjinVersion) {
+    return ObjectifyService.ofy()
+        .load()
+        .key(Key.create(RenjinRelease.class, renjinVersion.toString()));
+  }
+
+  public static LoadResult<PackageVersionDelta> getDelta(PackageVersionId packageVersionId) {
+    return ObjectifyService.ofy()
+        .load()
+        .key(Key.create(PackageVersionDelta.class, packageVersionId.toString()));
+  }
 }

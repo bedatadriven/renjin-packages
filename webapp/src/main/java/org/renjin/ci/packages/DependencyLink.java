@@ -13,6 +13,12 @@ public class DependencyLink {
     this.label = packageVersionId.getPackageName() + " " + packageVersionId.getVersion();
     this.successful = successful;
   }
+  
+  public DependencyLink(org.renjin.ci.datastore.Package replacement) {
+    this.url = replacement.getPackageId().getPath();
+    this.successful = true;
+    this.label = replacement.getName();
+  }
 
   public DependencyLink(String versionString, boolean successful) {
     this.url = "#";

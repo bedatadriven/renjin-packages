@@ -54,5 +54,9 @@ public class PackageId implements Serializable {
         String parts[] = name.split(":");
         return new PackageId(parts[0], parts[1]);
     }
+    
+    public String getPath() {
+        return "/package/" + groupId + "/" + packageName;
+    }
 }
 

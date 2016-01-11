@@ -59,6 +59,10 @@ public class RenjinRelease {
   public Ref<RenjinCommit> getRenjinCommit() {
     return renjinCommit;
   }
+  
+  public String getCommitSha1() {
+    return renjinCommit.getKey().getName();
+  }
 
   public void setRenjinCommit(Ref<RenjinCommit> renjinCommit) {
     this.renjinCommit = renjinCommit;

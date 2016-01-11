@@ -1,12 +1,14 @@
 package org.renjin.ci.datastore;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.IgnoreSave;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.condition.IfFalse;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
@@ -67,6 +69,17 @@ public class PackageVersionDelta {
     return builds;
   }
 
+  public Optional<BuildDelta> getBuild(PackageBuildId buildId) {
+    Preconditions.checkArgument(buildId.getPackageVersionId().equals(getPackageVersionId()));
+
+    for (BuildDelta build : builds) {
+      if(buildId.getBuildNumber() == build.getBuildNumber()) {
+        return Optional.of(build);
+      }
+    }
+    return Optional.absent();
+  }
+  
   public Optional<BuildDelta> getBuild(String renjinVersion) {
     for (BuildDelta build : builds) {
       if(build.getRenjinVersion().equals(renjinVersion)) {

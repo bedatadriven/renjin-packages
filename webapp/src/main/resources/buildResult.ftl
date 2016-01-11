@@ -61,6 +61,16 @@
         <p>${build.outcome!"Started"} <#if build.startTime??>on ${build.startTime?datetime} </#if>
             against Renjin ${build.renjinVersion} </p>
 
+        
+        <#if build.upstreamBuilds??>
+        <h3>Upstream builds</h3>
+        <ul>
+            <#list build.upstreamBuilds as upstreamBuild>
+                <li>${upstreamBuild}</li>
+            </#list>
+        </ul>
+        </#if>
+        
         <h3>History</h3>
         
         <table class="build-history">

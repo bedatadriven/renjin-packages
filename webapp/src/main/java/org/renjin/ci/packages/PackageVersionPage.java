@@ -121,8 +121,14 @@ public class PackageVersionPage {
       }
       for (String versionString : build.getResolvedDependencies()) {
         PackageVersionId packageVersionId = new PackageVersionId(versionString);
+        
         if(!blocking.contains(packageVersionId)) {
-          links.add(new DependencyLink(packageVersionId, true));
+          org.renjin.ci.datastore.Package pkg = PackageDatabase.getPackageOf(packageVersionId).get();
+          if(pkg.isReplaced()) {
+            links.add(new DependencyLink(pkg));
+          } else {
+            links.add(new DependencyLink(packageVersionId, true));
+          }
         }
       }
     }

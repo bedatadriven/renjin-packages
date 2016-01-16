@@ -3,17 +3,23 @@ package org.renjin.ci.jenkins;
 import hudson.model.*;
 import hudson.model.queue.AbstractQueueTask;
 import hudson.model.queue.CauseOfBlockage;
+import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.security.Permission;
-import org.renjin.ci.model.PackageVersionId;
+import org.acegisecurity.AccessDeniedException;
 import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.jenkins.graph.PackageNodeState;
+import org.renjin.ci.model.PackageVersionId;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class PackageBuildTask extends AbstractQueueTask {
+public class PackageBuildTask extends AbstractQueueTask implements AccessControlled {
+
+  public static final String BUILD_NODE_LABEL = "renjin-package-builder";
   
   private final Run<?, ?> run;
   private final PackageNode packageNode;
@@ -30,7 +36,7 @@ public class PackageBuildTask extends AbstractQueueTask {
 
   @Override
   public Label getAssignedLabel() {
-    return Label.get("renjin-package-builder");
+    return Label.get(BUILD_NODE_LABEL);
   }
 
   @Override
@@ -130,6 +136,22 @@ public class PackageBuildTask extends AbstractQueueTask {
 
   public PackageNode getPackageNode() {
     return packageNode;
+  }
+
+  @Nonnull
+  @Override
+  public ACL getACL() {
+    return run.getACL();
+  }
+
+  @Override
+  public void checkPermission(@Nonnull Permission permission) throws AccessDeniedException {
+    run.checkPermission(permission);
+  }
+
+  @Override
+  public boolean hasPermission(@Nonnull Permission permission) {
+    return run.hasPermission(permission);
   }
 
   private static class BecauseOfDependencies extends CauseOfBlockage {

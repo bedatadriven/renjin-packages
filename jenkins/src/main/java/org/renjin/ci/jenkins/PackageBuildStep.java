@@ -78,13 +78,22 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
       renjinVersion = RenjinVersionId.valueOf(this.renjinVersion);
     }
 
+    // Expand ${VARIABLES} in the filter parameter to allow for parameterized plugins
+    String expandedFilter = run.getEnvironment(listener).expand(filter);
+
+
     listener.getLogger().println("Building package graph...");
     PackageGraph graph;
     try {
-      graph = new PackageGraphBuilder(listener, rebuildDependencies, rebuildSuccessfulDependencies).build(filter, sample);
+      graph = new PackageGraphBuilder(listener, rebuildDependencies, rebuildSuccessfulDependencies)
+          .build(expandedFilter, sample);
     } catch (Exception e) {
       throw new AbortException("Failed to build package graph: " + e.getMessage());
     }
+
+
+    listener.getLogger().printf("Dependency graph built with %d nodes.\n", graph.size());
+
     
     // Create a list of packages to build, ordered by the number of downstream builds
     // That way, we maximize throughput by build the packages need the most first
@@ -105,6 +114,9 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
         queueItems.add(Jenkins.getInstance().getQueue().schedule(task, 0));
       }
     }
+
+    listener.getLogger().printf("Queued %d tasks.\n", queueItems.size());
+
     Tasks.waitForTasks(listener, queueItems);
   }
 

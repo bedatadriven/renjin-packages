@@ -62,8 +62,6 @@ public class PackageGraphBuilder {
       resolveDependencies(packageNode);
     }
 
-    taskListener.getLogger().printf("Dependency graph built with %d nodes.\n", nodes.size());
-
     /**
      * Step 3: Compute the number of ultimate dependencies of each node, and sort is descending order.
      * This will allow use to take the greatest advantage of parallel executors.

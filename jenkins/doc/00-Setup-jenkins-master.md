@@ -66,11 +66,6 @@ Start Jenkins (*start*, *stop*, *restart*)
 
 > sudo /etc/init.d/jenkins start
 
-
-Install **Maven3**
-
-> sudo apt-get install maven
-
 ##### Install Nginx proxy
 You need to install a proxy to redirect all communication through port 80
 

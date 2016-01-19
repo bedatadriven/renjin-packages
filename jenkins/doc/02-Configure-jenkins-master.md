@@ -1,5 +1,8 @@
 
-# Setup Credentials
+# Configure Jenkins Master
+
+
+## Setup Credentials
 
 The Renjin CI Jenkins Plugins requires permission to deploy to nexus.bedatadriven.com. 
 
@@ -19,4 +22,18 @@ In the "Edit Configuration File" that next appears, set the name to "Renjin Pack
 
 In the "Server Credentials" section, click add and then set the serverId to `renjin-packages` and select
 the `deployment/***` credential you added above.
+
+## Configure Maven Tool
+
+
+From the "Manage Jenkins" screen, choose "Configure System" 
+
+In the "Maven" section, under "Maven Installations", choose "Add Maven"
+
+Enter the name "M3" (must match precisely)
+
+Check "Install automatically"
+
+Choose the latest version of Maven
+
 

@@ -142,7 +142,7 @@ public class PackageRegistrationTasks {
       @Override
       public void vrun() {
         PackageVersionId newPvid = packageVersion.getPackageVersionId();
-        Package packageEntity = PackageDatabase.getPackageOf(newPvid).orNull();
+        Package packageEntity = PackageDatabase.getPackageIfExists(newPvid).orNull();
         if(packageEntity == null) {
           packageEntity = new Package(packageVersion.getGroupId(), newPvid.getPackageName());
         }

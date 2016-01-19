@@ -63,15 +63,12 @@ public class DeltaBuilder {
   public PackageVersionDelta build(Optional<PackageBuild> newBuild) {
 
     List<PackageBuild> builds = PackageDatabase.getFinishedBuilds(packageVersionId);
-    if(newBuild.isPresent()) {
-      builds.add(newBuild.get());
-    }
 
     if (!builds.isEmpty()) {
 
       // Build a simplified list, mapping each renjin version in order to a build
       // If there have been multiple builds for a given Renjin Version, use the last build
-      TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(builds);
+      TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(builds, newBuild);
 
       // Query the test results for these builds that we've included in the analysis
       Iterable<PackageTestResult> testResults = PackageDatabase.getTestResults(buildMap.values());
@@ -84,7 +81,7 @@ public class DeltaBuilder {
     return new PackageVersionDelta(packageVersionId, deltas.values());
   }
 
-  private TreeMap<RenjinVersionId, PackageBuild> latestBuildPerRenjinVersion(List<PackageBuild> builds) {
+  private TreeMap<RenjinVersionId, PackageBuild> latestBuildPerRenjinVersion(List<PackageBuild> builds, Optional<PackageBuild> newBuild) {
 
     TreeMap<RenjinVersionId, PackageBuild> buildMap = Maps.newTreeMap();
     for (PackageBuild build : builds) {
@@ -97,6 +94,14 @@ public class DeltaBuilder {
         }
       }
     }
+    
+    // If we have just updated a new build within the same transaction, it may not yet be
+    // returned by getFinishedBuilds(), or may be out of date. 
+    // Ensure that we use the updated version here
+    if(newBuild.isPresent()) {
+      buildMap.put(newBuild.get().getRenjinVersionId(), newBuild.get());
+    }
+    
     return buildMap;
   }
 

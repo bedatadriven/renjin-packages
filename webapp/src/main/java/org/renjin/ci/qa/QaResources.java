@@ -30,8 +30,12 @@ public class QaResources {
   public Viewable getDashboard() {
 
     Multimap<RenjinVersionId, RenjinVersionStat> statMap = HashMultimap.create();
-    for (RenjinVersionStat stat : ofy().load().type(RenjinVersionStat.class)) {
-      statMap.put(stat.getRenjinVersionId(), stat);
+
+    RenjinVersionStats stats = PackageDatabase.getRenjinVersionStats();
+    if(stats != null) {
+      for (RenjinVersionStat stat : stats.getVersions()) {
+        statMap.put(stat.getRenjinVersionId(), stat);
+      }
     }
     
     List<RenjinVersionSummary> versions = new ArrayList<>();
@@ -95,5 +99,21 @@ public class QaResources {
     
 
     return new Viewable("/versionDeltas.ftl", model);
+  }
+  
+  @GET
+  @Path("testRegressions")
+  public Viewable getTestRegressions() {
+
+    Iterable<PackageVersionDelta> deltas = ofy().load().type(PackageVersionDelta.class)
+        .filter("regression", true)
+        .iterable();
+
+    TestRegressionPage page = new TestRegressionPage(deltas);
+    
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", page);
+    
+    return new Viewable("/testRegressions.ftl", model);
   }
 }

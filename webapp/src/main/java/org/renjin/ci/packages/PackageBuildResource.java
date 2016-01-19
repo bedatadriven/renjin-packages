@@ -3,17 +3,16 @@ package org.renjin.ci.packages;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.*;
+import com.googlecode.objectify.NotFoundException;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
+import org.renjin.ci.packages.results.TestRegressionPage;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +54,15 @@ public class PackageBuildResource {
     model.put("build", page);
 
     return new Viewable("/buildResult.ftl", model);
+  }
+  
+  @GET
+  @Path("tests/regression/${testName}")
+  public Viewable getRegression(@PathParam("testName") String testName) {
+    TestRegressionPage regressionPage = TestRegressionPage.query(buildId, testName);
+ 
+    throw new UnsupportedOperationException();
+
   }
 
   @POST
@@ -115,7 +123,7 @@ public class PackageBuildResource {
           maybeUpdateLastSuccessfulBuild(build);
 
           // Update the delta (regression/progression) flags for this build
-          DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent());
+          DeltaBuilder.update(packageVersionId, Optional.of(build));
 
         }
       }

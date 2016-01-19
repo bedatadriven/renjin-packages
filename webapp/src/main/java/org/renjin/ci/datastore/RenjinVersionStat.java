@@ -1,55 +1,48 @@
 package org.renjin.ci.datastore;
 
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Unindex;
 import org.renjin.ci.model.RenjinVersionId;
 
-@Entity
-public class RenjinVersionStat {
+import java.io.Serializable;
+
+public class RenjinVersionStat implements Serializable {
 
   
-  /**
-   * Composite identifier renjinVersion:deltaType
-   */
-  @Id
-  private String id;
+  @Unindex
+  private String renjinVersion;
+  
+  @Unindex
+  private String name;
   
   @Unindex
   private int regressionCount;
  
   @Unindex
   private int progressionCount;
-
-  public static String keyName(String renjinVersion, String statName) {
-    return renjinVersion + ":" + statName;
-  }
   
   public RenjinVersionStat() {
   }
 
-  public String getId() {
-    return id;
+  public String getRenjinVersion() {
+    return renjinVersion;
   }
 
-  public String getRenjinVersion() {
-    String[] parts = id.split(":");
-    return parts[0];
+  public void setRenjinVersion(String renjinVersion) {
+    this.renjinVersion = renjinVersion;
   }
 
   public String getName() {
-    String[] parts = id.split(":");
-    return parts[1];
+    return name;
   }
-  
-  
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   public RenjinVersionId getRenjinVersionId() {
-    return new RenjinVersionId(getRenjinVersion());
+    return new RenjinVersionId(renjinVersion);
   }
   
-  public void setId(String id) {
-    this.id = id;
-  }
 
   public int getRegressionCount() {
     return regressionCount;
@@ -67,4 +60,7 @@ public class RenjinVersionStat {
     this.progressionCount = progressionCount;
   }
 
+  public void setRenjinVersion(RenjinVersionId renjinVersionId) {
+    this.renjinVersion = renjinVersionId.toString();
+  }
 }

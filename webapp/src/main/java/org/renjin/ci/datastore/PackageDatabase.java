@@ -4,6 +4,7 @@ import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -48,7 +49,7 @@ public class PackageDatabase {
     register(PackageExampleSource.class);
     register(PackageExampleRun.class);
     register(ReplacementRelease.class);
-    register(RenjinVersionStat.class);
+    register(RenjinVersionStats.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
     register(LastEventTime.class);
@@ -156,7 +157,7 @@ public class PackageDatabase {
         .list();
 
   }
-
+  
   public static Iterable<PackageVersionId> getPackageVersionIds(PackageId packageId) {
     QueryResultIterable<Key<PackageVersion>> versions = ObjectifyService.ofy()
         .load()
@@ -222,10 +223,25 @@ public class PackageDatabase {
     return ObjectifyService.ofy().load().type(RenjinRelease.class).iterable();
   }
 
-  public static Optional<Package> getPackageOf(PackageVersionId packageVersionId) {
-    return Optional.fromNullable(ObjectifyService.ofy().load().key(Key.create(Package.class,
-        packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName())).now());
+  public static Optional<Package> getPackageIfExists(PackageVersionId packageVersionId) {
+    return Optional.fromNullable(
+        ObjectifyService.ofy()
+            .load()
+            .key(Key.create(Package.class, packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName()))
+            .now());
+  }
+
+  public static Package getPackageOf(PackageVersionId packageVersionId) {
+    Package pkg = ObjectifyService.ofy()
+        .load()
+        .key(Key.create(Package.class, packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName()))
+        .now();
     
+    if(pkg == null) {
+      throw new IllegalStateException("Package entity does not exist: " + packageVersionId.getPackageId());
+    }
+    
+    return pkg;
   }
 
   public static QueryResultIterable<PackageTestResult> getTestResults(PackageBuildId packageBuildId) {
@@ -273,6 +289,24 @@ public class PackageDatabase {
   }
 
 
+  public static RenjinVersionStats getRenjinVersionStats() {
+    return ObjectifyService.ofy().load().key(RenjinVersionStats.singletonKey()).now();
+  }
+  
+  public static Iterable<PackageTestResult> getTestResults(PackageVersionId packageVersionId, final String testName) {
+    Iterable<PackageTestResult> testResults = ObjectifyService.ofy().load()
+        .type(PackageTestResult.class)
+        .ancestor(PackageVersion.key(packageVersionId))
+        .iterable();
+    
+    return Iterables.filter(testResults, new Predicate<PackageTestResult>() {
+      @Override
+      public boolean apply(PackageTestResult input) {
+        return input.getName().equals(testName);
+      };
+    });
+  }
+  
   public static RenjinVersionId getLatestRelease() {
     QueryResultIterator<Key<RenjinRelease>> results = ObjectifyService.ofy()
         .load()

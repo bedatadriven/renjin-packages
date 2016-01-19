@@ -3,6 +3,7 @@ package org.renjin.ci.datastore;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.IgnoreSave;
@@ -12,10 +13,7 @@ import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Stores regression/progression history per PackageVersion
@@ -32,7 +30,15 @@ public class PackageVersionDelta {
   @Index
   @IgnoreSave(IfFalse.class)
   private boolean regression;
-  
+
+  @Index
+  @IgnoreSave(IfFalse.class)
+  private boolean buildRegression;
+
+  @Index
+  @IgnoreSave(IfFalse.class)
+  private boolean compilationRegression;
+
   private List<BuildDelta> builds;
 
   public PackageVersionDelta() {
@@ -47,9 +53,11 @@ public class PackageVersionDelta {
       renjinVersions.add(build.getRenjinVersion());
       if(build.getBuildDelta() < 0) {
         regression = true;
+        buildRegression = true;
       }
       if(build.getCompilationDelta() < 0) {
         regression = true;
+        compilationRegression = true;
       }
       if(build.getTestRegressions().size() > 0) {
         regression = true;
@@ -66,15 +74,30 @@ public class PackageVersionDelta {
   }
   
   public List<BuildDelta> getBuilds() {
+    if(builds == null) {
+      return Collections.emptyList();
+    }
     return builds;
+  }
+  
+  public Set<String> getTestRegressions() {
+    Set<String> regressions = Sets.newHashSet();
+    if(builds != null) {
+      for (BuildDelta build : builds) {
+        regressions.addAll(build.getTestRegressions());
+      }
+    }
+    return regressions;
   }
 
   public Optional<BuildDelta> getBuild(PackageBuildId buildId) {
     Preconditions.checkArgument(buildId.getPackageVersionId().equals(getPackageVersionId()));
 
-    for (BuildDelta build : builds) {
-      if(buildId.getBuildNumber() == build.getBuildNumber()) {
-        return Optional.of(build);
+    if(builds != null) {
+      for (BuildDelta build : builds) {
+        if (buildId.getBuildNumber() == build.getBuildNumber()) {
+          return Optional.of(build);
+        }
       }
     }
     return Optional.absent();
@@ -91,6 +114,14 @@ public class PackageVersionDelta {
 
   public boolean isRegression() {
     return regression;
+  }
+
+  public boolean isBuildRegression() {
+    return buildRegression;
+  }
+
+  public boolean isCompilationRegression() {
+    return compilationRegression;
   }
 
   public PackageId getPackageId() {

@@ -3,8 +3,8 @@ package org.renjin.ci.stats;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.mapreduce.*;
 import com.google.appengine.tools.mapreduce.inputs.DatastoreInput;
-import com.google.appengine.tools.mapreduce.outputs.DatastoreOutput;
 import com.google.appengine.tools.pipeline.PipelineServiceFactory;
+import org.renjin.ci.datastore.RenjinVersionStat;
 
 public class StatPipelines {
   
@@ -13,14 +13,13 @@ public class StatPipelines {
     return PipelineServiceFactory.newPipelineService().startNewPipeline(updateBuildStats());
   }
 
-  public static MapReduceJob<Entity, DeltaKey, DeltaValue, Entity, Void> updateBuildStats() {
+  public static MapReduceJob<Entity, DeltaKey, DeltaValue, RenjinVersionStat, Void> updateBuildStats() {
     DatastoreInput input = new DatastoreInput("PackageVersionDelta", 10);
     BuildDeltaMapper mapper = new BuildDeltaMapper();
-    Reducer<DeltaKey, DeltaValue, Entity> reducer = new DeltaReducer();
+    Reducer<DeltaKey, DeltaValue, RenjinVersionStat> reducer = new DeltaReducer();
+    VersionStatsOutput output = new VersionStatsOutput();
 
-    Output<Entity, Void> output = new DatastoreOutput();
-
-    MapReduceSpecification<Entity, DeltaKey, DeltaValue, Entity, Void>
+    MapReduceSpecification<Entity, DeltaKey, DeltaValue, RenjinVersionStat, Void>
         spec = new MapReduceSpecification.Builder<>(input, mapper, reducer, output)
         .setKeyMarshaller(Marshallers.<DeltaKey>getSerializationMarshaller())
         .setValueMarshaller(Marshallers.<DeltaValue>getSerializationMarshaller())

@@ -134,12 +134,28 @@ public class PackageListResource {
     @Path("/regressions")
     @Produces(MediaType.APPLICATION_JSON)
     public List<PackageVersionId> getPackagesWithRegressions() {
+        return queryRegressions("regression");
+    }
 
-        
+    @GET
+    @Path("/buildRegressions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PackageVersionId> getPackagesWithBuildRegressions() {
+        return queryRegressions("buildRegression");
+    }
+
+    @GET
+    @Path("/compilationRegressions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PackageVersionId> getPackagesWithCompilationRegressions() {
+        return queryRegressions("compilationRegression");
+    }
+
+    private List<PackageVersionId> queryRegressions(String filter) {
         QueryResultIterable<Key<PackageVersionDelta>> deltas = ObjectifyService.ofy()
             .load()
             .type(PackageVersionDelta.class)
-            .filter("regression", true)
+            .filter(filter, true)
             .chunk(200)
             .keys()
             .iterable();
@@ -152,7 +168,8 @@ public class PackageListResource {
 
         return packageVersions;
     }
-    
+
+
     @GET
     @Path("/needsCompilation")
     @Produces(MediaType.APPLICATION_JSON)

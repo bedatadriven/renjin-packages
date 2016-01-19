@@ -118,6 +118,9 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     listener.getLogger().printf("Queued %d tasks.\n", queueItems.size());
 
     Tasks.waitForTasks(listener, queueItems);
+    
+    // Schedule an update of package build stats
+    RenjinCiClient.scheduleStatsUpdate();
   }
 
   @Override

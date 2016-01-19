@@ -13,6 +13,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -177,5 +178,17 @@ public class RenjinCiClient {
         .path("package").path(groupId).path(artifactId).path("replacement")
         .request()
         .post(Entity.form(form));
+  }
+  
+  public static void scheduleStatsUpdate() {
+    Response response = client().target(ROOT_URL)
+        .path("stats")
+        .path("scheduleCountUpdate")
+        .request()
+        .build("POST")
+        .invoke();
+    
+    LOGGER.info("scheduleStatsUpdate: " + response.getStatus());
+
   }
 }

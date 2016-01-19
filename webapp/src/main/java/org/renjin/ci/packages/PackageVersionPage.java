@@ -123,7 +123,7 @@ public class PackageVersionPage {
         PackageVersionId packageVersionId = new PackageVersionId(versionString);
         
         if(!blocking.contains(packageVersionId)) {
-          org.renjin.ci.datastore.Package pkg = PackageDatabase.getPackageOf(packageVersionId).get();
+          org.renjin.ci.datastore.Package pkg = PackageDatabase.getPackageOf(packageVersionId);
           if(pkg.isReplaced()) {
             links.add(new DependencyLink(pkg));
           } else {

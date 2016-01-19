@@ -10,8 +10,6 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
 import com.google.jenkins.plugins.credentials.oauth.GoogleRobotCredentials;
-import com.google.jenkins.plugins.credentials.oauth.GoogleRobotPrivateKeyCredentials;
-import com.google.jenkins.plugins.credentials.oauth.JsonServiceAccountConfig;
 import hudson.FilePath;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -46,7 +44,6 @@ public class GoogleCloudStorage {
         if(credentials == null) {
             throw new ConfigException(format("No service key credential available for project %s", PROJECT_ID));
         }
-        checkCredentials(credentials);
         
         Credential googleCredential;
         try {
@@ -56,22 +53,6 @@ public class GoogleCloudStorage {
             throw new IOException(e);
         }
         return googleCredential;
-    }
-
-    private static void checkCredentials(GoogleRobotCredentials credentials) {
-        if(!(credentials instanceof GoogleRobotPrivateKeyCredentials)) {
-            throw new ConfigException(format("Expected credentials for project %s [id: %s] to be of type %s, found %s",
-                PROJECT_ID, 
-                credentials.getId(), 
-                GoogleRobotCredentials.class.getName(), 
-                credentials.getClass().getName()));
-        }
-        GoogleRobotPrivateKeyCredentials privateKeyCredentials = (GoogleRobotPrivateKeyCredentials) credentials;
-        if(!(privateKeyCredentials.getServiceAccountConfig() instanceof JsonServiceAccountConfig)) {
-            throw new ConfigException(format("Expected credentials for project %s [id: %s] to include JSON Key," +
-                "found: %s", PROJECT_ID, credentials.getId(), 
-                privateKeyCredentials.getServiceAccountConfig().getClass().getName()));
-        }
     }
 
     public static Storage newClient(WorkerContext context) throws IOException {

@@ -4,9 +4,20 @@
 
 ## Setup Credentials
 
+### Nexus
+
 The Renjin CI Jenkins Plugins requires permission to deploy to nexus.bedatadriven.com. 
 
 Add the `deployment/***` credential to Jenkins.
+
+
+### Google Authentication
+
+Install the "Google Authenticated Source plugin"
+
+Add a credential of Kind "Google Service Account from metadata"
+
+Set the project name to "renjinci"
 
 
 ## Configuration Files
@@ -23,10 +34,21 @@ In the "Edit Configuration File" that next appears, set the name to "Renjin Pack
 In the "Server Credentials" section, click add and then set the serverId to `renjin-packages` and select
 the `deployment/***` credential you added above.
 
-## Configure Maven Tool
-
+## Configure Tools
 
 From the "Manage Jenkins" screen, choose "Configure System" 
+
+### Configure the JDK
+
+In the "JDK" section, click "Add JDK"
+
+Set the name to "Oracle 1.7"
+
+Choose "Install automatically" and select the latest update of Java 7 from the dropdown list.
+
+For the Oracle credentials, use bddbot@bedatadriven.com / 2CDRsY15JisnCVCV
+
+### Configure Maven
 
 In the "Maven" section, under "Maven Installations", choose "Add Maven"
 

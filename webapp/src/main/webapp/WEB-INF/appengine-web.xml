@@ -3,19 +3,16 @@
 
   <application>renjinci</application>
   <module>default</module>
-  <version>dev</version>
+  <version>2</version>
 
   <system-properties>
     <property name="java.util.logging.config.file" value="WEB-INF/logging.properties" />
-
-    <!--  JAXB Context Initialization was taking up to 2 seconds on AppEngine -->
-    <property name="com.sun.xml.bind.v2.runtime.JAXBContextImpl.fastBoot"
-              value="true" />
   </system-properties>
 
   <use-google-connector-j>true</use-google-connector-j>
   <threadsafe>true</threadsafe>
-  <instance-class>F4</instance-class>
+  <instance-class>F1</instance-class>
+  <warmup-requests-enabled>true</warmup-requests-enabled>
   
   <static-files>
     <include path="/assets/**.*" expiration="0s" />

@@ -2,6 +2,7 @@ package org.renjin.ci.packages;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
@@ -168,10 +169,10 @@ public class DependencyResolution {
   private ResolvedDependency resolution(PackageVersion version) {
     
     // Check to see if this package is replaced by a Renjin-specific package
-    Package packageEntity = PackageDatabase.getPackageOf(version.getPackageVersionId()).get();
-    if(packageEntity.isReplaced()) {
+    Optional<Package> packageEntity = PackageDatabase.getPackageIfExists(version.getPackageVersionId());
+    if(packageEntity.isPresent() && packageEntity.get().isReplaced()) {
       ResolvedDependency dependency = new ResolvedDependency(version.getPackageVersionId());
-      dependency.setReplacementVersion(packageEntity.getLatestReplacementVersion());
+      dependency.setReplacementVersion(packageEntity.get().getLatestReplacementVersion());
       return dependency;
     }
     

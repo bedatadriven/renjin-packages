@@ -185,7 +185,7 @@ public class RenjinCiClient {
         .path("stats")
         .path("scheduleCountUpdate")
         .request()
-        .build("POST")
+        .buildPost(Entity.text(""))
         .invoke();
     
     LOGGER.info("scheduleStatsUpdate: " + response.getStatus());

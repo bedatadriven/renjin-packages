@@ -55,6 +55,10 @@ public class PackageId implements Serializable {
         return new PackageId(parts[0], parts[1]);
     }
     
+    public static PackageId gitHub(String owner, String repo) {
+        return new PackageId("org.renjin.github." + owner, repo);
+    }
+    
     public String getPath() {
         return "/package/" + groupId + "/" + packageName;
     }

@@ -57,6 +57,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @Unindex
   private int testFailures;
   
+  @Index
+  private String tagName;
+  
   /**
    * True if there is a build of this PackageVersion available. (Used for searching
    * for PackageVersions without a build)
@@ -274,5 +277,16 @@ public class PackageVersion implements Comparable<PackageVersion> {
     String version = packageVersionKey.getName();
     
     return new PackageVersionId(packageId, version);
+  }
+
+  /**
+   * @return For GitHub packages, the tag name of the release
+   */
+  public String getTagName() {
+    return tagName;
+  }
+
+  public void setTagName(String tagName) {
+    this.tagName = tagName;
   }
 }

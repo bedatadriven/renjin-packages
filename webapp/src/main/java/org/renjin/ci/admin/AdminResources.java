@@ -1,11 +1,16 @@
 package org.renjin.ci.admin;
 
+import com.google.common.base.Optional;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.admin.migrate.ReIndexPackage;
 import org.renjin.ci.admin.migrate.ReIndexPackageVersion;
 import org.renjin.ci.admin.migrate.UpdatePubDates;
 import org.renjin.ci.archive.ExamplesExtractor;
+import org.renjin.ci.datastore.Package;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.index.GitHubTasks;
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 import org.renjin.ci.pipelines.Pipelines;
@@ -82,5 +87,33 @@ public class AdminResources {
   @Path("updateDeltaCounts")
   public Response updateBuildDeltaCounts() {
     return Pipelines.redirectToStatus(StatPipelines.startUpdateBuildStats());
+  }
+  
+  
+  @POST
+  @Path("addGitHubRepo")
+  public Response addGitHubRepo(@FormParam("repo") String repoId) {
+    
+    String[] repoParts = repoId.split("/");
+    if(repoParts.length != 2) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Malformed github repo name").build();
+    }
+
+    Optional<Package> cranPackage = PackageDatabase.getPackageIfExists(new PackageId("org.renjin.cran", repoParts[1]));
+    if(cranPackage.isPresent()) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("CRAN package with name '" + repoParts[1] + "' already exists.").build();
+    }
+    
+    PackageId packageId = new PackageId("org.renjin.github." + repoParts[0], repoParts[1]);
+    
+    Optional<Package> gitHubPackage = PackageDatabase.getPackageIfExists(packageId);
+    if(gitHubPackage.isPresent()) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Package " + packageId + " already exists.").build();
+    }
+
+    GitHubTasks.enqueue(repoParts[0], repoParts[1]);
+    
+    return Response.ok().entity("Enqueued.").build();
+    
   }
 }

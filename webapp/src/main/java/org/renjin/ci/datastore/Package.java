@@ -67,6 +67,7 @@ public class Package {
   private boolean built;
 
 
+
   public static Key<Package> key(PackageId packageId) {
     return Key.create(Package.class, packageId.toString());
   }
@@ -81,6 +82,13 @@ public class Package {
   public Package(String groupId, String packageName) {
     this.id = groupId + ":" + packageName;
     this.name = packageName;
+  }
+
+
+  public Package(PackageId packageId) {
+    this.id = packageId.toString();
+    this.name = packageId.getPackageName();
+
   }
 
   public String getId() {

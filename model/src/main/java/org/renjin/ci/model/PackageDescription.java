@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 public class PackageDescription {
 
 	private ArrayListMultimap<String, String> properties = ArrayListMultimap.create();
+
 
 	public static class PackageDependency {
 		private String name;
@@ -213,6 +215,10 @@ public class PackageDescription {
 		return fromString(CharStreams.toString(new InputStreamReader(in)));
 	}
 
+	public static PackageDescription fromCharSource(CharSource charSource) throws IOException {
+		return fromString(charSource.read());
+	}
+	
 	public static PackageDescription fromReader(Reader reader) throws IOException {
 		return fromString(CharStreams.toString(reader));
 	}

@@ -35,6 +35,13 @@
         <form action="/tasks/index/cran/fetchArchivedVersions" method="post">
             <input name="packageName"> <input type="submit" class="btn btn-default" value="Fetch archives">
         </form>
+        
+        <h2>Add GitHub Package</h2>
+        <form action="/admin/addGitHubRepo" method="post">
+            <input type="text" placeholder="owner/repository" name="repo">
+            <input type="submit" class="btn btn-default" value="Add">
+        </form>
+        
     </div>
 </div>
 </@scaffolding>

@@ -8,6 +8,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
@@ -224,11 +225,16 @@ public class PackageDatabase {
   }
 
   public static Optional<Package> getPackageIfExists(PackageVersionId packageVersionId) {
+    return getPackageIfExists(packageVersionId.getPackageId());
+  }
+
+  public static Optional<Package> getPackageIfExists(PackageId packageId) {
     return Optional.fromNullable(
         ObjectifyService.ofy()
             .load()
-            .key(Key.create(Package.class, packageVersionId.getGroupId() + ":" + packageVersionId.getPackageName()))
+            .key(Key.create(Package.class, packageId.toString()))
             .now());
+    
   }
 
   public static Package getPackageOf(PackageVersionId packageVersionId) {
@@ -303,7 +309,9 @@ public class PackageDatabase {
       @Override
       public boolean apply(PackageTestResult input) {
         return input.getName().equals(testName);
-      };
+      }
+
+      ;
     });
   }
   
@@ -368,5 +376,23 @@ public class PackageDatabase {
     return ObjectifyService.ofy()
         .load()
         .key(Key.create(PackageVersionDelta.class, packageVersionId.toString()));
+  }
+
+  public static Set<String> getPackageVersionTags(PackageId packageId) {
+    List<PackageVersion> versions = ObjectifyService.ofy()
+        .load()
+        .type(PackageVersion.class)
+        .ancestor(Package.key(packageId))
+        .list();
+    
+    Set<String> tagNames = Sets.newHashSet();
+
+    for (PackageVersion version : versions) {
+      if(version.getTagName() != null) {
+        tagNames.add(version.getTagName());
+      }
+    }
+    
+    return tagNames;
   }
 }

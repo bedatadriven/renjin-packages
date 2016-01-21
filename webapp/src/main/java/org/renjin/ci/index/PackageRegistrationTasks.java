@@ -82,7 +82,6 @@ public class PackageRegistrationTasks {
     GcsFilename filename = new GcsFilename(StorageKeys.PACKAGE_SOURCE_BUCKET, StorageKeys.packageSource(packageVersionId));
     LOGGER.info("Storing source archive at " + filename);
 
-
     GcsService gcsService =
             GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
@@ -90,9 +89,7 @@ public class PackageRegistrationTasks {
             gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
 
     try(OutputStream outputStream = Channels.newOutputStream(outputChannel)) {
-
       ByteStreams.copy(inputStream, outputStream);
-
     }
 
     SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
@@ -198,10 +195,9 @@ public class PackageRegistrationTasks {
     try(TarArchiveInputStream tarIn = sourceArchiveProvider.openSourceArchive(packageVersionId)) {
       TarArchiveEntry entry;
       while((entry = tarIn.getNextTarEntry()) != null) {
-
-        if(entry.getName().equals(packageVersionId.getPackageName() + "/DESCRIPTION")) {
-          String text = new String(ByteStreams.toByteArray(tarIn), Charsets.UTF_8);
-          return text;
+        String[] path = entry.getName().split("/");
+        if(path.length == 2 && path[1].equals("DESCRIPTION")) {
+          return  new String(ByteStreams.toByteArray(tarIn), Charsets.UTF_8);
         }
       }
     }

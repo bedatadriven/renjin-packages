@@ -214,7 +214,7 @@ public class MavenPomBuilder {
     testSourceDirectory.setValue("${basedir}/tests");
     
     Xpp3Dom timeout = new Xpp3Dom("timeoutInSeconds");
-    timeout.setValue("300");
+    timeout.setValue("30");
 
     Xpp3Dom defaultPackages = new Xpp3Dom("defaultPackages");
     for(String defaultPackage : DEFAULT_PACKAGES) {

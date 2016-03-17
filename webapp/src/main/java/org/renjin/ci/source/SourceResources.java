@@ -8,7 +8,9 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.cmd.Query;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.FunctionIndex;
+import org.renjin.ci.datastore.Loc;
 import org.renjin.ci.datastore.PackageSource;
+import org.renjin.ci.source.index.Language;
 import org.renjin.ci.source.index.SourceIndexTasks;
 
 import javax.ws.rs.GET;
@@ -19,6 +21,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Arrays.asList;
 
 /**
  * Searches the package source index
@@ -33,10 +37,31 @@ public class SourceResources {
     
     Map<String, Object> model = new HashMap<>();
     model.put("stats", SourceIndexStats.get());
+    model.put("loc", fetchLocStats());
     
     return new Viewable("/source.ftl", model);
   }
-  
+
+  private Map<String, Object> fetchLocStats() {
+    
+    Map<Key<Loc>, Loc> loc = ObjectifyService.ofy().load().keys(
+        asList(
+            Loc.totalKey(),
+            Loc.biocKey(),
+            Loc.cranKey()));
+    
+    List<LocChart> repos = Lists.newArrayList();
+    repos.add(new LocChart("CRAN", loc.get(Loc.cranKey())));
+    repos.add(new LocChart("BioConductor", loc.get(Loc.biocKey())));
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("languages", Language.values());
+    model.put("repos", repos);
+    model.put("lastUpdated", loc.get(Loc.totalKey()).getUpdateTime());
+    
+    return model;
+  }
+
   @GET
   @Produces("text/html")
   @Path("/search")

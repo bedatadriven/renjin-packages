@@ -49,7 +49,7 @@ public class CompatibilityAlert {
       List<String> issues = new ArrayList<>();
       
       if(lastBuild.getNativeOutcome() == NativeOutcome.FAILURE) {
-        issues.add("there was an error compiling C/Fortran sources");
+        issues.add("there was an error compiling C/FORTRAN sources");
       }
       int testCount = Iterables.size(results);
       int testFailures = countFailures(results);

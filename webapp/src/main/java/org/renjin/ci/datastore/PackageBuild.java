@@ -308,6 +308,7 @@ public class PackageBuild {
         return true;
 
       default:
+      case BLOCKED:
       case CANCELLED:
         return false;
     }

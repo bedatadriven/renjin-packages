@@ -57,6 +57,9 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
 
   public static PackageVersionId fromTriplet(String id) {
     String gav[] = id.split(":");
+    if(gav.length != 3) {
+      throw new IllegalArgumentException("Malformed package id: " + id);
+    }
     return new PackageVersionId(gav[0], gav[1], gav[2]);
   }
   

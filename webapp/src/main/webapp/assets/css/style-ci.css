@@ -196,3 +196,27 @@ td.line {
     padding: 0 10px;
     box-sizing: border-box;
 }
+
+.lang-bar {
+    width: 100%;
+}
+
+.lang-bar div {
+    display: inline-block;
+}
+
+.bar-r {
+    background-color: #27ae60;
+}
+
+.bar-c {
+    background-color: #e67e22;
+}
+
+.bar-cpp {
+    background-color: #e98b39;
+}
+
+.bar-fortran {
+    background-color: #e74c3c;
+}

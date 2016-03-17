@@ -6,13 +6,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.LoadResult;
+import com.googlecode.objectify.ObjectifyService;
 import org.joda.time.DateTime;
-import org.renjin.ci.datastore.PackageBuild;
-import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.datastore.PackageTestResult;
-import org.renjin.ci.datastore.PackageVersion;
+import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.source.LocChart;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -27,6 +26,7 @@ public class PackageVersionPage {
   private final PackageVersionId id;
   private final Supplier<PackageDescription> description;
   private final LoadResult<PackageBuild> latestBuild;
+  private final LoadResult<Loc> loc;
   private PackageVersion packageVersion;
   private Map<String, PackageVersionId> dependencyMap = Maps.newHashMap();
   private CompatibilityAlert compatibilityAlert;
@@ -42,7 +42,8 @@ public class PackageVersionPage {
     this.description = packageVersion.getDescription();
 
     this.otherVersions = PackageDatabase.getPackageVersionIds(packageVersion.getPackageId());
-
+    this.loc = ObjectifyService.ofy().load().key(Loc.key(id));
+    
     if(packageVersion.getLastSuccessfulBuildNumber() > 0) {
       this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastSuccessfulBuildNumber());
       this.testResults = PackageDatabase.getTestResults(packageVersion.getLastSuccessfulBuildId());
@@ -56,7 +57,7 @@ public class PackageVersionPage {
       this.testResults = Collections.emptyList();
     }
     this.compatibilityAlert = new CompatibilityAlert(packageVersion, latestBuild, testResults);
-
+    
   }
 
   public String getGroupId() {
@@ -189,6 +190,14 @@ public class PackageVersionPage {
         packageVersion.getVersion() + "/build/" + packageVersion.getLastSuccessfulBuildNumber();
   }
 
+  public LocChart getLoc() {
+    Loc counts = loc.now();
+    if(counts == null) {
+      return null;
+    } else {
+      return new LocChart(getPackageName(), counts);
+    }
+  }
 
   public String getRenjinLibraryCall() {
     return String.format("library('%s:%s')", packageVersion.getGroupId(), packageVersion.getPackageName());

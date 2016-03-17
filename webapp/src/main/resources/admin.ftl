@@ -25,6 +25,10 @@
         <form action="/admin/rebuildExamples" method="post">
             <input type="submit" class="btn btn-default" value="Rebuild examples index">
         </form>
+
+        <form action="/admin/queueUpdateTotalCounts" method="post">
+            <input type="submit" class="btn btn-default" value="Update LOC statistics">
+        </form>
         
         <h2>CRAN Archiving Fetching</h2>
 
@@ -35,6 +39,7 @@
         <form action="/tasks/index/cran/fetchArchivedVersions" method="post">
             <input name="packageName"> <input type="submit" class="btn btn-default" value="Fetch archives">
         </form>
+        
         
         <h2>Add GitHub Package</h2>
         <form action="/admin/addGitHubRepo" method="post">

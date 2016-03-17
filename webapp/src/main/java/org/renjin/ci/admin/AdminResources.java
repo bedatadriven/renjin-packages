@@ -1,5 +1,7 @@
 package org.renjin.ci.admin;
 
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Optional;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
@@ -14,6 +16,8 @@ import org.renjin.ci.model.PackageId;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 import org.renjin.ci.pipelines.Pipelines;
+import org.renjin.ci.source.index.LocCounter;
+import org.renjin.ci.source.index.UpdateLocStats;
 import org.renjin.ci.stats.StatPipelines;
 
 import javax.ws.rs.*;
@@ -38,7 +42,8 @@ public class AdminResources {
         ReComputeBuildDeltas.class,
         ReIndexPackageVersion.class,
         UpdatePubDates.class,
-        ReIndexPackage.class));
+        ReIndexPackage.class,
+        LocCounter.class));
     
     return new Viewable("/admin.ftl", model);
   }
@@ -88,7 +93,22 @@ public class AdminResources {
   public Response updateBuildDeltaCounts() {
     return Pipelines.redirectToStatus(StatPipelines.startUpdateBuildStats());
   }
-  
+
+  @POST
+  @Path("/queueUpdateTotalCounts")
+  public Response queueUpdateTotalCounts() {
+    QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/admin/updateTotalCounts"));
+    return Response.ok().entity("Enqueued.").build();
+  }
+
+  @POST
+  @Path("/updateTotalCounts")
+  public Response updateTotalCounts() {
+    UpdateLocStats stats = new UpdateLocStats();
+    stats.run();
+
+    return Response.ok().build();
+  }
   
   @POST
   @Path("addGitHubRepo")

@@ -60,6 +60,8 @@ public class PackageDatabase {
     
     register(PackageSource.class);
     register(FunctionIndex.class);
+    
+    register(Loc.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
@@ -97,6 +99,15 @@ public class PackageDatabase {
     
     return packages;
   }
+
+
+  public static QueryResultIterable<Package> getPackages() {
+    return ObjectifyService.ofy().load()
+        .type(Package.class)
+        .chunk(1000)
+        .iterable();
+  }
+
 
   public static QueryResultIterable<Package> getPackagesStartingWithCharacter(char letter) {
     String lowerKey = Character.toString(letter);

@@ -277,6 +277,11 @@ public class DeltaBuilder {
     if(rv.toString().equals("LATEST")) {
       return false;
     }
+    if(rv.toString().contains("RC")) {
+      // Discount these very old builds, sometimes the package "built"
+      // because we weren't really do everything we should have been doing
+      return false;
+    }
     return true;
   }
 

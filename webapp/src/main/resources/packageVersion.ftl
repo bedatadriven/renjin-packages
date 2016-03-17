@@ -59,6 +59,11 @@
         
         <h1>${version.packageName} ${version.version}</h1>
         
+        <#if version.groupId == "org.renjin.cran">
+            <a href="https://cran.r-project.org/web/packages/${version.packageName}/index.html">
+            <img src="/assets/img/cran.png" align="right" title="CRAN"></a>
+        </#if>
+        
         <p class="lead">${version.title}</p>
         
         <#if version.publicationDate??>
@@ -124,7 +129,7 @@
         <#if (version.testResults?size > 0) >
         <h2>Test Results</h2>
         
-        <p>This package was last tested against Renjin ${version.latestBuild.renjinVersion}
+        <p>This package was last tested against Renjin ${version.latestBuild.interpreterVersion}
             <#if version.latestBuild.startDate??> on ${version.latestBuild.startDate?date}</#if>.</p>
         
         <ul class="test-results">
@@ -137,7 +142,13 @@
         </#if>
     </div>
     <div class="grid-item medium-4">
-        <div class="inset">
+        <#if version.loc??>
+        <h3>Source <#if version.groupId == "org.renjin.cran"><a href="https://github.com/cran/${version.packageName}/tree/${version.version}">
+            <img src="/assets/img/github.png" width="36" height="36"></a></#if></h3>
+        
+        ${version.loc.chartHtml}
+        </#if>
+        
         <h3>Release History</h3>
         <ul>
             <#list version.otherVersions as other>
@@ -145,6 +156,7 @@
             </#list>
         </ul>
         </div>
+
     </div>
 </div>
 

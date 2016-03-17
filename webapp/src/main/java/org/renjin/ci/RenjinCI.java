@@ -21,6 +21,7 @@ import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.ReleasesResource;
 import org.renjin.ci.source.SourceResources;
+import org.renjin.ci.stats.StatsResources;
 
 import javax.ws.rs.core.Application;
 import java.util.Map;
@@ -57,6 +58,7 @@ public class RenjinCI extends Application {
     classes.add(SourceResources.class);
     
     classes.add(AdminResources.class);
+    classes.add(StatsResources.class);
 
     return classes;
   }

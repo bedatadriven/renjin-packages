@@ -2,6 +2,7 @@ package org.renjin.ci.datastore;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.Date;
@@ -21,7 +22,7 @@ public class BenchmarkMachine {
   @Unindex
   private String operatingSystem;
 
-  @Unindex
+  @Index
   private Date lastUpdated;
   
   public String getId() {

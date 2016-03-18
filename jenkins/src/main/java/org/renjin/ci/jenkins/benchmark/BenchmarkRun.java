@@ -10,13 +10,10 @@ import hudson.model.AbstractBuild;
 import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
-import org.jenkinsci.remoting.RoleChecker;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.BenchmarkRunDescriptor;
 
 import java.io.IOException;
-import java.net.NetworkInterface;
 import java.util.List;
 
 /**
@@ -124,25 +121,7 @@ public class BenchmarkRun {
 
   private String findMacId() throws AbortException {
     try {
-      return launcher.getChannel().call(new Callable<String, IOException>() {
-        @Override
-        public String call() throws IOException  {
-
-          NetworkInterface networkInterface = NetworkInterface.getNetworkInterfaces().nextElement();
-          byte[] mac = networkInterface.getHardwareAddress();
-
-          StringBuilder sb = new StringBuilder("MAC");
-          for (int i = 0; i < mac.length; i++) {
-            sb.append(String.format("%02X", mac[i]));
-          }
-          return sb.toString();
-        }
-
-        @Override
-        public void checkRoles(RoleChecker roleChecker) throws SecurityException {
-
-        }
-      });
+      return launcher.getChannel().call(new FindMacAddress());
     } catch (Exception e) {
       e.printStackTrace(listener.getLogger());
       throw new AbortException("Could not obtain machine's MAC address: " + e.getMessage());
@@ -166,4 +145,5 @@ public class BenchmarkRun {
         "cat(timing[[3]]*1000, file='timing.out');\n"
         , benchmark.getScript().getName());
   }
+
 }

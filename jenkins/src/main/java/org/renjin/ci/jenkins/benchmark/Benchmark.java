@@ -38,8 +38,12 @@ public class Benchmark {
     }
   }
   
-  public FilePath getDescriptorPath() {
-    return filePath.child("BENCHMARK.dcf");
+  public FilePath getDescriptorPath() throws IOException, InterruptedException {
+    if(filePath.child("BENCHMARK.dcf").exists()) {
+      return filePath.child("BENCHMARK.dcf");
+    } else {
+      return filePath.child("BENCHMARK");
+    }
   }
   
   public FilePath getScript() {

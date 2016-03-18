@@ -1,126 +1,104 @@
 package org.renjin.ci.datastore;
 
-import com.google.common.base.Charsets;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
-import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
-
-import java.nio.charset.Charset;
-import java.util.Date;
+import com.googlecode.objectify.annotation.*;
+import com.googlecode.objectify.condition.IfNull;
 
 
 @Entity
 public class BenchmarkResult {
 
-    @Id
-    private String id;
+  @Id
+  private Long id;
 
-    @Index
-    private String environmentId;
-    
-    @Index
-    private Date time;
-    
-    @Index
-    private String benchmarkId;
-    
-    @Index
-    private String interpreter;
-    
-    @Index
-    private String interpreterVersion;
-    
-    @Index
-    private String interpreterCommitId;
-    
-    private String harnessCommitId;
-    
-    @Unindex
-    private double value;
+  @Index
+  private long runId;
+  
+  @Index
+  private String machineId;
 
-    public String getId() {
-        return id;
-    }
+  /**
+   * The running time of the benchmark, in milliseconds
+   */
+  @Unindex
+  @IgnoreSave(IfNull.class)
+  private Long runTime;
 
-    public void setId(String id) {
-        this.id = id;
-    }
+  @Index
+  private String benchmarkName;
+  
+  @Unindex
+  private String interpreter;
+  
+  @Unindex
+  private String interpreterVersion;
 
-    public double getValue() {
-        return value;
-    }
+  /**
+   * Whether the benchmark successfully completed or not
+   */
+  private boolean completed;
 
-    public void setValue(double value) {
-        this.value = value;
-    }
 
-    public String getEnvironmentId() {
-        return environmentId;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public void setEnvironmentId(String environmentId) {
-        this.environmentId = environmentId;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public Date getTime() {
-        return time;
-    }
+  public long getRunId() {
+    return runId;
+  }
 
-    public void setTime(Date time) {
-        this.time = time;
-    }
+  public String getMachineId() {
+    return machineId;
+  }
 
-    public String getBenchmarkId() {
-        return benchmarkId;
-    }
+  public void setMachineId(String machineId) {
+    this.machineId = machineId;
+  }
 
-    public void setBenchmarkId(String benchmarkId) {
-        this.benchmarkId = benchmarkId;
-    }
+  public void setRunId(long runId) {
+    this.runId = runId;
+  }
 
-    public String getInterpreter() {
-        return interpreter;
-    }
+  public Long getRunTime() {
+    return runTime;
+  }
 
-    public void setInterpreter(String interpreter) {
-        this.interpreter = interpreter;
-    }
+  public void setRunTime(Long runTime) {
+    this.runTime = runTime;
+  }
 
-    public String getInterpreterVersion() {
-        return interpreterVersion;
-    }
+  public String getBenchmarkName() {
+    return benchmarkName;
+  }
 
-    public void setInterpreterVersion(String interpreterVersion) {
-        this.interpreterVersion = interpreterVersion;
-    }
+  public void setBenchmarkName(String benchmarkName) {
+    this.benchmarkName = benchmarkName;
+  }
 
-    public String getInterpreterCommitId() {
-        return interpreterCommitId;
-    }
+  public boolean isCompleted() {
+    return completed;
+  }
 
-    public void setInterpreterCommitId(String interpreterCommitId) {
-        this.interpreterCommitId = interpreterCommitId;
-    }
+  public void setCompleted(boolean completed) {
+    this.completed = completed;
+  }
 
-    public String getHarnessCommitId() {
-        return harnessCommitId;
-    }
+  public String getInterpreter() {
+    return interpreter;
+  }
 
-    public void setHarnessCommitId(String harnessCommitId) {
-        this.harnessCommitId = harnessCommitId;
-    }
-    
-    public String computeHash() {
-        Hasher hasher = Hashing.sha1().newHasher();
-        hasher.putString(benchmarkId, Charsets.UTF_8);
-        hasher.putString(environmentId, Charsets.UTF_8);
-        hasher.putString(interpreterCommitId, Charsets.UTF_8);
-        hasher.putLong(time.getTime());
-        return hasher.hash().toString();
-    }
-    
+  public void setInterpreter(String interpreter) {
+    this.interpreter = interpreter;
+  }
+
+  public String getInterpreterVersion() {
+    return interpreterVersion;
+  }
+
+  public void setInterpreterVersion(String interpreterVersion) {
+    this.interpreterVersion = interpreterVersion;
+  }
 }

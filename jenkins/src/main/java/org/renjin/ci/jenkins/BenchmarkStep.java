@@ -1,7 +1,7 @@
 package org.renjin.ci.jenkins;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -12,9 +12,7 @@ import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.renjin.ci.jenkins.benchmark.Benchmark;
-import org.renjin.ci.jenkins.benchmark.BenchmarkDataset;
-import org.renjin.ci.jenkins.benchmark.Interpreter;
-import org.renjin.ci.jenkins.benchmark.Renjin;
+import org.renjin.ci.jenkins.benchmark.BenchmarkRun;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,31 +45,32 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
 
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-    
     List<Benchmark> benchmarks = Lists.newArrayList();
     findBenchmarks(benchmarks, "", workspace, listener);
-
-    Interpreter interpreter = setupInterpreter(workspace, launcher, listener);
-
-    for (Benchmark benchmark : benchmarks) {
-      if(accept(benchmark)) {
-        run(launcher, interpreter, benchmark, listener);
-      }
+    
+    if(benchmarks.isEmpty()) {
+      listener.getLogger().println("No benchmarks found.");
+      throw new AbortException();
     }
     
+    BenchmarkRun benchmarkRun = new BenchmarkRun(run, workspace, launcher, listener);
+    benchmarkRun.setupInterpreter(
+        run.getEnvironment(listener).expand(interpreter), 
+        run.getEnvironment(listener).expand(interpreterVersion));
+    benchmarkRun.start();
+    benchmarkRun.run(benchmarks);
   }
 
-  private Interpreter setupInterpreter(FilePath workspace, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
-    Renjin renjin = new Renjin(workspace, listener, interpreterVersion);
-    renjin.ensureInstalled();
-    
-    return renjin;
-  }
   
   private void findBenchmarks(List<Benchmark> benchmarks, String namePrefix, FilePath parentDir, TaskListener listener) throws IOException, InterruptedException {
     for (FilePath childDir : parentDir.listDirectories()) {
-      if (childDir.child("BENCHMARK.dcf").exists()) {
-        benchmarks.add(new Benchmark(namePrefix + childDir.getName(), childDir));
+      if (childDir.child("BENCHMARK.dcf").exists() || 
+          childDir.child("BENCHMARK").exists()) {
+
+        Benchmark benchmark = new Benchmark(namePrefix + childDir.getName(), childDir);
+        if(accept(benchmark)) {
+          benchmarks.add(benchmark);
+        }
       } else {
         findBenchmarks(benchmarks, namePrefix + childDir.getName() + "/", childDir, listener);
       }
@@ -84,25 +83,6 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     } else {
       return benchmark.getName().contains(includes);
     }
-  }
-
-  private void run(Launcher launcher, Interpreter interpreter, Benchmark benchmark, TaskListener listener) throws IOException, InterruptedException {
-
-    List<BenchmarkDataset> datasets = benchmark.readDatasets();
-    for (BenchmarkDataset dataset : datasets) {
-      FilePath datasetPath = benchmark.getDirectory().child(dataset.getFileName());
-      if(!datasetPath.exists()) {
-        listener.getLogger().println("Downloading " + dataset.getFileName() + " from " + dataset.getUrl());
-        datasetPath.copyFrom(dataset.getUrl());
-      }
-    }
-    
-    String runScript = String.format("system.time(result <- source('%s', local = new.env()));\n", benchmark.getScript().getName());
-    
-    FilePath runScriptFile = benchmark.getDirectory().child("harness.R");
-    runScriptFile.write(runScript, Charsets.UTF_8.name());
-    
-    interpreter.execute(launcher, runScriptFile);
   }
 
   @Override

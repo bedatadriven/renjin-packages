@@ -27,7 +27,7 @@ public class RenjinCiClient {
 
   private static final Logger LOGGER = Logger.getLogger(RenjinCiClient.class.getName());
 
-  public static final String ROOT_URL = "https://renjinci.appspot.com";
+  public static final String ROOT_URL = "https://dev-dot-renjinci.appspot.com";
 
 
   private static WebTarget rootTarget() {
@@ -179,6 +179,45 @@ public class RenjinCiClient {
         .request()
         .post(Entity.form(form));
   }
+  
+  public static long startBenchmarkRun(BenchmarkRunDescriptor descriptor) {
+    return client().target(ROOT_URL)
+        .path("benchmarks/runs")
+        .request()
+        .post(Entity.entity(descriptor, MediaType.APPLICATION_JSON_TYPE), Long.class);
+  }
+  
+  public static void postBenchmarkResult(long runId, String name, long milliseconds) {
+    
+    Form form = new Form();
+    form.param("name", name);
+    form.param("runTime", Long.toString(milliseconds));
+    form.param("completed", "true");
+    
+    client().target(ROOT_URL)
+        .path("benchmarks")
+        .path("run")
+        .path(Long.toString(runId))
+        .path("results")
+        .request()
+        .post(Entity.form(form));
+  }
+
+  public static void postBenchmarkFailure(long runId, String name) {
+
+    Form form = new Form();
+    form.param("name", name);
+    form.param("completed", "false");
+
+    client().target(ROOT_URL)
+        .path("benchmarks")
+        .path("run")
+        .path(Long.toString(runId))
+        .path("results")
+        .request()
+        .post(Entity.form(form));
+  }
+  
   
   public static void scheduleStatsUpdate() {
     Response response = client().target(ROOT_URL)

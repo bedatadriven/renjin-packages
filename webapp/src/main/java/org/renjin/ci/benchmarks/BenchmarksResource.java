@@ -1,102 +1,147 @@
 package org.renjin.ci.benchmarks;
 
-import com.google.appengine.api.datastore.QueryResultIterable;
-import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
-import org.renjin.ci.datastore.BenchmarkEnvironment;
-import org.renjin.ci.datastore.BenchmarkResult;
-import org.renjin.ci.datastore.RenjinRelease;
+import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.BenchmarkRunDescriptor;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
 @Path("/benchmarks")
 public class BenchmarksResource {
-    
-    
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response post(final SubmissionSet resultSet) {
-        createEnvironmentIfNotExists(resultSet);
-        
-        String interpreterCommitId = lookupRenjinCommit(resultSet.getInterpreterVersion());
 
-        List<BenchmarkResult> toSave = Lists.newArrayList();
-        for (Submission submission : resultSet.getResults()) {
-            
-            BenchmarkResult result = new BenchmarkResult();
-            result.setEnvironmentId(resultSet.getEnvironmentId());
-            result.setInterpreter(resultSet.getInterpreter());
-            result.setInterpreterVersion(resultSet.getInterpreterVersion());
-            result.setInterpreterCommitId(interpreterCommitId);
-            result.setBenchmarkId(submission.getBenchmarkId());
-            result.setTime(new Date(submission.getTime()));
-            result.setValue(submission.getValue());
-            result.setId(result.computeHash());
-            toSave.add(result);
+  private static final Logger LOGGER = Logger.getLogger(BenchmarksResource.class.getName());
+
+  @GET
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable getIndex() {
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", new BenchmarkPage());
+    
+    return new Viewable("/benchmarks.ftl", model);
+  }
+  
+  @GET
+  @Path("machine/{machineId}")
+  @Produces(MediaType.TEXT_HTML) 
+  public Viewable getMachineResults(@PathParam("machineId") String machineId) {
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", new MachinePage(machineId));
+    
+    return new Viewable("/benchmarkMachine.ftl", model);
+  }
+  
+  @POST
+  @Path("runs")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_PLAIN)
+  public String post(final BenchmarkRunDescriptor descriptor) {
+
+    LOGGER.info("Received update from machine " + descriptor.getMachineId());
+    
+    createMachineIfNotExists(descriptor);
+
+    BenchmarkRun run = new BenchmarkRun();
+    run.setId(nextRunNumber());
+    run.setMachineId(descriptor.getMachineId());
+    run.setRepoUrl(descriptor.getRepoUrl());
+    run.setCommitId(descriptor.getCommitId());
+    run.setStartTime(new Date());
+    run.setInterpreter(descriptor.getInterpreter());
+    run.setInterpreterVersion(descriptor.getInterpreterVersion());
+
+    Key<BenchmarkRun> key = ObjectifyService.ofy().save().entity(run).now();
+
+    return Long.toString(key.getId());
+  }
+  
+  @POST
+  @Path("run/{number}/results")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  public Response postResult(@PathParam("number") long runNumber, 
+                             @FormParam("name") String benchmarkName, 
+                             @FormParam("completed") boolean completed,
+                             @FormParam("runTime") long runTime) {
+
+
+    BenchmarkRun run = PackageDatabase.getBenchmarkRun(runNumber).now();
+    if(run == null) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Unknown run number " + runNumber).build();
+    }
+    
+    
+    BenchmarkResult result = new BenchmarkResult();
+    result.setRunId(runNumber);
+    result.setMachineId(run.getMachineId());
+    result.setBenchmarkName(benchmarkName);
+    result.setCompleted(completed);
+    result.setInterpreter(run.getInterpreter());
+    result.setInterpreterVersion(run.getInterpreterVersion());
+    
+    if(completed) {
+      result.setRunTime(runTime);
+    }
+
+    Key<BenchmarkResult> key = ObjectifyService.ofy().save().entity(result).now();
+    
+    return Response.ok().build();
+  }
+
+  private long nextRunNumber() {
+    return ObjectifyService.ofy().transact(new Work<Long>() {
+      @Override
+      public Long run() {
+        BenchmarkNumber number = ObjectifyService.ofy().load().key(BenchmarkNumber.nextKey()).now();
+        
+        long nextNumber;
+        
+        if(number == null) {
+          nextNumber = 1;
+          number = new BenchmarkNumber();
+          number.setNumber(2);
+        } else {
+          nextNumber = number.getNumber();
+          number.setNumber(number.getNumber() + 1);
+        }
+        ObjectifyService.ofy().save().entity(number);
+
+        return nextNumber;
+      }
+    });
+  }
+  
+  private void createMachineIfNotExists(final BenchmarkRunDescriptor descriptor) {
+    // Create the machine if doesn't exist
+    ObjectifyService.ofy().transact(new Work<Void>() {
+      @Override
+      public Void run() {
+        BenchmarkMachine machine = ObjectifyService.ofy().load().key(
+            Key.create(BenchmarkMachine.class, descriptor.getMachineId()))
+            .now();
+
+        if(machine == null) {
+          machine = new BenchmarkMachine();
+          machine.setId(descriptor.getMachineId());
+          machine.setOperatingSystem(descriptor.getOperatingSystem());
+          machine.setCpuInfo(descriptor.getCpuInfo());
         }
         
-        ObjectifyService.ofy().save().entities(toSave);
-        
-        return Response.ok().build();
-    }
-    
-    @GET
-    @Path("/results")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<BenchmarkResult> queryResults() {
-        QueryResultIterable<BenchmarkResult> results = ObjectifyService.ofy().load()
-                .type(BenchmarkResult.class)
-                .iterable();
-        
-        return Lists.newArrayList(results);
-    }
-    
-    @GET
-    @Path("/environments")
-    public List<BenchmarkEnvironment> getEnvironments() {
-        QueryResultIterable<BenchmarkEnvironment> results = ObjectifyService.ofy().load()
-                .type(BenchmarkEnvironment.class)
-                .iterable();
+        machine.setLastUpdated(new Date());
 
-        return Lists.newArrayList(results);
-    }
+        ObjectifyService.ofy().save().entity(machine);
 
-    private String lookupRenjinCommit(String interpreterVersion) {
-        RenjinRelease release = ObjectifyService.ofy().load().key(Key.create(RenjinRelease.class, interpreterVersion)).now();
-        if(release == null) {
-            throw new WebApplicationException(Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid renjin version '" + interpreterVersion + "'")
-                    .build());
-        }
-        return release.getRenjinCommit().getKey().getName();
-    }
-
-
-    private void createEnvironmentIfNotExists(final SubmissionSet resultSet) {
-        // Create the environment if doesn't exist
-        ObjectifyService.ofy().transact(new Work<Void>() {
-            @Override
-            public Void run() {
-                BenchmarkEnvironment environment = ObjectifyService.ofy().load().key(
-                        Key.create(BenchmarkEnvironment.class, resultSet.getEnvironmentId()))
-                        .now();
-                
-                if(environment == null) {
-                    environment = new BenchmarkEnvironment();
-                    environment.setId(resultSet.getEnvironmentId());
-                    ObjectifyService.ofy().save().entity(environment);
-                }
-                
-                return null;
-            }
-        });
-    }
+        return null;
+      }
+    });
+  }
 
 }

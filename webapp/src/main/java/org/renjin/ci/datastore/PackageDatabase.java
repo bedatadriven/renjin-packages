@@ -54,9 +54,11 @@ public class PackageDatabase {
     register(RenjinCommit.class);
     register(RenjinRelease.class);
     register(LastEventTime.class);
-    register(Benchmark.class);
-    register(BenchmarkEnvironment.class);
+    
+    register(BenchmarkMachine.class);
+    register(BenchmarkRun.class);
     register(BenchmarkResult.class);
+    register(BenchmarkNumber.class);
     
     register(PackageSource.class);
     register(FunctionIndex.class);
@@ -405,5 +407,21 @@ public class PackageDatabase {
     }
     
     return tagNames;
+  }
+
+  public static LoadResult<BenchmarkRun> getBenchmarkRun(long runNumber) {
+    return ObjectifyService.ofy().load().key(Key.create(BenchmarkRun.class, runNumber));
+  }
+
+  public static Query<BenchmarkMachine> getMostRecentBenchmarkMachines() {
+    return ObjectifyService.ofy().load().type(BenchmarkMachine.class).order("-lastUpdated");
+  }
+
+  public static LoadResult<BenchmarkMachine> getBenchmarkMachine(String machineId) {
+    return ObjectifyService.ofy().load().key(Key.create(BenchmarkMachine.class, machineId));
+  }
+
+  public static Query<BenchmarkResult> getBenchmarkResultsForMachine(String machineId) {
+    return ObjectifyService.ofy().load().type(BenchmarkResult.class).filter("machineId", machineId);
   }
 }

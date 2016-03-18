@@ -1,35 +1,31 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import com.google.common.base.Preconditions;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Proc;
+import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.util.ArgumentListBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Executes Renjin
  */
 public class Renjin extends Interpreter {
 
-  private FilePath workspace;
-  private TaskListener listener;
   private String version;
-  
   private FilePath bin;
 
   public Renjin(FilePath workspace, TaskListener listener, String version) {
-    this.workspace = workspace;
-    this.listener = listener;
     this.version = version;
   }
   
   @Override
-  public void ensureInstalled() throws IOException, InterruptedException {
+  public void ensureInstalled(Node node, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
 
     URL renjinArchive;
     try {
@@ -40,10 +36,18 @@ public class Renjin extends Interpreter {
       throw new AbortException();
     }
 
-    FilePath renjinLocation = workspace.child("bin").child("renjin-" + version);
+    FilePath renjinLocation = node.getRootPath().child("tools").child("Renjin").child("renjin-" + version);
     renjinLocation.installIfNecessaryFrom(renjinArchive, listener, "Installing Renjin " + version + "...");
 
-    bin = renjinLocation.child("renjin-" + version).child("bin").child("renjin");
+    List<FilePath> subDirs = renjinLocation.listDirectories();
+    if(subDirs.size() != 1) {
+      throw new AbortException("Error installing Renjin " + version + ", expected exactly one sub directory, found " + 
+          subDirs);
+    }
+    
+    FilePath subDir = subDirs.get(0);
+    
+    bin = subDir.child("bin").child("renjin");
 
     if(!bin.exists()) {
       listener.fatalError("Renjin executable " + bin + " does not exist!");
@@ -52,19 +56,19 @@ public class Renjin extends Interpreter {
   }
 
   @Override
-  public void execute(Launcher launcher, FilePath scriptPath) throws IOException, InterruptedException {
+  public String getId() {
+    return "Renjin";
+  }
 
-    ArgumentListBuilder args = new ArgumentListBuilder();
-    args.add(bin.getRemote());
-    args.add("-f");
-    args.add(scriptPath.getName());
+  @Override
+  public String getVersion() {
+    return version;
+  }
 
-    Launcher.ProcStarter ps = launcher.new ProcStarter();
-    ps = ps.cmds(args).pwd(scriptPath.getParent()).stdout(listener);
-
-    Proc proc = launcher.launch(ps);
-    int exitCode = proc.join();
+  @Override
+  public boolean execute(Launcher launcher, TaskListener listener, FilePath scriptPath) throws IOException, InterruptedException {
+    Preconditions.checkState(bin != null);
     
-    listener.getLogger().println("Exit code : " + exitCode);
+    return execute(launcher, listener, bin, scriptPath);
   }
 }

@@ -38,12 +38,20 @@ public class BenchmarkGraph {
       } else if(result.getInterpreter().equals("Renjin")) {
         RenjinVersionId renjinVersionId = new RenjinVersionId(result.getInterpreterVersion());
         if(renjinTimings.containsKey(renjinVersionId)) {
-          renjinTimings.get(renjinVersionId).add((double)result.getRunTime());
+          renjinTimings.get(renjinVersionId).add(toDouble(result.getRunTime()));
         }
       }
     }
   }
-  
+
+  private Double toDouble(Long runTime) {
+    if(runTime == null) {
+      return null;
+    } else {
+      return runTime.doubleValue();
+    }
+  }
+
   public String getBaselineTiming() {
     return timing(baselineTimings);
   }

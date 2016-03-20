@@ -6,6 +6,7 @@ import com.googlecode.objectify.Work;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.BenchmarkRunDescriptor;
+import org.renjin.ci.model.MachineDescriptor;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -46,13 +47,13 @@ public class BenchmarksResource {
   @Produces(MediaType.TEXT_PLAIN)
   public String post(final BenchmarkRunDescriptor descriptor) {
 
-    LOGGER.info("Received update from machine " + descriptor.getMachineId());
+    LOGGER.info("Received update from machine " + descriptor.getMachine().getId());
     
-    createMachineIfNotExists(descriptor);
+    createMachineIfNotExists(descriptor.getMachine());
 
     BenchmarkRun run = new BenchmarkRun();
     run.setId(nextRunNumber());
-    run.setMachineId(descriptor.getMachineId());
+    run.setMachineId(descriptor.getMachine().getId());
     run.setRepoUrl(descriptor.getRepoUrl());
     run.setCommitId(descriptor.getCommitId());
     run.setStartTime(new Date());
@@ -119,21 +120,23 @@ public class BenchmarksResource {
     });
   }
   
-  private void createMachineIfNotExists(final BenchmarkRunDescriptor descriptor) {
+  private void createMachineIfNotExists(final MachineDescriptor descriptor) {
     // Create the machine if doesn't exist
     ObjectifyService.ofy().transact(new Work<Void>() {
       @Override
       public Void run() {
         BenchmarkMachine machine = ObjectifyService.ofy().load().key(
-            Key.create(BenchmarkMachine.class, descriptor.getMachineId()))
+            Key.create(BenchmarkMachine.class, descriptor.getId()))
             .now();
 
         if(machine == null) {
           machine = new BenchmarkMachine();
-          machine.setId(descriptor.getMachineId());
-          machine.setOperatingSystem(descriptor.getOperatingSystem());
-          machine.setCpuInfo(descriptor.getCpuInfo());
+          machine.setId(descriptor.getId());
         }
+        machine.setOperatingSystem(descriptor.getOperatingSystem());
+        machine.setPhysicalMemory(descriptor.getPhysicalMemory());
+        machine.setAvailableProcessors(descriptor.getAvailableProcessors());
+        machine.setCpuModel(descriptor.getCpuModel());
         
         machine.setLastUpdated(new Date());
 

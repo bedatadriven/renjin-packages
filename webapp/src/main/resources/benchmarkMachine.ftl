@@ -7,7 +7,10 @@
     <div class="grid-item medium-12">
         <h1>Machine ${page.machine.id}</h1>
         
-        <p>Operating System: ${page.machine.operatingSystem}</p>
+        <p>${page.machine.operatingSystem} 
+            <#if (page.machine.availableProcessors > 0)>${page.machine.availableProcessors}-core</#if>
+            <#if (page.machine.physicalMemory > 0)>${page.machine.physicalMemoryDescription}</#if>
+            <#if page.machine.cpuModel??><br>${page.machine.cpuModel}</#if></p>
 
         <h2>Benchmarks</h2>
 

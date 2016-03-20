@@ -5,6 +5,7 @@ package org.renjin.ci.model;
  */
 public class BenchmarkRunDescriptor {
 
+  private MachineDescriptor machine;
 
   /**
    * The repo of the benchmarks
@@ -18,12 +19,6 @@ public class BenchmarkRunDescriptor {
 
 
   /**
-   * The id of the machine
-   */
-  private String machineId;
-
-
-  /**
    * The contents of /proc/cpuinfo
    */
   private String cpuInfo;
@@ -34,9 +29,6 @@ public class BenchmarkRunDescriptor {
    */
   private String interpreter;
   
-  private String operatingSystem;
-  
-
 
   /**
    * The version of the interpreter used
@@ -57,14 +49,6 @@ public class BenchmarkRunDescriptor {
 
   public void setCommitId(String commitId) {
     this.commitId = commitId;
-  }
-
-  public String getMachineId() {
-    return machineId;
-  }
-
-  public void setMachineId(String machineId) {
-    this.machineId = machineId;
   }
 
   public String getCpuInfo() {
@@ -92,12 +76,12 @@ public class BenchmarkRunDescriptor {
   }
 
 
-  public String getOperatingSystem() {
-    return operatingSystem;
+  public MachineDescriptor getMachine() {
+    return machine;
   }
 
-  public void setOperatingSystem(String operatingSystem) {
-    this.operatingSystem = operatingSystem;
+  public void setMachine(MachineDescriptor machine) {
+    this.machine = machine;
   }
 }
 

@@ -25,6 +25,15 @@ public class BenchmarkMachine {
   @Index
   private Date lastUpdated;
   
+  @Unindex
+  private long physicalMemory;
+  
+  @Unindex
+  private long availableProcessors;
+  
+  @Unindex
+  private String cpuModel;
+  
   public String getId() {
     return id;
   }
@@ -59,5 +68,41 @@ public class BenchmarkMachine {
   
   public String getPath() {
     return "/benchmarks/machine/" + id;
+  }
+
+  public long getPhysicalMemory() {
+    return physicalMemory;
+  }
+  
+  public String getPhysicalMemoryDescription() {
+    if(physicalMemory <= 0) {
+      return "Unknown RAM";
+    }
+    
+    double kb = physicalMemory / 1024d;
+    double mb = kb / 1024d;
+    double gb = mb / 1024d;
+    
+    return String.format("%.0f GB RAM", gb);
+  }
+
+  public void setPhysicalMemory(long physicalMemory) {
+    this.physicalMemory = physicalMemory;
+  }
+
+  public long getAvailableProcessors() {
+    return availableProcessors;
+  }
+
+  public void setAvailableProcessors(long availableProcessors) {
+    this.availableProcessors = availableProcessors;
+  }
+
+  public String getCpuModel() {
+    return cpuModel;
+  }
+
+  public void setCpuModel(String cpuModel) {
+    this.cpuModel = cpuModel;
   }
 }

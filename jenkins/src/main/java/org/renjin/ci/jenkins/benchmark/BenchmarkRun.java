@@ -49,7 +49,7 @@ public class BenchmarkRun {
     this.interpreter.ensureInstalled(node, launcher, listener);
   }
   
-  public void start() throws AbortException {
+  public void start() throws AbortException, InterruptedException {
     Preconditions.checkState(interpreter != null);
     
     BenchmarkRunDescriptor benchmarkRun = new BenchmarkRunDescriptor();
@@ -57,8 +57,11 @@ public class BenchmarkRun {
     benchmarkRun.setInterpreterVersion(interpreter.getVersion());
     benchmarkRun.setRepoUrl(env.get("GIT_URL"));
     benchmarkRun.setCommitId(env.get("GIT_COMMIT"));
-    benchmarkRun.setMachineId(findMachineId());
-    benchmarkRun.setOperatingSystem(System.getProperty("os.name"));
+    try {
+      benchmarkRun.setMachine(launcher.getChannel().call(new UnixDescriber()));
+    } catch (IOException e) {
+      throw new AbortException("Error getting machine description");
+    }
 
     runId = RenjinCiClient.startBenchmarkRun(benchmarkRun);
 
@@ -112,20 +115,6 @@ public class BenchmarkRun {
     timing = timing.replace(",", "");
     
     return Double.parseDouble(timing);
-  }
-
-  private String findMachineId() throws AbortException {
-    // On physical machines, use the machine's MAC address
-    return findMacId();
-  }
-
-  private String findMacId() throws AbortException {
-    try {
-      return launcher.getChannel().call(new FindMacAddress());
-    } catch (Exception e) {
-      e.printStackTrace(listener.getLogger());
-      throw new AbortException("Could not obtain machine's MAC address: " + e.getMessage());
-    }
   }
   
 

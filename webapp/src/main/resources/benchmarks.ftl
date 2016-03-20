@@ -14,6 +14,8 @@
                 <tr>
                     <td><a href="${machine.path}">${machine.id}</a></td>
                     <td>${machine.operatingSystem}</td>
+                    <td>${machine.availableProcessors} cores</td>
+                    <td>${machine.physicalMemoryDescription} GB RAM</td>
                 </tr>
                 </#list>
             </tbody>

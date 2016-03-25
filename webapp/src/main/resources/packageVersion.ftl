@@ -56,13 +56,11 @@
                 <@depLabel dependency=dep/>
             </#list>
         </#macro>
-        
-        <h1>${version.packageName} ${version.version}</h1>
-        
         <#if version.groupId == "org.renjin.cran">
             <a href="https://cran.r-project.org/web/packages/${version.packageName}/index.html">
-            <img src="/assets/img/cran.png" align="right" title="CRAN"></a>
+                <img src="/assets/img/cran.png" align="right" title="CRAN"></a>
         </#if>
+        <h1>${version.packageName} ${version.version}</h1>
         
         <p class="lead">${version.title}</p>
         
@@ -129,7 +127,7 @@
         <#if (version.testResults?size > 0) >
         <h2>Test Results</h2>
         
-        <p>This package was last tested against Renjin ${version.latestBuild.interpreterVersion}
+        <p>This package was last tested against Renjin ${version.latestBuild.renjinVersion}
             <#if version.latestBuild.startDate??> on ${version.latestBuild.startDate?date}</#if>.</p>
         
         <ul class="test-results">
@@ -144,10 +142,12 @@
     <div class="grid-item medium-4">
         <#if version.loc??>
         <h3>Source <#if version.groupId == "org.renjin.cran"><a href="https://github.com/cran/${version.packageName}/tree/${version.version}">
-            <img src="/assets/img/github.png" width="36" height="36"></a></#if></h3>
+            <img src="/assets/img/github.png" width="32" height="32"></a></#if></h3>
         
         ${version.loc.chartHtml}
+        <br>
         </#if>
+        
         
         <h3>Release History</h3>
         <ul>

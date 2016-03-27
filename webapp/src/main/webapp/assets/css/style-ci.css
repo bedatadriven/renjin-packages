@@ -91,6 +91,10 @@ ul.test-results li:before {
     background-color: #e98b39 !important; 
 }
 
+.btn-blocked {
+    background-color:  #aaaaaa;
+}
+
 .btn-small {
     padding: 2px 4px 2px !important;
     line-height: 1.2 !important;

@@ -281,6 +281,9 @@ public class PackageBuild {
   }
   
   public String getButtonStyle() {
+    if(outcome == BuildOutcome.BLOCKED) {
+      return "btn-blocked";
+    }
     if(outcome != BuildOutcome.SUCCESS) {
       return "btn-danger";
     } else if(nativeOutcome == NativeOutcome.FAILURE) {

@@ -78,6 +78,7 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   public PackageVersion(PackageVersionId packageVersionId) {
     this.packageKey = Package.key(packageVersionId.getPackageId());
+    this.packageName = packageVersionId.getPackageName();
     this.version = packageVersionId.getVersionString();
   }
 
@@ -257,7 +258,11 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public String getPackageName() {
     return getPackageVersionId().getPackageName();
   }
-
+  
+  public String getPackageNameIndex() {
+    return packageName;
+  }
+  
   public PackageId getPackageId() {
     return PackageId.valueOf(packageKey.getName());
   }

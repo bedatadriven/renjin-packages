@@ -17,9 +17,10 @@ public class ReIndexPackageVersion extends ForEachEntityAsBean<PackageVersion> {
   @Override
   public void apply(PackageVersion entity) {
     
-    entity.setPackageName(entity.getPackageVersionId().getPackageName());
-    
-    ObjectifyService.ofy().transactionless().save().entity(entity);
-      
+    if(entity.getPackageNameIndex() == null) {
+      entity.setPackageName(entity.getPackageVersionId().getPackageName());
+
+      ObjectifyService.ofy().transactionless().save().entity(entity);
+    }
   }
 }

@@ -5,7 +5,7 @@ import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import org.joda.time.DateTime;
@@ -18,14 +18,12 @@ import org.w3c.dom.CharacterData;
 import org.w3c.dom.*;
 import org.w3c.tidy.Tidy;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,7 +33,7 @@ public class CRAN {
   private static final Logger LOGGER = Logger.getLogger(CRAN.class.getName());
 
   public static final String CRAN_MIRROR = "http://ftp.heanet.ie/mirrors/cran.r-project.org/";
-  
+
   public static List<String> fetchUpdatedPackageList(LocalDate lastUpdate) {
     String indexUrl = CRAN_MIRROR + "web/packages/available_packages_by_date.html";
     LOGGER.info("Fetching from " + indexUrl);
@@ -144,7 +142,7 @@ public class CRAN {
   public static URL sourceUrl(String packageName, String version) throws MalformedURLException {
     return new URL(CRAN.CRAN_MIRROR + "src/contrib/" + packageName + "_" + version + ".tar.gz");
   }
-  
+
   public static URL archivedSourceUrl(String packageName, String version) throws MalformedURLException {
     return new URL(CRAN.CRAN_MIRROR + "src/contrib/Archive/" + packageName + "/" + packageName + "_" + version + ".tar.gz");
   }
@@ -153,7 +151,7 @@ public class CRAN {
     return new GcsFilename(StorageKeys.PACKAGE_SOURCE_BUCKET,
         StorageKeys.packageSource("org.renjin.cran", packageName, version));
   }
-  
+
   public static String packageId(String packageName) {
     return  "org.renjin.cran:" + packageName;
   }
@@ -162,9 +160,9 @@ public class CRAN {
     return packageId(packageName) + ":" + version;
   }
 
-  public static Map<PackageVersionId, DateTime> getArchivedVersionList(String packageName) throws IOException {
+  public static Set<PackageVersionId> getArchivedVersionList(String packageName) throws IOException {
 
-    
+
     String indexUrl = CRAN_MIRROR + "src/contrib/Archive/" + packageName;
     System.out.println("Fetching from " + indexUrl);
     URL url = null;
@@ -180,36 +178,33 @@ public class CRAN {
     if(response.getResponseCode() != 200) {
       throw new RuntimeException("Response code: " + response.getResponseCode());
     }
-    
-    Map<PackageVersionId, DateTime> versions = Maps.newHashMap();
+
+    Set<PackageVersionId> versions = Sets.newHashSet();
     Document document = fetchAsDom(ByteSource.wrap(response.getContent()));
-        NodeList rows = document.getElementsByTagName("tr");
+    NodeList links = document.getElementsByTagName("a");
     String packagePrefix = (packageName + "_");
 
-    for (int i = 0; i < rows.getLength(); i++) {
-      Element row = (Element) rows.item(i);
-      Optional<String> version = parsePackageVersionFromRow(packagePrefix, row);
+    for (int i = 0; i < links.getLength(); i++) {
+      Element link = (Element) links.item(i);
+      Optional<String> version = parsePackageVersionFromLink(packagePrefix, link);
       if(version.isPresent()) {
-        DateTime time = parseReleaseDateFromRow(row);
-        versions.put(new PackageVersionId("org.renjin.cran", packageName, version.get()), time);
+        LOGGER.info("Found version : " + version.get());
+        versions.add(new PackageVersionId("org.renjin.cran", packageName, version.get()));
       }
     }
     return versions;
   }
-  
-  private static Optional<String> parsePackageVersionFromRow(String packagePrefix, Element tableRow) {
-    NodeList links = tableRow.getElementsByTagName("a");
-    if(links.getLength() == 1) {
-      Element link = (Element) links.item(0);
-      String href = link.getAttribute("href");
-      if(!Strings.isNullOrEmpty(href) && href.startsWith(packagePrefix) && href.endsWith(".tar.gz")) {
-        String version = href.substring(packagePrefix.length(), href.length() - ".tar.gz".length());
-        return Optional.of(version);
-      }
+
+  private static Optional<String> parsePackageVersionFromLink(String packagePrefix, Element link) {
+
+    String href = link.getAttribute("href");
+    if(!Strings.isNullOrEmpty(href) && href.startsWith(packagePrefix) && href.endsWith(".tar.gz")) {
+      String version = href.substring(packagePrefix.length(), href.length() - ".tar.gz".length());
+      return Optional.of(version);
     }
     return Optional.absent();
   }
-  
+
   private static DateTime parseReleaseDateFromRow(Element tableRow) {
     NodeList tdList = tableRow.getElementsByTagName("td");
     for (int i = 0; i < tdList.getLength(); i++) {
@@ -223,6 +218,6 @@ public class CRAN {
     }
     throw new IllegalStateException("Can't find date in row: " + tableRow.toString());
   }
-  
-  
+
+
 }

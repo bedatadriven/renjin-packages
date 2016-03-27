@@ -2,7 +2,6 @@ package org.renjin.ci.tasks;
 
 import com.google.common.io.Resources;
 import org.hamcrest.Matchers;
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -12,7 +11,7 @@ import org.renjin.ci.model.PackageVersionId;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertThat;
 
@@ -34,7 +33,7 @@ public class CRANTest {
   @Test
   @Ignore("requires fetch")
   public void fetchArchiveVersions() throws IOException {
-    Map<PackageVersionId, DateTime> survival = CRAN.getArchivedVersionList("survival");
+    Set<PackageVersionId> survival = CRAN.getArchivedVersionList("survival");
     
     System.out.println(survival);
   }

@@ -1,10 +1,12 @@
 package org.renjin.ci.packages;
 
+import com.google.appengine.api.datastore.Entity;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.NotFoundException;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.admin.migrate.MigrateTestOutput;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
@@ -13,6 +15,7 @@ import org.renjin.ci.model.*;
 import org.renjin.ci.packages.results.TestRegressionPage;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +65,20 @@ public class PackageBuildResource {
     TestRegressionPage regressionPage = TestRegressionPage.query(buildId, testName);
  
     throw new UnsupportedOperationException();
-
+  }
+  
+  @GET
+  @Path("migrateTests")
+  public Response migrateTests() {
+    MigrateTestOutput mapper = new MigrateTestOutput();
+    mapper.beginSlice();
+    Iterable<PackageTestResult> results = PackageDatabase.getTestResults(buildId);
+    for (PackageTestResult result : results) {
+      Entity entity = ObjectifyService.ofy().save().toEntity(result);
+      mapper.migrateEntity(entity);
+      
+    }
+    return Response.ok("Done").build();
   }
 
   @POST

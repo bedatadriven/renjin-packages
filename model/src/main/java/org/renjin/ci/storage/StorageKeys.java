@@ -22,11 +22,17 @@ public class StorageKeys {
   }
   
 
+
   public static String buildLog(PackageVersionId packageVersionId, long buildNumber) {
     return packageVersionId.getGroupId() + "/" + packageVersionId.getPackageName() + "/" + 
         packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-b" + buildNumber + ".log";
   }
 
+  public static String testLog(PackageVersionId packageVersionId, long buildNumber, String testName) {
+    return packageVersionId.getGroupId() + "/" + packageVersionId.getPackageName() + "/" +
+        packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-b" + buildNumber +
+        "-" + testName + ".test.log";
+  }
 
   public static String packageSource(String groupId, String packageName, String version) {
     return groupId + "/" + packageName + "_" + version + ".tar.gz";

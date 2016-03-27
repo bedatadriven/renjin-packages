@@ -4,10 +4,7 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Optional;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
-import org.renjin.ci.admin.migrate.ReIndexPackage;
-import org.renjin.ci.admin.migrate.ReIndexPackageVersion;
-import org.renjin.ci.admin.migrate.UpdatePubDates;
+import org.renjin.ci.admin.migrate.*;
 import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
@@ -43,6 +40,7 @@ public class AdminResources {
         ReIndexPackageVersion.class,
         UpdatePubDates.class,
         ReIndexPackage.class,
+        MigrateTestOutput.class,
         LocCounter.class));
     
     return new Viewable("/admin.ftl", model);

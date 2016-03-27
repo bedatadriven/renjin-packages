@@ -1,5 +1,6 @@
 package org.renjin.ci.packages;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -78,7 +79,9 @@ public class PackageVersionPage {
 
   public String getPageDescription() {
     StringBuilder meta = new StringBuilder();
-    meta.append(packageVersion.getTitle().replace("\"", "'")).append(". ");
+    if(!Strings.isNullOrEmpty(packageVersion.getTitle())) {
+      meta.append(packageVersion.getTitle().replace("\"", "'")).append(". ");
+    }
     meta.append("Released ").append(new DateTime(getPublicationDate()).toString("MMM d, YYYY")).append(".");
     return meta.toString();
   }

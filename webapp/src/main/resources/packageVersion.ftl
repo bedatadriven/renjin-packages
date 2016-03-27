@@ -56,13 +56,21 @@
                 <@depLabel dependency=dep/>
             </#list>
         </#macro>
+
+
         <#if version.groupId == "org.renjin.cran">
-            <a href="https://cran.r-project.org/web/packages/${version.packageName}/index.html">
-                <img src="/assets/img/cran.png" align="right" title="CRAN"></a>
+        <h2><a href="https://cran.r-project.org/web/packages/${version.packageName}/index.html">CRAN</a></h2>
         </#if>
+        
+        <#if version.groupId == "org.renjin.bioconductor">
+        <h2><a href="https://bioconductor.org/packages/release/bioc/html/${version.packageName}.html">BioConductor</a></h2>
+        </#if>
+       
         <h1>${version.packageName} ${version.version}</h1>
         
+        <#if version.title??>
         <p class="lead">${version.title}</p>
+        </#if>
         
         <#if version.publicationDate??>
         <p class="sec">Released ${version.publicationDate?date} by ${version.authorList}</p>
@@ -141,14 +149,13 @@
     </div>
     <div class="grid-item medium-4">
         <#if version.loc??>
-        <h3>Source <#if version.groupId == "org.renjin.cran"><a href="https://github.com/cran/${version.packageName}/tree/${version.version}">
-            <img src="/assets/img/github.png" width="32" height="32"></a></#if></h3>
+        <h3>Source</h3>
         
         ${version.loc.chartHtml}
-        <br>
+        <#if version.groupId == "org.renjin.cran">
+        <p><a href="https://github.com/cran/${version.packageName}/tree/${version.version}">View GitHub Mirror</a></#if></p>
         </#if>
-        
-        
+
         <h3>Release History</h3>
         <ul>
             <#list version.otherVersions as other>

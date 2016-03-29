@@ -8,10 +8,7 @@ import hudson.model.queue.SubTask;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.graph.PackageNode;
-import org.renjin.ci.jenkins.tools.GoogleCloudStorage;
-import org.renjin.ci.jenkins.tools.LogFileParser;
-import org.renjin.ci.jenkins.tools.Maven;
-import org.renjin.ci.jenkins.tools.TestResultParser;
+import org.renjin.ci.jenkins.tools.*;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
@@ -128,12 +125,14 @@ public class PackageBuildExecutable implements Queue.Executable {
         /**
          * Archive the build log file permanently to Google Cloud Storage
          */
-        GoogleCloudStorage.archiveLogFile(buildContext, build);
+        LogArchiver logArchiver = GoogleCloudStorage.newArchiver(buildContext, build);
+
+        logArchiver.archiveLog();
 
         /**
          * Test results
          */
-        result.setTestResults(TestResultParser.parseResults(buildContext));
+        result.setTestResults(TestResultParser.parseResults(buildContext, logArchiver));
 
         /**
          * Report the build result to ci.renjin.org

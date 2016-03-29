@@ -5,12 +5,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 import com.googlecode.objectify.LoadResult;
-import org.renjin.ci.archive.BuildLogs;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -20,7 +20,6 @@ import java.util.*;
 public class PackageBuildPage {
   private final List<PackageTestResult> testResults;
   private PackageBuildId buildId;
-  private final String logText;
   private PackageBuild build;
   
   private LoadResult<PackageVersionDelta> deltas;
@@ -39,8 +38,6 @@ public class PackageBuildPage {
     Iterable<PackageBuild> buildQuery = PackageDatabase.getBuilds(buildId.getPackageVersionId()).iterable();
     Iterable<PackageTestResult> testsQuery = PackageDatabase.getTestResults(buildId);
     deltas = PackageDatabase.getDelta(buildId.getPackageVersionId());
-    
-    logText = BuildLogs.tryFetchLog(buildId);
     
     // Aggregate query results together
     this.testResults = Lists.newArrayList(testsQuery);
@@ -112,9 +109,9 @@ public class PackageBuildPage {
     }
     throw new WebApplicationException(Response.Status.NOT_FOUND);
   }
-
-  public String getLogText() {
-    return logText;
+  
+  public String getLogUrl() {
+    return StorageKeys.buildLogUrl(buildId);
   }
   
   public BuildOutcome getOutcome() {
@@ -206,7 +203,8 @@ public class PackageBuildPage {
     
     private PackageTestResult result;
     private boolean regression;
-
+    private String output;
+    
     public Test(PackageTestResult testResult) {
       this.result = testResult;
     }
@@ -227,8 +225,9 @@ public class PackageBuildPage {
       return regression;
     }
     
-    public String getOutput() {
-      return result.getOutput();
+    public String getLogUrl() {
+      return "https://storage.googleapis.com/" + StorageKeys.BUILD_LOG_BUCKET + "/" +
+          StorageKeys.testLog(getPackageVersionId(), getBuildNumber(), result.getName());
     }
   }
 }

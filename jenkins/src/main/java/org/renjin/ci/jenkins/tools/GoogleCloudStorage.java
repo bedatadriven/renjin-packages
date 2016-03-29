@@ -122,6 +122,9 @@ public class GoogleCloudStorage {
         }
     }
 
+    public static LogArchiver newArchiver(BuildContext context, PackageBuild build) throws IOException {
+        return new LogArchiver(context, build, newClient(context.getWorkerContext()));
+    }
 
     public static void archiveLogFile(BuildContext buildContext, PackageBuild build) throws IOException, InterruptedException {
 
@@ -145,5 +148,7 @@ public class GoogleCloudStorage {
    
         buildContext.log("Successfully archived log file");
     }
+
+
 
 }

@@ -44,7 +44,6 @@ public class PackageDatabase {
     register(PackageVersionDescription.class);
     register(PackageVersionDelta.class);
     register(PackageTestResult.class);
-    register(TestOutput.class);
 
     register(PackageExample.class);
     register(PackageExampleSource.class);

@@ -1,12 +1,10 @@
 package org.renjin.ci.packages;
 
-import com.google.appengine.api.datastore.Entity;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.NotFoundException;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.admin.migrate.MigrateTestOutput;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
@@ -15,7 +13,6 @@ import org.renjin.ci.model.*;
 import org.renjin.ci.packages.results.TestRegressionPage;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -66,20 +63,6 @@ public class PackageBuildResource {
  
     throw new UnsupportedOperationException();
   }
-  
-  @GET
-  @Path("migrateTests")
-  public Response migrateTests() {
-    MigrateTestOutput mapper = new MigrateTestOutput();
-    mapper.beginSlice();
-    Iterable<PackageTestResult> results = PackageDatabase.getTestResults(buildId);
-    for (PackageTestResult result : results) {
-      Entity entity = ObjectifyService.ofy().save().toEntity(result);
-      mapper.migrateEntity(entity);
-      
-    }
-    return Response.ok("Done").build();
-  }
 
   @POST
   @Consumes("application/json")
@@ -119,16 +102,17 @@ public class PackageBuildResource {
           build.setBlockingDependencies(buildResult.getBlockingDependencies());
           toSave.add(build);
 
+          List<PackageTestResult> testResults = Lists.newArrayList();
           if (buildResult.getTestResults() != null) {
             for (TestResult result : buildResult.getTestResults()) {
               PackageTestResult test = new PackageTestResult(buildKey, result.getName());
               test.setDuration(result.getDuration());
               test.setPassed(result.isPassed());
-              test.setOutput(result.getOutput());
               test.setRenjinVersion(build.getRenjinVersion());
               if (result.getDuration() > 0) {
                 test.setDuration(result.getDuration());
               }
+              testResults.add(test);
               toSave.add(test);
             }
           }
@@ -139,7 +123,7 @@ public class PackageBuildResource {
           maybeUpdateLastSuccessfulBuild(build);
 
           // Update the delta (regression/progression) flags for this build
-          DeltaBuilder.update(packageVersionId, Optional.of(build));
+          DeltaBuilder.update(packageVersionId, Optional.of(build), testResults);
 
         }
       }

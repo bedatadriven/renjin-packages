@@ -45,6 +45,7 @@ public class Pipelines {
   public static String forEach(ForEachPackageVersion function) {
     return PipelineServiceFactory.newPipelineService().startNewPipeline(newMapPackageVersionJob(function));
   }
+  
 
   public static <T> MapJob<Key, Void, Void> newMapPackageVersionJob(ForEachPackageVersion function) {
     MapSpecification<Key, Void, Void> spec =

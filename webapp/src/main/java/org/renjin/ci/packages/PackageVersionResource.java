@@ -146,7 +146,7 @@ public class PackageVersionResource {
   @Path("updateDeltas")
   @Produces(MediaType.TEXT_PLAIN)
   public String updateDeltas() {
-    DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent());
+    DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
     return "Done.";
   }
   

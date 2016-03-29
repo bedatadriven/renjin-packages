@@ -60,7 +60,7 @@ public class DeltaBuilder {
   }
 
 
-  public PackageVersionDelta build(Optional<PackageBuild> newBuild) {
+  public PackageVersionDelta build(Optional<PackageBuild> newBuild, List<PackageTestResult> newTestResults) {
 
     List<PackageBuild> builds = PackageDatabase.getFinishedBuilds(packageVersionId);
 
@@ -71,7 +71,9 @@ public class DeltaBuilder {
       TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(builds, newBuild);
 
       // Query the test results for these builds that we've included in the analysis
-      Iterable<PackageTestResult> testResults = PackageDatabase.getTestResults(buildMap.values());
+      Iterable<PackageTestResult> testResults = Iterables.concat(
+          PackageDatabase.getTestResults(buildMap.values()),
+          newTestResults);
 
       checkBuildHistory(buildMap);
       checkCompilationHistory(buildMap);
@@ -286,9 +288,9 @@ public class DeltaBuilder {
   }
 
 
-  public static void update(PackageVersionId packageVersionId, Optional<PackageBuild> newBuild) {
+  public static void update(PackageVersionId packageVersionId, Optional<PackageBuild> newBuild, List<PackageTestResult> testResults) {
     DeltaBuilder builder = new DeltaBuilder(packageVersionId);
-    PackageVersionDelta deltas = builder.build(newBuild);
+    PackageVersionDelta deltas = builder.build(newBuild, testResults);
 
     ObjectifyService.ofy().save().entity(deltas).now();
   }

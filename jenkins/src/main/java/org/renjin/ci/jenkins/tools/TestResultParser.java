@@ -18,7 +18,7 @@ import java.util.List;
 
 public class TestResultParser {
 
-  public static List<TestResult> parseResults(BuildContext context) throws IOException, InterruptedException {
+  public static List<TestResult> parseResults(BuildContext context, LogArchiver archiver) throws IOException, InterruptedException {
 
     List<TestResult> testResults = Lists.newArrayList();
 
@@ -28,7 +28,7 @@ public class TestResultParser {
       for (FilePath file : reportDir.list()) {
         if (file.getName().startsWith("TEST-") && file.getName().endsWith(".xml")) {
           try {
-            testResults.addAll(parseResult(file));
+            testResults.addAll(parseResult(file, archiver));
           } catch (InterruptedException e) {
             throw e;
           } catch(Exception e) {
@@ -42,12 +42,12 @@ public class TestResultParser {
     return testResults;
   }
 
-  public static List<TestResult> parseResult(FilePath xmlFile) throws IOException, InterruptedException {
+  public static List<TestResult> parseResult(FilePath xmlFile, LogArchiver archiver) throws IOException, InterruptedException {
 
     List<TestResult> results = new ArrayList<TestResult>();
 
     Document doc = parseXml(xmlFile);
-    String output = parseOutput(xmlFile);
+    archiveOutput(xmlFile, archiver);
     
     NodeList testCases = doc.getElementsByTagName("testcase");
     for(int i=0;i!=testCases.getLength();++i) {
@@ -62,7 +62,6 @@ public class TestResultParser {
       TestResult result = new TestResult();
       result.setName(formatName(className, name));
       result.setPassed(errors.getLength() == 0);
-      result.setOutput(output);
       
       if(!Strings.isNullOrEmpty(time)) {
         // Convert seconds to ms
@@ -75,13 +74,11 @@ public class TestResultParser {
     return results;
   }
 
-  private static String parseOutput(FilePath xmlFile) throws IOException, InterruptedException {
-    String fileName = xmlFile.getName().substring("TEST-".length(), xmlFile.getName().length() - ".xml".length());
-    FilePath outputFile = xmlFile.getParent().child(fileName + "-output.txt");
-    if(outputFile.exists()) {
-      return outputFile.readToString();
-    } else {
-      return "";
+  private static void archiveOutput(FilePath xmlFile, LogArchiver archiver) throws IOException, InterruptedException {
+    String testName = xmlFile.getName().substring("TEST-".length(), xmlFile.getName().length() - ".xml".length());
+    FilePath outputFile = xmlFile.getParent().child(testName + "-output.txt");
+    if(outputFile.exists() && outputFile.length() > 0) {
+      archiver.archiveTestOutput(testName, outputFile);
     }
   }
 

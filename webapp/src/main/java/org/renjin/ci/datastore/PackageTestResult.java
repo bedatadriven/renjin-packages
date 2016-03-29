@@ -26,9 +26,6 @@ public class PackageTestResult {
   @Index
   private boolean passed;
   
-  @Unindex
-  @IgnoreSave(IfNull.class)
-  private String output;
   
   @Unindex
   private Long duration;
@@ -88,14 +85,11 @@ public class PackageTestResult {
   public void setPassed(boolean passed) {
     this.passed = passed;
   }
-
+  
   public String getOutput() {
-    return output;
+    return "";
   }
 
-  public void setOutput(String output) {
-    this.output = output;
-  }
 
   public String getError() {
     return error;

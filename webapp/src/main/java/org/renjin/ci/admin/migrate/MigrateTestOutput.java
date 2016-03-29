@@ -1,11 +1,11 @@
 package org.renjin.ci.admin.migrate;
 
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.*;
 import com.google.appengine.tools.cloudstorage.GcsFileOptions;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
+import com.google.appengine.tools.mapreduce.DatastoreMutationPool;
 import com.google.common.base.Charsets;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
@@ -23,61 +23,68 @@ import static java.nio.channels.Channels.newOutputStream;
  */
 public class MigrateTestOutput extends ForEachEntity {
 
-  private static final Logger LOGGER = Logger.getLogger(MigrateTestOutput.class.getName());
-  
+  private transient Logger LOGGER;
+
   private transient GcsService client;
-  
+  private transient DatastoreService datastore;
+  private DatastoreMutationPool mutationPool;
+
+  @Override
+  public void beginSlice() {
+    client = GcsServiceFactory.createGcsService();
+    datastore = DatastoreServiceFactory.getDatastoreService();
+    mutationPool = DatastoreMutationPool.create();
+    
+    LOGGER = Logger.getLogger(MigrateTestOutput.class.getName());
+  }
 
   @Override
   public String getEntityKind() {
     return "PackageTestResult";
   }
 
-  @Override
-  public void beginSlice() {
-    client = GcsServiceFactory.createGcsService();
-  }
-  
-  @Override
   public void map(Entity entity) {
 
-    migrateEntity(entity);
-  }
-
-  public void migrateEntity(Entity entity) {
     Object outputObject = entity.getProperty("output");
 
-    if(outputObject instanceof String) {
-      String output = (String) outputObject;
-      if(output.length() > 0) {
-        
-        String testName = entity.getKey().getName();
+    String output = "";
+    if(outputObject instanceof Text) {
+      output = ((Text) outputObject).getValue();
+    } else if(outputObject instanceof String) {
+      output = (String) outputObject;
+    }
+    if(output.length() > 0) {
 
-        Key buildKey = entity.getParent();
-        long buildNumber = buildKey.getId();
-        
-        Key packageVersionKey = buildKey.getParent();
-        String version = packageVersionKey.getName();
-        
-        Key packageKey = packageVersionKey.getParent();
-        PackageId packageId = PackageId.valueOf(packageKey.getName());
-        PackageVersionId packageVersionId = new PackageVersionId(packageId, version);
-        
-        GcsFilename filename = new GcsFilename(StorageKeys.BUILD_LOG_BUCKET,
-            StorageKeys.testLog(packageVersionId, buildNumber, testName));
+      String testName = entity.getKey().getName();
 
-        GcsFileOptions options = new GcsFileOptions.Builder()
-            .mimeType("text/plain")
-            .acl("public-read").build();
+      Key buildKey = entity.getParent();
+      long buildNumber = buildKey.getId();
 
-        LOGGER.info("Writing to " + filename);
+      Key packageVersionKey = buildKey.getParent();
+      String version = packageVersionKey.getName();
 
-        try (OutputStream outputStream = newOutputStream(client.createOrReplace(filename, options))) {
-          outputStream.write(output.getBytes(Charsets.UTF_8));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+      Key packageKey = packageVersionKey.getParent();
+      PackageId packageId = PackageId.valueOf(packageKey.getName());
+      PackageVersionId packageVersionId = new PackageVersionId(packageId, version);
+
+      GcsFilename filename = new GcsFilename(StorageKeys.BUILD_LOG_BUCKET,
+          StorageKeys.testLog(packageVersionId, buildNumber, testName));
+
+      GcsFileOptions options = new GcsFileOptions.Builder()
+          .mimeType("text/plain")
+          .acl("public-read").build();
+
+      try (OutputStream outputStream = newOutputStream(client.createOrReplace(filename, options))) {
+        outputStream.write(output.getBytes(Charsets.UTF_8));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
+
+      LOGGER.info("Wrote to " + filename);
+
+      entity.removeProperty("output");
+
+      datastore.put(entity);
     }
   }
 

@@ -3,7 +3,7 @@
 
   <application>renjinci</application>
   <module>default</module>
-  <version>dev</version>
+  <version>4</version>
 
   <system-properties>
     <property name="java.util.logging.config.file" value="WEB-INF/logging.properties" />
@@ -11,7 +11,7 @@
 
   <use-google-connector-j>true</use-google-connector-j>
   <threadsafe>true</threadsafe>
-  <instance-class>F4</instance-class>
+  <instance-class>F1</instance-class>
   <warmup-requests-enabled>true</warmup-requests-enabled>
   
   <static-files>

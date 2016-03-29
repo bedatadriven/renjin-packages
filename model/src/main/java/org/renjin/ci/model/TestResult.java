@@ -5,7 +5,6 @@ package org.renjin.ci.model;
  */
 public class TestResult {
   private String name;
-  private String output;
   private boolean passed;
   private long duration;
 
@@ -16,15 +15,7 @@ public class TestResult {
   public void setName(String id) {
     this.name = id;
   }
-
-  public String getOutput() {
-    return output;
-  }
-
-  public void setOutput(String output) {
-    this.output = output;
-  }
-
+  
   public boolean isPassed() {
     return passed;
   }

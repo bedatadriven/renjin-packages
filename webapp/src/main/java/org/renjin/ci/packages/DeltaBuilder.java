@@ -78,9 +78,31 @@ public class DeltaBuilder {
       checkBuildHistory(buildMap);
       checkCompilationHistory(buildMap);
       checkTestResults(testResults);
+      
+      // Annotate the build deltas with last good build
+      for (BuildDelta delta : deltas.values()) {
+        PackageBuild previousSuccessfulBuild = findPreviousSuccessfulBuild(delta.getRenjinVersionId(), buildMap);
+        if(previousSuccessfulBuild != null) {
+          delta.setLastSuccessfulBuild(previousSuccessfulBuild.getBuildNumber());
+          delta.setLastSuccessfulRenjinVersion(previousSuccessfulBuild.getRenjinVersion());
+        }
+      }
     }
-
     return new PackageVersionDelta(packageVersionId, deltas.values());
+  }
+
+  private PackageBuild findPreviousSuccessfulBuild(RenjinVersionId renjinVersionId, TreeMap<RenjinVersionId, PackageBuild> buildMap) {
+    Map.Entry<RenjinVersionId, PackageBuild> previous = buildMap.lowerEntry(renjinVersionId);
+    if(previous == null) {
+      return null;
+    }
+    while(!previous.getValue().isSucceeded()) {
+      previous = buildMap.lowerEntry(previous.getKey());
+      if(previous == null) {
+        return null;
+      }
+    }
+    return previous.getValue();
   }
 
   private TreeMap<RenjinVersionId, PackageBuild> latestBuildPerRenjinVersion(List<PackageBuild> builds, Optional<PackageBuild> newBuild) {

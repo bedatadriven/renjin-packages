@@ -194,4 +194,11 @@ public class PackageVersionResource {
     
     return new Viewable("/packageSource.ftl", model);
   }
+  
+  @GET
+  @Produces("text/html")
+  @Path("compareDependencies")
+  public Viewable compareDependencies(@QueryParam("fromBuild") long fromBuild, @QueryParam("toBuild") long toBuild) {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -27,7 +27,7 @@ public class RenjinCiClient {
 
   private static final Logger LOGGER = Logger.getLogger(RenjinCiClient.class.getName());
 
-  public static final String ROOT_URL = "https://dev-dot-renjinci.appspot.com";
+  public static final String ROOT_URL = "https://renjinci.appspot.com";
 
 
   private static WebTarget rootTarget() {

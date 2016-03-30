@@ -45,8 +45,6 @@ pre.log {
     background: #dbfaf4;
 }
 
-.test-output {
-}
 
 .small-2 {
     width: 16.6%;
@@ -207,6 +205,8 @@ td.line {
 
 .lang-bar div {
     display: inline-block;
+    padding-left: 3px;
+    overflow: hidden;
 }
 
 .bar-r {

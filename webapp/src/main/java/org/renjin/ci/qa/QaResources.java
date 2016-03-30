@@ -9,11 +9,14 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.PackageBuildId;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -115,5 +118,33 @@ public class QaResources {
     model.put("page", page);
     
     return new Viewable("/testRegressions.ftl", model);
+  }
+  
+  @GET
+  @Path("stillFailing")
+  public String getMostRecentFailingBuild(@QueryParam("pv") String packageVersion, 
+                                          @QueryParam("renjinVersion") String renjinVersion,
+                                          @QueryParam("test") String testName) {
+    PackageVersionId packageVersionId = PackageVersionId.fromTriplet(packageVersion);
+    Iterable<PackageTestResult> results = PackageDatabase.getTestResults(packageVersionId);
+   
+    // The version of Renjin with the first failure
+    RenjinVersionId regressionVersion = RenjinVersionId.valueOf(renjinVersion);
+    
+    // The last version of Renjin still failing
+    RenjinVersionId lastFailingVersion = regressionVersion;
+    long lastFailingBuild = 0;
+    for (PackageTestResult result : results) {
+      if(result.getRenjinVersionId().compareTo(lastFailingVersion) > 0 && !result.isPassed()) {
+        lastFailingVersion = result.getRenjinVersionId();
+        lastFailingBuild = result.getPackageBuildNumber();
+      }
+    }
+    if(lastFailingVersion.equals(regressionVersion)) {
+      return "";
+    } else {
+      return "Still failing on " + lastFailingVersion + " <a href=\"" + 
+          new PackageBuildId(packageVersionId, lastFailingBuild).getPath() + "\">#" + lastFailingBuild + "</a>";
+    }
   }
 }

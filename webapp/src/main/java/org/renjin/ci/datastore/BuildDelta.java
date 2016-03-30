@@ -1,5 +1,6 @@
 package org.renjin.ci.datastore;
 
+import com.google.common.base.Optional;
 import org.renjin.ci.model.RenjinVersionId;
 
 import java.util.HashSet;
@@ -15,6 +16,9 @@ public class BuildDelta {
   private String renjinVersion;
   private int buildDelta = 0;
   private int compilationDelta = 0;
+  
+  private long lastSuccessfulBuild;
+  private String lastSuccessfulRenjinVersion;
   
   private Set<String> testRegressions = new HashSet<>();
   private Set<String> testProgressions = new HashSet<>();
@@ -68,4 +72,27 @@ public class BuildDelta {
     return RenjinVersionId.valueOf(renjinVersion);
   }
 
+  public long getLastSuccessfulBuild() {
+    return lastSuccessfulBuild;
+  }
+
+  public void setLastSuccessfulBuild(long lastSuccessfulBuild) {
+    this.lastSuccessfulBuild = lastSuccessfulBuild;
+  }
+
+  public String getLastSuccessfulRenjinVersion() {
+    return lastSuccessfulRenjinVersion;
+  }
+
+  public void setLastSuccessfulRenjinVersion(String lastSuccessfulRenjinVersion) {
+    this.lastSuccessfulRenjinVersion = lastSuccessfulRenjinVersion;
+  }
+
+  public Optional<RenjinVersionId> getLastSuccessfulRenjinVersionId() {
+    if(lastSuccessfulRenjinVersion == null) {
+      return Optional.absent();
+    } else {
+      return Optional.of(RenjinVersionId.valueOf(lastSuccessfulRenjinVersion));
+    }
+  }
 }

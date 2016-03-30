@@ -9,6 +9,8 @@ import org.renjin.ci.model.RenjinVersionId;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 
 @Path("/releases")
@@ -34,7 +36,7 @@ public class ReleasesResource {
 
         Key<RenjinRelease> releaseKey = Key.create(RenjinRelease.class, renjinVersion);
         RenjinRelease release = ObjectifyService.ofy().load().key(releaseKey).now();
-        if(release != null) {
+        if (release != null) {
           return Response.status(Response.Status.BAD_REQUEST)
               .entity("Release exists already")
               .build();
@@ -45,12 +47,32 @@ public class ReleasesResource {
         release.setBuildNumber(buildNumber);
         release.setDate(new Date());
         release.setRenjinCommit(Ref.create(Key.create(RenjinCommit.class, commitId)));
-        
+
         ObjectifyService.ofy().save().entity(release);
-        
+
         return Response.ok().build();
       }
     });
+  }
+  
+  @GET
+  @Path("compare")
+  public Response compareRenjinVersions(@QueryParam("from") String fromVersion, @QueryParam("to") String toVersion) 
+      throws URISyntaxException {
+    
+    RenjinVersionId from = RenjinVersionId.valueOf(fromVersion);
+    RenjinVersionId to = RenjinVersionId.valueOf(toVersion);
+
+    LoadResult<RenjinRelease> fromRelease = PackageDatabase.getRenjinRelease(from);
+    LoadResult<RenjinRelease> toRelease = PackageDatabase.getRenjinRelease(to);
+    
+    if(fromRelease.now() == null || toRelease.now() == null) {
+      return Response.status(503).entity("Not available").build();
+    }
+
+    return Response.temporaryRedirect(
+        new URI("https://github.com/bedatadriven/renjin/compare/" + 
+            fromRelease.now().getCommitSha1() + "..." + toRelease.now().getCommitSha1())).build();
   }
   
 }

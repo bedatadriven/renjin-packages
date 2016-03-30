@@ -123,8 +123,9 @@ public class PackageBuildResource {
           maybeUpdateLastSuccessfulBuild(build);
 
           // Update the delta (regression/progression) flags for this build
-          DeltaBuilder.update(packageVersionId, Optional.of(build), testResults);
-
+          if(build.getOutcome() != BuildOutcome.BLOCKED) {
+            DeltaBuilder.update(packageVersionId, Optional.of(build), testResults);
+          }
         }
       }
     });

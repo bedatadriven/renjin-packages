@@ -1,108 +1,70 @@
 package org.renjin.ci.qa;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import com.googlecode.objectify.Key;
 import org.renjin.ci.datastore.BuildDelta;
+import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.model.PackageBuildId;
-import org.renjin.ci.model.PackageId;
-import org.renjin.ci.model.RenjinVersionId;
 
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Page model showing all test regressions
  */
 public class TestRegressionPage {
 
-  public class Build {
-    private PackageBuildId id;
-    private RenjinVersionId renjinVersion;
-
-    public Build(PackageBuildId id, RenjinVersionId renjinVersion) {
-      this.id = id;
-      this.renjinVersion = renjinVersion;
-    }
-
-    public Build(PackageVersionDelta delta, BuildDelta buildDelta) {
-      this.id = new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber());
-      this.renjinVersion = buildDelta.getRenjinVersionId();
-    }
-
-    public PackageBuildId getId() {
-      return id;
-    }
-
-    public RenjinVersionId getRenjinVersion() {
-      return renjinVersion;
-    }
-  }
-  
-  public class TestRegression { 
-    private final String name;
-    private Build brokenBuild;
-    
-    public TestRegression(String name, Build brokenBuild) {
-      this.name = name;
-      this.brokenBuild = brokenBuild;
-    }
-    
-    public String getTestName() {
-      return name;
-    }
-
-    public Build getBrokenBuild() {
-      return brokenBuild;
-    }
-  }
-  
-  public class PackageResult {
-    private final PackageId id;
-    private List<TestRegression> regressions = Lists.newArrayList();
-    
-    public PackageResult(PackageId id) {
-      this.id = id;
-    }
-
-    public void add(TestRegression regression) {
-      regressions.add(regression);
-    }
-
-    public PackageId getId() {
-      return id;
-    }
-
-    public List<TestRegression> getRegressions() {
-      return regressions;
-    }
-  }
-
-  private final Map<PackageId, PackageResult> packages = Maps.newHashMap();
-
+  private List<TestRegression> regressions = Lists.newArrayList();
 
   public TestRegressionPage(Iterable<PackageVersionDelta> deltas) {
+    
+    Set<Key<PackageTestResult>> toFetch = Sets.newHashSet();
+    
     for (PackageVersionDelta delta : deltas) {
       for (BuildDelta buildDelta : delta.getBuilds()) {
-        Build brokenBuild = new Build(delta, buildDelta);
         for (String testName : buildDelta.getTestRegressions()) {
-          forPackage(delta.getPackageId()).add(new TestRegression(testName, brokenBuild));
+          TestRegression regression = new TestRegression();
+          regression.setPackageVersionId(delta.getPackageVersionId());
+          regression.setTestName(testName);
+          regression.setBrokenBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber()));
+          regression.setBrokenRenjinVersionId(buildDelta.getRenjinVersionId());
+          if(buildDelta.getLastSuccessfulBuild() != 0) {
+            regression.setLastGoodBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getLastSuccessfulBuild()));
+            regression.setLastGoodRenjinVersion(buildDelta.getLastSuccessfulRenjinVersionId().get());
+          }
+          regressions.add(regression);
         }
       }
     }
+    
+    Ordering<TestRegression> byPackage = Ordering.natural().onResultOf(new Function<TestRegression, Comparable>() {
+      @Nullable
+      @Override
+      public Comparable apply(TestRegression input) {
+        return input.getPackageVersionId().getPackageName();
+      }
+    });
+    
+    Ordering<TestRegression> byTest = Ordering.natural().onResultOf(new Function<TestRegression, Comparable>() {
+      @Nullable
+      @Override
+      public Comparable apply(@Nullable TestRegression input) {
+        return input.getTestName().toLowerCase();
+      }
+    });
+    
+    Collections.sort(regressions, Ordering.compound(Arrays.asList(byPackage, byTest)));
+    
   }
 
-  private PackageResult forPackage(PackageId packageId) {
-    PackageResult packageResult = packages.get(packageId);
-    if(packageResult == null) {
-      packageResult = new PackageResult(packageId);
-      packages.put(packageId, packageResult);
-    }
-    return packageResult;
+  public List<TestRegression> getRegressions() {
+    return regressions;
   }
-  
-  public List<PackageResult> getPackages() {
-    return Lists.newArrayList(packages.values());
-  }
-  
 }

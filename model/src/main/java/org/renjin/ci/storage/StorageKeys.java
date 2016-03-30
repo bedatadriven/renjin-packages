@@ -41,4 +41,9 @@ public class StorageKeys {
   public static String packageSource(PackageVersionId packageVersionId) {
     return packageSource(packageVersionId.getGroupId(), packageVersionId.getPackageName(), packageVersionId.getVersionString());
   }
+
+  public static String testLogUrl(PackageBuildId buildId, String testName) {
+    return  "http://storage.googleapis.com/renjinci-logs/" +
+        testLog(buildId.getPackageVersionId(), buildId.getBuildNumber(), testName);
+  }
 }

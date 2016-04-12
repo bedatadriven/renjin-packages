@@ -3,7 +3,7 @@
 
   <application>renjinci</application>
   <module>default</module>
-  <version>5</version>
+  <version>6</version>
 
   <system-properties>
     <property name="java.util.logging.config.file" value="WEB-INF/logging.properties" />

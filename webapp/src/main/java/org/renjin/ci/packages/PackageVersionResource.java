@@ -201,4 +201,15 @@ public class PackageVersionResource {
   public Viewable compareDependencies(@QueryParam("fromBuild") long fromBuild, @QueryParam("toBuild") long toBuild) {
     throw new UnsupportedOperationException();
   }
+  
+  @GET
+  @Produces("text/html")
+  @Path("test/{testName}/history")
+  public Viewable getTestHistory(@PathParam("testName") String testName) {
+    
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", new TestHistoryPage(packageVersion, testName));
+    
+    return new Viewable("/testHistory.ftl", model);
+  }
 }

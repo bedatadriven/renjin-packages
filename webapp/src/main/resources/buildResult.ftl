@@ -133,7 +133,9 @@
 
         <#list build.testResults as test>
             <h4 id="test-${test.name}">${test.name?html}</h4>
-            <p><#if test.passed>PASSED<#else>FAILED</#if> after ${test.duration} ms. <#if test.regression>[REGRESSION]</#if></p>
+            <p><#if test.passed>PASSED<#else>FAILED</#if> after ${test.duration} ms. 
+            <a href="${build.packageVersionId.path}/test/${test.name}/history#build-">History</a>
+            <#if test.regression>[REGRESSION]</#if></p>
             <pre class="log test-log" data-log-url="${test.logUrl}">Loading...</pre>
         </#list>
         </#if>

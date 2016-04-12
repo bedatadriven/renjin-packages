@@ -59,6 +59,10 @@ public class TestRegression {
   public RenjinVersionId getBrokenRenjinVersionId() {
     return brokenRenjinVersionId;
   }
+  
+  public String getTestHistoryPath() {
+    return packageVersionId.getPath() + "/test/" + testName + "/history#build-" + brokenBuild.getBuildNumber();
+  }
 
   public void setBrokenRenjinVersionId(RenjinVersionId brokenRenjinVersionId) {
     this.brokenRenjinVersionId = brokenRenjinVersionId;

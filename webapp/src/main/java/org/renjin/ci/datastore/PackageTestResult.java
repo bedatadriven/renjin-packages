@@ -6,6 +6,7 @@ import com.googlecode.objectify.condition.IfNull;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.storage.StorageKeys;
 
 @Entity
 public class PackageTestResult {
@@ -50,7 +51,7 @@ public class PackageTestResult {
     return getBuildId().getPackageVersionId();
   }
 
-  private PackageBuildId getBuildId() {
+  public PackageBuildId getBuildId() {
     return PackageBuild.idOf(buildKey);
   }
 
@@ -102,8 +103,13 @@ public class PackageTestResult {
   public Long getDuration() {
     return duration;
   }
-
+  
   public void setDuration(Long duration) {
     this.duration = duration;
+  }
+
+  public String getLogUrl() {
+    return "https://storage.googleapis.com/" + StorageKeys.BUILD_LOG_BUCKET + "/" +
+        StorageKeys.testLog(getPackageVersionId(), getPackageBuildNumber(), getName());
   }
 }

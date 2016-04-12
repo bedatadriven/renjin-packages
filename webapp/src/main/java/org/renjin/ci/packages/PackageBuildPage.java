@@ -226,8 +226,7 @@ public class PackageBuildPage {
     }
     
     public String getLogUrl() {
-      return "https://storage.googleapis.com/" + StorageKeys.BUILD_LOG_BUCKET + "/" +
-          StorageKeys.testLog(getPackageVersionId(), getBuildNumber(), result.getName());
+      return result.getLogUrl();
     }
   }
 }

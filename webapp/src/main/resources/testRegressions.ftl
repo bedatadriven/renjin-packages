@@ -35,6 +35,8 @@
     
         <h1>Test Regressions</h1>
 
+        <p>${page.regressions?size} unresolved test regressions.</p>
+    
         <#list page.regressions as regression>
         <h2>${regression.packageVersionId} ${regression.testName}</h2>
         
@@ -51,7 +53,8 @@
         </td>
         <td width="50%">
             Failed on ${regression.brokenRenjinVersionId} <a href="${regression.brokenBuild.path}">#${regression.brokenBuild.buildNumber}</a>
-            &#8226; <a href="${regression.comparePath}" target="_blank">Compare Renjin versions</a>
+            &#8226; <a href="${regression.testHistoryPath}">Test History</a>
+            &#8226;  <a href="${regression.comparePath}" target="_blank">Compare Renjin versions</a>
             <pre class="log log-failure" style="height: 200px;" data-log-url="${regression.brokenLogUrl}">
                 Loading...
             </pre>

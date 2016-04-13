@@ -27,10 +27,14 @@
                 <td>${version}</td>
                 <#list version.deltas as delta>
                 <td align="right">
-                    <#if delta.regressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-danger">-${delta.regressionCount}</a></#if>
+                    <#if delta.regressionCount != 0><a href="/qa/testRegressions?renjinVersion=${version}" class="btn btn-small btn-danger">
+                        -${delta.regressionCount}</a>
+                    </#if>
                 </td>
                 <td>
-                    <#if delta.progressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-success">+${delta.progressionCount}</a></#if>
+                    <#if delta.progressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-success">
+                        +${delta.progressionCount}</a>
+                    </#if>
                 </td>
                 </#list>
             </tr>

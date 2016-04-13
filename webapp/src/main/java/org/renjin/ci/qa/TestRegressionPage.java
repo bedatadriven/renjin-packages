@@ -1,12 +1,10 @@
 package org.renjin.ci.qa;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
-import com.googlecode.objectify.Key;
 import org.renjin.ci.datastore.BuildDelta;
-import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.model.PackageBuildId;
 
@@ -14,7 +12,6 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Page model showing all test regressions
@@ -23,23 +20,23 @@ public class TestRegressionPage {
 
   private List<TestRegression> regressions = Lists.newArrayList();
 
-  public TestRegressionPage(Iterable<PackageVersionDelta> deltas) {
-    
-    Set<Key<PackageTestResult>> toFetch = Sets.newHashSet();
+  public TestRegressionPage(Iterable<PackageVersionDelta> deltas, Predicate<PackageVersionDelta> filter) {
     
     for (PackageVersionDelta delta : deltas) {
-      for (BuildDelta buildDelta : delta.getBuilds()) {
-        for (String testName : buildDelta.getTestRegressions()) {
-          TestRegression regression = new TestRegression();
-          regression.setPackageVersionId(delta.getPackageVersionId());
-          regression.setTestName(testName);
-          regression.setBrokenBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber()));
-          regression.setBrokenRenjinVersionId(buildDelta.getRenjinVersionId());
-          if(buildDelta.getLastSuccessfulBuild() != 0) {
-            regression.setLastGoodBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getLastSuccessfulBuild()));
-            regression.setLastGoodRenjinVersion(buildDelta.getLastSuccessfulRenjinVersionId().get());
+      if(filter.apply(delta)) {
+        for (BuildDelta buildDelta : delta.getBuilds()) {
+          for (String testName : buildDelta.getTestRegressions()) {
+            TestRegression regression = new TestRegression();
+            regression.setPackageVersionId(delta.getPackageVersionId());
+            regression.setTestName(testName);
+            regression.setBrokenBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber()));
+            regression.setBrokenRenjinVersionId(buildDelta.getRenjinVersionId());
+            if (buildDelta.getLastSuccessfulBuild() != 0) {
+              regression.setLastGoodBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getLastSuccessfulBuild()));
+              regression.setLastGoodRenjinVersion(buildDelta.getLastSuccessfulRenjinVersionId().get());
+            }
+            regressions.add(regression);
           }
-          regressions.add(regression);
         }
       }
     }

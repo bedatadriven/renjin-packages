@@ -65,6 +65,14 @@ public class PackageVersionDelta {
     }
   }
 
+  public Set<String> getRenjinVersions() {
+    return renjinVersions;
+  }
+
+  public void setRenjinVersions(Set<String> renjinVersions) {
+    this.renjinVersions = renjinVersions;
+  }
+
   public String getPackageVersion() {
     return packageVersion;
   }

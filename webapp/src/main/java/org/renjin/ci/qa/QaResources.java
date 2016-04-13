@@ -1,7 +1,10 @@
 package org.renjin.ci.qa;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -106,13 +109,23 @@ public class QaResources {
   
   @GET
   @Path("testRegressions")
-  public Viewable getTestRegressions() {
+  public Viewable getTestRegressions(@QueryParam("renjinVersion") final String renjinVersion) {
 
     Iterable<PackageVersionDelta> deltas = ofy().load().type(PackageVersionDelta.class)
         .filter("regression", true)
         .iterable();
 
-    TestRegressionPage page = new TestRegressionPage(deltas);
+    Predicate<PackageVersionDelta> filter = Predicates.alwaysTrue();
+    if(!Strings.isNullOrEmpty(renjinVersion)) {
+      filter = new Predicate<PackageVersionDelta>() {
+        @Override
+        public boolean apply(PackageVersionDelta input) {
+          return input.getRenjinVersions().contains(renjinVersion);
+        }
+      };
+    }
+    
+    TestRegressionPage page = new TestRegressionPage(deltas, filter);
     
     Map<String, Object> model = new HashMap<>();
     model.put("page", page);

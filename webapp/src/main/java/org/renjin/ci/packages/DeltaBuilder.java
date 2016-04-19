@@ -129,6 +129,7 @@ public class DeltaBuilder {
     return buildMap;
   }
 
+
   private void checkCompilationHistory(TreeMap<RenjinVersionId, PackageBuild> buildMap) {
     // Consider only those builds where we have native compilation results and look for 
     // progressions/regressions among those.
@@ -162,7 +163,7 @@ public class DeltaBuilder {
     Multimap<String, PackageTestResult> tests = indexByName(testResults);
     for (String testName : tests.keySet()) {
 
-      Collection<PackageTestResult> results = tests.get(testName);
+      Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(tests.get(testName));
       
       // Identify regression or progression among the build selected for comparison
       TreeMap<RenjinVersionId, PackageTestResult> byVersion = resultsFromLatestBuilds(results);
@@ -176,6 +177,35 @@ public class DeltaBuilder {
         delta(progression.get()).getTestProgressions().add(progression.get().getName());
       }
     }
+  }
+
+  /**
+   * Exclude tests failures resulting from timeouts. It is more helpful at this stage to think of these results
+   * as both indeterminate and a result of some of the noise in the build process, as run time can be influenced
+   * by whatever else happens to be running on the build node at the time the test is executed. 
+   *
+   * We don't have a time out flag, unfortunately, so we have to make an assumption that any test that fails and
+   * runs for more than 25 seconds has been canceled as the result of a timeout.
+   */
+  private Collection<PackageTestResult> excludeTestsThatProbablyTimedOut(Collection<PackageTestResult> results) {
+    List<PackageTestResult> filtered = new ArrayList<>();
+    for (PackageTestResult result : results) {
+      if(!probablyTimedOut(result)) {
+        filtered.add(result);
+      }
+    }
+    return filtered;
+  }
+
+  private boolean probablyTimedOut(PackageTestResult result) {
+    if(!result.isPassed()) {
+      if(result.getDuration() != null) {
+        if(result.getDuration() > 25_000) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 

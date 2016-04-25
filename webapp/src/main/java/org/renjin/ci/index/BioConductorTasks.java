@@ -2,21 +2,21 @@ package org.renjin.ci.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.taskqueue.*;
 import com.google.common.base.Optional;
+import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.source.index.SourceIndexTasks;
 
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -34,9 +34,16 @@ public class BioConductorTasks {
      */
     @GET
     @Path("enqueue")
-    public Response updateBioConductor() {
+    public Response updateBioConductor(@QueryParam("release") String releaseNumber) {
+        
+        if(Strings.isNullOrEmpty(releaseNumber)) {
+            releaseNumber = "3.2";
+        }
+        
         Queue queue = QueueFactory.getQueue(BIO_CONDUCTOR_QUEUE);
-        TaskHandle taskHandle = queue.add(TaskOptions.Builder.withUrl("/tasks/index/bioc/fetchList"));
+        TaskHandle taskHandle = queue.add(TaskOptions.Builder
+            .withUrl("/tasks/index/bioc/fetchList")
+            .param("bioconductorRelease", releaseNumber));
 
         LOGGER.info("Enqueued task to check for updated BioConductor packages: " + taskHandle.getName());
 
@@ -49,10 +56,9 @@ public class BioConductorTasks {
      */
     @POST
     @Path("fetchList")
-    public Response fetchBioConductorUpdates() throws IOException {
-
-        String releaseNumber = "3.2";
-
+    public Response fetchBioConductorUpdates(
+        @FormParam("bioconductorRelease") String releaseNumber) throws IOException {
+        
         URL packageListUrl = new URL(String.format(
                 "http://master.bioconductor.org/packages/json/%s/bioc/packages.json", releaseNumber));
 
@@ -94,9 +100,18 @@ public class BioConductorTasks {
 
         PackageVersionId packageVersionId = new PackageVersionId("org.renjin.bioconductor", packageName, packageVersion);
 
-        Optional<PackageVersion> pv = PackageDatabase.getPackageVersion(packageVersionId);
-        if(pv.isPresent()) {
+        Optional<PackageVersion> result = PackageDatabase.getPackageVersion(packageVersionId);
+        if(result.isPresent()) {
             LOGGER.info(packageVersionId + " is already present");
+
+            PackageVersion pv = result.get();
+            if(!Objects.equals(pv.getBioconductorRelease(), bioConductorRelease)) {
+                LOGGER.severe("Updating bioConductor Release of " + packageVersion + " from " + 
+                    pv.getBioconductorRelease() + " to " + bioConductorRelease);          
+                
+                pv.setBioconductorRelease(bioConductorRelease);
+                ObjectifyService.ofy().save().entity(pv).now();
+            }
 
         } else {
             LOGGER.info("Ingesting new package version " + packageVersionId);

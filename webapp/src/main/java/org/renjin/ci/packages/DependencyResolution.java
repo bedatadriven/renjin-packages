@@ -16,6 +16,7 @@ import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
 import org.renjin.ci.model.PackageDescription.PackageDependency;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -101,13 +102,6 @@ public class DependencyResolution {
     }
     return map;
   }
-  
-  private QueryResultIterable<Package> queryCandidatePackages(String packageName) {
-    return ObjectifyService.ofy()
-        .load()
-        .type(Package.class)
-        .filter("name", packageName).iterable();
-  }
 
   private QueryResultIterable<PackageVersion> queryCandidateVersions(String packageName) {
 
@@ -135,6 +129,11 @@ public class DependencyResolution {
 
     // Create a predicate based on the explicit version range specified in the DESCRIPTION file
     Predicate<PackageVersion> versionRange = versionConstraint(declared);
+    
+    // For bioconductor packages, we limit bioconductor release
+    if(isBioconductorPackage()) {
+      versionRange = Predicates.and(versionRange, sameBioconductorRelease());
+    }
 
     Predicate<PackageVersion> publishedBefore = publishedBeforeConstraint();
 
@@ -164,6 +163,27 @@ public class DependencyResolution {
     
     // No beans...
     return new ResolvedDependency(declared.getName());
+  }
+
+  private boolean isBioconductorPackage() {
+    return packageVersion.getGroupId().equals("org.renjin.bioconductor");
+  }
+
+  private Predicate<? super PackageVersion> sameBioconductorRelease() {
+    return new Predicate<PackageVersion>() {
+      @Override
+      public boolean apply(@Nullable PackageVersion input) {
+        if(input.getGroupId().equals("org.renjin.bioconductor")) {
+          // Dependencies on other bioconductor packages MUST be from the same
+          // bioconductor release
+          return packageVersion.getBioconductorRelease().equals(input.getBioconductorRelease());
+        
+        } else {
+          // For CRAN packages, we use the normal constraints
+          return true;
+        }
+      }
+    };
   }
 
   private ResolvedDependency resolution(PackageVersion version) {

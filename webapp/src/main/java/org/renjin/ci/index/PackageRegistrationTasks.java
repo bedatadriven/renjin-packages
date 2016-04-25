@@ -1,5 +1,6 @@
 package org.renjin.ci.index;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
@@ -54,7 +55,17 @@ public class PackageRegistrationTasks {
     Queue queue = QueueFactory.getDefaultQueue();
     queue.add(TaskOptions.Builder.withUrl("/tasks/register").param("packageVersionId", packageVersionId.toString()));
   }
-  
+
+
+  public static void enqueueBioconductor(String bioconductorRelease, PackageVersionId packageVersionId) {
+    // Register the package version in our database
+    Queue queue = QueueFactory.getDefaultQueue();
+    queue.add(TaskOptions.Builder.withUrl("/tasks/register")
+        .param("bioconductorRelease", bioconductorRelease)
+        .param("packageVersionId", packageVersionId.toString()));
+  }
+
+
   public static void archiveSource(PackageVersionId packageVersionId, String sourceUrl) throws IOException {
 
     HTTPRequest request = new HTTPRequest(new URL(sourceUrl), HTTPMethod.GET, 
@@ -105,7 +116,8 @@ public class PackageRegistrationTasks {
    version of Renjin
    */
   @POST
-  public Response run(@FormParam("packageVersionId") String packageVersionId) throws Exception {
+  public Response run(@FormParam("packageVersionId") String packageVersionId, 
+                      @FormParam("bioconductorRelease") String bioconductorRelease) throws Exception {
 
     LOGGER.log(Level.INFO, "Registering new package version " + packageVersionId);
     
@@ -117,6 +129,10 @@ public class PackageRegistrationTasks {
 
       // create the new entity for this packageVersion
       PackageVersion packageVersion = register(pvid, descriptionSource);
+
+      if (!Strings.isNullOrEmpty(bioconductorRelease)) {
+        packageVersion.setBioconductorRelease(bioconductorRelease);
+      }
       
       // save the description in a seperate entity
       PackageVersionDescription description =

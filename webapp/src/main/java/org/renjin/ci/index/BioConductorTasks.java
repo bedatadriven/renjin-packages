@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.appengine.api.taskqueue.*;
 import com.google.common.base.Optional;
-import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
@@ -52,7 +51,7 @@ public class BioConductorTasks {
     @Path("fetchList")
     public Response fetchBioConductorUpdates() throws IOException {
 
-        String releaseNumber = "3.1";
+        String releaseNumber = "3.2";
 
         URL packageListUrl = new URL(String.format(
                 "http://master.bioconductor.org/packages/json/%s/bioc/packages.json", releaseNumber));
@@ -103,11 +102,9 @@ public class BioConductorTasks {
             LOGGER.info("Ingesting new package version " + packageVersionId);
 
             PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
-            PackageRegistrationTasks.enqueue(packageVersionId);
+            PackageRegistrationTasks.enqueueBioconductor(bioConductorRelease, packageVersionId);
             SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
 
-            // Extract examples for testing purposes
-            new ExamplesExtractor().map(PackageVersion.key(packageVersionId).getRaw());
         }
 
         return Response.ok().build();

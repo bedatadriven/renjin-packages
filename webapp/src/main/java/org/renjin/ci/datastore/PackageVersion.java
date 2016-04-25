@@ -49,6 +49,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @IgnoreSave(IfZero.class)
   private long lastSuccessfulBuildNumber;
   
+  @Index
+  private String bioconductorRelease;
+  
   
   @Unindex
   @IgnoreSave(IfZero.class)
@@ -158,7 +161,15 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public PackageBuildId getLastBuildId() {
     return new PackageBuildId(getPackageVersionId(), lastBuildNumber);
   }
-  
+
+  public String getBioconductorRelease() {
+    return bioconductorRelease;
+  }
+
+  public void setBioconductorRelease(String bioconductorRelease) {
+    this.bioconductorRelease = bioconductorRelease;
+  }
+
   public String getLastSuccessfulBuildVersion() {
     if(lastSuccessfulBuildNumber > 0) {
       return version + "-b" + lastSuccessfulBuildNumber;

@@ -5,4 +5,9 @@
     <description>Fetch new packages nightly</description>
     <schedule>every day 02:00</schedule>
   </cron>
+  <cron>
+    <url>/tasks/index/bioc/enqueue</url>
+    <description>Fetch new bioconductor packages nightly</description>
+    <schedule>every day 02:00</schedule>
+  </cron>
 </cronentries>

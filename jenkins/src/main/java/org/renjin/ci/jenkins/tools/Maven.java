@@ -73,7 +73,7 @@ public class Maven {
         arguments.add("-Dignore.gnur.compilation.failure=true");
       //  arguments.add("-DskipTests");
         arguments.add("-B"); // run in batch mode
-
+        arguments.add("-X");
         arguments.add("clean");
         arguments.add("deploy");
 

@@ -154,7 +154,8 @@ public class SourceIndexTasks {
     try {
       source = RParser.parseAllSource(new StringReader(sourceEntity.safe().getSource()));
     } catch (Exception e) {
-      LOGGER.log(Level.WARNING, "Failed to parse " + filename + " in " + packageVersionId);
+      LOGGER.log(Level.WARNING, "Failed to parse " + filename + " in " + packageVersionId +
+        ": " + e.getMessage());
       return Response.ok().build();
     }
 

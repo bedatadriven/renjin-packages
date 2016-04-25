@@ -41,6 +41,7 @@ public class AdminResources {
         UpdatePubDates.class,
         ReIndexPackage.class,
         MigrateTestOutput.class,
+        BiocRelease.class,
         LocCounter.class));
     
     return new Viewable("/admin.ftl", model);

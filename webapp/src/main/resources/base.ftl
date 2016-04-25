@@ -15,6 +15,7 @@
     <![endif]-->
     <link href="/assets/css/style.css" rel="stylesheet" media="all">
     <link href="/assets/css/style-ci.css" rel="stylesheet" media="all">
+    <link href="http://packages.renjin.org"
 </head>
 <body>
 <nav id="nav" role="navigation">

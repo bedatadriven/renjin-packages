@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.taskqueue.*;
 import com.google.common.base.Optional;
-import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
@@ -16,21 +15,20 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
  * Task end points for fetching and indexing bioconductor packages
  */
-public class BioConductorTasks {
+public class BioconductorTasks {
     
-    private static final Logger LOGGER = Logger.getLogger(BioConductorTasks.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BioconductorTasks.class.getName());
 
     private static final String BIO_CONDUCTOR_QUEUE = "bioConductor-fetch";
 
     
     /**
-     * Cron endpoint that enqueues the {@code fetchBioConductorUpdates()} task
+     * Cron endpoint that enqueues the {@code fetchBioconductorUpdates()} task
      */
     @GET
     @Path("enqueue")
@@ -45,7 +43,7 @@ public class BioConductorTasks {
             .withUrl("/tasks/index/bioc/fetchList")
             .param("bioconductorRelease", releaseNumber));
 
-        LOGGER.info("Enqueued task to check for updated BioConductor packages: " + taskHandle.getName());
+        LOGGER.info("Enqueued task to check for updated Bioconductor packages: " + taskHandle.getName());
 
         return Response.ok().build();
     }
@@ -56,7 +54,7 @@ public class BioConductorTasks {
      */
     @POST
     @Path("fetchList")
-    public Response fetchBioConductorUpdates(
+    public Response fetchBioconductorUpdates(
         @FormParam("bioconductorRelease") String releaseNumber) throws IOException {
         
         URL packageListUrl = new URL(String.format(
@@ -77,7 +75,7 @@ public class BioConductorTasks {
             String sourceUrl = "http://master.bioconductor.org/packages/release/bioc/" + packageNode.get("source.ver").asText();
 
             queue.add(TaskOptions.Builder.withUrl("/tasks/index/bioc/updatePackage")
-                    .param("bioConductorRelease", releaseNumber)
+                    .param("bioconductorRelease", releaseNumber)
                     .param("packageName", packageName)
                     .param("packageVersion", version)
                     .param("sourceUrl", sourceUrl)
@@ -90,7 +88,7 @@ public class BioConductorTasks {
     @POST
     @Path("updatePackage")
     public Response updatePackage(
-            @FormParam("bioConductorRelease") String bioConductorRelease,
+            @FormParam("bioconductorRelease") String bioconductorRelease,
             @FormParam("packageName") String packageName,
             @FormParam("packageVersion") String packageVersion,
             @FormParam("sourceUrl") String sourceUrl) throws IOException {
@@ -104,20 +102,11 @@ public class BioConductorTasks {
         if(result.isPresent()) {
             LOGGER.info(packageVersionId + " is already present");
 
-            PackageVersion pv = result.get();
-            if(!Objects.equals(pv.getBioconductorRelease(), bioConductorRelease)) {
-                LOGGER.severe("Updating bioConductor Release of " + packageVersion + " from " + 
-                    pv.getBioconductorRelease() + " to " + bioConductorRelease);          
-                
-                pv.setBioconductorRelease(bioConductorRelease);
-                ObjectifyService.ofy().save().entity(pv).now();
-            }
-
         } else {
             LOGGER.info("Ingesting new package version " + packageVersionId);
 
             PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
-            PackageRegistrationTasks.enqueueBioconductor(bioConductorRelease, packageVersionId);
+            PackageRegistrationTasks.enqueueBioconductor(bioconductorRelease, packageVersionId);
             SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
 
         }

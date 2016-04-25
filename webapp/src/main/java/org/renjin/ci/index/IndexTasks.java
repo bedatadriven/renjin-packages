@@ -26,8 +26,8 @@ public class IndexTasks {
   }
 
   @Path("bioc")
-  public BioConductorTasks getBioConductorTasks() {
-    return new BioConductorTasks();
+  public BioconductorTasks getBioConductorTasks() {
+    return new BioconductorTasks();
   }
 
   @GET

@@ -139,7 +139,7 @@ public class PackageBuildExecutable implements Queue.Executable {
          */
         RenjinCiClient.postResult(build, result);
 
-        listener.hyperlink("https://renjinci.appspot.com" + build.getId().getPath(), pvid + ": " + result.getOutcome());
+        listener.hyperlink("http://packages.renjin.org" + build.getId().getPath(), pvid + ": " + result.getOutcome());
         listener.getLogger().println();
 
         parentTask.getPackageNode().completed(build.getBuildNumber(), result.getOutcome());

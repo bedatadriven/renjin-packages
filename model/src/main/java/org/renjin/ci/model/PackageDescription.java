@@ -310,6 +310,10 @@ public class PackageDescription {
 	public Iterable<PackageDependency> getImports() {
 		return getPackageDependencyList("Imports");
 	}
+	
+	public Iterable<PackageDependency> getLinkingTo() {
+		return getPackageDependencyList("LinkingTo");
+	}
 
 	public Iterable<PackageDependency> getDepends() {
 		return getPackageDependencyList("Depends");

@@ -25,18 +25,42 @@
             <#list versions as version>
             <tr>
                 <td>${version}</td>
-                <#list version.deltas as delta>
+                
+                <#-- BUILD DELTAS -->
                 <td align="right">
-                    <#if delta.regressionCount != 0><a href="/qa/testRegressions?renjinVersion=${version}" class="btn btn-small btn-danger">
-                        -${delta.regressionCount}</a>
+                    <#if version.buildDeltas.regressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-danger">
+                        -${version.buildDeltas.regressionCount}</a>
                     </#if>
                 </td>
                 <td>
-                    <#if delta.progressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-success">
-                        +${delta.progressionCount}</a>
+                    <#if version.buildDeltas.progressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-success">
+                        +${version.buildDeltas.progressionCount}</a>
                     </#if>
                 </td>
-                </#list>
+                
+                <#-- COMPILATION DELTAS -->
+                <td align="right">
+                    <#if version.compilationDeltas.regressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-danger">
+                        -${version.compilationDeltas.regressionCount}</a>
+                    </#if>
+                </td>
+                <td>
+                    <#if version.compilationDeltas.progressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-success">
+                        +${version.compilationDeltas.progressionCount}</a>
+                    </#if>
+                </td>
+
+                <#-- TEST DELTAS -->
+                <td align="right">
+                    <#if version.testDeltas.regressionCount != 0><a href="/qa/testRegressions?renjinVersion=${version}" class="btn btn-small btn-danger">
+                        -${version.testDeltas.regressionCount}</a>
+                    </#if>
+                </td>
+                <td>
+                    <#if version.testDeltas.progressionCount != 0><a href="/qa/progress/${version}" class="btn btn-small btn-success">
+                        +${version.testDeltas.progressionCount}</a>
+                    </#if>
+                </td>
             </tr>
             </#list>
         </tbody>

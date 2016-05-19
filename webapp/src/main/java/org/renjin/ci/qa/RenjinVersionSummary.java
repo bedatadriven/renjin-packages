@@ -30,6 +30,18 @@ public class RenjinVersionSummary implements Comparable<RenjinVersionSummary> {
     return stats;
   }
   
+  public RenjinVersionStat getBuildDeltas() {
+    return getDeltas(DeltaType.BUILD);
+  }
+  
+  public RenjinVersionStat getCompilationDeltas() {
+    return getDeltas(DeltaType.COMPILATION);
+  }
+  
+  public RenjinVersionStat getTestDeltas() {
+    return getDeltas(DeltaType.TESTS);
+  }
+  
   public RenjinVersionStat getDeltas(DeltaType deltaType) {
     RenjinVersionStat stat = statMap.get(deltaType);
     if(stat == null) {

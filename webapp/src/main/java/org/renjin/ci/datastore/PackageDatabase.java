@@ -4,7 +4,6 @@ import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -315,16 +314,20 @@ public class PackageDatabase {
     Iterable<PackageTestResult> testResults = ObjectifyService.ofy().load()
         .type(PackageTestResult.class)
         .ancestor(PackageVersion.key(packageVersionId))
+        .filter("name", testName)
         .iterable();
     
-    return Iterables.filter(testResults, new Predicate<PackageTestResult>() {
-      @Override
-      public boolean apply(PackageTestResult input) {
-        return input.getName().equals(testName);
-      }
+    return testResults;
+  }
 
-      ;
-    });
+  public static Iterable<PackageTestResult> getTestResults(PackageId packageId, final String testName) {
+    Iterable<PackageTestResult> testResults = ObjectifyService.ofy().load()
+        .type(PackageTestResult.class)
+        .ancestor(Package.key(packageId))
+        .filter("name", testName)
+        .iterable();
+
+    return testResults;
   }
   
   public static RenjinVersionId getLatestRelease() {

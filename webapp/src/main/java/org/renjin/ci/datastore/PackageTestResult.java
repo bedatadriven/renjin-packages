@@ -1,5 +1,6 @@
 package org.renjin.ci.datastore;
 
+import com.google.appengine.api.datastore.KeyFactory;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfFalse;
@@ -20,8 +21,11 @@ public class PackageTestResult {
    * The name of the test
    */
   @Id
+  private String id;
+  
+  @Index
   private String name;
-
+  
   @Unindex
   private String renjinVersion;
   
@@ -53,9 +57,18 @@ public class PackageTestResult {
   
   public PackageTestResult(Key<PackageBuild> buildKey, String name) {
     this.buildKey = buildKey;
+    this.id = name;
     this.name = name;
   }
 
+  public Key<PackageTestResult> getKey() {
+    return Key.create(buildKey, PackageTestResult.class, name);
+  }
+  
+  public String getWebSafeKey() {
+    return KeyFactory.keyToString(getKey().getRaw());
+  }
+  
   public Key<PackageBuild> getPackageBuildKey() {
     return buildKey;
   }
@@ -73,6 +86,7 @@ public class PackageTestResult {
   }
 
   public void setName(String name) {
+    this.id = name;
     this.name = name;
   }
 
@@ -143,5 +157,9 @@ public class PackageTestResult {
 
   public void setManualFailReason(String manualFailReason) {
     this.manualFailReason = manualFailReason;
+  }
+  
+  public String getMarkFormPath() {
+    return "/qa/markTestResults?packageId=" + getPackageVersionId().getPackageId() + "&testName=" + name;
   }
 }

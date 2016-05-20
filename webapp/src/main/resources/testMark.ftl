@@ -1,8 +1,8 @@
-<#-- @ftlvariable name="page" type="org.renjin.ci.packages.TestHistoryPage" -->
+<#-- @ftlvariable name="page" type="org.renjin.ci.qa.MarkTestsPage" -->
 
 <#include "base.ftl">
 
-<@scaffolding title="${page.packageVersion.packageName} ${page.packageVersion.version} ${page.testName} History">
+<@scaffolding title="Mark Tests as Failing">
 
 <style type="text/css" xmlns="http://www.w3.org/1999/html">
     .log-failure {
@@ -17,23 +17,21 @@
 <div class="grid">
     <div class="medium-12 grid-item">
 
-        <h1><a href="${page.packageVersion.path}">${page.packageVersion.packageName} ${page.packageVersion.version.toString()}</a></h1>
+        <h1 id="summary">Mark Tests as Failing</h1>
 
-        <h2>${page.testName} History</h2>
+        <h2><a href="${page.packageId.path}">${page.packageId.packageName} ${page.testName}</a></h2>
 
-        <h3 id="summary">Mark Tests as Failed</h3>
+        <form method="post" action="updateTestResults">
 
-        <form method="post">
-
-            <p>Reason to mark this test as failed:</p>
-            <div><input name="reason" type="text" width="100%"></div>
+            <p>Reason to mark this test as failed: <input name="reason" type="text" size="100"></p>
 
             <ul>
-                <#list page.results?sort_by("buildNumber") as result>
+                <#list page.results?sort_by("packageVersionId") as result>
                     <#if result.passed>
 
-                        <li><input type="checkbox" name="b${result.buildNumber}" value="true" cbecked>${fresult.buildNumber}<br>
-                            <pre class="log test-log log-failure" data-log-url="${result.logUrl}">Loading...</pre>
+                        <li><label><input type="checkbox" name="result-${result.webSafeKey}" value="true" checked> 
+                            ${page.packageId.packageName} ${result.buildId.packageVersionId.versionString} Build #${result.packageBuildNumber}</label><br>
+                            <pre class="log test-log" data-log-url="${result.logUrl}">Loading...</pre>
                         </li>
                     </#if>
                 </#list>

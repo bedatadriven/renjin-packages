@@ -48,10 +48,10 @@
                 <tr>
                     <th>${renjinVersion}</th>
                     <td>
-                        <#list page.getResults(renjinVersion)?sort_by("buildNumber") as result>
-                        <a href="#build-${result.buildNumber}"
+                        <#list page.getResults(renjinVersion)?sort_by("packageBuildNumber") as result>
+                        <a href="#build-${result.packageBuildNumber}"
                            style="width:2.5em"
-                           class="btn <#if result.passed>btn-success<#else>btn-danger</#if>">#${result.buildNumber}</a>
+                           class="btn <#if result.passed>btn-success<#else>btn-danger</#if>">#${result.packageBuildNumber}</a>
                         </#list>
                     </td>
                 </tr>
@@ -59,43 +59,23 @@
             </tbody>
         </table>
         
-        <#--
-        <#if page.dependencies??>
-        <h3>Summary by Dependency Version</h3>    
-        <table>
-            <thead>
-            <tr>
-                <th>Build</th>
-                <th>Renjin Version</th>
-                <#list page.dependencies?sort as dependency>
-                <th align="left">${dependency.packageName}</th>    
-                </#list>
-            </tr>
-            </thead>
-            <tbody>
-            <#list page.results?sort_by("buildNumber") as result>
-            <tr class="<#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>">
-                <td>#${result.buildNumber}</td>
-                <td>${result.renjinVersion}</td>
-                <#list page.dependencies?sort as dependency>
-                    <th align="left">${result.getDependencyVersion(dependency)}</th>
-                </#list>
-            </tr>
-            </#list>
-            </tbody>
-        </table>
-        </#if>
-        -->
+        <p><a href="${page.packageVersion.path}/buildDependencyMatrix?test=${page.testName}">View Build-Dependency Matrix</a></p>
         
-        <#list page.results?sort_by("buildNumber") as result>
-            <h3 id="build-${result.buildNumber}">Renjin ${result.renjinVersion} </h3>
-            <p>${result.status} after ${result.duration} ms during
-                <a href="${result.buildId.path}">Build #${result.buildNumber}</a>.
+        <#list page.results?sort_by("packageBuildNumber") as result>
+            <h3 id="build-${result.packageBuildNumber}">Renjin ${result.renjinVersion} </h3>
+            <p>
+            <#if result.manualFail>
+                MARKED AS FAILED: ${result.manualFailReason}    
+            <#elseif result.passed>
+                PASSED
+            <#else>
+                FAILED
+            </#if> after ${result.duration} ms during
+                <a href="${result.buildId.path}">Build #${result.packageBuildNumber}</a>.
                 <#if result.passed>
-                    <a href="${result.markUrl}">Mark as failed.</a>
+                    <a href="${result.markFormPath}">Mark as failed.</a>
                 </#if>
             </p>
-        
             <pre class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}">Loading...</pre>
         </#list>
     </div>

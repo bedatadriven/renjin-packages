@@ -71,6 +71,8 @@
         </ul>
         </#if>
         
+        <p><a href="${build.packageVersionId.path}/buildDependencyMatrix">View Build Dependency Matrix</a></p>
+        
         <h3>History</h3>
         
         <table class="build-history">

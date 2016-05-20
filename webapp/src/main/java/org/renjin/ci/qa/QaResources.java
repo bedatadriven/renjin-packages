@@ -2,24 +2,27 @@ package org.renjin.ci.qa;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.*;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageBuildId;
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.packages.DeltaBuilder;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -159,5 +162,86 @@ public class QaResources {
       return "Still failing on " + lastFailingVersion + " <a href=\"" + 
           new PackageBuildId(packageVersionId, lastFailingBuild).getPath() + "\">#" + lastFailingBuild + "</a>";
     }
+  }
+
+
+  @GET
+  @Produces("text/html")
+  @Path("markTestResults")
+  public Viewable getMarkTestForm(@Context UriInfo uriInfo, @QueryParam("packageId") String packageId, @QueryParam("testName") String testName)
+      throws URISyntaxException {
+
+    UserService userService = UserServiceFactory.getUserService();
+    if(!userService.isUserLoggedIn()) {
+      String loginUrl = userService.createLoginURL(uriInfo.getRequestUri().toString());
+      throw new WebApplicationException(Response.seeOther(new URI(loginUrl)).build());
+    }
+    if(!userService.isUserAdmin()) {
+      throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).build());
+    }
+
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", new MarkTestsPage(PackageId.valueOf(packageId), testName));
+
+    return new Viewable("/testMark.ftl", model);
+  }
+
+  @POST
+  @Path("updateTestResults")
+  @Consumes("application/x-www-form-urlencoded")
+  public Response post(@Context UriInfo uriInfo, MultivaluedMap<String, String> params) {
+
+    UserService userService = UserServiceFactory.getUserService();
+    if(!userService.isUserAdmin()) {
+      return Response.status(Response.Status.FORBIDDEN).build();
+    }
+
+    final String reason = params.getFirst("reason");
+    if(com.google.common.base.Strings.isNullOrEmpty(reason)) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Must provide a reason").build();
+    }
+
+    Set<PackageVersionId> packageVersionIds = Sets.newHashSet();
+    
+    final List<Key<PackageTestResult>> toUpdate = Lists.newArrayList();
+    for (String paramName : params.keySet()) {
+      if(paramName.startsWith("result-") && "true".equals(params.getFirst(paramName))) {
+        String webSafeKey = paramName.substring("result-".length());
+        Key<PackageTestResult> resultKey = Key.create(webSafeKey);
+        Key<PackageBuild> buildKey = resultKey.getParent();
+        Key<PackageVersion> versionKey = buildKey.getParent();
+        
+        packageVersionIds.add(PackageVersion.idOf(versionKey));
+        toUpdate.add(resultKey);
+      }
+    }
+
+    // Update the entities
+    ObjectifyService.ofy().transact(new VoidWork() {
+      @Override
+      public void vrun() {
+        Collection<PackageTestResult> results = ObjectifyService.ofy().load().keys(toUpdate).values();
+        for (PackageTestResult result : results) {
+          result.setPassed(false);
+          result.setManualFail(true);
+          result.setManualFailReason(reason);
+        }
+        ObjectifyService.ofy().save().entities(results);
+      }
+    });
+
+    // Recalculate deltas
+    for (PackageVersionId packageVersionId : packageVersionIds) {
+      DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
+    }
+
+    // Redirect to history page
+    UriBuilder historyUri = uriInfo.getBaseUriBuilder()
+        .path("qa")
+        .path("testRegressions");
+
+    return Response.seeOther(historyUri.build()).build();
+
   }
 }

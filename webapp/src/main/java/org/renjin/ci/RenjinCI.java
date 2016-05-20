@@ -17,7 +17,6 @@ import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.packages.PackageListResource;
 import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.RootResource;
-import org.renjin.ci.packages.TestResources;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.ReleasesResource;
 import org.renjin.ci.source.SourceResources;
@@ -53,7 +52,6 @@ public class RenjinCI extends Application {
     classes.add(WebHooks.class);
     classes.add(QaResources.class);
     classes.add(BenchmarksResource.class);
-    classes.add(TestResources.class);
     classes.add(SourceTasks.class);
     classes.add(SourceResources.class);
     

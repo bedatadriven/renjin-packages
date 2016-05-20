@@ -7,7 +7,7 @@ public class TestResult {
   private String name;
   private boolean passed;
   private long duration;
-
+  
   public String getName() {
     return name;
   }

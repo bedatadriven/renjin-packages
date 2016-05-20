@@ -2,6 +2,7 @@ package org.renjin.ci.datastore;
 
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
+import com.googlecode.objectify.condition.IfFalse;
 import com.googlecode.objectify.condition.IfNull;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
@@ -27,7 +28,6 @@ public class PackageTestResult {
   @Index
   private boolean passed;
   
-  
   @Unindex
   private Long duration;
   
@@ -35,9 +35,22 @@ public class PackageTestResult {
   @IgnoreSave(IfNull.class)
   private String error;
 
+  
+  @Index
+  @IgnoreSave(IfFalse.class)
+  private boolean manualFail;
+  
+  @Unindex
+  private String manualFailReason;
+  
+  
   public PackageTestResult() {
   }
 
+  public static Key<PackageTestResult> key(PackageBuildId buildId, String testName) {
+    return Key.create(PackageBuild.key(buildId), PackageTestResult.class, testName);
+  }
+  
   public PackageTestResult(Key<PackageBuild> buildKey, String name) {
     this.buildKey = buildKey;
     this.name = name;
@@ -111,5 +124,24 @@ public class PackageTestResult {
   public String getLogUrl() {
     return "https://storage.googleapis.com/" + StorageKeys.BUILD_LOG_BUCKET + "/" +
         StorageKeys.testLog(getPackageVersionId(), getPackageBuildNumber(), getName());
+  }
+
+  /**
+   * @return true if this test result has been manually marked as a failure.
+   */
+  public boolean isManualFail() {
+    return manualFail;
+  }
+
+  public void setManualFail(boolean manualFail) {
+    this.manualFail = manualFail;
+  }
+
+  public String getManualFailReason() {
+    return manualFailReason;
+  }
+
+  public void setManualFailReason(String manualFailReason) {
+    this.manualFailReason = manualFailReason;
   }
 }

@@ -215,6 +215,10 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public String getPath() {
     return getPackageVersionId().getPath();
   }
+  
+  public String getJenkinsBuildUrl() {
+    return getPackageVersionId().getJenkinsBuildPath();
+  }
 
   @OnLoad
   public void onLoad() {

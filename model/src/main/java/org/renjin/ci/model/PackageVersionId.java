@@ -71,6 +71,10 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     return "/package/" + getGroupId() + "/" + getPackageName() + "/" + getVersionString();
   }
   
+  public String getJenkinsBuildPath() {
+    return "http://build.renjin.org/job/Packages/job/Build-Package/parambuild?PACKAGE_VERSION_ID=" + toString();
+  }
+  
   @JsonValue
   @Override
   public String toString() {

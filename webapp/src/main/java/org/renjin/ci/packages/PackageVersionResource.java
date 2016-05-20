@@ -1,23 +1,24 @@
 
 package org.renjin.ci.packages;
 
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.googlecode.objectify.Key;
-import com.googlecode.objectify.LoadResult;
-import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.Work;
+import com.googlecode.objectify.*;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.TestCase;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -211,5 +212,79 @@ public class PackageVersionResource {
     model.put("page", new TestHistoryPage(packageVersion, testName));
     
     return new Viewable("/testHistory.ftl", model);
+  }
+  
+  @GET
+  @Produces("text/html")
+  @Path("test/{testName}/mark")
+  public Viewable getMarkTestForm(@Context UriInfo uriInfo, @PathParam("testName") String testName)
+      throws URISyntaxException {
+
+    UserService userService = UserServiceFactory.getUserService();
+    if(!userService.isUserLoggedIn()) {
+      String loginUrl = userService.createLoginURL(uriInfo.getRequestUri().toString());
+      throw new WebApplicationException(Response.seeOther(new URI(loginUrl)).build());
+    }
+    if(!userService.isUserAdmin()) {
+      throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).build());
+    }
+    
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", new TestHistoryPage(packageVersion, testName));
+
+    return new Viewable("/testMark.ftl", model);
+  }
+  
+  @POST
+  @Path("test/{testName}/mark")
+  @Consumes("application/x-www-form-urlencoded")
+  public Response post(@PathParam("testName") String testName, @Context UriInfo uriInfo,
+                       MultivaluedMap<String, String> params) {
+
+    UserService userService = UserServiceFactory.getUserService();
+    if(!userService.isUserAdmin()) {
+      return Response.status(Response.Status.FORBIDDEN).build();
+    }
+
+    final String reason = params.getFirst("reason");
+    if(Strings.isNullOrEmpty(reason)) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Must provide a reason").build();
+    }
+
+    final List<Key<PackageTestResult>> toUpdate = Lists.newArrayList();
+    for (String paramNames : params.keySet()) {
+      if(paramNames.startsWith("b")) {
+        long buildNumber = Long.parseLong(paramNames.substring(1));
+        PackageBuildId buildId = new PackageBuildId(packageVersionId, buildNumber);
+        toUpdate.add(PackageTestResult.key(buildId, testName));
+      }
+    }
+    
+    // Update the entities
+    ObjectifyService.ofy().transact(new VoidWork() {
+      @Override
+      public void vrun() {
+        Collection<PackageTestResult> results = ObjectifyService.ofy().load().keys(toUpdate).values();
+        for (PackageTestResult result : results) {
+          result.setPassed(false);
+          result.setManualFail(true);
+          result.setManualFailReason(reason);
+        }
+        ObjectifyService.ofy().save().entities(results);
+      }
+    });
+    
+    // Recalculate deltas
+    DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
+
+    // Redirect to history page
+    UriBuilder historyUri = uriInfo.getBaseUriBuilder()
+        .path(packageVersion.getPath())
+        .path("test")
+        .path(testName)
+        .path("history");
+
+    return Response.seeOther(historyUri.build()).build();
+
   }
 }

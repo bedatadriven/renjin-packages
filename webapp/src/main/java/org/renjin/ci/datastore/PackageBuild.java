@@ -3,6 +3,7 @@ package org.renjin.ci.datastore;
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
@@ -274,6 +275,14 @@ public class PackageBuild {
     } else {
       return Collections.emptyList();
     }
+  }
+  
+  public List<PackageVersionId> getResolvedDependencyIds() {
+    List<PackageVersionId> ids = Lists.newArrayList();
+    for (String dependency : getResolvedDependencies()) {
+      ids.add(PackageVersionId.fromTriplet(dependency));
+    }
+    return ids;
   }
   
   public void setResolvedDependencies(List<String> resolvedDependencies) {

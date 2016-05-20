@@ -180,7 +180,8 @@ public class DeltaBuilder {
   }
 
   /**
-   * Exclude tests failures resulting from timeouts. It is more helpful at this stage to think of these results
+   * Exclude tests failures resulting from timeouts, or tests that only passed because no timeout was enforced.
+   * It is more helpful at this stage to think of these results
    * as both indeterminate and a result of some of the noise in the build process, as run time can be influenced
    * by whatever else happens to be running on the build node at the time the test is executed. 
    *
@@ -198,12 +199,12 @@ public class DeltaBuilder {
   }
 
   private boolean probablyTimedOut(PackageTestResult result) {
-    if(!result.isPassed()) {
-      if(result.getDuration() != null) {
-        if(result.getDuration() > 25_000) {
-          return true;
-        }
-      }
+    // Exclude tests that have no duration result
+    if(result.getDuration() == null || result.getDuration() == 0) {
+      return true;
+    }
+    if(result.getDuration() > 25_000) {
+      return true;
     }
     return false;
   }

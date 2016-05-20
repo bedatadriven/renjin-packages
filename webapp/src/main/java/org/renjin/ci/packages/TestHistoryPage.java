@@ -20,6 +20,8 @@ public class TestHistoryPage {
 
   private final Multimap<RenjinVersionId, PackageTestResult> resultMap = HashMultimap.create();
 
+  private final boolean reliable;
+  
   public TestHistoryPage(PackageVersion packageVersion, String testName) {
     this.packageVersion = packageVersion;
     this.testName = testName;
@@ -29,6 +31,8 @@ public class TestHistoryPage {
     for (PackageTestResult result : results) {
       resultMap.put(result.getRenjinVersionId(), result);
     }
+    
+    reliable = DeltaBuilder.reliableTest(results);
   }
 
   public String getTestName() {
@@ -49,5 +53,9 @@ public class TestHistoryPage {
   
   public Collection<PackageTestResult> getResults() {
     return resultMap.values();
+  }
+
+  public boolean isReliable() {
+    return reliable;
   }
 }

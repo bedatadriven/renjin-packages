@@ -60,6 +60,11 @@
         </table>
         
         <p><a href="${page.packageVersion.path}/buildDependencyMatrix?test=${page.testName}">View Build-Dependency Matrix</a></p>
+
+        <#if !page.reliable>
+        <p><strong>Note:</strong> this test has been flagged as unreliable due to inconsistent results when run against
+        the same version of Renjin. Failures will not be counted as regressions.</p>
+        </#if>
         
         <#list page.results?sort_by("packageBuildNumber") as result>
             <h3 id="build-${result.packageBuildNumber}">Renjin ${result.renjinVersion} </h3>

@@ -33,7 +33,7 @@ import static org.renjin.ci.datastore.PackageBuild.*;
 public class DeltaBuilder {
 
   private static final Logger LOGGER = Logger.getLogger(DeltaBuilder.class.getName());
-  
+
   private final PackageVersionId packageVersionId;
   private final Map<Long, BuildDelta> deltas = new HashMap<>();
 
@@ -70,15 +70,15 @@ public class DeltaBuilder {
       // If there have been multiple builds for a given Renjin Version, use the last build
       TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(builds, newBuild);
 
-      // Query the test results for these builds that we've included in the analysis
+      // Query the test results for all builds - we need the data to assess reliability
       Iterable<PackageTestResult> testResults = Iterables.concat(
-          PackageDatabase.getTestResults(buildMap.values()),
+          PackageDatabase.getTestResults(packageVersionId),
           newTestResults);
 
       checkBuildHistory(buildMap);
       checkCompilationHistory(buildMap);
-      checkTestResults(testResults);
-      
+      checkTestResults(buildMap, testResults);
+
       // Annotate the build deltas with last good build
       for (BuildDelta delta : deltas.values()) {
         PackageBuild previousSuccessfulBuild = findPreviousSuccessfulBuild(delta.getRenjinVersionId(), buildMap);
@@ -118,14 +118,14 @@ public class DeltaBuilder {
         }
       }
     }
-    
+
     // If we have just updated a new build within the same transaction, it may not yet be
     // returned by getFinishedBuilds(), or may be out of date. 
     // Ensure that we use the updated version here
     if(newBuild.isPresent()) {
       buildMap.put(newBuild.get().getRenjinVersionId(), newBuild.get());
     }
-    
+
     return buildMap;
   }
 
@@ -157,26 +157,57 @@ public class DeltaBuilder {
   }
 
 
-  private void checkTestResults(Iterable<PackageTestResult> testResults) {
-    
+  private void checkTestResults(TreeMap<RenjinVersionId, PackageBuild> buildMap, Iterable<PackageTestResult> testResults) {
+
     // Now do the same for tests, one test at a time
     Multimap<String, PackageTestResult> tests = indexByName(testResults);
     for (String testName : tests.keySet()) {
 
       Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(tests.get(testName));
-      
-      // Identify regression or progression among the build selected for comparison
-      TreeMap<RenjinVersionId, PackageTestResult> byVersion = resultsFromLatestBuilds(results);
 
+      // Identify regression or progression among the build selected for comparison
+      TreeMap<RenjinVersionId, PackageTestResult> byVersion = resultsFromLatestBuilds(buildMap, results);
+      
       Optional<PackageTestResult> regression = findRegression(byVersion.values(), testSucceeded());
       if(regression.isPresent()) {
-        delta(regression.get()).getTestRegressions().add(regression.get().getName());
+        if(reliableTest(results)) {
+          delta(regression.get()).getTestRegressions().add(regression.get().getName());
+        }
       }
       Optional<PackageTestResult> progression = findProgression(byVersion.values(), testSucceeded());
       if(progression.isPresent()) {
         delta(progression.get()).getTestProgressions().add(progression.get().getName());
       }
     }
+  }
+
+  /**
+   * Check to see if this test is erratic. For tests or examples that use random numbers, it is possible for 
+   * tests to randomly fail, either because they are poorly written examples/tests that would fail under GNU R,
+   * or because there is a bug in Renjin that is triggered as a function of a random number. In either case,
+   * we don't want to mark it as a regression because it is likely a false signal.
+   */
+  public static boolean reliableTest(Iterable<PackageTestResult> testResults) {
+    Set<RenjinVersionId> passed = Sets.newHashSet();
+    Set<RenjinVersionId> failed = Sets.newHashSet();
+    
+    // Make a list of Renjin versions in which this test has passed,
+    // and versions in which it has failed.
+    for (PackageTestResult testResult : testResults) {
+      if(testResult.isPassed()) {
+        passed.add(testResult.getRenjinVersionId());
+      } else {
+        failed.add(testResult.getRenjinVersionId());
+      }
+    }
+
+    // Count how many Renjin versions have both passes and failures of this test
+    Set<RenjinVersionId> intersection = Sets.intersection(passed, failed);
+    
+    LOGGER.info(testResults.iterator().next().getName() + 
+        ": Renjin versions with inconsistent results: " + intersection.size());
+    
+    return intersection.size() < 2;
   }
 
   /**
@@ -215,14 +246,18 @@ public class DeltaBuilder {
    * builds by Renjin version id.
    */
   private static TreeMap<RenjinVersionId, PackageTestResult> resultsFromLatestBuilds(
-      Collection<PackageTestResult> results) {
-    
+      TreeMap<RenjinVersionId, PackageBuild> buildMap, Collection<PackageTestResult> results) {
+
     TreeMap<RenjinVersionId, PackageTestResult> treeMap = new TreeMap<>();
     for (PackageTestResult result : results) {
+      PackageBuild latestBuild = buildMap.get(result.getRenjinVersionId());
+      if(latestBuild.getId().equals(result.getBuildId())) {
         treeMap.put(result.getRenjinVersionId(), result);
+      }
     }
     return treeMap;
   }
+
 
   private static Predicate<PackageTestResult> testSucceeded() {
     return new Predicate<PackageTestResult>() {
@@ -243,8 +278,8 @@ public class DeltaBuilder {
 
   private static Collection<TreeMap<RenjinVersionId, PackageTestResult>> indexTests(
       Iterable<PackageTestResult> testResults) {
-    
-    
+
+
     Map<String, TreeMap<RenjinVersionId, PackageTestResult>> map = new HashMap<>();
     for (PackageTestResult result : testResults) {
 
@@ -312,7 +347,7 @@ public class DeltaBuilder {
     if(it.hasNext()) {
       T firstBuild = it.next();
       if (!predicate.apply(firstBuild)) {
-        
+
         // First build is failing, see if there's a subsequent success.
         while (it.hasNext()) {
           T build = it.next();

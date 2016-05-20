@@ -162,4 +162,13 @@ public class PackageTestResult {
   public String getMarkFormPath() {
     return "/qa/markTestResults?packageId=" + getPackageVersionId().getPackageId() + "&testName=" + name;
   }
+
+  @Override
+  public String toString() {
+    return "PackageTestResult{" +
+        name + 
+        ", renjinVersion='" + renjinVersion + '\'' +
+        ", passed=" + passed +
+        '}';
+  }
 }

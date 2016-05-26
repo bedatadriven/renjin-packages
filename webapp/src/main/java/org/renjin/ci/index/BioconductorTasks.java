@@ -8,7 +8,6 @@ import com.google.common.base.Optional;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.source.index.SourceIndexTasks;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -107,7 +106,6 @@ public class BioconductorTasks {
 
             PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
             PackageRegistrationTasks.enqueueBioconductor(bioconductorRelease, packageVersionId);
-            SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
 
         }
 

@@ -68,6 +68,22 @@ public class SourceIndexTasks {
         .withUrl("/source/index/extract")
         .param("packageVersionId", id.toString())
         .retryOptions(RetryOptions.Builder.withTaskRetryLimit(10)));
+
+    QueueFactory.getQueue(QUEUE_NAME).add(TaskOptions.Builder
+        .withUrl("/source/index/countLines")
+        .param("packageVersionId", id.toString())
+        .retryOptions(RetryOptions.Builder.withTaskRetryLimit(10)));
+  }
+  
+  @POST
+  @Path("countLines")
+  public Response countLines(@FormParam("packageVersionId") String packageVersionId) throws IOException {
+
+    Entity entity = LocCounter.computeLoc(PackageVersionId.fromTriplet(packageVersionId));
+    
+    DatastoreServiceFactory.getDatastoreService().put(entity);
+
+    return Response.ok().build();
   }
 
   /**

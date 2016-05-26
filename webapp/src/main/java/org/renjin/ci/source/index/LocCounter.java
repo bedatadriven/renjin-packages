@@ -5,9 +5,11 @@ import com.google.appengine.tools.mapreduce.DatastoreMutationPool;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
+import com.googlecode.objectify.ObjectifyService;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.renjin.ci.archive.AppEngineSourceArchiveProvider;
+import org.renjin.ci.datastore.Loc;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 
@@ -35,29 +37,15 @@ public class LocCounter extends ForEachPackageVersion {
   @Override
   protected void apply(PackageVersionId packageVersionId) {
 
+    // Check to see if stats are already computed
+    Loc existingCounts = ObjectifyService.ofy().load().key(Loc.key(packageVersionId)).now();
+    if(existingCounts != null) {
+      return;
+    }
+
     try {
 
-      long counts[] = new long[Language.values().length];
-
-      AppEngineSourceArchiveProvider provider = new AppEngineSourceArchiveProvider();
-      try (TarArchiveInputStream tarIn = provider.openSourceArchive(packageVersionId)) {
-        TarArchiveEntry entry;
-        while ((entry = tarIn.getNextTarEntry()) != null) {
-
-          Language language = detectLanguage(entry.getName());
-          if (language != null) {
-            counts[language.ordinal()] += countLines(tarIn);
-          }
-        }
-      }
-
-      Entity entity = new Entity("LOC", packageVersionId.toString());
-      for (Language language : Language.values()) {
-        long loc = counts[language.ordinal()];
-        if(loc > 0) {
-          entity.setUnindexedProperty(language.name().toLowerCase(), loc);
-        }
-      }
+      Entity entity = computeLoc(packageVersionId);
       
       pool.put(entity);
       
@@ -66,7 +54,32 @@ public class LocCounter extends ForEachPackageVersion {
     }
   }
 
-  private long countLines(TarArchiveInputStream tarIn) throws IOException {
+  public static Entity computeLoc(PackageVersionId packageVersionId) throws IOException {
+    long counts[] = new long[Language.values().length];
+
+    AppEngineSourceArchiveProvider provider = new AppEngineSourceArchiveProvider();
+    try (TarArchiveInputStream tarIn = provider.openSourceArchive(packageVersionId)) {
+      TarArchiveEntry entry;
+      while ((entry = tarIn.getNextTarEntry()) != null) {
+
+        Language language = detectLanguage(entry.getName());
+        if (language != null) {
+          counts[language.ordinal()] += countLines(tarIn);
+        }
+      }
+    }
+
+    Entity entity = new Entity("LOC", packageVersionId.toString());
+    for (Language language : Language.values()) {
+      long loc = counts[language.ordinal()];
+      if(loc > 0) {
+        entity.setUnindexedProperty(language.name().toLowerCase(), loc);
+      }
+    }
+    return entity;
+  }
+
+  private static long countLines(TarArchiveInputStream tarIn) throws IOException {
     InputStreamReader reader = new InputStreamReader(tarIn);
     return CharStreams.readLines(reader, new LineProcessor<Long>() {
       private long count = 0;
@@ -86,7 +99,7 @@ public class LocCounter extends ForEachPackageVersion {
     });
   }
 
-  private Language detectLanguage(String fileName) {
+  private static Language detectLanguage(String fileName) {
     String ext = Files.getFileExtension(fileName);
 
     // First check C extension which can be case sensitive

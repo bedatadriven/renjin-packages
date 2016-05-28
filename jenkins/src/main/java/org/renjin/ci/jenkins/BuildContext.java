@@ -9,12 +9,16 @@ import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.jenkins.tools.Maven;
 
 import java.io.*;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 /**
  * Context for an individual package build
  */
 public class BuildContext {
+  
+  private static final Logger LOGGER = Logger.getLogger(BuildContext.class.getName());
+  
   private WorkerContext workerContext;
   private Maven maven;
   private PackageNode packageNode;
@@ -74,6 +78,11 @@ public class BuildContext {
   }
   
   public void cleanup() {
+    try {
+      buildDir.deleteRecursive();
+    } catch (Exception e) {
+      LOGGER.severe("Failed to delete build directory " + buildDir);
+    }
     if(logFile.exists()) {
       logFile.delete();
     }

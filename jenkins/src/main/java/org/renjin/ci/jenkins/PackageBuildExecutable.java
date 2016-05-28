@@ -148,7 +148,8 @@ public class PackageBuildExecutable implements Queue.Executable {
         /*
          * Make sure we clean up our workspace so we don't fill the builder's storage
          */
-        buildContext.getBuildDir().deleteRecursive();
+        buildContext.cleanup();
+        
       }
     } catch (InterruptedException e) {
       parentTask.getPackageNode().cancelled();

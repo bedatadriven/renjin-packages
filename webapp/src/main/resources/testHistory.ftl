@@ -5,24 +5,9 @@
 <@scaffolding title="${page.packageVersion.packageName} ${page.packageVersion.version} ${page.testName} History">
 
 <style type="text/css">
-    
-    
-
     table.comparison-table pre {
         width: 100%;
         height: 300px;
-    }
-
-    .log-failure {
-        background-color: #F6B9BB !important;
-    }
-    .log-passed {
-        background-color: #cff6cc !important;
-    }
-    .floater {
-        position: fixed;
-        left: 10px;
-        bottom: 10px;
     }
 </style>
 

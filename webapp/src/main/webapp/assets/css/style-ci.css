@@ -223,3 +223,16 @@ td.line {
 .bar-fortran {
     background-color: #e74c3c;
 }
+
+.log-failure {
+    background-color: #F6B9BB !important;
+}
+.log-passed {
+    background-color: #cff6cc !important;
+}
+
+.floater {
+    position: fixed;
+    left: 10px;
+    bottom: 10px;
+}

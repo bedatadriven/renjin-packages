@@ -144,5 +144,10 @@
     </div>
 </div>
 
+
+<div class="floater">
+    <a href="${build.packageVersionId.jenkinsBuildPath}" class="btn" target="_blank">Rebuild</a>
+</div>
+
 <script src="/assets/js/logs-v2.js"></script>
 </@scaffolding>

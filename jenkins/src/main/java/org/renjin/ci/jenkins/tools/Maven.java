@@ -67,6 +67,8 @@ public class Maven {
         arguments.add(configFile.getRemote());
 
         arguments.add("-e"); // show full stack traces
+        
+        arguments.add("-U"); // recheck for missing dependencies
 
         arguments.add("-DenvClassifier=linux-x86_64");
         arguments.add("-Dmaven.test.failure.ignore=true");

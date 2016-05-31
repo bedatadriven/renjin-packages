@@ -6,6 +6,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.*;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
@@ -134,7 +135,13 @@ public class DeltaBuilder {
     // Consider only those builds where we have native compilation results and look for 
     // progressions/regressions among those.
     Iterable<PackageBuild> nativeCompilation = Iterables.filter(buildMap.values(), nativeCompilationAttempted());
+    
+    if(Iterables.isEmpty(nativeCompilation)) {
+      return;
+    }
 
+    markCppFailures(nativeCompilation);
+    
     Optional<PackageBuild> nativeRegression = findRegression(nativeCompilation, nativeCompilationSucceeded());
     if(nativeRegression.isPresent()) {
       delta(nativeRegression.get()).setCompilationDelta(-1);
@@ -142,6 +149,29 @@ public class DeltaBuilder {
     Optional<PackageBuild> nativeProgression = findProgression(nativeCompilation, nativeCompilationSucceeded());
     if(nativeProgression.isPresent()) {
       delta(nativeProgression.get()).setCompilationDelta(+1);
+    }
+  }
+
+  private void markCppFailures(Iterable<PackageBuild> buildResults) {
+    // If this package has C++ code, mark any results for versions prior to 0.8.2025 when C++
+    // compilation was turned on, otherwise it incorrectly looks like a regression once we start
+    // trying (and failing) to compile C++
+    Loc lines = PackageDatabase.getLinesOfCode(packageVersionId).now();
+    if(lines == null) {
+      // No statistics available, make no changes
+      return;
+    }
+    
+    if(lines.getCpp() == 0) {
+      // No C++ code to worry about
+      return;
+    }
+
+    for (PackageBuild buildResult : buildResults) {
+      if(buildResult.getNativeOutcome() == NativeOutcome.SUCCESS && 
+          buildResult.getRenjinVersionId().compareTo(RenjinVersionId.FIRST_VERSION_WITH_CPP) < 0) {
+        buildResult.setNativeOutcome(NativeOutcome.FAILURE);
+      }
     }
   }
 

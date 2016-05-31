@@ -426,4 +426,8 @@ public class PackageDatabase {
   public static Query<BenchmarkResult> getBenchmarkResultsForMachine(String machineId) {
     return ObjectifyService.ofy().load().type(BenchmarkResult.class).filter("machineId", machineId);
   }
+
+  public static LoadResult<Loc> getLinesOfCode(PackageVersionId packageVersionId) {
+    return ObjectifyService.ofy().load().key(Loc.key(packageVersionId));
+  }
 }

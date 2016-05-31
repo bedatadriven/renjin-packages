@@ -2,7 +2,6 @@ package org.renjin.ci.model;
 
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
@@ -11,6 +10,8 @@ import java.io.Serializable;
 public class RenjinVersionId implements Serializable, Comparable<RenjinVersionId> {
 
   public static final RenjinVersionId RELEASE = new RenjinVersionId("0.7.0-RC7");
+  
+  public static final RenjinVersionId FIRST_VERSION_WITH_CPP = new RenjinVersionId("0.8.2025");
 
   private final String version;
 

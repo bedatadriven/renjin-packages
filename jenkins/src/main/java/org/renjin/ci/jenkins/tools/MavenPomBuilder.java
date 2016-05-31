@@ -27,7 +27,6 @@ import java.util.Set;
  */
 public class MavenPomBuilder {
 
-
   public static final String[] DEFAULT_PACKAGES = new String[]{
       "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
 
@@ -94,6 +93,7 @@ public class MavenPomBuilder {
             headerDep.setArtifactId(dependencyNode.getId().getPackageName());
             headerDep.setVersion(dependencyNode.getBuildResult().getBuildVersion());
             headerDep.setClassifier("headers");
+            headerDep.setScope("provided");
             model.addDependency(headerDep);
           }
         }
@@ -200,23 +200,33 @@ public class MavenPomBuilder {
   }
 
   private PluginExecution legacyCompileExecution() {
-    PluginExecution compileExecution = new PluginExecution();
-    compileExecution.setId("gnur-compile");
-    compileExecution.addGoal("gnur-sources-compile");
-    compileExecution.setPhase("compile");
+    if(RenjinCapabilities.hasMake(build.getRenjinVersionId())) {
+      PluginExecution compileExecution = new PluginExecution();
+      compileExecution.setId("gnur-compile");
+      compileExecution.addGoal("make-gnur-sources");
+      compileExecution.setPhase("compile");
+
+      return compileExecution;
     
-    Xpp3Dom sourceDirectory = new Xpp3Dom("sourceDirectory");
-    sourceDirectory.setValue("${basedir}/src");
+    } else {
+      PluginExecution compileExecution = new PluginExecution();
+      compileExecution.setId("gnur-compile");
+      compileExecution.addGoal("gnur-sources-compile");
+      compileExecution.setPhase("compile");
 
-    Xpp3Dom sourceDirectories = new Xpp3Dom("sourceDirectories");
-    sourceDirectories.addChild(sourceDirectory);
+      Xpp3Dom sourceDirectory = new Xpp3Dom("sourceDirectory");
+      sourceDirectory.setValue("${basedir}/src");
 
-    Xpp3Dom configuration = new Xpp3Dom("configuration");
-    configuration.addChild(sourceDirectories);
+      Xpp3Dom sourceDirectories = new Xpp3Dom("sourceDirectories");
+      sourceDirectories.addChild(sourceDirectory);
 
-    compileExecution.setConfiguration(configuration);
+      Xpp3Dom configuration = new Xpp3Dom("configuration");
+      configuration.addChild(sourceDirectories);
 
-    return compileExecution;
+      compileExecution.setConfiguration(configuration);
+
+      return compileExecution;
+    }
   }
 
   private PluginExecution testExecution() {

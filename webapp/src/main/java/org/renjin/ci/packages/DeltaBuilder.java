@@ -37,6 +37,7 @@ public class DeltaBuilder {
 
   private final PackageVersionId packageVersionId;
   private final Map<Long, BuildDelta> deltas = new HashMap<>();
+  private PackageVersion packageVersion;
 
   public DeltaBuilder(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
@@ -63,6 +64,8 @@ public class DeltaBuilder {
 
   public PackageVersionDelta build(Optional<PackageBuild> newBuild, List<PackageTestResult> newTestResults) {
 
+    packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
+    
     List<PackageBuild> builds = PackageDatabase.getFinishedBuilds(packageVersionId);
 
     if (!builds.isEmpty()) {
@@ -132,6 +135,12 @@ public class DeltaBuilder {
 
 
   private void checkCompilationHistory(TreeMap<RenjinVersionId, PackageBuild> buildMap) {
+    
+    // Only compute for packages that require compilation
+    if(!packageVersion.isNeedsCompilation()) {
+      return;
+    }
+
     // Consider only those builds where we have native compilation results and look for 
     // progressions/regressions among those.
     Iterable<PackageBuild> nativeCompilation = Iterables.filter(buildMap.values(), nativeCompilationAttempted());

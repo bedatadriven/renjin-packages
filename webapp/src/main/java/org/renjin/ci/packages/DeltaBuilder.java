@@ -6,7 +6,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.*;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.*;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.model.NativeOutcome;
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
@@ -38,6 +40,7 @@ public class DeltaBuilder {
   private final PackageVersionId packageVersionId;
   private final Map<Long, BuildDelta> deltas = new HashMap<>();
   private PackageVersion packageVersion;
+  private Package packageEntity;
 
   public DeltaBuilder(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
@@ -65,30 +68,34 @@ public class DeltaBuilder {
   public PackageVersionDelta build(Optional<PackageBuild> newBuild, List<PackageTestResult> newTestResults) {
 
     packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
+    packageEntity = PackageDatabase.getPackageOf(packageVersionId);
     
-    List<PackageBuild> builds = PackageDatabase.getFinishedBuilds(packageVersionId);
+    if(!packageEntity.isReplaced()) {
+      List<PackageBuild> builds = PackageDatabase.getFinishedBuilds(packageVersionId);
 
-    if (!builds.isEmpty()) {
+      if (!builds.isEmpty()) {
 
-      // Build a simplified list, mapping each renjin version in order to a build
-      // If there have been multiple builds for a given Renjin Version, use the last build
-      TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(builds, newBuild);
+        // Build a simplified list, mapping each renjin version in order to a build
+        // If there have been multiple builds for a given Renjin Version, use the last build
+        TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(
+            selectWithSameDependencyVersions(builds), newBuild);
 
-      // Query the test results for all builds - we need the data to assess reliability
-      Iterable<PackageTestResult> testResults = Iterables.concat(
-          PackageDatabase.getTestResults(packageVersionId),
-          newTestResults);
+        // Query the test results for all builds - we need the data to assess reliability
+        Iterable<PackageTestResult> testResults = Iterables.concat(
+            PackageDatabase.getTestResults(packageVersionId),
+            newTestResults);
 
-      checkBuildHistory(buildMap);
-      checkCompilationHistory(buildMap);
-      checkTestResults(buildMap, testResults);
+        checkBuildHistory(buildMap);
+        checkCompilationHistory(buildMap);
+        checkTestResults(buildMap, testResults);
 
-      // Annotate the build deltas with last good build
-      for (BuildDelta delta : deltas.values()) {
-        PackageBuild previousSuccessfulBuild = findPreviousSuccessfulBuild(delta.getRenjinVersionId(), buildMap);
-        if(previousSuccessfulBuild != null) {
-          delta.setLastSuccessfulBuild(previousSuccessfulBuild.getBuildNumber());
-          delta.setLastSuccessfulRenjinVersion(previousSuccessfulBuild.getRenjinVersion());
+        // Annotate the build deltas with last good build
+        for (BuildDelta delta : deltas.values()) {
+          PackageBuild previousSuccessfulBuild = findPreviousSuccessfulBuild(delta.getRenjinVersionId(), buildMap);
+          if (previousSuccessfulBuild != null) {
+            delta.setLastSuccessfulBuild(previousSuccessfulBuild.getBuildNumber());
+            delta.setLastSuccessfulRenjinVersion(previousSuccessfulBuild.getRenjinVersion());
+          }
         }
       }
     }
@@ -195,6 +202,59 @@ public class DeltaBuilder {
     }
   }
 
+  private List<PackageBuild> selectWithSameDependencyVersions(List<PackageBuild> builds) {
+    PackageBuild latestBuild = findLastBuild(builds);
+    
+    LOGGER.info("Latest dependencies = " + latestBuild.getResolvedDependencyIds());
+    
+    List<PackageBuild> matching = Lists.newArrayList();
+    for (PackageBuild build : builds) {
+      if(sameDependencyVersions(build, latestBuild)) {
+       // LOGGER.info("Build #" + build.getBuildNumber() + " matches = " + build.getResolvedDependencyIds());
+        matching.add(build);
+      }
+    }
+    return matching;
+  }
+
+  private PackageBuild findLastBuild(List<PackageBuild> builds) {
+    Iterator<PackageBuild> it = builds.iterator();
+    PackageBuild last = it.next();
+    while(it.hasNext()) {
+      PackageBuild build = it.next();
+      if(build.getBuildNumber() > last.getBuildNumber()) {
+        last = build;
+      }
+    }
+    return last;
+  }
+
+  private Map<PackageId, PackageVersionId> versionMap(PackageBuild packageBuild) {
+    Map<PackageId, PackageVersionId> map = Maps.newHashMap();
+    for (PackageVersionId versionId : packageBuild.getResolvedDependencyIds()) {
+      map.put(versionId.getPackageId(), versionId);
+    }
+    return map;
+  }
+
+  /**
+   * Sometimes regressions are caused because we updated our dependency resolution algorithm. This ensures that
+   * we only compare results 
+   * @param build
+   * @param latestBuild
+   * @return
+   */
+  private boolean sameDependencyVersions(PackageBuild build, PackageBuild latestBuild) {
+    Map<PackageId, PackageVersionId> dependencies = versionMap(build);
+    for (PackageVersionId expectedVersionId : latestBuild.getResolvedDependencyIds()) {
+      PackageVersionId versionId = dependencies.get(expectedVersionId.getPackageId());
+      if(!expectedVersionId.equals(versionId)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 
   private void checkTestResults(TreeMap<RenjinVersionId, PackageBuild> buildMap, Iterable<PackageTestResult> testResults) {
 
@@ -206,6 +266,8 @@ public class DeltaBuilder {
 
       // Identify regression or progression among the build selected for comparison
       TreeMap<RenjinVersionId, PackageTestResult> byVersion = resultsFromLatestBuilds(buildMap, results);
+      
+      //LOGGER.info("Comparing results for " + testName + " = " + byVersion);
       
       Optional<PackageTestResult> regression = findRegression(byVersion.values(), testSucceeded());
       if(regression.isPresent()) {
@@ -290,10 +352,11 @@ public class DeltaBuilder {
     TreeMap<RenjinVersionId, PackageTestResult> treeMap = new TreeMap<>();
     for (PackageTestResult result : results) {
       PackageBuild latestBuild = buildMap.get(result.getRenjinVersionId());
-      if(latestBuild.getId().equals(result.getBuildId())) {
+      if(latestBuild != null && latestBuild.getId().equals(result.getBuildId())) {
         treeMap.put(result.getRenjinVersionId(), result);
       }
     }
+    
     return treeMap;
   }
 

@@ -29,7 +29,7 @@
             </tr>
             </thead>
             <tbody>
-            <#list page.rows?sort_by("buildNumber") as row>
+            <#list page.rows?sort_by("renjinVersionId") as row>
             <tr>
                 <#if row.build.outcome??>
                     <td>#${row.buildNumber}</td>
@@ -46,7 +46,8 @@
                     <#if page.testPresent>
                     <td>
                         <#if row.testRun>
-                        <a href="${row.build.packageVersionId.path}/test/${page.testName}/history#build-${row.buildNumber}" class="btn">
+                        <a href="${row.build.packageVersionId.path}/test/${page.testName}/history#build-${row.buildNumber}" 
+                           class="btn <#if row.testPassed>btn-success<#else>btn-danger</#if>">
                         ${row.testResult}
                         </a>
                         </#if>

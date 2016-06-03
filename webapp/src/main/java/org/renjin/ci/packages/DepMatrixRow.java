@@ -6,6 +6,7 @@ import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.model.NativeOutcome;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.util.Collection;
 import java.util.Map;
@@ -22,6 +23,10 @@ public class DepMatrixRow {
     for (PackageVersionId packageVersionId : build.getResolvedDependencyIds()) {
       dependencyVersion.put(packageVersionId.getPackageId(), packageVersionId);
     }
+  }
+  
+  public RenjinVersionId getRenjinVersionId() {
+    return build.getRenjinVersionId();
   }
   
   public Collection<PackageId> getDependencies() {
@@ -54,6 +59,10 @@ public class DepMatrixRow {
   
   public boolean isTestRun() {
     return result != null;
+  }
+  
+  public boolean isTestPassed() {
+    return result.isPassed();
   }
   
   public String getTestResult() {

@@ -75,7 +75,7 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     if(Strings.isNullOrEmpty(this.renjinVersion) || this.renjinVersion.equals("LATEST")) {
       renjinVersion = RenjinCiClient.getLatestRenjinRelease();
     } else {  
-      renjinVersion = RenjinVersionId.valueOf(this.renjinVersion);
+      renjinVersion = RenjinVersionId.valueOf(run.getEnvironment(listener).expand(this.renjinVersion));
     }
 
     // Expand ${VARIABLES} in the filter parameter to allow for parameterized plugins
@@ -87,7 +87,7 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     try {
       graph = new PackageGraphBuilder(listener, rebuildDependencies, rebuildSuccessfulDependencies)
           .build(expandedFilter, sample);
-    } catch (Exception e) {
+    } catch (Exception e) { 
       throw new AbortException("Failed to build package graph: " + e.getMessage());
     }
 

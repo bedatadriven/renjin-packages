@@ -10,4 +10,8 @@ public class RenjinCapabilities {
   public static boolean hasMake(RenjinVersionId renjinVersionId) {
     return renjinVersionId.compareTo(new RenjinVersionId("0.8.2037")) >= 0;
   }
+  
+  public static boolean hasCompiler(RenjinVersionId renjinVersionId) {
+    return renjinVersionId.compareTo(new RenjinVersionId("0.8.2063")) >= 0;
+  }
 }

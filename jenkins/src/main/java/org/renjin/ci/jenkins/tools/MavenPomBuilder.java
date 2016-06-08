@@ -69,7 +69,9 @@ public class MavenPomBuilder {
       linkingTo.add(linkTimeDependency.getName());
     }
 
-    for(String dependencyName : dependencies()) {
+    Set<String> runtimeDependencies = dependencies();
+    
+    for(String dependencyName : runtimeDependencies) {
       if(!CorePackages.IGNORED_PACKAGES.contains(dependencyName)) {
         
         if(CorePackages.isPartOfRenjin(dependencyName)) {
@@ -97,6 +99,14 @@ public class MavenPomBuilder {
             model.addDependency(headerDep);
           }
         }
+      }
+    }
+    
+    // Compiler package may needed during namespace evaluation,
+    // but unless explicitly imported, not at runtime
+    if(RenjinCapabilities.hasCompiler(build.getRenjinVersionId())) {
+      if (!runtimeDependencies.contains("compiler")) {
+        addCoreModule(model, "compiler", "provided");
       }
     }
     
@@ -257,12 +267,17 @@ public class MavenPomBuilder {
 
     return testExecution;
   }
-  
+
   private void addCoreModule(Model model, String name) {
+    addCoreModule(model, name, null);
+  }
+
+  private void addCoreModule(Model model, String name, String scope) {
     Dependency mavenDep = new Dependency();
     mavenDep.setGroupId("org.renjin");
     mavenDep.setArtifactId(name);
     mavenDep.setVersion(build.getRenjinVersionId().toString());
+    mavenDep.setScope(scope);
     model.addDependency(mavenDep);
   }
 

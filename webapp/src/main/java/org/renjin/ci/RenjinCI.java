@@ -57,6 +57,8 @@ public class RenjinCI extends Application {
     
     classes.add(AdminResources.class);
     classes.add(StatsResources.class);
+    
+    classes.add(RobotsResource.class);
 
     return classes;
   }

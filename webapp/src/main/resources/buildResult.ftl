@@ -2,7 +2,7 @@
 
 <#include "base.ftl">
 
-<@scaffolding title="${build.packageName} ${build.version} #${build.buildNumber}">
+<@scaffolding title="${build.packageName} ${build.version} #${build.buildNumber}" index=false>
 <#-- Shows breadcrumbs in search results -->
 <script type="application/ld+json">
 {

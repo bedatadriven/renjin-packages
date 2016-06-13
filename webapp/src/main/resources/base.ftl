@@ -1,6 +1,6 @@
 <#setting url_escaping_charset='ISO-8859-1'>
 
-<#macro scaffolding title description="">
+<#macro scaffolding title description="" index=true>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <#if description?? >
     <meta name="description" content="${description}">
+    </#if>
+    <#if !index>
+    <meta name="robots" content="noindex">
     </#if>
     <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>

@@ -11,14 +11,13 @@
     <meta name="description" content="${description}">
     </#if>
     <#if !index>
-    <meta name="robots" content="noindex">
+    <meta name="robots" content="noindex, nofollow">
     </#if>
     <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>
     <![endif]-->
     <link href="/assets/css/style.css" rel="stylesheet" media="all">
     <link href="/assets/css/style-ci.css" rel="stylesheet" media="all">
-    <link href="http://packages.renjin.org"
 </head>
 <body>
 <nav id="nav" role="navigation">

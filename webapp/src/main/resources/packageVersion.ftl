@@ -122,7 +122,7 @@
         <h3>Maven</h3>
         <p>This package can be included as a dependency from a Java or Scala project by including 
         the following your project's <code>pom.xml</code> file. 
-        <a href="http://docs.renjin.org/en/latest/introduction.html#setting-up-a-java-project-for-renjin">Read more</a> 
+        <a href="http://docs.renjin.org/en/latest/library/project-setup.html">Read more</a> 
         about embedding Renjin in JVM-based projects.</p>
         <pre>${version.pomReference?html}</pre>
         <p><a href="${version.latestBuildUrl}">View build log</a></p>

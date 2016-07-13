@@ -30,6 +30,18 @@
     <url-pattern>/mapreduce/*</url-pattern>
   </servlet-mapping>
 
+
+  <servlet>
+    <servlet-name>ScriptServlet</servlet-name>
+    <servlet-class>
+      org.renjin.ci.ScriptExecServlet
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ScriptServlet</servlet-name>
+    <url-pattern>/_script</url-pattern>
+  </servlet-mapping>
+
   <servlet>
     <servlet-name>pipeline</servlet-name>
     <servlet-class>

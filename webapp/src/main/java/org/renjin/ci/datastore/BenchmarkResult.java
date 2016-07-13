@@ -1,7 +1,15 @@
 package org.renjin.ci.datastore;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 
 @Entity
@@ -100,5 +108,30 @@ public class BenchmarkResult {
 
   public void setInterpreterVersion(String interpreterVersion) {
     this.interpreterVersion = interpreterVersion;
+  }
+  
+  public static Comparator<BenchmarkResult> comparator() {
+    
+    List<Comparator<BenchmarkResult>> comparators = new ArrayList<>();
+    comparators.add(Ordering.natural().onResultOf(new Function<BenchmarkResult, String>() {
+      @Override
+      public String apply(BenchmarkResult input) {
+        return input.getInterpreter();
+      }
+    }));
+    comparators.add(Ordering.natural().onResultOf(new Function<BenchmarkResult, ArtifactVersion>() {
+      @Override
+      public ArtifactVersion apply(BenchmarkResult input) {
+        return new DefaultArtifactVersion(input.getInterpreterVersion());
+      }
+    }).reverse());
+    comparators.add(Ordering.natural().onResultOf(new Function<BenchmarkResult, Long>() {
+      @Override
+      public Long apply(BenchmarkResult input) {
+        return input.getRunId();
+      }
+    }));
+    
+    return Ordering.compound(comparators);
   }
 }

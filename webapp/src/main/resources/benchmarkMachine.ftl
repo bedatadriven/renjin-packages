@@ -18,20 +18,28 @@
             <thead>
             <tr>
                 <th align="left">Benchmark</th>
-                <th align="right">GNU R ${page.baselineVersion}</th>
-                <#list page.renjinVersions as renjinVersion>
-                <th align="right">Renjin ${renjinVersion}</th>
-                </#list>
+                <th align="left">GNU R</th>
+                <th align="left">Renjin</th>
+                <th align="right">Speedup</th>
             </tr>
             </thead>
             <tbody>
                 <#list page.benchmarks as benchmark>
                 <tr>
-                    <th align="left">${benchmark.name}</th>
-                    <td align="right">${benchmark.baselineTiming}</td>
-                    <#list page.renjinVersions as renjinVersion>
-                    <td align="right">${benchmark.getRenjinTiming(renjinVersion)}</td>
-                    </#list>
+                    <th align="left"><a href="benchmarks/${benchmark.name}">${benchmark.name}</a></th>
+                    <td align="left">
+                        <#if benchmark.gnu??>
+                            <span title="${benchmark.gnu.title}">${benchmark.gnu.time}</span>
+                        </#if>
+                    </td>
+                    <td align="left">
+                        <#if benchmark.renjin??>
+                            <span title="${benchmark.renjin.title}">${benchmark.renjin.time}</span>
+                        </#if>
+                    </td>
+                    <td align="right">
+                        ${benchmark.speedup}
+                    </td>
                 </tr>
                 </#list>
             </tbody>

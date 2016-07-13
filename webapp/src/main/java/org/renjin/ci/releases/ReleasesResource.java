@@ -1,16 +1,25 @@
 package org.renjin.ci.releases;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.googlecode.objectify.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.RenjinCommit;
 import org.renjin.ci.datastore.RenjinRelease;
 import org.renjin.ci.model.RenjinVersionId;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Path("/releases")
@@ -53,6 +62,50 @@ public class ReleasesResource {
         return Response.ok().build();
       }
     });
+  }
+  
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getVersionRange(@QueryParam("from") final String from, @QueryParam("to") final String to) throws JSONException {
+
+    Predicate<RenjinVersionId> predicate = Predicates.alwaysTrue();
+    if(!Strings.isNullOrEmpty(from)) {
+      final RenjinVersionId fromVersion = RenjinVersionId.valueOf(from);
+      predicate = new Predicate<RenjinVersionId>() {
+
+        @Override
+        public boolean apply(@Nullable RenjinVersionId input) {
+          return input.compareTo(fromVersion) >= 0;
+        }
+      };
+    }
+    if(!Strings.isNullOrEmpty(to)) {
+      final RenjinVersionId toVersion = RenjinVersionId.valueOf(to);
+      predicate = Predicates.and(predicate, new Predicate<RenjinVersionId>() {
+        @Override
+        public boolean apply(@Nullable RenjinVersionId input) {
+          return input.compareTo(toVersion) <= 0;
+        }
+      });
+    }
+
+    JSONArray array = new JSONArray();
+    int arrayIndex = 0;
+    
+    DateFormat format = new SimpleDateFormat("YYYY-MM-dd");
+    
+    
+    for (RenjinRelease renjinRelease : PackageDatabase.getRenjinVersions()) {
+      if(predicate.apply(renjinRelease.getVersionId())) {
+        JSONObject object = new JSONObject();
+        object.put("version", renjinRelease.getVersion());
+        object.put("sha1", renjinRelease.getCommitSha1());
+        object.put("date", format.format(renjinRelease.getDate()));
+        array.put(arrayIndex++, object);
+      }
+    }
+    
+    return Response.ok().entity(array.toString()).type(MediaType.APPLICATION_JSON_TYPE).build();
   }
   
   @GET

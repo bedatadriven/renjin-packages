@@ -9,12 +9,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.*;
+import com.googlecode.objectify.cmd.LoadType;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.sexp.ExternalPtr;
+import org.renjin.sexp.ListVector;
+import org.renjin.sexp.NamedValue;
+import org.renjin.util.DataFrameBuilder;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -57,6 +62,7 @@ public class PackageDatabase {
     register(BenchmarkRun.class);
     register(BenchmarkResult.class);
     register(BenchmarkNumber.class);
+    register(BenchmarkSummary.class);
     
     register(PackageSource.class);
     register(FunctionIndex.class);
@@ -225,6 +231,11 @@ public class PackageDatabase {
   public static Result<Map<Key<PackageVersion>,PackageVersion>> save(PackageVersion... packageVersions) {
     return ObjectifyService.ofy().save().entities(packageVersions);
   }
+  
+  public static void saveNow(Object entity) {
+    ObjectifyService.ofy().save().entity(entity).now();
+  }
+  
 
   public static Optional<RenjinCommit> getCommit(String commitHash) {
     Key<RenjinCommit> key = Key.create(RenjinCommit.class, commitHash);
@@ -427,7 +438,48 @@ public class PackageDatabase {
     return ObjectifyService.ofy().load().type(BenchmarkResult.class).filter("machineId", machineId);
   }
 
+  public static Query<BenchmarkResult> getBenchmarkResultsForMachine(String machineId, String benchmarkName) {
+    return ObjectifyService.ofy().load().type(BenchmarkResult.class)
+        .filter("machineId", machineId)
+        .filter("benchmarkName", benchmarkName);
+  }
+
   public static LoadResult<Loc> getLinesOfCode(PackageVersionId packageVersionId) {
     return ObjectifyService.ofy().load().key(Loc.key(packageVersionId));
   }
+
+  public static QueryResultIterable<RenjinRelease> getRenjinVersions() {
+    return ObjectifyService.ofy()
+        .load()
+        .type(RenjinRelease.class)
+        .chunk(500)
+        .iterable();
+  }
+
+
+  public static QueryResultIterable<BenchmarkSummary> getBenchmarkSummaries(String machineId) {
+    return ObjectifyService.ofy()
+        .load()
+        .type(BenchmarkSummary.class)
+        .ancestor(Key.create(BenchmarkMachine.class, machineId))
+        .iterable();
+  }
+  
+  public static ListVector query(ExternalPtr entityClassPtr, ListVector filters) {
+    Class<?> entityClass = (Class<?>) entityClassPtr.getInstance();
+    LoadType<?> query = ObjectifyService.ofy()
+        .load()
+        .type(entityClass);
+
+    for (NamedValue namedValue : filters.namedValues()) {
+      query.filter(namedValue.getName(), namedValue.getValue().asString());
+    }
+
+    List list = query.list();
+    ListVector dataFrame = DataFrameBuilder.build(entityClass, list);
+    
+    return dataFrame;
+  }
+
+
 }

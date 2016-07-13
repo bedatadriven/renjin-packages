@@ -29,7 +29,7 @@
   <name>Renjin CI WebApp</name>
 
   <properties>
-    <renjin.version>0.7.0-SNAPSHOT</renjin.version>
+    <renjin.version>0.9.0-SNAPSHOT</renjin.version>
   </properties>
 
   <dependencies>
@@ -97,6 +97,11 @@
       <version>1.7.0</version>
     </dependency>
     <dependency>
+      <groupId>org.renjin</groupId>
+      <artifactId>renjin-appengine</artifactId>
+      <version>${renjin.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.renjin.ci</groupId>
       <artifactId>renjin-ci-model</artifactId>
       <version>${project.version}</version>
@@ -130,15 +135,18 @@
     <dependency>
       <groupId>org.renjin</groupId>
       <artifactId>renjin-core</artifactId>
-      <version>0.7.0-RC6</version>
-      <exclusions>
-        <exclusion>
-          <groupId>asm</groupId>
-          <artifactId>asm</artifactId>
-        </exclusion>
-      </exclusions>
+      <version>${renjin.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.renjin</groupId>
+      <artifactId>renjin-script-engine</artifactId>
+      <version>${renjin.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.renjin.cran</groupId>
+      <artifactId>changepoint</artifactId>
+      <version>2.2.1-b25</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

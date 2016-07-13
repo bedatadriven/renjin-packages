@@ -11,10 +11,14 @@ import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.jenkins.benchmark.Benchmark;
 import org.renjin.ci.jenkins.benchmark.BenchmarkRun;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -52,16 +56,56 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
       listener.getLogger().println("No benchmarks found.");
       throw new AbortException();
     }
-    
-    BenchmarkRun benchmarkRun = new BenchmarkRun(run, workspace, launcher, listener);
-    benchmarkRun.setupInterpreter(
-        run.getEnvironment(listener).expand(interpreter), 
-        run.getEnvironment(listener).expand(interpreterVersion));
-    benchmarkRun.start();
-    benchmarkRun.run(benchmarks);
+
+    String interpreter = run.getEnvironment(listener).expand(this.interpreter);
+    List<String> interpreterVersions = expandVersions(interpreter, run, listener);
+
+    for (String interpreterVersion : interpreterVersions) {
+      try {
+        BenchmarkRun benchmarkRun = new BenchmarkRun(run, workspace, launcher, listener);
+        benchmarkRun.setupInterpreter(
+            interpreter,
+            interpreterVersion);
+        benchmarkRun.start();
+        benchmarkRun.run(benchmarks);
+      
+      } catch (InterruptedException e) {
+        listener.error("Interrupted. Stopping.");
+        return;
+        
+      } catch (Exception e) {
+        listener.error("Failed to run benchmarks on " + interpreter + " " + interpreterVersion + ": " + 
+          e.getMessage());
+        e.printStackTrace(listener.getLogger());
+      }
+    }
   }
 
-  
+  private List<String> expandVersions(String interpreter, Run<?, ?> run, TaskListener listener) throws IOException, InterruptedException {
+    String range = run.getEnvironment(listener).expand(this.interpreterVersion);
+    if(interpreter.equals("Renjin")) {
+      return expandRenjinVersions(range);
+
+    } else {
+      return Collections.singletonList(range);
+    }    
+  }
+
+  static List<String> expandRenjinVersions(String range) {
+    if(range.endsWith(",")) {
+      return queryVersions(range.substring(0, range.length()-1), null);
+    }
+    return Collections.singletonList(range);
+  }
+
+  private static List<String> queryVersions(String from, String to) {
+    List<String> versionStrings = new ArrayList<String>();
+    for (RenjinVersionId renjinVersionId : RenjinCiClient.getRenjinVersionRange(from, to)) {
+      versionStrings.add(renjinVersionId.toString());
+    }
+    return versionStrings;
+  }
+
   private void findBenchmarks(List<Benchmark> benchmarks, String namePrefix, FilePath parentDir, TaskListener listener) throws IOException, InterruptedException {
     for (FilePath childDir : parentDir.listDirectories()) {
       if (childDir.child("BENCHMARK.dcf").exists() || 
@@ -83,11 +127,6 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     } else {
       return benchmark.getName().contains(includes);
     }
-  }
-
-  @Override
-  public Descriptor<Builder> getDescriptor() {
-    return new DescriptorImpl();
   }
 
   @Extension

@@ -1,7 +1,10 @@
 package org.renjin.ci;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import org.renjin.ci.build.PackageBuild;
@@ -153,7 +156,23 @@ public class RenjinCiClient {
         .request(MediaType.TEXT_PLAIN)
         .get(String.class);
     return RenjinVersionId.valueOf(version);
-
+  }
+  
+  public static List<RenjinVersionId> getRenjinVersionRange(String from, String to) {
+    ArrayNode array = client().target(ROOT_URL)
+        .path("releases")
+        .queryParam("from", from)
+        .queryParam("to", to)
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .get(ArrayNode.class);
+    
+    List<RenjinVersionId> versionIds = Lists.newArrayList();
+    for (JsonNode release : array) {
+      String version = release.get("version").asText();
+      versionIds.add(RenjinVersionId.valueOf(version));
+    }
+    
+    return versionIds;
   }
 
   public static void postRenjinRelease(String renjinVersion, String commitId) {

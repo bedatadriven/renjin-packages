@@ -26,7 +26,7 @@
             <tbody>
                 <#list page.benchmarks as benchmark>
                 <tr>
-                    <th align="left"><a href="benchmarks/${benchmark.name}">${benchmark.name}</a></th>
+                    <th align="left"><a href="${benchmark.path}">${benchmark.name}</a></th>
                     <td align="left">
                         <#if benchmark.gnu??>
                             <span title="${benchmark.gnu.title}">${benchmark.gnu.time}</span>

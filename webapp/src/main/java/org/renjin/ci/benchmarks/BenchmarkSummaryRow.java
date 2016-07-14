@@ -4,13 +4,15 @@ import org.renjin.ci.datastore.BenchmarkSummary;
 import org.renjin.ci.datastore.BenchmarkSummaryPoint;
 
 public class BenchmarkSummaryRow {
-  
 
+
+  private String machineId;
   private BenchmarkSummary summary;
   private Cell gnu;
   private Cell renjin;
   
-  public BenchmarkSummaryRow(BenchmarkSummary summary) {
+  public BenchmarkSummaryRow(String machineId, BenchmarkSummary summary) {
+    this.machineId = machineId;
     this.summary = summary;
     if(summary.getInterpreters().containsKey("GNU R")) {
       gnu = new Cell("GNU R");
@@ -40,6 +42,10 @@ public class BenchmarkSummaryRow {
                      ((double) renjin.point.getMeanRunTime());
     
     return String.format("%.2f", speedUp);
+  }
+  
+  public String getPath() {
+    return "/benchmarks/machine/" + machineId + "/benchmark/" + summary.getBenchmarkName();
   }
   
 

@@ -27,9 +27,13 @@ findLatestVersion <- function(versions) {
 }
 
 summarizeByTerp <- function(interpreter, results) {
+    cat(sprintf("Summarizing for %s\n", interpreter))
+    
     results <-  results[results$interpreter == interpreter, ]
     latestVersion <- findLatestVersion(results$interpreterVersion)
     latestResults <- results[results$interpreterVersion == latestVersion, ]
+   
+    print(latestResults)
     
     runTimes <- na.omit(latestResults$runTime)
     
@@ -42,6 +46,8 @@ summarizeByTerp <- function(interpreter, results) {
 }
 
 results <- PackageDatabase$query(BenchmarkResult, list(machineId = machineId, benchmarkName = benchmarkName))
+print(results)
+
 summary <- BenchmarkSummary$new( machineId, benchmarkName )
 interpreters <- unique(results$interpreter)
 

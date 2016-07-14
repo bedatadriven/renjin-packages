@@ -1,31 +1,47 @@
 package org.renjin.ci.benchmarks;
 
-import com.google.appengine.api.datastore.QueryResultIterable;
+import com.googlecode.objectify.LoadResult;
+import org.renjin.ci.datastore.BenchmarkMachine;
 import org.renjin.ci.datastore.BenchmarkResult;
 import org.renjin.ci.datastore.PackageDatabase;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Shows results for a single machine and benchmark
  */
 public class DetailPage {
-  
+  private String machineId;
+  private String benchmarkId;
+  private final LoadResult<BenchmarkMachine> machine;
+  private final DataTable dataTable;
+  private final List<BenchmarkResult> results;
   
   public DetailPage(String machineId, String benchmarkId) {
+    this.machineId = machineId;
+    this.benchmarkId = benchmarkId;
 
-    QueryResultIterable<BenchmarkResult> results =
-        PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkId).iterable();
+    this.machine = PackageDatabase.getBenchmarkMachine(machineId);
+    
+    results = PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkId).list();
+    Collections.sort(results, BenchmarkResult.comparator());
 
-    // Find the max time taken
-    long maxTime = 0;
-    for (BenchmarkResult result : results) {
-      if (result.isCompleted() && result.getRunTime() > maxTime) {
-        maxTime = result.getRunTime();
-      }
-    }
+    this.dataTable = new DataTable(results, "Renjin");
+  }
 
-    // Now sort these into runs
-    for (BenchmarkResult result : results) {
+  public DataTable getDataTable() {
+    return dataTable;
+  }
+  public String getBenchmarkId() {
+    return benchmarkId;
+  }
 
-    }
+  public List<BenchmarkResult> getResults() {
+    return results;
+  }
+
+  public BenchmarkMachine getMachine() {
+    return machine.now();
   }
 }

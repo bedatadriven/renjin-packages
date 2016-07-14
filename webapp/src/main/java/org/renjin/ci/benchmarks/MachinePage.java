@@ -19,7 +19,7 @@ public class MachinePage {
   public MachinePage(String machineId) {
     this.machine = PackageDatabase.getBenchmarkMachine(machineId);
     for (BenchmarkSummary summary : PackageDatabase.getBenchmarkSummaries(machineId)) {
-      rows.add(new BenchmarkSummaryRow(summary));
+      rows.add(new BenchmarkSummaryRow(machineId, summary));
     }
   }
 

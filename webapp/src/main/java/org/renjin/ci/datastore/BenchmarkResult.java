@@ -124,7 +124,7 @@ public class BenchmarkResult {
       public ArtifactVersion apply(BenchmarkResult input) {
         return new DefaultArtifactVersion(input.getInterpreterVersion());
       }
-    }).reverse());
+    }));
     comparators.add(Ordering.natural().onResultOf(new Function<BenchmarkResult, Long>() {
       @Override
       public Long apply(BenchmarkResult input) {

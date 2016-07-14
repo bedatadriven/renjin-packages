@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.*;
-import com.googlecode.objectify.cmd.LoadType;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.PackageBuildId;
@@ -467,12 +466,12 @@ public class PackageDatabase {
   
   public static ListVector query(ExternalPtr entityClassPtr, ListVector filters) {
     Class<?> entityClass = (Class<?>) entityClassPtr.getInstance();
-    LoadType<?> query = ObjectifyService.ofy()
+    Query<?> query = ObjectifyService.ofy()
         .load()
         .type(entityClass);
 
     for (NamedValue namedValue : filters.namedValues()) {
-      query.filter(namedValue.getName(), namedValue.getValue().asString());
+      query = query.filter(namedValue.getName(), namedValue.getValue().asString());
     }
 
     List list = query.list();

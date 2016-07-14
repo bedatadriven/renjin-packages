@@ -1,22 +1,45 @@
-<#-- @ftlvariable name="machine" type="org.renjin.ci.datastore.BenchmarkMachine" -->
-<#-- @ftlvariable name="results" type="java.util.List<org.renjin.ci.datastore.BenchmarkResult>" -->
+<#-- @ftlvariable name="page" type="org.renjin.ci.benchmarks.DetailPage" -->
 
 <#include "base.ftl">
 
-<@scaffolding title="Benchmarks - ${benchmarkName} - ${machine.id}">
+<@scaffolding title="Benchmarks - ${page.benchmarkId} - ${page.machine.id}">
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+        var data = google.visualization.arrayToDataTable([${page.dataTable.array}]);
+
+        var options = {
+            title: 'Runtime (${page.dataTable.units})',
+            pointSize: 5,
+            legend: { position: 'bottom' }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('runtime_chart'));
+
+        chart.draw(data, options);
+    }
+</script>
 <div class="grid">
     <div class="grid-item medium-12">
         
-        <h1>${benchmarkName}</h1>
+        <h1>Benchmark ${page.benchmarkId}</h1>
         
-        <h2>Machine ${machine.id}</h2>
+        <h2>Machine ${page.machine.id}</h2>
         
-        <p>${machine.operatingSystem} 
-            <#if (machine.availableProcessors > 0)>${machine.availableProcessors}-core</#if>
-            <#if (machine.physicalMemory > 0)>${machine.physicalMemoryDescription}</#if>
-            <#if machine.cpuModel??><br>${machine.cpuModel}</#if></p>
+        <div id="runtime_chart"></div>
+        
+        <p>${page.machine.operatingSystem} 
+            <#if (page.machine.availableProcessors > 0)>${page.machine.availableProcessors}-core</#if>
+            <#if (page.machine.physicalMemory > 0)>${page.machine.physicalMemoryDescription}</#if>
+            <#if page.machine.cpuModel??><br>${page.machine.cpuModel}</#if></p>
 
-        <h3>Benchmarks</h3>
+        
+        <h3></h3>
+        
+        <h3>Results</h3>
 
         <table>
             <thead>
@@ -27,7 +50,7 @@
             </tr>
             </thead>
             <tbody>
-                <#list results as result>
+                <#list page.results as result>
                 <tr>
                     <th align="left">${result.interpreter} ${result.interpreterVersion}</th>
                     <td align="left">#${result.runId}</td>

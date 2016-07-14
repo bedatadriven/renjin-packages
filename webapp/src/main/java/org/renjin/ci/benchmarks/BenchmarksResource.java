@@ -4,10 +4,8 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
-import com.googlecode.objectify.cmd.Query;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.BenchmarkRunDescriptor;
@@ -16,7 +14,9 @@ import org.renjin.ci.model.MachineDescriptor;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @Path("/benchmarks")
@@ -45,31 +45,16 @@ public class BenchmarksResource {
   }
 
   @GET
-  @Path("machine/{machineId}/benchmark/{benchmarkName}")
-  @Produces(MediaType.APPLICATION_JSON)
-  public List<BenchmarkResult> getMachineBenchmarkResults(@PathParam("machineId") String machineId,
-                                                          @PathParam("benchmarkName") String benchmarkName) {
-
-    Query<BenchmarkResult> results = PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkName);
-    return results.list();
-  }
-  
-  @GET
   @Path("machine/{machineId}/benchmark/{benchmarkName:.+}")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getMachineBenchmarkResultsPage(@PathParam("machineId") String machineId, 
-                                             @PathParam("benchmarkName") String benchmarkName) {
+                                                 @PathParam("benchmarkName") String benchmarkName) {
 
-    LoadResult<BenchmarkMachine> machine = PackageDatabase.getBenchmarkMachine(machineId);
-    List<BenchmarkResult> results = PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkName).list();
-
-    Collections.sort(results, BenchmarkResult.comparator());
+    DetailPage page = new DetailPage(machineId, benchmarkName);
     
     Map<String, Object> model = new HashMap<>();
-    model.put("machine", machine.now());
-    model.put("benchmarkName", benchmarkName);
-    model.put("results", results);
-    
+    model.put("page", page);
+
     return new Viewable("/benchmarkResults.ftl", model);
   }
   

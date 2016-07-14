@@ -21,6 +21,7 @@ public class BenchmarkChangePointTest extends AbstractDatastoreTest {
 
     
     PackageDatabase.saveNow(result("GNU R", "3.2.0", MACHINE1, 24000));
+    PackageDatabase.saveNow(result("GNU R", "3.2.0", "FOO", 0));
     PackageDatabase.saveNow(result("Renjin", "0.8.2130", MACHINE1, 114059));
     PackageDatabase.saveNow(result("Renjin", "0.8.2135", MACHINE1, 63771));
     PackageDatabase.saveNow(result("Renjin", "0.8.2141", MACHINE1, 48137));

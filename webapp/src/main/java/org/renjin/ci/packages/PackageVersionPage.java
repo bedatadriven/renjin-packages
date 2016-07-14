@@ -10,6 +10,7 @@ import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.ObjectifyService;
 import org.joda.time.DateTime;
 import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.PackageDependency;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.source.LocChart;
@@ -139,9 +140,9 @@ public class PackageVersionPage {
     return links;
   }
 
-  public List<DependencyViewModel> getDependencies(Iterable<PackageDescription.PackageDependency> declaredDependencies) {
+  public List<DependencyViewModel> getDependencies(Iterable<PackageDependency> declaredDependencies) {
     List<DependencyViewModel> models = new ArrayList<>();
-    for (PackageDescription.PackageDependency declared : declaredDependencies) {
+    for (PackageDependency declared : declaredDependencies) {
       PackageVersionId resolved = dependencyMap.get(declared.getName());
       models.add(new DependencyViewModel(declared, resolved));
     }

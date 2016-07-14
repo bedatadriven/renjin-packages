@@ -17,12 +17,19 @@ public class UnixDescriber implements Callable<MachineDescriptor, IOException> {
   public MachineDescriptor call() throws IOException {
     
     MachineDescriptor descriptor = new MachineDescriptor();
-    descriptor.setId(findMacId());
+    descriptor.setId(findMachineId());
     descriptor.setOperatingSystem(System.getProperty("os.name"));
     descriptor.setAvailableProcessors(Runtime.getRuntime().availableProcessors());
     descriptor.setPhysicalMemory(findPhysicalMemory());
     descriptor.setCpuModel(findCpuModel());
     return descriptor;
+  }
+
+  private String findMachineId() throws IOException {
+    if(GceDescriber.isGoogleComputeEngine()) {
+      return GceDescriber.getGcsMachineId();
+    }
+    return findMacId();
   }
 
   private String findMacId() throws IOException {

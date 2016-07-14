@@ -1,20 +1,20 @@
 package org.renjin.ci.packages;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
-import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.PackageDependency;
 import org.renjin.ci.model.PackageVersionId;
 
 public class DependencyViewModel {
 
-    private PackageDescription.PackageDependency declared;
+    private PackageDependency declared;
     private PackageVersionId resolved;
 
-    public DependencyViewModel(PackageDescription.PackageDependency declared, PackageVersionId resolved) {
+    public DependencyViewModel(PackageDependency declared, PackageVersionId resolved) {
         this.declared = declared;
         this.resolved = resolved;
     }
 
-    public PackageDescription.PackageDependency getDeclared() {
+    public PackageDependency getDeclared() {
         return declared;
     }
 

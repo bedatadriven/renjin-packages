@@ -1,17 +1,15 @@
 package org.renjin.ci.jenkins.benchmark;
 
-import java.net.URL;
-
 /**
  * Describes a dataset required by a benchmark
  */
 public class BenchmarkDataset {
 
   private final String fileName;
-  private final URL url;
+  private final String url;
   private final String hash;
 
-  public BenchmarkDataset(String fileName, URL url, String hash) {
+  public BenchmarkDataset(String fileName, String url, String hash) {
     this.hash = hash;
     this.url = url;
     this.fileName = fileName;
@@ -21,7 +19,7 @@ public class BenchmarkDataset {
     return fileName;
   }
 
-  public URL getUrl() {
+  public String getUrl() {
     return url;
   }
 

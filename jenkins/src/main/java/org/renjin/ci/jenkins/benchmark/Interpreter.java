@@ -6,8 +6,10 @@ import hudson.Proc;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Common interface to R Interpreters
@@ -19,7 +21,7 @@ public abstract class Interpreter {
   
   public abstract String getVersion();
   
-  public abstract boolean execute(Launcher launcher, TaskListener listener, FilePath runScript) throws IOException, InterruptedException;
+  public abstract boolean execute(Launcher launcher, TaskListener listener, Node node, FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun) throws IOException, InterruptedException;
   
   protected final boolean execute(Launcher launcher, TaskListener listener, FilePath exeFile, FilePath scriptPath) 
       throws IOException, InterruptedException {

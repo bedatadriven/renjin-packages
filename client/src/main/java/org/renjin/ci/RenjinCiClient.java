@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
@@ -48,12 +49,36 @@ public class RenjinCiClient {
     build.setRenjinVersion(renjinVersion);
     return build;
   }
+  
 
   public static ResolvedDependencySet resolveDependencies(PackageVersionId packageVersionId) {
     return packageVersion(packageVersionId)
         .path("resolveDependencies")
         .request().get(ResolvedDependencySet.class);
     
+  }
+  
+  public static List<PackageVersionId> resolveDependencies(List<PackageDependency> dependencies) {
+    
+    if(dependencies.isEmpty()) {
+      return Collections.emptyList();
+    }
+    
+    WebTarget path = rootTarget()
+        .path("packages")
+        .path("resolveDependencies");
+
+    for (PackageDependency dependency : dependencies) {
+      path = path.queryParam(dependency.getName(), dependency.getVersion());
+    }
+    
+    ArrayNode versions = path.request().get(ArrayNode.class);
+    
+    List<PackageVersionId> versionIds = new ArrayList<>();
+    for (JsonNode version : versions) {
+      versionIds.add(PackageVersionId.fromTriplet(version.asText()));
+    }
+    return versionIds;
   }
   
   public static ListenableFuture<ResolvedDependencySet> resolveDependencies(ListeningExecutorService service, 

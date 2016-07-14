@@ -14,6 +14,7 @@ import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.BenchmarkRunDescriptor;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -42,6 +43,8 @@ public class BenchmarkRun {
   public void setupInterpreter(String interpreter, String version) throws IOException, InterruptedException {
     if("GNU R".equals(interpreter)) {
       this.interpreter = new GnuR(version);
+    } else if("pqR".equals(interpreter)) {
+      this.interpreter = new PQR(version);
     } else {
       this.interpreter = new Renjin(workspace, listener, version);
     }
@@ -70,18 +73,32 @@ public class BenchmarkRun {
     
   }
   
-  public void run(List<Benchmark> benchmarks) throws IOException, InterruptedException {
+  public boolean run(List<Benchmark> benchmarks, boolean dryRun) throws IOException, InterruptedException {
+    boolean allPassed = true;
+    
     for (Benchmark benchmark : benchmarks) {
-      run(benchmark);
+      try {
+        run(benchmark, dryRun);
+      } catch (InterruptedException e) {
+        throw e;
+      } catch(Exception e) {
+        allPassed = false;
+        listener.error("Failed to run benchmark: " + benchmark.getName());
+        e.printStackTrace(listener.getLogger());
+      }
     }
+    
+    return allPassed;
   }
 
-  private void run(Benchmark benchmark) throws IOException, InterruptedException {
+  private void run(Benchmark benchmark, boolean dryRun) throws IOException, InterruptedException {
 
     listener.getLogger().println("Running benchmark " + benchmark.getName() + "...");
 
-    ensureDatasetsDownloaded(benchmark);
-
+    if(!dryRun) {
+      ensureDatasetsDownloaded(benchmark);
+    }
+    
     // Write out a simple script that will source the benchmark
     // and write the timing to an output file
     // In this way, we exclude the interpreter start up time from the benchmark
@@ -96,15 +113,17 @@ public class BenchmarkRun {
     FilePath runScriptFile = benchmark.getDirectory().child("harness.R");
     runScriptFile.write(runScript, Charsets.UTF_8.name());
 
-    boolean completed = interpreter.execute(launcher, listener, runScriptFile);
+    boolean completed = interpreter.execute(launcher, listener, node, runScriptFile, benchmark.getDependencies(), dryRun);
 
-    if(completed && timingFile.exists()) {
-      double milliseconds = parseTiming(timingFile);
-      
-      RenjinCiClient.postBenchmarkResult(runId, benchmark.getName(), (long)milliseconds);
-    
-    } else {
-      RenjinCiClient.postBenchmarkFailure(runId, benchmark.getName());
+    if(!dryRun) {
+      if (completed && timingFile.exists()) {
+        double milliseconds = parseTiming(timingFile);
+
+        RenjinCiClient.postBenchmarkResult(runId, benchmark.getName(), (long) milliseconds);
+
+      } else {
+        RenjinCiClient.postBenchmarkFailure(runId, benchmark.getName());
+      }
     }
   }
 
@@ -119,12 +138,12 @@ public class BenchmarkRun {
   
 
   private void ensureDatasetsDownloaded(Benchmark benchmark) throws IOException, InterruptedException {
-    List<BenchmarkDataset> datasets = benchmark.readDatasets();
+    List<BenchmarkDataset> datasets = benchmark.getDatasets();
     for (BenchmarkDataset dataset : datasets) {
       FilePath datasetPath = benchmark.getDirectory().child(dataset.getFileName());
       if(!datasetPath.exists()) {
         listener.getLogger().println("Downloading " + dataset.getFileName() + " from " + dataset.getUrl());
-        datasetPath.copyFrom(dataset.getUrl());
+        datasetPath.copyFrom(new URL(dataset.getUrl()));
       }
     }
   }

@@ -96,8 +96,10 @@ public class PackageRegistrationTasks {
     GcsService gcsService =
             GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
+    GcsFileOptions options = new GcsFileOptions.Builder().acl("publicread").build();
+
     GcsOutputChannel outputChannel =
-            gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
+            gcsService.createOrReplace(filename, options);
 
     try(OutputStream outputStream = Channels.newOutputStream(outputChannel)) {
       ByteStreams.copy(inputStream, outputStream);

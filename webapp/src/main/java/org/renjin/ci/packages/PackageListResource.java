@@ -9,6 +9,8 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.joda.time.DateTime;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
@@ -18,10 +20,7 @@ import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.util.*;
 
 @Path("/packages")
@@ -224,6 +223,48 @@ public class PackageListResource {
             .build();
     }
 
+    
+    @GET
+    @Path("/resolveDependencies")
+    public Response resolveDependencies(@Context UriInfo uriInfo) throws JSONException {
+
+        MultivaluedMap<String, String> packages = uriInfo.getQueryParameters(true);
+
+        // Map the package names to FQNs
+        List<Package> packageList = ObjectifyService.ofy().load()
+            .type(Package.class)
+            .filter("name in", packages.keySet())
+            .list();
+        Map<String, PackageId> map = new HashMap<>();
+        for (Package aPackage : packageList) {
+            map.put(aPackage.getName(), aPackage.getPackageId());
+        }
+        
+        // Now query package versions
+        List<PackageVersionId> roots = new ArrayList<>();
+        for (String rootPackage : packages.keySet()) {
+            PackageId rootPackageId = map.get(rootPackage);
+            String version = packages.getFirst(rootPackage);
+            if(rootPackageId == null) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                .entity("Could not find package named '" + rootPackage + "'").build());
+            }
+            roots.add(new PackageVersionId(rootPackageId, version));
+        }
+
+        DependencyResolutionMulti resolver = new DependencyResolutionMulti(roots);
+        List<PackageVersionId> dependencies = resolver.resolve();
+        
+        
+
+        // Only support one level right now...
+        JSONArray array = new JSONArray();
+        int arrayIndex = 0;
+        for (PackageVersionId packageVersionId : dependencies) {
+            array.put(arrayIndex++, packageVersionId.toString());
+        }
+        return Response.ok().entity(array.toString()).type(MediaType.APPLICATION_JSON_TYPE).build();
+    }
 
     @GET
     @Path("search")

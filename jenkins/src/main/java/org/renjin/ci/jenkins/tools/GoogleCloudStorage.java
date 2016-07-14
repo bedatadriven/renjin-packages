@@ -2,11 +2,9 @@ package org.renjin.ci.jenkins.tools;
 
 
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.model.StorageObject;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
 import com.google.jenkins.plugins.credentials.oauth.GoogleRobotCredentials;
@@ -125,30 +123,6 @@ public class GoogleCloudStorage {
     public static LogArchiver newArchiver(BuildContext context, PackageBuild build) throws IOException {
         return new LogArchiver(context, build, newClient(context.getWorkerContext()));
     }
-
-    public static void archiveLogFile(BuildContext buildContext, PackageBuild build) throws IOException, InterruptedException {
-
-        Storage storage = GoogleCloudStorage.newClient(buildContext.getWorkerContext());
-
-        String objectName = StorageKeys.buildLog(build.getPackageVersionId(), build.getBuildNumber());
-        StorageObject objectMetadata = new StorageObject()
-                .setName(objectName)
-                .setContentType("text/plain")
-                .setContentEncoding("gzip");
-
-        Storage.Objects.Insert request = storage.objects().insert(
-                StorageKeys.BUILD_LOG_BUCKET,
-                objectMetadata,
-                new FileContent("text/plain", buildContext.getLogFile()));
-
-        request.setPredefinedAcl("publicread");
-        request.setContentEncoding("gzip");
-
-        request.execute();
-   
-        buildContext.log("Successfully archived log file");
-    }
-
 
 
 }

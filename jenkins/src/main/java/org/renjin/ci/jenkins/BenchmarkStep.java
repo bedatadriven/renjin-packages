@@ -27,12 +27,14 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
   private String interpreter;
   private String interpreterVersion;
   private String includes;
+  private boolean dryRun;
 
   @DataBoundConstructor
-  public BenchmarkStep(String interpreter, String interpreterVersion, String includes) {
+  public BenchmarkStep(String interpreter, String interpreterVersion, String includes, boolean dryRun) {
     this.interpreter = interpreter;
     this.interpreterVersion = interpreterVersion;
     this.includes = includes;
+    this.dryRun = dryRun;
   }
 
   public String getInterpreterVersion() {
@@ -47,10 +49,14 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     return interpreter;
   }
 
+  public boolean isDryRun() {
+    return dryRun;
+  }
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
     List<Benchmark> benchmarks = Lists.newArrayList();
-    findBenchmarks(benchmarks, "", workspace, listener);
+    findBenchmarks(benchmarks, "", workspace);
     
     if(benchmarks.isEmpty()) {
       listener.getLogger().println("No benchmarks found.");
@@ -60,6 +66,8 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     String interpreter = run.getEnvironment(listener).expand(this.interpreter);
     List<String> interpreterVersions = expandVersions(interpreter, run, listener);
 
+    boolean allPassed = true;
+    
     for (String interpreterVersion : interpreterVersions) {
       try {
         BenchmarkRun benchmarkRun = new BenchmarkRun(run, workspace, launcher, listener);
@@ -67,7 +75,9 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
             interpreter,
             interpreterVersion);
         benchmarkRun.start();
-        benchmarkRun.run(benchmarks);
+        if(!benchmarkRun.run(benchmarks, dryRun)) {
+          allPassed = false;
+        }
       
       } catch (InterruptedException e) {
         listener.error("Interrupted. Stopping.");
@@ -77,7 +87,12 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
         listener.error("Failed to run benchmarks on " + interpreter + " " + interpreterVersion + ": " + 
           e.getMessage());
         e.printStackTrace(listener.getLogger());
+        return;
       }
+    }
+    
+    if(!allPassed) {
+      throw new AbortException("There were failures executing benchmarks.");
     }
   }
 
@@ -106,17 +121,17 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     return versionStrings;
   }
 
-  private void findBenchmarks(List<Benchmark> benchmarks, String namePrefix, FilePath parentDir, TaskListener listener) throws IOException, InterruptedException {
+  private void findBenchmarks(List<Benchmark> benchmarks, String namePrefix, FilePath parentDir) throws IOException, InterruptedException {
     for (FilePath childDir : parentDir.listDirectories()) {
       if (childDir.child("BENCHMARK.dcf").exists() || 
           childDir.child("BENCHMARK").exists()) {
 
-        Benchmark benchmark = new Benchmark(namePrefix + childDir.getName(), childDir);
+        Benchmark benchmark = Benchmark.read(namePrefix, childDir);
         if(accept(benchmark)) {
           benchmarks.add(benchmark);
         }
       } else {
-        findBenchmarks(benchmarks, namePrefix + childDir.getName() + "/", childDir, listener);
+        findBenchmarks(benchmarks, namePrefix + childDir.getName() + "/", childDir);
       }
     }
   }

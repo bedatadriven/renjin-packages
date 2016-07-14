@@ -52,7 +52,7 @@ public class PackageVersionResource {
   public PackageBuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
     return new PackageBuildResource(packageVersion.getPackageVersionId(), buildNumber);
   }
-
+  
   @GET
   @Path("lastSuccessfulBuild")
   @Produces(MediaType.TEXT_PLAIN)

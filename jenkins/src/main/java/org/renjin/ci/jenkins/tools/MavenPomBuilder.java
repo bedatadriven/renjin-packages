@@ -11,8 +11,8 @@ import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.CorePackages;
+import org.renjin.ci.model.PackageDependency;
 import org.renjin.ci.model.PackageDescription;
-import org.renjin.ci.model.PackageDescription.PackageDependency;
 import org.renjin.ci.model.PackageDescription.Person;
 
 import java.io.IOException;

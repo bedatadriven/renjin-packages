@@ -1,12 +1,16 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import hudson.FilePath;
+import org.renjin.ci.RenjinCiClient;
+import org.renjin.ci.model.PackageDependency;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,8 +19,12 @@ import java.util.List;
 public class Benchmark {
   private String name;
   private FilePath filePath;
+  
+  private List<BenchmarkDataset> datasets = new ArrayList<BenchmarkDataset>();
+  private List<PackageDependency> dependencies = new ArrayList<PackageDependency>();
+  private List<PackageVersionId> resolvedDependencies = null;
 
-  public Benchmark(String name, FilePath filePath) {
+  private Benchmark(String name, FilePath filePath) {
     this.name = name;
     this.filePath = filePath;
   }
@@ -38,7 +46,7 @@ public class Benchmark {
     }
   }
   
-  public FilePath getDescriptorPath() throws IOException, InterruptedException {
+  private static FilePath getDescriptorPath(FilePath filePath) throws IOException, InterruptedException {
     if(filePath.child("BENCHMARK.dcf").exists()) {
       return filePath.child("BENCHMARK.dcf");
     } else {
@@ -50,12 +58,22 @@ public class Benchmark {
     return filePath.child(getLocalName() + ".R");
   }
 
-  public List<BenchmarkDataset> readDatasets() throws IOException, InterruptedException {
-    BufferedReader in = new BufferedReader(new InputStreamReader(getDescriptorPath().read()));
+  public List<PackageVersionId> getDependencies() {
+    if(resolvedDependencies == null) {
+      resolvedDependencies = RenjinCiClient.resolveDependencies(dependencies);
+    }
+    return resolvedDependencies;
+  }
+  
+  public static Benchmark read(String namePrefix, FilePath filePath) throws IOException, InterruptedException {
+    
+    Benchmark benchmark = new Benchmark(namePrefix + filePath.getName(), filePath);
+    
+    BufferedReader in = new BufferedReader(new InputStreamReader(getDescriptorPath(filePath).read()));
     String line;
     
     List<String> files = Lists.newArrayList();
-    List<URL> sources = Lists.newArrayList();
+    List<String> sources = Lists.newArrayList();
     List<String> hash = Lists.newArrayList();
     
     while((line=in.readLine())!=null) {
@@ -67,21 +85,38 @@ public class Benchmark {
         String key = keyValue[0].trim();
         String value = keyValue[1].trim();
 
-        if (key.equals("File")) {
+        if (key.equals("Depends")) {
+          Iterables.addAll(benchmark.dependencies, PackageDependency.parseList(value));
+          
+        } else if (key.equals("File")) {
           files.add(value);
+          
         } else if(key.equals("Source")) {
-          sources.add(new URL(value));
+          sources.add(value);
+        
         } else if(key.equals("Hash")) {
           hash.add(value);
         }
       }
     }
 
-    List<BenchmarkDataset> datasets = Lists.newArrayList();
     for (int i = 0; i < files.size(); i++) {
-      datasets.add(new BenchmarkDataset(files.get(i), sources.get(i), hash.get(i)));
+      benchmark.datasets.add(new BenchmarkDataset(getOrNull(files, i), getOrNull(sources, i), getOrNull(hash, i)));
     }
+    
+    return benchmark;
+  }
+
+  private static String getOrNull(List<String> values, int i) {
+    if(i < values.size()) {
+      return values.get(i);
+    } else {
+      return null;
+    }
+  }
+
+
+  public List<BenchmarkDataset> getDatasets() {
     return datasets;
   }
-  
 }

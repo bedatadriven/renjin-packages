@@ -6,6 +6,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Node;
 import hudson.model.TaskListener;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -66,7 +67,7 @@ public class Renjin extends Interpreter {
   }
 
   @Override
-  public boolean execute(Launcher launcher, TaskListener listener, FilePath scriptPath) throws IOException, InterruptedException {
+  public boolean execute(Launcher launcher, TaskListener listener, Node node, FilePath scriptPath, List<PackageVersionId> dependencies, boolean dryRun) throws IOException, InterruptedException {
     Preconditions.checkState(bin != null);
     
     return execute(launcher, listener, bin, scriptPath);

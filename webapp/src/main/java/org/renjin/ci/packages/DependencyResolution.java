@@ -14,7 +14,6 @@ import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
-import org.renjin.ci.model.PackageDescription.PackageDependency;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.GET;

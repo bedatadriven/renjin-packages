@@ -6,10 +6,12 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.cmd.Query;
+import com.googlecode.objectify.cmd.QueryKeys;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.FunctionIndex;
 import org.renjin.ci.datastore.Loc;
 import org.renjin.ci.datastore.PackageSource;
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.source.index.Language;
 import org.renjin.ci.source.index.SourceIndexTasks;
 
@@ -17,10 +19,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.ws.rs.core.MediaType;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -62,6 +62,27 @@ public class SourceResources {
     return model;
   }
 
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/searchPackages")
+  public List<String> searchPackages(@QueryParam("uses") String function) {
+
+    QueryKeys<FunctionIndex> query = ObjectifyService.ofy()
+        .load()
+        .type(FunctionIndex.class)
+        .chunk(1000)
+        .keys();
+
+    Set<String> packages = new HashSet<>();
+
+    for (Key<FunctionIndex> functionIndexKey : query.iterable()) {
+      PackageId packageId = FunctionIndex.packageVersionIdOf(functionIndexKey.getName());
+      packages.add(packageId.toString());
+    }
+
+    return Lists.newArrayList(packages);
+  }
+  
   @GET
   @Produces("text/html")
   @Path("/search")

@@ -9,6 +9,8 @@ import hudson.Proc;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.ByteArrayOutputStream;
@@ -75,10 +77,20 @@ public class Renjin extends Interpreter {
     detectBlasVersion(launcher, renjinLocation);
     jdkVersion = VersionDetectors.detectJavaVersion(launcher);
   }
+  
+  private boolean atLeast(String version) {
+    ArtifactVersion thisVersion = new DefaultArtifactVersion(this.version);
+    ArtifactVersion thatVersion = new DefaultArtifactVersion(version);
+    return thisVersion.compareTo(thatVersion) >= 0; 
+  }
 
   private void detectBlasVersion(Launcher launcher, FilePath renjinLocation) throws IOException, InterruptedException {
     StringBuilder script = new StringBuilder();
-    script.append("import(org.netlib.lapack.LAPACK)\n");
+    if(atLeast("0.8.2142")) {
+      script.append("import(com.github.fommil.netlib.LAPACK)\n");
+    } else {
+      script.append("import(org.netlib.lapack.LAPACK)\n");
+    }
     script.append("cat(LAPACK$getInstance()$class$name)\n");
 
     FilePath scriptFile = renjinLocation.child("detect-blas.R");
@@ -101,10 +113,15 @@ public class Renjin extends Interpreter {
     }
 
     String output = new String(baos.toByteArray());
-    if(output.contains("org.netlib.lapack.JLAPACK")) {
-      blasLibrary = "reference-jvm";
+    if(output.contains("org.netlib.lapack.JLAPACK") ||
+       output.contains("com.github.fommil.netlib.F2jBLAS")) {
+      blasLibrary = "f2jblas";
     } else if(output.contains("org.netlib.lapack.NativeLAPACK")) {
       blasLibrary = "native";
+    } else if(output.contains("com.github.fommil.netlib.NativeRefBLAS")) {
+      blasLibrary = "reference";
+    } else if(output.contains("com.github.fommil.netlib.NativeSystemBLAS")) {
+      blasLibrary = "native-system";
     }
   }
 

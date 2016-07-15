@@ -8,6 +8,7 @@ import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.tasks.BuildStepDescriptor;
@@ -38,6 +39,10 @@ public class RenjinCiNotifier extends Notifier {
   @Override
   public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
     
+    if(build.getResult() != Result.SUCCESS) {
+      return true;
+    }
+    
     listener.getLogger().println("Renjin ci starting on " + build.getClass().getName());
     
     if(build instanceof hudson.maven.MavenModuleSetBuild) {
@@ -58,6 +63,7 @@ public class RenjinCiNotifier extends Notifier {
   }
 
   private void notifyRenjinRelease(BuildListener listener, MavenModuleSetBuild mavenBuild, MavenModule module) throws IOException {
+    
     String renjinVersion = module.getVersion();
     String commitId = ObjectId.toString(getCommitSHA1(mavenBuild));
 

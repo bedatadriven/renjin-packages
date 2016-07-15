@@ -55,6 +55,7 @@ public class Terr extends Interpreter {
             throws IOException, InterruptedException {
     
     RScript rScript = new RScript(scriptBin);
+    rScript.setUserLibsEnvVariable("TERR_LIBS_USER");
     
     LibraryDir libraryDir = new LibraryDir(getId(), version, dependencies);
     libraryDir.ensureInstalled(launcher, listener, node, rScript);

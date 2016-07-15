@@ -14,6 +14,7 @@ import java.util.Map;
 public class RScript {
   
   public FilePath bin;
+  private String userLibsEnvVariable = "R_LIBS_USER";
 
   /**
    * Path to the Rscript binary
@@ -21,6 +22,10 @@ public class RScript {
    */
   public RScript(FilePath bin) {
     this.bin = bin;
+  }
+
+  public void setUserLibsEnvVariable(String userLibsEnvVariable) {
+    this.userLibsEnvVariable = userLibsEnvVariable;
   }
 
   public Launcher.ProcStarter runScript(Launcher launcher, FilePath libraryPath, FilePath scriptPath)
@@ -31,7 +36,7 @@ public class RScript {
     args.add(scriptPath.getName());
 
     Map<String, String> env = new HashMap<String, String>();
-    env.put("R_LIBS_USER", libraryPath.getRemote());
+    env.put(userLibsEnvVariable, libraryPath.getRemote());
 
     Launcher.ProcStarter ps = launcher.new ProcStarter();
     ps = ps.cmds(args)

@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import com.google.common.collect.Maps;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Node;
@@ -8,6 +9,7 @@ import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Driver for "Pretty Quick R"
@@ -23,12 +25,19 @@ public class PQR extends Interpreter {
 
   @Override
   void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
-    sourceInstallation = new SourceInstallation();
+    sourceInstallation = new SourceInstallation(new DefaultBlas());
     sourceInstallation.setVersion(version);
     sourceInstallation.setSourceUrl("http://www.pqr-project.org/pqR-" + version + ".tar.gz");
     sourceInstallation.setInstallPrefix("pqR");
     sourceInstallation.setSourceDirectoryName("pqR-" + version);
     sourceInstallation.ensureInstalled(node, launcher, taskListener);
+  }
+
+  @Override
+  public Map<String, String> getRunVariables() {
+    Map<String, String> variables = Maps.newHashMap();
+    variables.put(RunVariables.BLAS, "reference");
+    return variables;
   }
 
   @Override

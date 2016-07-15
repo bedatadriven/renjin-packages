@@ -9,7 +9,9 @@ import hudson.util.ArgumentListBuilder;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Common interface to R Interpreters
@@ -22,6 +24,10 @@ public abstract class Interpreter {
   public abstract String getVersion();
   
   public abstract boolean execute(Launcher launcher, TaskListener listener, Node node, FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun) throws IOException, InterruptedException;
+  
+  public Map<String, String> getRunVariables() {
+    return Collections.emptyMap();
+  }
   
   protected final boolean execute(Launcher launcher, TaskListener listener, FilePath exeFile, FilePath scriptPath) 
       throws IOException, InterruptedException {

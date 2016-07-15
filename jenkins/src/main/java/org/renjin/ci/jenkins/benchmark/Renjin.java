@@ -1,17 +1,23 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Proc;
 import hudson.model.Node;
 import hudson.model.TaskListener;
+import hudson.util.ArgumentListBuilder;
 import org.renjin.ci.model.PackageVersionId;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Executes Renjin
@@ -20,11 +26,22 @@ public class Renjin extends Interpreter {
 
   private String version;
   private FilePath bin;
-
+  
+  private String blasLibrary = null;
+  private String jdkVersion;
+  
   public Renjin(FilePath workspace, TaskListener listener, String version) {
     this.version = version;
   }
-  
+
+  @Override
+  public Map<String, String> getRunVariables() {
+    Map<String, String> variables = new HashMap<String, String>();
+    variables.put(RunVariables.BLAS, blasLibrary);
+    variables.put(RunVariables.JDK, jdkVersion);
+    return variables;
+  }
+
   @Override
   public void ensureInstalled(Node node, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
 
@@ -53,6 +70,41 @@ public class Renjin extends Interpreter {
     if(!bin.exists()) {
       listener.fatalError("Renjin executable " + bin + " does not exist!");
       throw new AbortException();
+    }
+    
+    detectBlasVersion(launcher, renjinLocation);
+    jdkVersion = VersionDetectors.detectJavaVersion(launcher);
+  }
+
+  private void detectBlasVersion(Launcher launcher, FilePath renjinLocation) throws IOException, InterruptedException {
+    StringBuilder script = new StringBuilder();
+    script.append("import(org.netlib.lapack.LAPACK)\n");
+    script.append("cat(LAPACK$getInstance()$class$name)\n");
+
+    FilePath scriptFile = renjinLocation.child("detect-blas.R");
+    scriptFile.write(script.toString(), Charsets.UTF_8.name());
+
+    ArgumentListBuilder args = new ArgumentListBuilder();
+    args.add(bin.getRemote());
+    args.add("-f");
+    args.add(scriptFile.getRemote());
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+    Launcher.ProcStarter ps = launcher.new ProcStarter();
+    ps = ps.cmds(args).stdout(baos);
+
+    Proc proc = launcher.launch(ps);
+    int exitCode = proc.join();
+    if(exitCode != 0) {
+      throw new RuntimeException("Failed to detect BLAS version");
+    }
+
+    String output = new String(baos.toByteArray());
+    if(output.contains("org.netlib.lapack.JLAPACK")) {
+      blasLibrary = "reference-jvm";
+    } else if(output.contains("org.netlib.lapack.NativeLAPACK")) {
+      blasLibrary = "native";
     }
   }
 

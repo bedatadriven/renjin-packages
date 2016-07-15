@@ -7,7 +7,9 @@ import hudson.model.TaskListener;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tibco interpreter
@@ -33,6 +35,13 @@ public class Terr extends Interpreter {
   @Override
   public String getId() {
     return "TERR";
+  }
+
+  @Override
+  public Map<String, String> getRunVariables() {
+    Map<String, String> variables = new HashMap<String, String>();
+    variables.put(RunVariables.BLAS, "MKL");
+    return variables;
   }
 
   @Override

@@ -6,6 +6,7 @@ import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Describes a single run of a set of benchmarks
@@ -39,6 +40,8 @@ public class BenchmarkRun {
   @Index
   private String machineId;
   
+  @Unindex
+  private Map<String, String> runVariables;
   
   /**
    * The interpreter used (Renjin, GNU R, pqR, etc)
@@ -105,5 +108,13 @@ public class BenchmarkRun {
 
   public void setInterpreterVersion(String interpreterVersion) {
     this.interpreterVersion = interpreterVersion;
+  }
+
+  public Map<String, String> getRunVariables() {
+    return runVariables;
+  }
+
+  public void setRunVariables(Map<String, String> runVariables) {
+    this.runVariables = runVariables;
   }
 }

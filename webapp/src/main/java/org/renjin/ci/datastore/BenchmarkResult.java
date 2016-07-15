@@ -10,6 +10,7 @@ import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 
 @Entity
@@ -20,7 +21,7 @@ public class BenchmarkResult {
 
   @Index
   private long runId;
-  
+
   @Index
   private String machineId;
 
@@ -33,12 +34,15 @@ public class BenchmarkResult {
 
   @Index
   private String benchmarkName;
-  
+
   @Unindex
   private String interpreter;
-  
+
   @Unindex
   private String interpreterVersion;
+
+  @Unindex
+  private Map<String, String> runVariables;
 
   /**
    * Whether the benchmark successfully completed or not
@@ -109,7 +113,15 @@ public class BenchmarkResult {
   public void setInterpreterVersion(String interpreterVersion) {
     this.interpreterVersion = interpreterVersion;
   }
-  
+
+  public Map<String, String> getRunVariables() {
+    return runVariables;
+  }
+
+  public void setRunVariables(Map<String, String> runVariables) {
+    this.runVariables = runVariables;
+  }
+
   public static Comparator<BenchmarkResult> comparator() {
     
     List<Comparator<BenchmarkResult>> comparators = new ArrayList<>();

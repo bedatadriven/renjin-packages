@@ -13,8 +13,7 @@ import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.renjin.ci.RenjinCiClient;
-import org.renjin.ci.jenkins.benchmark.Benchmark;
-import org.renjin.ci.jenkins.benchmark.BenchmarkRun;
+import org.renjin.ci.jenkins.benchmark.*;
 import org.renjin.ci.model.RenjinVersionId;
 
 import java.io.IOException;
@@ -29,15 +28,18 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
   private String interpreterVersion;
   private String includes;
   private String excludes;
+  private String blas;
   private boolean dryRun;
   private boolean noDependencies;
 
   @DataBoundConstructor
-  public BenchmarkStep(String interpreter, String interpreterVersion, String includes, String excludes, boolean dryRun, boolean noDependencies) {
+  public BenchmarkStep(String interpreter, String interpreterVersion, String includes,
+                       String excludes, String blas, boolean dryRun, boolean noDependencies) {
     this.interpreter = interpreter;
     this.interpreterVersion = interpreterVersion;
     this.includes = includes;
     this.excludes = excludes;
+    this.blas = blas;
     this.dryRun = dryRun;
     this.noDependencies = noDependencies;
   }
@@ -66,6 +68,10 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     return noDependencies;
   }
 
+  public String getBlas() {
+    return blas;
+  }
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
     List<Benchmark> benchmarks = Lists.newArrayList();
@@ -86,7 +92,8 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
         BenchmarkRun benchmarkRun = new BenchmarkRun(run, workspace, launcher, listener);
         benchmarkRun.setupInterpreter(
             interpreter,
-            interpreterVersion);
+            interpreterVersion,
+            blasLibrary());
         benchmarkRun.start();
         if(!benchmarkRun.run(benchmarks, dryRun)) {
           allPassed = false;
@@ -106,6 +113,14 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     
     if(!allPassed) {
       throw new AbortException("There were failures executing benchmarks.");
+    }
+  }
+
+  private BlasLibrary blasLibrary() {
+    if("OpenBLAS".equals(blas)) {
+      return new OpenBlas();
+    } else {
+      return new DefaultBlas();
     }
   }
 

@@ -40,9 +40,9 @@ public class BenchmarkRun {
     node = ((AbstractBuild) build).getBuiltOn();
   }
 
-  public void setupInterpreter(String interpreter, String version) throws IOException, InterruptedException {
+  public void setupInterpreter(String interpreter, String version, BlasLibrary blasLibrary) throws IOException, InterruptedException {
     if("GNU R".equalsIgnoreCase(interpreter)) {
-      this.interpreter = new GnuR(version);
+      this.interpreter = new GnuR(version, blasLibrary);
     } else if("pqR".equalsIgnoreCase(interpreter)) {
       this.interpreter = new PQR(version);
     } else if("TERR".equalsIgnoreCase(interpreter)) {
@@ -62,6 +62,8 @@ public class BenchmarkRun {
     benchmarkRun.setInterpreterVersion(interpreter.getVersion());
     benchmarkRun.setRepoUrl(env.get("GIT_URL"));
     benchmarkRun.setCommitId(env.get("GIT_COMMIT"));
+    benchmarkRun.setRunVariables(interpreter.getRunVariables());
+    
     try {
       benchmarkRun.setMachine(launcher.getChannel().call(new UnixDescriber()));
     } catch (IOException e) {

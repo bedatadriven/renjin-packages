@@ -84,6 +84,7 @@ public class BenchmarksResource {
     run.setStartTime(new Date());
     run.setInterpreter(descriptor.getInterpreter());
     run.setInterpreterVersion(descriptor.getInterpreterVersion());
+    run.setRunVariables(descriptor.getRunVariables());
 
     Key<BenchmarkRun> key = ObjectifyService.ofy().save().entity(run).now();
 
@@ -111,6 +112,7 @@ public class BenchmarksResource {
     result.setCompleted(completed);
     result.setInterpreter(run.getInterpreter());
     result.setInterpreterVersion(run.getInterpreterVersion());
+    result.setRunVariables(run.getRunVariables());
     
     if(completed) {
       result.setRunTime(runTime);

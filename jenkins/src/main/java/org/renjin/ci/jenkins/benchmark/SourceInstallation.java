@@ -21,7 +21,17 @@ public class SourceInstallation {
   private String sourceDirectoryName;
   
   private FilePath sourcePath;
+  
+  private BlasLibrary blasLibrary;
+  private String gccVersion;
 
+  public SourceInstallation(BlasLibrary blasLibrary) {
+    this.blasLibrary = blasLibrary;
+  }
+  
+  public SourceInstallation() {
+    this.blasLibrary = new DefaultBlas();
+  }
 
   /**
    * The prefix to use for this interpreter in the tools/ directory
@@ -58,7 +68,11 @@ public class SourceInstallation {
 
   public void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
 
-    FilePath homePath = node.getRootPath().child("tools").child(installPrefix).child(version);
+    gccVersion = VersionDetectors.detectGccVersion(launcher);
+    
+    blasLibrary.ensureInstalled(node, launcher, taskListener);
+    
+    FilePath homePath = node.getRootPath().child("tools").child(installPrefix + "-" + blasLibrary.getNameAndVersion()).child(version);
     sourcePath = homePath.child(sourceDirectoryName);
 
     // check if installation is complete
@@ -72,10 +86,15 @@ public class SourceInstallation {
         throw new AbortException("Expected source directory not found: " + sourcePath);
       }
 
+      String commandLine = "./configure";
+      if(!blasLibrary.getConfigureFlags().isEmpty()) {
+        commandLine += " " + blasLibrary.getConfigureFlags();
+      }
+      
       // Configure && build
       int configureExitCode = launcher.launch()
           .pwd(sourcePath)
-          .cmdAsSingleString("./configure")
+          .cmdAsSingleString(commandLine)
           .stdout(taskListener)
           .start()
           .join();
@@ -101,5 +120,9 @@ public class SourceInstallation {
 
   public RScript getExecutor() {
     return new RScript(sourcePath.child("bin").child("Rscript"));
+  }
+
+  public String getGccVersion() {
+    return gccVersion;
   }
 }

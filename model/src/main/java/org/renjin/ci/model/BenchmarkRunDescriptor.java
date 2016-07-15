@@ -1,11 +1,15 @@
 package org.renjin.ci.model;
 
+import java.util.Map;
+
 /**
  * Describes a new benchmark run
  */
 public class BenchmarkRunDescriptor {
 
   private MachineDescriptor machine;
+  
+  private Map<String, String> runVariables;
 
   /**
    * The repo of the benchmarks
@@ -82,6 +86,14 @@ public class BenchmarkRunDescriptor {
 
   public void setMachine(MachineDescriptor machine) {
     this.machine = machine;
+  }
+
+  public Map<String, String> getRunVariables() {
+    return runVariables;
+  }
+
+  public void setRunVariables(Map<String, String> runVariables) {
+    this.runVariables = runVariables;
   }
 }
 

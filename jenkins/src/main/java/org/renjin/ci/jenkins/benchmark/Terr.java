@@ -10,30 +10,29 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Driver for "Pretty Quick R"
+ * Tibco interpreter
  */
-public class PQR extends Interpreter {
+public class Terr extends Interpreter {
   
   private String version;
-  private SourceInstallation sourceInstallation;
+  private FilePath scriptBin;
 
-  public PQR(String version) {
+  public Terr(String version) {
     this.version = version;
   }
 
   @Override
   void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
-    sourceInstallation = new SourceInstallation();
-    sourceInstallation.setVersion(version);
-    sourceInstallation.setSourceUrl("http://www.pqr-project.org/pqR-" + version + ".tar.gz");
-    sourceInstallation.setInstallPrefix("pqR");
-    sourceInstallation.setSourceDirectoryName("pqR-" + version);
-    sourceInstallation.ensureInstalled(node, launcher, taskListener);
+    FilePath homeDir = node.getRootPath().child("tools").child("terr").child(version);
+    scriptBin = homeDir.child("bin").child("TERRscript");
+    if(!scriptBin.exists()) {
+      throw new RuntimeException("Could not find TERRscript at " + scriptBin.getRemote());
+    }
   }
 
   @Override
   public String getId() {
-    return "pqR";
+    return "TERR";
   }
 
   @Override
@@ -43,13 +42,14 @@ public class PQR extends Interpreter {
 
   @Override
   public boolean execute(Launcher launcher, TaskListener listener, Node node, 
-                         FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun) throws IOException, InterruptedException {
+                         FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun) 
+            throws IOException, InterruptedException {
     
-    RScript rScript = sourceInstallation.getExecutor();
+    RScript rScript = new RScript(scriptBin);
     
     LibraryDir libraryDir = new LibraryDir(getId(), version, dependencies);
     libraryDir.ensureInstalled(launcher, listener, node, rScript);
-
+    
     int exitCode = rScript.runScript(launcher, libraryDir.getPath(), runScript)
         .stdout(listener)
         .start()

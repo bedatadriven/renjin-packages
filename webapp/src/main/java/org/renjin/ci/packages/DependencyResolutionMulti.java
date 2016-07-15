@@ -46,7 +46,7 @@ public class DependencyResolutionMulti {
     
     
     for (PackageVersionId root : roots) {
-      add(root, sorted.size());
+      add(root);
     }
     
     return sorted;
@@ -68,7 +68,7 @@ public class DependencyResolutionMulti {
     }
   }
 
-  private void add(PackageVersionId versionId, int before) {
+  private void add(PackageVersionId versionId) {
 
     PackageVersionId resolvedId = resolvedVersion.get(versionId.getPackageId());
     if(!sorted.contains(resolvedId)) {
@@ -76,11 +76,11 @@ public class DependencyResolutionMulti {
       // Add dependencies first
       Collection<PackageVersionId> dependencies = dependencyMap.get(resolvedId);
       for (PackageVersionId dependency : dependencies) {
-        add(dependency, before);
+        add(dependency);
       }
       
       // Now add ourselves
-      sorted.add(before, resolvedId);
+      sorted.add(resolvedId);
     }
   }
 

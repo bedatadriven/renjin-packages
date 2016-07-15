@@ -9,6 +9,12 @@
   <f:entry title="Benchmarks to include" field="includes">
     <f:textbox/>
   </f:entry>
+  <f:entry title="Benchmarks to exclude" field="excludes">
+    <f:textbox/>
+  </f:entry>
+  <f:entry title="Exclude benchmarks with dependencies" field="noDependencies">
+    <f:checkbox/>
+  </f:entry>
   <f:entry title="Dry Run" field="dryRun">
     <f:checkbox/>
   </f:entry>

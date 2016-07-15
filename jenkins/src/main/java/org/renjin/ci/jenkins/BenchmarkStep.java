@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import hudson.AbortException;
 import hudson.Extension;
@@ -27,14 +28,18 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
   private String interpreter;
   private String interpreterVersion;
   private String includes;
+  private String excludes;
   private boolean dryRun;
+  private boolean noDependencies;
 
   @DataBoundConstructor
-  public BenchmarkStep(String interpreter, String interpreterVersion, String includes, boolean dryRun) {
+  public BenchmarkStep(String interpreter, String interpreterVersion, String includes, String excludes, boolean dryRun, boolean noDependencies) {
     this.interpreter = interpreter;
     this.interpreterVersion = interpreterVersion;
     this.includes = includes;
+    this.excludes = excludes;
     this.dryRun = dryRun;
+    this.noDependencies = noDependencies;
   }
 
   public String getInterpreterVersion() {
@@ -51,6 +56,14 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
 
   public boolean isDryRun() {
     return dryRun;
+  }
+
+  public String getExcludes() {
+    return excludes;
+  }
+
+  public boolean isNoDependencies() {
+    return noDependencies;
   }
 
   @Override
@@ -137,11 +150,16 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
   }
 
   private boolean accept(Benchmark benchmark) {
-    if(includes == null) {
-      return true;
-    } else {
-      return benchmark.getName().contains(includes);
+    if(!Strings.isNullOrEmpty(includes) && !benchmark.getName().contains(includes)) {
+      return false;
     }
+    if(!Strings.isNullOrEmpty(excludes) && benchmark.getName().contains(excludes)) {
+      return false;
+    }
+    if(noDependencies && benchmark.hasDependencies()) {
+      return false;
+    }
+    return true;
   }
 
   @Extension

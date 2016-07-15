@@ -41,10 +41,12 @@ public class BenchmarkRun {
   }
 
   public void setupInterpreter(String interpreter, String version) throws IOException, InterruptedException {
-    if("GNU R".equals(interpreter)) {
+    if("GNU R".equalsIgnoreCase(interpreter)) {
       this.interpreter = new GnuR(version);
-    } else if("pqR".equals(interpreter)) {
+    } else if("pqR".equalsIgnoreCase(interpreter)) {
       this.interpreter = new PQR(version);
+    } else if("TERR".equalsIgnoreCase(interpreter)) {
+      this.interpreter = new Terr(version);
     } else {
       this.interpreter = new Renjin(workspace, listener, version);
     }

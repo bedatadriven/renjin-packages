@@ -31,7 +31,7 @@ summarizeByTerp <- function(interpreter, results) {
     
     results <-  results[results$interpreter == interpreter, ]
     latestVersion <- findLatestVersion(results$interpreterVersion)
-    latestResults <- results[results$interpreterVersion == latestVersion, ]
+    latestResults <- results[results$interpreterVersion == latestVersion & results$completed, ]
    
     print(latestResults)
     

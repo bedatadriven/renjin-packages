@@ -1,5 +1,6 @@
 package org.renjin.ci.datastore;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import com.googlecode.objectify.annotation.*;
@@ -122,6 +123,14 @@ public class BenchmarkResult {
     this.runVariables = runVariables;
   }
 
+  public String getRunVariable(String name) {
+    String value = null;
+    if(runVariables != null) {
+      value = runVariables.get(name);
+    }
+    return Strings.nullToEmpty(value);
+  }
+  
   public static Comparator<BenchmarkResult> comparator() {
     
     List<Comparator<BenchmarkResult>> comparators = new ArrayList<>();

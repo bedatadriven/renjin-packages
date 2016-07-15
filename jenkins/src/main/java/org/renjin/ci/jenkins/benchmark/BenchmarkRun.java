@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import hudson.AbortException;
@@ -142,13 +143,42 @@ public class BenchmarkRun {
   
 
   private void ensureDatasetsDownloaded(Benchmark benchmark) throws IOException, InterruptedException {
+    
+    FilePath sharedDataDir = node.getRootPath().child("data");
+    
     List<BenchmarkDataset> datasets = benchmark.getDatasets();
     for (BenchmarkDataset dataset : datasets) {
-      FilePath datasetPath = benchmark.getDirectory().child(dataset.getFileName());
-      if(!datasetPath.exists()) {
-        listener.getLogger().println("Downloading " + dataset.getFileName() + " from " + dataset.getUrl());
-        datasetPath.copyFrom(new URL(dataset.getUrl()));
+      
+      listener.getLogger().println("Downloading dataset " + dataset.getFileName());
+      
+      if(Strings.isNullOrEmpty(dataset.getHash())) {
+        throw new RuntimeException("Dataset in " + benchmark.getName() + "/" + dataset.getFileName() + " is missing MD5 hash");
       }
+      
+      // If the file already exists, verify its hash,
+      // and remove if it's incorrect
+      FilePath datasetPath = benchmark.getDirectory().child(dataset.getFileName());
+      if(datasetPath.exists()) {
+        if(datasetPath.digest().equals(dataset.getHash())) {
+          continue;
+        }
+        datasetPath.delete();
+      }
+
+      // Download the file to a shared data location on the node
+      FilePath sharedFile = sharedDataDir.child(dataset.getHash());
+      if(!sharedFile.exists()) {
+        FilePath tempFile = sharedDataDir.child(dataset.getHash() + ".download");
+        tempFile.copyFrom(new URL(dataset.getUrl()));
+        if(!tempFile.digest().equals(dataset.getHash())) {
+          throw new RuntimeException("Dataset " + benchmark.getName() + "/" + dataset.getFileName() + ", downloaded from " + 
+              dataset.getUrl() + " has incorrect hash.");
+        }
+        tempFile.renameTo(sharedFile);
+      }
+
+      // Symlink the dataset into the workspace to avoid too much extra space used
+      datasetPath.symlinkTo(sharedFile.getRemote(), listener);
     }
   }
 

@@ -9,10 +9,10 @@
     google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
-        var data = google.visualization.arrayToDataTable([${page.dataTable.array}]);
+        var data = google.visualization.arrayToDataTable([${page.detailGraph.array}]);
 
         var options = {
-            title: 'Runtime (${page.dataTable.units})',
+            title: 'Runtime (${page.detailGraph.units})',
             pointSize: 5,
             legend: { position: 'bottom' }
         };
@@ -47,6 +47,9 @@
                 <th align="left">Interpreter</th>
                 <th align="left">Run</th>
                 <th align="right">Run Time (ms)</th>
+                <#list page.detailTable.variables as variable>
+                <th align="left">${variable}</th>
+                </#list>
             </tr>
             </thead>
             <tbody>
@@ -60,6 +63,11 @@
                         <#else>
                             ERROR
                         </#if>
+                    <#list page.detailTable.variables as variable>
+                    <td align="left">
+                    ${result.getRunVariable(variable)}
+                    </td>
+                    </#list>
                 </tr>
                 </#list>
             </tbody>

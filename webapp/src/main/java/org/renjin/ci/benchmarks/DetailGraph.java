@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DataTable {
+public class DetailGraph {
 
 
   private final String array;
   private double scale;
   private String units;
   
-  public DataTable(Iterable<BenchmarkResult> results, String trackInterpreter) {
+  public DetailGraph(Iterable<BenchmarkResult> results, String trackInterpreter) {
     
     
     // Find the latest version of each intepreter

@@ -24,7 +24,7 @@ public class RScript {
     this.bin = bin;
   }
 
-  public void setUserLibsEnvVariable(String userLibsEnvVariable) {
+  public void qsetUserLibsEnvVariable(String userLibsEnvVariable) {
     this.userLibsEnvVariable = userLibsEnvVariable;
   }
 

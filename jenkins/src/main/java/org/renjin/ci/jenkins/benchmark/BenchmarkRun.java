@@ -149,8 +149,6 @@ public class BenchmarkRun {
     List<BenchmarkDataset> datasets = benchmark.getDatasets();
     for (BenchmarkDataset dataset : datasets) {
       
-      listener.getLogger().println("Downloading dataset " + dataset.getFileName());
-      
       if(Strings.isNullOrEmpty(dataset.getHash())) {
         throw new RuntimeException("Dataset in " + benchmark.getName() + "/" + dataset.getFileName() + " is missing MD5 hash");
       }
@@ -168,6 +166,8 @@ public class BenchmarkRun {
       // Download the file to a shared data location on the node
       FilePath sharedFile = sharedDataDir.child(dataset.getHash());
       if(!sharedFile.exists()) {
+        listener.getLogger().println("Downloading dataset " + dataset.getFileName());
+
         FilePath tempFile = sharedDataDir.child(dataset.getHash() + ".download");
         tempFile.copyFrom(new URL(dataset.getUrl()));
         if(!tempFile.digest().equals(dataset.getHash())) {
@@ -178,6 +178,7 @@ public class BenchmarkRun {
       }
 
       // Symlink the dataset into the workspace to avoid too much extra space used
+      listener.getLogger().println("Linking dataset " + dataset.getFileName());
       datasetPath.symlinkTo(sharedFile.getRemote(), listener);
     }
   }

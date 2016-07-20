@@ -64,4 +64,19 @@ public class VersionDetectors {
 
     return output.split("\n");
   }
+
+  public static String findSystemBlas(Launcher launcher) throws IOException, InterruptedException {
+    return parseSystemBlas(execute(launcher, "ldconfig", "-p"));
+  }
+
+  private static String parseSystemBlas(String[] output) {
+    for (String line : output) {
+      if(line.contains("libopenblas.so")) {
+        return "OpenBLAS";
+      } else if(line.contains("blas.so")) {
+        return "reference";
+      }
+    }
+    return "unknown";
+  }
 }

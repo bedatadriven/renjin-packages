@@ -113,15 +113,19 @@ public class Renjin extends Interpreter {
     }
 
     String output = new String(baos.toByteArray());
-    if(output.contains("org.netlib.lapack.JLAPACK") ||
+    if(output.contains("Falling back to pure JVM BLAS libraries.") ||
+       output.contains("org.netlib.lapack.JLAPACK") ||
        output.contains("com.github.fommil.netlib.F2jBLAS")) {
       blasLibrary = "f2jblas";
-    } else if(output.contains("org.netlib.lapack.NativeLAPACK")) {
-      blasLibrary = "native";
-    } else if(output.contains("com.github.fommil.netlib.NativeRefBLAS")) {
+      
+    } else if(output.contains("com.github.fommil.netlib.NativeRefBLAS") ||
+              output.contains("Using native reference BLAS libraries.")) {
       blasLibrary = "reference";
-    } else if(output.contains("com.github.fommil.netlib.NativeSystemBLAS")) {
-      blasLibrary = "native-system";
+    
+    } else if(
+        output.contains("com.github.fommil.netlib.NativeSystemBLAS") ||
+        output.contains("Using system BLAS libraries.")) {
+      blasLibrary = VersionDetectors.findSystemBlas(launcher);
     }
   }
 

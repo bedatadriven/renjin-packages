@@ -20,6 +20,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Executes Renjin
@@ -140,9 +141,33 @@ public class Renjin extends Interpreter {
   }
 
   @Override
-  public boolean execute(Launcher launcher, TaskListener listener, Node node, FilePath scriptPath, List<PackageVersionId> dependencies, boolean dryRun) throws IOException, InterruptedException {
-    Preconditions.checkState(bin != null);
+  public boolean execute(Launcher launcher, TaskListener listener, Node node, FilePath scriptPath, 
+                         List<PackageVersionId> dependencies, 
+                         boolean dryRun, 
+                         long timeoutMillis) throws IOException, InterruptedException {
     
-    return execute(launcher, listener, bin, scriptPath);
+    Preconditions.checkState(bin != null);
+
+
+    ArgumentListBuilder args = new ArgumentListBuilder();
+    args.add(bin.getRemote());
+    args.add("-f");
+    args.add(scriptPath.getName());
+
+    Launcher.ProcStarter ps = launcher.new ProcStarter();
+    ps = ps.cmds(args).pwd(scriptPath.getParent()).stdout(listener);
+
+    Proc proc = launcher.launch(ps);
+    int exitCode;
+    if(timeoutMillis > 0) {
+      exitCode = proc.joinWithTimeout(timeoutMillis, TimeUnit.MILLISECONDS, listener);
+    } else {
+      exitCode = proc.join();
+    }
+
+    listener.getLogger().println("Exit code : " + exitCode);
+
+    return exitCode == 0;
+  
   }
 }

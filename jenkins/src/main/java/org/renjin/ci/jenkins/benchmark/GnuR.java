@@ -73,7 +73,7 @@ public class GnuR extends Interpreter {
 
   @Override
   public boolean execute(Launcher launcher, TaskListener listener,
-                         Node node, FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun) throws IOException, InterruptedException {
+                         Node node, FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun, long timeoutMillis) throws IOException, InterruptedException {
 
 
     RScript rscript = installation.getExecutor();

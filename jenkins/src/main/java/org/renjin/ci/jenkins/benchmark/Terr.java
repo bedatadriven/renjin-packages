@@ -50,8 +50,8 @@ public class Terr extends Interpreter {
   }
 
   @Override
-  public boolean execute(Launcher launcher, TaskListener listener, Node node, 
-                         FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun) 
+  public boolean execute(Launcher launcher, TaskListener listener, Node node,
+                         FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun, long timeoutMillis) 
             throws IOException, InterruptedException {
     
     RScript rScript = new RScript(scriptBin);

@@ -118,7 +118,7 @@ public class BenchmarkRun {
     FilePath runScriptFile = benchmark.getDirectory().child("harness.R");
     runScriptFile.write(runScript, Charsets.UTF_8.name());
 
-    boolean completed = interpreter.execute(launcher, listener, node, runScriptFile, benchmark.getDependencies(), dryRun);
+    boolean completed = interpreter.execute(launcher, listener, node, runScriptFile, benchmark.getDependencies(), dryRun, -1);
 
     if(!dryRun) {
       if (completed && timingFile.exists()) {

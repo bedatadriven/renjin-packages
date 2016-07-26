@@ -19,6 +19,7 @@ import java.util.List;
 public class Benchmark {
   private String name;
   private FilePath filePath;
+  private long timeoutMillis;
   
   private List<BenchmarkDataset> datasets = new ArrayList<BenchmarkDataset>();
   private List<PackageDependency> dependencies = new ArrayList<PackageDependency>();
@@ -86,7 +87,10 @@ public class Benchmark {
         String value = keyValue[1].trim();
 
         if (key.equals("Depends")) {
-          Iterables.addAll(benchmark.dependencies, PackageDependency.parseList(value));
+          Iterables.addAll(benchmark.dependencies, PackageDependency.parseList(value.trim()));
+
+        } else if (key.equals("Timeout")) {
+          benchmark.timeoutMillis = parseTimeout(value);
           
         } else if (key.equals("File")) {
           files.add(value);
@@ -96,7 +100,7 @@ public class Benchmark {
         
         } else if(key.equals("Hash")) {
           hash.add(value);
-        }
+        } 
       }
     }
 
@@ -105,6 +109,16 @@ public class Benchmark {
     }
     
     return benchmark;
+  }
+
+  private static long parseTimeout(String value) {
+    if(value.endsWith("min")) {
+      String minuteString = value.substring(0, value.length() - "min".length()).trim();
+      double minutes = Double.parseDouble(minuteString);
+      return (long)(minutes * 60d * 1000d);
+    } else {
+      throw new IllegalArgumentException("Could not parse timeout '" + value + "'");
+    }
   }
 
   private static String getOrNull(List<String> values, int i) {

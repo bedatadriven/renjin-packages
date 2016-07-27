@@ -6,10 +6,9 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.Descriptor;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.tasks.Builder;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.renjin.ci.RenjinCiClient;
@@ -29,17 +28,19 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
   private String includes;
   private String excludes;
   private String blas;
+  private String jdk;
   private boolean dryRun;
   private boolean noDependencies;
 
   @DataBoundConstructor
   public BenchmarkStep(String interpreter, String interpreterVersion, String includes,
-                       String excludes, String blas, boolean dryRun, boolean noDependencies) {
+                       String excludes, String blas, String jdk, boolean dryRun, boolean noDependencies) {
     this.interpreter = interpreter;
     this.interpreterVersion = interpreterVersion;
     this.includes = includes;
     this.excludes = excludes;
     this.blas = blas;
+    this.jdk = jdk;
     this.dryRun = dryRun;
     this.noDependencies = noDependencies;
   }
@@ -72,6 +73,10 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     return blas;
   }
 
+  public String getJdk() {
+    return jdk;
+  }
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
     List<Benchmark> benchmarks = Lists.newArrayList();
@@ -81,7 +86,11 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
       listener.getLogger().println("No benchmarks found.");
       throw new AbortException();
     }
-
+    
+    JDK jdk = findJdk()
+        .forNode(((AbstractBuild) run).getBuiltOn(), listener)
+        .forEnvironment(run.getEnvironment(listener));
+    
     String interpreter = run.getEnvironment(listener).expand(this.interpreter);
     List<String> interpreterVersions = expandVersions(interpreter, run, listener);
 
@@ -93,7 +102,8 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
         benchmarkRun.setupInterpreter(
             interpreter,
             interpreterVersion,
-            blasLibrary());
+            blasLibrary(), 
+            jdk);
         benchmarkRun.start();
         if(!benchmarkRun.run(benchmarks, dryRun)) {
           allPassed = false;
@@ -114,6 +124,25 @@ public class BenchmarkStep extends Builder  implements SimpleBuildStep {
     if(!allPassed) {
       throw new AbortException("There were failures executing benchmarks.");
     }
+  }
+
+  private JDK findJdk() throws AbortException {
+
+    List<JDK> tools = Jenkins.getInstance().getJDKs();
+    if(tools.isEmpty()) {
+      throw new AbortException("No JDKs setup.");
+    }
+    
+    if(Strings.isNullOrEmpty(jdk)) {
+      return tools.get(0);
+    }
+    
+    for (JDK tool : Jenkins.getInstance().getJDKs()) {
+      if(tool.getName().equals(jdk)) {
+        return tool;
+      }
+    }
+    throw new ConfigException("Couldn't find JDK named '" + jdk + "'");
   }
 
   private BlasLibrary blasLibrary() {

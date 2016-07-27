@@ -2,10 +2,8 @@ package org.renjin.ci.jenkins.benchmark;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import hudson.AbortException;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Proc;
+import hudson.*;
+import hudson.model.JDK;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
@@ -27,14 +25,19 @@ import java.util.concurrent.TimeUnit;
  */
 public class Renjin extends Interpreter {
 
-  private String version;
+  private final String version;
+  private String requestedJdk;
+
   private FilePath bin;
   
   private String blasLibrary = null;
   private String jdkVersion;
-  
-  public Renjin(FilePath workspace, TaskListener listener, String version) {
-    this.version = version;
+
+  private JDK jdk;
+
+  public Renjin(JDK jdk, String renjinVersion) {
+    this.version = renjinVersion;
+    this.jdk = jdk;
   }
 
   @Override
@@ -76,9 +79,10 @@ public class Renjin extends Interpreter {
     }
     
     detectBlasVersion(launcher, renjinLocation);
-    jdkVersion = VersionDetectors.detectJavaVersion(launcher);
+    jdkVersion = VersionDetectors.detectJavaVersion(launcher, jdk);
   }
   
+
   private boolean atLeast(String version) {
     ArtifactVersion thisVersion = new DefaultArtifactVersion(this.version);
     ArtifactVersion thatVersion = new DefaultArtifactVersion(version);
@@ -156,6 +160,14 @@ public class Renjin extends Interpreter {
 
     Launcher.ProcStarter ps = launcher.new ProcStarter();
     ps = ps.cmds(args).pwd(scriptPath.getParent()).stdout(listener);
+
+    if(jdk != null) {
+      EnvVars environmentOverrides = new EnvVars();
+      jdk.buildEnvVars(environmentOverrides);
+      
+      ps = ps.envs(environmentOverrides);
+    }
+
 
     Proc proc = launcher.launch(ps);
     int exitCode;

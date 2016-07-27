@@ -7,10 +7,7 @@ import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.Node;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.BenchmarkRunDescriptor;
 
@@ -41,7 +38,7 @@ public class BenchmarkRun {
     node = ((AbstractBuild) build).getBuiltOn();
   }
 
-  public void setupInterpreter(String interpreter, String version, BlasLibrary blasLibrary) throws IOException, InterruptedException {
+  public void setupInterpreter(String interpreter, String version, BlasLibrary blasLibrary, JDK jdk) throws IOException, InterruptedException {
     if("GNU R".equalsIgnoreCase(interpreter)) {
       this.interpreter = new GnuR(version, blasLibrary);
     } else if("pqR".equalsIgnoreCase(interpreter)) {
@@ -49,7 +46,7 @@ public class BenchmarkRun {
     } else if("TERR".equalsIgnoreCase(interpreter)) {
       this.interpreter = new Terr(version);
     } else {
-      this.interpreter = new Renjin(workspace, listener, version);
+      this.interpreter = new Renjin(jdk, version);
     }
     
     this.interpreter.ensureInstalled(node, launcher, listener);

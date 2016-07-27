@@ -6,9 +6,12 @@
   <f:entry title="Interpreter Version" field="interpreterVersion">
     <f:textbox/>
   </f:entry>
-    <f:entry title="BLAS Library" field="blas">
-      <f:textbox/>
-    </f:entry>
+  <f:entry title="JDK Version" field="jdk">
+    <f:textbox/>
+  </f:entry>
+  <f:entry title="BLAS Library" field="blas">
+    <f:textbox/>
+  </f:entry>
   <f:entry title="Benchmarks to include" field="includes">
     <f:textbox/>
   </f:entry>

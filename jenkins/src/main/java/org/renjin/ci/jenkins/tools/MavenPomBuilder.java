@@ -116,6 +116,9 @@ public class MavenPomBuilder {
     renjinPlugin.setVersion(build.getRenjinVersionId().toString());
 
     PluginExecution compileExecution = compileExecution();
+    if(RenjinCapabilities.hasCompiler(build.getRenjinVersionId()) && hasJava()) {
+      renjinPlugin.addExecution(javaExecution());
+    }
     renjinPlugin.addExecution(compileExecution);
     renjinPlugin.addExecution(testExecution());
     renjinPlugin.addExecution(legacyCompileExecution());
@@ -142,6 +145,21 @@ public class MavenPomBuilder {
     model.setPluginRepositories(Lists.newArrayList(bddRepo));
 
     return model;
+  }
+
+
+  private boolean hasJava() {
+    Iterable<PackageDependency> deps = Iterables.concat(
+        description.getDepends(), 
+        description.getImports(), 
+        description.getSuggests());
+
+    for (PackageDependency dep : deps) {
+      if(dep.getName().equals("rJava")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private Set<String> dependencies() {
@@ -266,6 +284,16 @@ public class MavenPomBuilder {
     testExecution.setConfiguration(configuration);
 
     return testExecution;
+  }
+
+
+  private PluginExecution javaExecution() {
+    PluginExecution execution = new PluginExecution();
+    execution.setId("renjin-jars");
+    execution.addGoal("merge-gnur-jars");
+    execution.setPhase("process-classes");
+    
+    return execution;
   }
 
   private void addCoreModule(Model model, String name) {

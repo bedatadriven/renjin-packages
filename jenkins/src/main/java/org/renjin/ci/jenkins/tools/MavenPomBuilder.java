@@ -115,13 +115,19 @@ public class MavenPomBuilder {
     renjinPlugin.setArtifactId("renjin-maven-plugin");
     renjinPlugin.setVersion(build.getRenjinVersionId().toString());
 
-    PluginExecution compileExecution = compileExecution();
-    if(RenjinCapabilities.hasCompiler(build.getRenjinVersionId()) && hasJava()) {
-      renjinPlugin.addExecution(javaExecution());
+    if(RenjinCapabilities.hasGnurBuild(build.getRenjinVersionId())) {
+      renjinPlugin.addExecution(gnurBuildExecution());
+    } else {
+      PluginExecution compileExecution = compileExecution();
+      if (RenjinCapabilities.hasUnpackJars(build.getRenjinVersionId()) && hasJava()) {
+        renjinPlugin.addExecution(javaExecution());
+      }
+      renjinPlugin.addExecution(compileExecution);
+      renjinPlugin.addExecution(legacyCompileExecution());
     }
-    renjinPlugin.addExecution(compileExecution);
+    
+    // Run package tests
     renjinPlugin.addExecution(testExecution());
-    renjinPlugin.addExecution(legacyCompileExecution());
 
     Build build = new Build();
     build.addPlugin(renjinPlugin);
@@ -146,6 +152,7 @@ public class MavenPomBuilder {
 
     return model;
   }
+
 
 
   private boolean hasJava() {
@@ -227,6 +234,15 @@ public class MavenPomBuilder {
     return sourceFiles;
   }
 
+  private PluginExecution gnurBuildExecution() {
+    PluginExecution buildExecution = new PluginExecution();
+    buildExecution.setId("compile");
+    buildExecution.addGoal("gnur-compile");
+    buildExecution.setPhase("compile");
+    
+    return buildExecution;
+  }
+  
   private PluginExecution legacyCompileExecution() {
     if(RenjinCapabilities.hasMake(build.getRenjinVersionId())) {
       PluginExecution compileExecution = new PluginExecution();

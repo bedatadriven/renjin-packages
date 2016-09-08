@@ -18,4 +18,8 @@ public class RenjinCapabilities {
   public static boolean hasUnpackJars(RenjinVersionId renjinVersionId) {
     return renjinVersionId.compareTo(new RenjinVersionId("0.8.2194")) >= 0;
   }
+
+  public static boolean hasGnurBuild(RenjinVersionId renjinVersionId) {
+    return renjinVersionId.compareTo(new RenjinVersionId("0.8.2205")) > 0;
+  }
 }

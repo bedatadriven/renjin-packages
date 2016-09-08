@@ -30,6 +30,12 @@ public class CompatibilityAlert {
   }
 
   public String getMessage() {
+    
+    if(packageVersion.isDisabled()) {
+      return "This version of " + packageVersion.getPackageName() + " is not supported by Renjin. " +
+          "Please use a more recent version.";
+    }
+    
     if(packageVersion.getLastBuildNumber() == 0) {
       return "This package has not yet been built and tested against Renjin. Please allow a few days for the " +
           "package to be built.";

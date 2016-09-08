@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.IgnoreSave;
@@ -41,6 +42,10 @@ public class PackageVersionDelta {
 
   private List<BuildDelta> builds;
 
+  public static Key<PackageVersionDelta> key(PackageVersionId versionId) {
+    return Key.create(PackageVersionDelta.class, versionId.toString());
+  }
+  
   public PackageVersionDelta() {
   }
 

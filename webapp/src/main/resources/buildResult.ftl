@@ -147,6 +147,7 @@
 
 <div class="floater">
     <a href="${build.packageVersionId.jenkinsBuildPath}" class="btn" target="_blank">Rebuild</a>
+    <a href="${build.packageVersionId.packageId.path}/disabled?from=${build.packageVersionId.versionString}" class="btn">Disable</a>
 </div>
 
 <script src="/assets/js/logs-v2.js"></script>

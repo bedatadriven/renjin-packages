@@ -89,32 +89,6 @@
         
         <p>${version.descriptionText}</p>
         
-        <#--
-        <table>
-            <tbody>
-                <tr>
-                    <td>Authors</td>
-                    <td>${version.authorList}</td>
-                </tr>
-                <tr>
-                    <td>Maintainer:</td>
-                    <td>${version.description.maintainer.name}</td>
-                </tr>
-                <tr>
-                    <td>Imports:</td>
-                    <td><@depList list=version.imports/></td>
-                </tr>
-                <tr>
-                    <td>Depends:</td>
-                    <td><@depList list=version.depends/></td>
-                </tr>
-                <tr>
-                    <td>Suggests:</td>
-                    <td><@depList list=version.suggests/></td>
-                </tr>
-            </tbody>
-        </table>
-        -->
         <#if version.available>
         
         <h2>Installation</h2>

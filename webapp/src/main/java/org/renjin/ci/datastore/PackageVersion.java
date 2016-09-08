@@ -71,6 +71,18 @@ public class PackageVersion implements Comparable<PackageVersion> {
   @IgnoreSave(IfTrue.class)
   private boolean built;
   
+  /**
+   * True if this package version has been disabled. No builds should be attempted,
+   * nor should it be used as a dependency.
+   */
+  @Unindex
+  private boolean disabled;
+
+  /**
+   * Reason for the package being disabled.
+   */
+  @Unindex
+  private String disabledReason;
 
   public PackageVersion() {
   }
@@ -285,6 +297,22 @@ public class PackageVersion implements Comparable<PackageVersion> {
   public static Key<PackageVersion> key(PackageVersionId id) {
     Key<Package> packageKey = Package.key(id.getPackageId());
     return Key.create(packageKey, PackageVersion.class, id.getVersionString());
+  }
+
+  public boolean isDisabled() {
+    return disabled;
+  }
+
+  public void setDisabled(boolean disabled) {
+    this.disabled = disabled;
+  }
+
+  public String getDisabledReason() {
+    return disabledReason;
+  }
+
+  public void setDisabledReason(String disabledReason) {
+    this.disabledReason = disabledReason;
   }
 
   @Override

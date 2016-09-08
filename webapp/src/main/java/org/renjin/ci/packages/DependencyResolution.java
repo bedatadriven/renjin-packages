@@ -121,7 +121,12 @@ public class DependencyResolution {
                                     Iterable<PackageVersion> candidates) {
 
     
-    List<PackageVersion> candidateList = Lists.newArrayList(candidates);
+    List<PackageVersion> candidateList = Lists.newArrayList();
+    for (PackageVersion candidate : candidates) {
+      if(!candidate.isDisabled()) {
+        candidateList.add(candidate);
+      }
+    }
 
     // Sort in descending order, so we can look from most recent to the oldest
     Collections.sort(candidateList, PackageVersion.orderByVersion().reverse());

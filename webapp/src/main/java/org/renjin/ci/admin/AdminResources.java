@@ -10,6 +10,7 @@ import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.index.GitHubTasks;
 import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.pipelines.ForEachEntity;
 import org.renjin.ci.pipelines.ForEachPackageVersion;
 import org.renjin.ci.pipelines.Pipelines;
@@ -45,6 +46,18 @@ public class AdminResources {
         LocCounter.class));
     
     return new Viewable("/admin.ftl", model);
+  }
+
+  @GET
+  @Produces(MediaType.TEXT_HTML)
+  @Path("/disable")
+  public Viewable getDisablePage(@QueryParam("packageVersionId") String packageVersion) {
+    PackageVersionId pvid = PackageVersionId.fromTriplet(packageVersion);
+   
+    Map<String, Object> model = new HashMap<>();
+    model.put("packageVersionId", pvid.toString());
+    
+    return new Viewable("/disablePackageVersion.ftl", model);
   }
   
   @POST

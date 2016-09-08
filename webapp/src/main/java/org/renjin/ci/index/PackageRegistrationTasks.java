@@ -87,8 +87,6 @@ public class PackageRegistrationTasks {
     }
   }
 
-
-
   private static void archiveSource(PackageVersionId packageVersionId, InputStream inputStream) throws IOException {
     GcsFilename filename = new GcsFilename(StorageKeys.PACKAGE_SOURCE_BUCKET, StorageKeys.packageSource(packageVersionId));
     LOGGER.info("Storing source archive at " + filename);
@@ -96,7 +94,7 @@ public class PackageRegistrationTasks {
     GcsService gcsService =
             GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
 
-    GcsFileOptions options = new GcsFileOptions.Builder().acl("publicread").build();
+    GcsFileOptions options = new GcsFileOptions.Builder().acl("public-read").build();
 
     GcsOutputChannel outputChannel =
             gcsService.createOrReplace(filename, options);
@@ -108,7 +106,7 @@ public class PackageRegistrationTasks {
     SourceIndexTasks.enqueuePackageForSourceIndexing(packageVersionId);
   }
 
-  /**
+  /** 
    *
    1. Create a new PackageVersion entity from the DESCRIPTION File
    2. Create a new Package entity if one does not exist already

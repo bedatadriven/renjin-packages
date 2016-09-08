@@ -70,7 +70,7 @@ public class DeltaBuilder {
     packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
     packageEntity = PackageDatabase.getPackageOf(packageVersionId);
     
-    if(!packageEntity.isReplaced()) {
+    if(!packageEntity.isReplaced() && !packageVersion.isDisabled()) {
       List<PackageBuild> builds = PackageDatabase.getFinishedBuilds(packageVersionId);
 
       if (!builds.isEmpty()) {

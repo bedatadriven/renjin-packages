@@ -46,11 +46,11 @@ public class PackageVersionPage {
     this.otherVersions = PackageDatabase.getPackageVersionIds(packageVersion.getPackageId());
     this.loc = ObjectifyService.ofy().load().key(Loc.key(id));
     
-    if(packageVersion.getLastSuccessfulBuildNumber() > 0) {
+    if(!packageVersion.isDisabled() && packageVersion.getLastSuccessfulBuildNumber() > 0) {
       this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastSuccessfulBuildNumber());
       this.testResults = PackageDatabase.getTestResults(packageVersion.getLastSuccessfulBuildId());
 
-    } else if(packageVersion.getLastBuildNumber() > 0) {
+    } else if(!packageVersion.isDisabled() && packageVersion.getLastBuildNumber() > 0) {
       this.latestBuild = PackageDatabase.getBuild(id, packageVersion.getLastBuildNumber());
       this.testResults = PackageDatabase.getTestResults(packageVersion.getLastBuildId());
       
@@ -167,7 +167,7 @@ public class PackageVersionPage {
 
 
   public boolean isAvailable() {
-    return packageVersion.getLastSuccessfulBuildNumber() > 0;
+    return !packageVersion.isDisabled() && packageVersion.getLastSuccessfulBuildNumber() > 0;
   }
 
   public String getPomReference() {

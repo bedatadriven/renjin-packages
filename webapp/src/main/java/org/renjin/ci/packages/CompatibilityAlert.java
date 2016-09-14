@@ -2,6 +2,8 @@ package org.renjin.ci.packages;
 
 import com.google.common.collect.Iterables;
 import com.googlecode.objectify.LoadResult;
+import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersion;
@@ -37,7 +39,15 @@ public class CompatibilityAlert {
     }
     
     if(packageVersion.getLastBuildNumber() == 0) {
-      return "This package has not yet been built and tested against Renjin. Please allow a few days for the " +
+      LocalDate pubDate = new LocalDate(packageVersion.getPublicationDate());
+      LocalDate today = new LocalDate();
+      int daysSincePub = Days.daysBetween(pubDate, today).getDays();
+      if(daysSincePub > 90) {
+        return "This version is archived for historical reasons. Please see a more recent version for " +
+            "Renjin compatability information.";
+      }
+
+      return "This version has not yet been built and tested against Renjin. Please allow a few days for the " +
           "package to be built.";
     }
 

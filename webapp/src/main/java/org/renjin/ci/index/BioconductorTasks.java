@@ -34,7 +34,7 @@ public class BioconductorTasks {
     public Response updateBioConductor(@QueryParam("release") String releaseNumber) {
         
         if(Strings.isNullOrEmpty(releaseNumber)) {
-            releaseNumber = "3.2";
+            releaseNumber = "3.3";
         }
         
         Queue queue = QueueFactory.getQueue(BIO_CONDUCTOR_QUEUE);

@@ -42,6 +42,20 @@ public class PackageBuildId {
   }
 
 
+  private String getRepoLink(String extension) {
+    return "https://nexus.bedatadriven.com/content/groups/public/" + getGroupId().replace('.', '/') + "/" +
+        getPackageName() + "/" + getBuildVersion() + "/" + getPackageName() + "-" + getBuildVersion() + "." + extension;
+  }
+
+  public String getRepoJarLink() {
+    return getRepoLink("jar");
+  }
+
+  public String getRepoPomLink() {
+    return getRepoLink("pom");
+  }
+
+
   public PackageId getPackageId() {
     return packageVersionId.getPackageId();
   }

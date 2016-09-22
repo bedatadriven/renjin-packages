@@ -126,6 +126,9 @@ public class PackageBuildPage {
     return build.getBlockingDependencyVersions();
   }
   
+  public String getRebuildScript() {
+    return BashScripts.rebuild(buildId);
+  }
 
   public List<Test> getTestResults() {
     

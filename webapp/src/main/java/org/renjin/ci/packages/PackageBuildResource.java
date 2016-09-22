@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
+import static java.lang.String.format;
 import static org.renjin.ci.datastore.PackageBuild.key;
 
 public class PackageBuildResource {
@@ -54,6 +55,28 @@ public class PackageBuildResource {
     model.put("build", page);
 
     return new Viewable("/buildResult.ftl", model);
+  }
+  
+  @GET
+  @Produces("text/x-shellscript")
+  @Path("rebuild.sh")
+  public String getRebuildScript() {
+    PackageVersionId versionId = buildId.getPackageVersionId();
+
+    String dirName = versionId.getPackageName() + "_" + buildId.getBuildVersion();
+    String archiveName = versionId.getPackageName() + "_" + versionId.getVersionString() + ".tar.gz";
+    String sourceUrl = format("https://storage.googleapis.com/renjinci-package-sources/%s/%s",
+        versionId.getGroupId(),
+        archiveName);
+
+    StringBuilder script = new StringBuilder();
+    script.append(format("mkdir %s\n", dirName));
+    script.append(format("cd %s\n", dirName));
+    script.append(format("curl %s | tar -xz --strip-components 1\n", sourceUrl));
+    script.append(format("curl %s > pom.xml\n", buildId.getRepoPomLink()));
+    script.append(format("echo Build directory created in %s\n", dirName));
+    script.append(format("echo To build: cd %s && mvn clean install\n", dirName));
+    return script.toString();
   }
   
   @GET

@@ -59,8 +59,11 @@
         <h2>Build #${build.buildNumber}</h2>
 
         <p>${build.outcome!"Started"} <#if build.startTime??>on ${build.startTime?datetime} </#if>
-            against Renjin ${build.renjinVersion} </p>
-
+            against Renjin ${build.renjinVersion}
+        <#if build.build.succeeded>
+            (<a href="${build.buildId.repoPomLink}">pom</a> | <a href="${build.buildId.repoJarLink}">jar</a> )
+        </#if>
+        </p>
         
         <#if build.upstreamBuilds??>
         <h3>Upstream builds</h3>
@@ -128,6 +131,13 @@
             </#if>
 
         </#if>
+        
+        <#if build.build.succeeded>
+        <h3>Rebuild Locally</h3>
+
+        <input id="rebuild-script" style="width: 100%; width: 100%; border: none; box-shadow: none;" 
+               value="curl http://packages.renjin.org${build.buildId.path}/rebuild.sh | sh">
+        </#if>
 
         <#if (build.testResults?size > 0) >
 
@@ -147,8 +157,20 @@
 
 <div class="floater">
     <a href="${build.packageVersionId.jenkinsBuildPath}" class="btn" target="_blank">Rebuild</a>
+    <#if build.build.succeeded><a href="javascript:rebuild()" id="rebuild-btn" class="btn">Rebuild Locally</a></#if>
     <a href="${build.packageVersionId.packageId.path}/disabled?from=${build.packageVersionId.versionString}" class="btn">Disable</a>
 </div>
 
+
+
 <script src="/assets/js/logs-v2.js"></script>
+<script type="application/javascript">
+    
+    function rebuild() {
+        var textArea = document.getElementById('rebuild-script');
+        textArea.select();
+        document.execCommand("copy");
+        document.getElementById("rebuild-btn").innerText = "Copied.";
+    }
+</script>
 </@scaffolding>

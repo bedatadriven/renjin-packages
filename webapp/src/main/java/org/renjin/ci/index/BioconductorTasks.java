@@ -36,13 +36,17 @@ public class BioconductorTasks {
         if(Strings.isNullOrEmpty(releaseNumber)) {
             releaseNumber = "3.3";
         }
-        
-        Queue queue = QueueFactory.getQueue(BIO_CONDUCTOR_QUEUE);
-        TaskHandle taskHandle = queue.add(TaskOptions.Builder
-            .withUrl("/tasks/index/bioc/fetchList")
-            .param("bioconductorRelease", releaseNumber));
 
-        LOGGER.info("Enqueued task to check for updated Bioconductor packages: " + taskHandle.getName());
+        String types[] = new String[] { "bioc", "data/annotation", "data/experiment" };
+        for (String type : types) {
+            Queue queue = QueueFactory.getQueue(BIO_CONDUCTOR_QUEUE);
+            TaskHandle taskHandle = queue.add(TaskOptions.Builder
+                    .withUrl("/tasks/index/bioc/fetchList")
+                    .param("bioconductorRelease", releaseNumber)
+                    .param("type", type));
+
+            LOGGER.info("Enqueued task to check for updated Bioconductor packages: " + taskHandle.getName());
+        }
 
         return Response.ok().build();
     }
@@ -50,14 +54,18 @@ public class BioconductorTasks {
     /**
      * Fetches the list of packages and their current version that are part of a given BioConductor release,
      * and enqueues a {@code checkBioConductorUpdate} for each package found.
+     *
+     * @param releaseNumber The BioConductor release to query, for example "3.1", "3.3", etc.
+     * @param type The type of packages to query. One of "bioc", "data/annotation", or "data/experiment"
      */
     @POST
     @Path("fetchList")
     public Response fetchBioconductorUpdates(
-        @FormParam("bioconductorRelease") String releaseNumber) throws IOException {
+        @FormParam("bioconductorRelease") String releaseNumber,
+        @FormParam("type") String type) throws IOException {
         
         URL packageListUrl = new URL(String.format(
-                "http://master.bioconductor.org/packages/json/%s/bioc/packages.json", releaseNumber));
+                "http://master.bioconductor.org/packages/json/%s/%s/packages.json", releaseNumber, type));
 
         LOGGER.info("Fetching list of packages from " + packageListUrl);
 
@@ -71,7 +79,9 @@ public class BioconductorTasks {
             String packageName = packageIt.next();
             JsonNode packageNode = packageList.get(packageName);
             String version = packageNode.get("Version").asText();
-            String sourceUrl = "http://master.bioconductor.org/packages/release/bioc/" + packageNode.get("source.ver").asText();
+            String sourceUrl = String.format("http://master.bioconductor.org/packages/release/%s/%s",
+              type,
+              packageNode.get("source.ver").asText());
 
             queue.add(TaskOptions.Builder.withUrl("/tasks/index/bioc/updatePackage")
                     .param("bioconductorRelease", releaseNumber)

@@ -183,7 +183,7 @@ public class PackageVersionPage {
     xml.append("  <repository>\n");
     xml.append("    <id>bedatadriven</id>\n");
     xml.append("    <name>bedatadriven public repo</name>\n");
-    xml.append("    <url>http://nexus.bedatadriven.com/content/groups/public/</url>\n");
+    xml.append("    <url>https://nexus.bedatadriven.com/content/groups/public/</url>\n");
     xml.append("  </repository>\n");
     xml.append("</repositories>");
     return xml.toString();

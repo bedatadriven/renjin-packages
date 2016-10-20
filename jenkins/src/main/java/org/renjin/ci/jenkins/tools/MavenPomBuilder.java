@@ -134,7 +134,7 @@ public class MavenPomBuilder {
 
     DeploymentRepository deploymentRepo = new DeploymentRepository();
     deploymentRepo.setId("renjin-packages");
-    deploymentRepo.setUrl("http://nexus.bedatadriven.com/content/repositories/renjin-packages");
+    deploymentRepo.setUrl("https://nexus.bedatadriven.com/content/repositories/renjin-packages");
     deploymentRepo.setName("Renjin CI Repository");
 
     DistributionManagement distributionManagement = new DistributionManagement();
@@ -142,7 +142,7 @@ public class MavenPomBuilder {
 
     Repository bddRepo = new Repository();
     bddRepo.setId("bedatadriven-public");
-    bddRepo.setUrl("http://nexus.bedatadriven.com/content/groups/public/");
+    bddRepo.setUrl("https://nexus.bedatadriven.com/content/groups/public/");
 
 
     model.setDistributionManagement(distributionManagement);

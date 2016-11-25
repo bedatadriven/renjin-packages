@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Node;
@@ -24,7 +25,7 @@ public class Terr extends Interpreter {
   }
 
   @Override
-  void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+  void ensureInstalled(Node node, EnvVars envVars, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
     FilePath homeDir = node.getRootPath().child("tools").child("terr").child(version);
     scriptBin = homeDir.child("bin").child("TERRscript");
     if(!scriptBin.exists()) {

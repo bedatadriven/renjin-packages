@@ -8,6 +8,8 @@ import hudson.FilePath;
 import hudson.Proc;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.JDK;
+import hudson.model.Node;
+import hudson.model.TaskListener;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
@@ -137,15 +139,7 @@ public class Maven {
 
 
     public File findMavenBinary() throws IOException, InterruptedException {
-        return new File(findMavenHome() + "/bin/mvn");
-    }
-
-    private static void setupJdk17(WorkerContext context, EnvVars environmentOverrides) throws IOException, InterruptedException {
-        JDK jdk = findJdk17()
-            .forNode(context.getNode(), context.getListener())
-            .forEnvironment(context.getEnv());
-        
-        jdk.buildEnvVars(environmentOverrides);
+        return findMavenBinary(workerContext.getNode(), workerContext.getListener(), workerContext.getEnv());
     }
 
     private static JDK findJdk17() {
@@ -156,20 +150,22 @@ public class Maven {
         }
         throw new ConfigException("Couldn't find JDK containing '1.7' in its name.");
     }
+
     
-    public String findMavenHome() throws IOException, InterruptedException {
+    public static File findMavenBinary(Node node, TaskListener listener, EnvVars env) throws IOException, InterruptedException {
 
         for (ToolDescriptor<?> desc : ToolInstallation.all()) {
             if (desc.getId().equals("hudson.tasks.Maven$MavenInstallation")) {
+
                 for (ToolInstallation tool : desc.getInstallations()) {
                     if (tool.getName().equals("M3")) {
                         if (tool instanceof NodeSpecific) {
-                            tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(workerContext.getNode(), workerContext.getListener());
+                            tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(node, listener);
                         }
                         if (tool instanceof EnvironmentSpecific) {
-                            tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(workerContext.getEnv());
+                            tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(env);
                         }
-                        return tool.getHome();
+                        return new File(tool.getHome(), "/bin/mvn");
                     }
                 }
             }

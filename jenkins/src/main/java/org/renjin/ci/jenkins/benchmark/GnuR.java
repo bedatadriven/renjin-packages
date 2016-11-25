@@ -1,6 +1,7 @@
 package org.renjin.ci.jenkins.benchmark;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Node;
@@ -33,7 +34,7 @@ public class GnuR extends Interpreter {
   }
 
   @Override
-  void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+  void ensureInstalled(Node node, EnvVars envVars, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
     installation = new SourceInstallation(blasLibrary);
     installation.setInstallPrefix("GNU_R");
     installation.setVersion(version);

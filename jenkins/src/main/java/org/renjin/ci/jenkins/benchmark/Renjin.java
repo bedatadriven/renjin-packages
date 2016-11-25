@@ -9,12 +9,15 @@ import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.renjin.ci.jenkins.tools.Maven;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +31,11 @@ public class Renjin extends Interpreter {
   private final String version;
   private String requestedJdk;
 
-  private FilePath bin;
-  
   private String blasLibrary = null;
   private String jdkVersion;
 
   private JDK jdk;
+  private File mavenBinary;
 
   public Renjin(JDK jdk, String renjinVersion) {
     this.version = renjinVersion;
@@ -48,40 +50,15 @@ public class Renjin extends Interpreter {
     return variables;
   }
 
+
   @Override
-  public void ensureInstalled(Node node, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+  public void ensureInstalled(Node node, EnvVars envVars, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
 
-    URL renjinArchive;
-    try {
-      renjinArchive = new URL("https://nexus.bedatadriven.com/content/groups/public/org/renjin/renjin-generic-package/"
-          + version + "/renjin-generic-package-" + version + ".zip");
-    } catch (MalformedURLException e) {
-      e.printStackTrace(listener.getLogger());
-      throw new AbortException();
-    }
+    this.mavenBinary = Maven.findMavenBinary(node, listener, envVars);
 
-    FilePath renjinLocation = node.getRootPath().child("tools").child("Renjin").child("renjin-" + version);
-    renjinLocation.installIfNecessaryFrom(renjinArchive, listener, "Installing Renjin " + version + "...");
-
-    List<FilePath> subDirs = renjinLocation.listDirectories();
-    if(subDirs.size() != 1) {
-      throw new AbortException("Error installing Renjin " + version + ", expected exactly one sub directory, found " + 
-          subDirs);
-    }
-    
-    FilePath subDir = subDirs.get(0);
-    
-    bin = subDir.child("bin").child("renjin");
-
-    if(!bin.exists()) {
-      listener.fatalError("Renjin executable " + bin + " does not exist!");
-      throw new AbortException();
-    }
-    
-    detectBlasVersion(launcher, renjinLocation);
+    detectBlasVersion(node, launcher, listener);
     jdkVersion = VersionDetectors.detectJavaVersion(launcher, jdk);
   }
-  
 
   private boolean atLeast(String version) {
     ArtifactVersion thisVersion = new DefaultArtifactVersion(this.version);
@@ -89,7 +66,8 @@ public class Renjin extends Interpreter {
     return thisVersion.compareTo(thatVersion) >= 0; 
   }
 
-  private void detectBlasVersion(Launcher launcher, FilePath renjinLocation) throws IOException, InterruptedException {
+  private void detectBlasVersion(Node node, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+
     StringBuilder script = new StringBuilder();
     if(atLeast("0.8.2142")) {
       script.append("import(com.github.fommil.netlib.LAPACK)\n");
@@ -98,39 +76,41 @@ public class Renjin extends Interpreter {
     }
     script.append("cat(LAPACK$getInstance()$class$name)\n");
 
-    FilePath scriptFile = renjinLocation.child("detect-blas.R");
+    FilePath scriptFile = node.getRootPath().createTempFile("detect-blas", "R");
     scriptFile.write(script.toString(), Charsets.UTF_8.name());
 
-    ArgumentListBuilder args = new ArgumentListBuilder();
-    args.add(bin.getRemote());
-    args.add("-f");
-    args.add(scriptFile.getRemote());
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      Launcher.ProcStarter ps = runScript(launcher, scriptFile, Collections.<PackageVersionId>emptyList())
+              .stdout(baos);
 
-    Launcher.ProcStarter ps = launcher.new ProcStarter();
-    ps = ps.cmds(args).stdout(baos);
+      Proc proc = launcher.launch(ps);
+      int exitCode = proc.join();
 
-    Proc proc = launcher.launch(ps);
-    int exitCode = proc.join();
-    if(exitCode != 0) {
-      throw new RuntimeException("Failed to detect BLAS version");
-    }
+      String output = new String(baos.toByteArray());
 
-    String output = new String(baos.toByteArray());
-    if(output.contains("Falling back to pure JVM BLAS libraries.") ||
-       output.contains("org.netlib.lapack.JLAPACK") ||
-       output.contains("com.github.fommil.netlib.F2jBLAS")) {
-      blasLibrary = "f2jblas";
-      
-    } else if(output.contains("com.github.fommil.netlib.NativeRefBLAS") ||
+      if (exitCode != 0) {
+        listener.getLogger().println(output);
+        throw new RuntimeException("Failed to detect BLAS version");
+      }
+
+      if (output.contains("Falling back to pure JVM BLAS libraries.") ||
+              output.contains("org.netlib.lapack.JLAPACK") ||
+              output.contains("com.github.fommil.netlib.F2jBLAS")) {
+        blasLibrary = "f2jblas";
+
+      } else if (output.contains("com.github.fommil.netlib.NativeRefBLAS") ||
               output.contains("Using native reference BLAS libraries.")) {
-      blasLibrary = "reference";
-    
-    } else if(
-        output.contains("com.github.fommil.netlib.NativeSystemBLAS") ||
-        output.contains("Using system BLAS libraries.")) {
-      blasLibrary = VersionDetectors.findSystemBlas(launcher);
+        blasLibrary = "reference";
+
+      } else if (
+              output.contains("com.github.fommil.netlib.NativeSystemBLAS") ||
+                      output.contains("Using system BLAS libraries.")) {
+        blasLibrary = VersionDetectors.findSystemBlas(launcher);
+      }
+    } finally {
+      scriptFile.delete();
     }
   }
 
@@ -149,29 +129,14 @@ public class Renjin extends Interpreter {
                          List<PackageVersionId> dependencies, 
                          boolean dryRun, 
                          long timeoutMillis) throws IOException, InterruptedException {
-    
-    Preconditions.checkState(bin != null);
 
-
-    ArgumentListBuilder args = new ArgumentListBuilder();
-    args.add(bin.getRemote());
-    args.add("-f");
-    args.add(scriptPath.getName());
-
-    Launcher.ProcStarter ps = launcher.new ProcStarter();
-    ps = ps.cmds(args).pwd(scriptPath.getParent()).stdout(listener);
-
-    if(jdk != null) {
-      EnvVars environmentOverrides = new EnvVars();
-      jdk.buildEnvVars(environmentOverrides);
-      
-      ps = ps.envs(environmentOverrides);
-    }
-
+    Launcher.ProcStarter ps = runScript(launcher, scriptPath, dependencies)
+            .stdout(listener);
 
     Proc proc = launcher.launch(ps);
+
     int exitCode;
-    if(timeoutMillis > 0) {
+    if (timeoutMillis > 0) {
       exitCode = proc.joinWithTimeout(timeoutMillis, TimeUnit.MILLISECONDS, listener);
     } else {
       exitCode = proc.join();
@@ -180,6 +145,36 @@ public class Renjin extends Interpreter {
     listener.getLogger().println("Exit code : " + exitCode);
 
     return exitCode == 0;
-  
+
+  }
+
+
+  private Launcher.ProcStarter runScript(Launcher launcher, FilePath scriptPath, List<PackageVersionId> dependencies) throws IOException, InterruptedException {
+    Preconditions.checkState(mavenBinary != null);
+
+    BenchmarkPomBuilder pom = new BenchmarkPomBuilder(version, dependencies);
+    FilePath pomFile = scriptPath.getParent().child(scriptPath + ".xml");
+    pomFile.write(pom.getXml(), Charsets.UTF_8.name());
+
+
+    ArgumentListBuilder args = new ArgumentListBuilder();
+    args.add(mavenBinary.getAbsolutePath());
+    args.add("-B");
+    args.add("-f");
+    args.add(pomFile.getRemote());
+    args.add("exec:java");
+    args.add("-Dexec.mainClass=org.renjin.cli.Main");
+    args.add("-Dexec.args=-f " + scriptPath.getName());
+
+    Launcher.ProcStarter ps = launcher.new ProcStarter();
+    ps = ps.cmds(args).pwd(scriptPath.getParent());
+
+    if (jdk != null) {
+      EnvVars environmentOverrides = new EnvVars();
+      jdk.buildEnvVars(environmentOverrides);
+
+      ps = ps.envs(environmentOverrides);
+    }
+    return ps;
   }
 }

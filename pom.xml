@@ -40,7 +40,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <appengine.target.version>1.9.15</appengine.target.version>
-    <renjin.version>0.8.2219</renjin.version>
+    <renjin.version>0.8.2294</renjin.version>
     <renjin.display.version>${project.version}</renjin.display.version>
     <envClassifier>linux-x86</envClassifier>
     <jersey.version>2.17</jersey.version>

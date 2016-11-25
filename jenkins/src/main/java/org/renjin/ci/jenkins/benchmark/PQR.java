@@ -1,6 +1,7 @@
 package org.renjin.ci.jenkins.benchmark;
 
 import com.google.common.collect.Maps;
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Node;
@@ -24,7 +25,7 @@ public class PQR extends Interpreter {
   }
 
   @Override
-  void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+  void ensureInstalled(Node node, EnvVars envVars, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
     sourceInstallation = new SourceInstallation(new DefaultBlas());
     sourceInstallation.setVersion(version);
     sourceInstallation.setSourceUrl("http://www.pqr-project.org/pqR-" + version + ".tar.gz");

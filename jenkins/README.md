@@ -30,3 +30,12 @@ This will produce an archive located at `jenkins/target/renjin-ci-jenkins-plugin
 
 ## Configuration
 
+The Renjin CI plugin relies on certain tool configurations.
+
+### Maven
+
+The Renjin CI plugin will look for a Maven install called "M3". This must be added in
+Manage Jenkins > System Configuration > Maven Installations.
+
+
+

@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins.benchmark;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Node;
@@ -15,7 +16,7 @@ import java.util.Map;
  * Common interface to R Interpreters
  */
 public abstract class Interpreter {
-  abstract void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException;
+  abstract void ensureInstalled(Node node, EnvVars envVars, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException;
 
   public abstract String getId();
   

@@ -49,7 +49,7 @@ public class BenchmarkRun {
       this.interpreter = new Renjin(jdk, version);
     }
     
-    this.interpreter.ensureInstalled(node, launcher, listener);
+    this.interpreter.ensureInstalled(node, env, launcher, listener);
   }
   
   public void start() throws AbortException, InterruptedException {

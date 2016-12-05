@@ -46,6 +46,11 @@
             <input type="text" placeholder="owner/repository" name="repo">
             <input type="submit" class="btn btn-default" value="Add">
         </form>
+
+        <h2>Export</h2>
+        <form action="/admin/exportBuilds" method="post">
+            <input type="submit" class="btn btn-default" value="Export Builds">
+        </form>
         
     </div>
 </div>

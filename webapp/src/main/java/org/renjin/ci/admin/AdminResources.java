@@ -1,7 +1,13 @@
 package org.renjin.ci.admin;
 
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.tools.mapreduce.*;
+import com.google.appengine.tools.mapreduce.inputs.DatastoreInput;
+import com.google.appengine.tools.mapreduce.outputs.GoogleCloudStorageFileOutput;
+import com.google.appengine.tools.mapreduce.reducers.ValueProjectionReducer;
+import com.google.appengine.tools.pipeline.PipelineServiceFactory;
 import com.google.common.base.Optional;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.*;
@@ -21,6 +27,7 @@ import org.renjin.ci.stats.StatPipelines;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +50,7 @@ public class AdminResources {
         ReIndexPackage.class,
         MigrateTestOutput.class,
         ReindexTestResults.class,
+        RecomputeBuildGrades.class,
         LocCounter.class));
     
     return new Viewable("/admin.ftl", model);
@@ -121,7 +129,33 @@ public class AdminResources {
 
     return Response.ok().build();
   }
-  
+
+  @POST
+  @Path("/exportBuilds")
+  public Response exportBuilds() {
+    DatastoreInput input = new DatastoreInput("PackageBuild", 10);
+    BuildExporter mapper = new BuildExporter();
+    Reducer<String, ByteBuffer, ByteBuffer> reducer = new ValueProjectionReducer<>();
+    GoogleCloudStorageFileOutput output = new GoogleCloudStorageFileOutput("renjinci-exports", "builds-%d.csv", "text/csv");
+
+    MapReduceSpecification<Entity, String, ByteBuffer, ByteBuffer, GoogleCloudStorageFileSet>
+            spec = new MapReduceSpecification.Builder<>(input, mapper, reducer, output)
+            .setKeyMarshaller(Marshallers.getStringMarshaller())
+            .setValueMarshaller(Marshallers.getByteBufferMarshaller())
+            .setJobName("Export Build List")
+            .setNumReducers(10)
+            .build();
+
+    MapReduceSettings settings = new MapReduceSettings.Builder()
+            .setBucketName("renjinci-map-reduce")
+            .build();
+
+    MapReduceJob<Entity, String, ByteBuffer, ByteBuffer, GoogleCloudStorageFileSet> job = new MapReduceJob<>(spec, settings);
+    String jobId = PipelineServiceFactory.newPipelineService().startNewPipeline(job);
+
+    return Pipelines.redirectToStatus(jobId);
+  }
+
   @POST
   @Path("addGitHubRepo")
   public Response addGitHubRepo(@FormParam("repo") String repoId) {

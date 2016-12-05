@@ -69,6 +69,8 @@ public class PackageBuild {
   @IgnoreSave(IfNull.class)
   private Long duration;
   
+  @Index
+  private String grade;
 
   public PackageBuild() {
   }
@@ -160,6 +162,36 @@ public class PackageBuild {
 
   public RenjinVersionId getRenjinVersionId() {
     return new RenjinVersionId(renjinVersion);
+  }
+
+  public String getGrade() {
+    return grade;
+  }
+
+  public Integer getGradeInteger() {
+    if(grade != null) {
+      switch (grade) {
+        case "A":
+          return 5;
+        case "B":
+          return 4;
+        case "C":
+          return 3;
+        case "D":
+          return 2;
+        case "F":
+          return 0;
+      }
+    }
+    return null;
+  }
+
+  public void setGrade(char grade) {
+    this.grade = Character.toString(grade);
+  }
+
+  public void setGrade(String grade) {
+    this.grade = grade;
   }
 
   @JsonSetter

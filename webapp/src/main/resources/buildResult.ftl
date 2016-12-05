@@ -56,12 +56,12 @@
         <h1><a href="${build.packageVersionId.path}">${build.packageName} ${build.version}</a></h1>
     
 
-        <h2>Build #${build.buildNumber}</h2>
+        <h2>Build #${build.buildNumber} <#if build.build.grade?? >[${build.build.grade}]</#if></h2>
 
         <p>${build.outcome!"Started"} <#if build.startTime??>on ${build.startTime?datetime} </#if>
             against Renjin ${build.renjinVersion}
         <#if build.build.succeeded>
-            (<a href="${build.buildId.repoPomLink}">pom</a> | <a href="${build.buildId.repoJarLink}">jar</a> )
+            (<a href="${build.buildId.repoPomLink}">pom</a> | <a href="${build.buildId.repoJarLink}">jar</a>)
         </#if>
         </p>
         

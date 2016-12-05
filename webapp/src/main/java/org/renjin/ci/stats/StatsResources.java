@@ -12,7 +12,7 @@ public class StatsResources {
   @Path("/scheduleCountUpdate")
   public Response scheduleStatsUpdate() {
     StatPipelines.startUpdateBuildStats();
-    
+
     return Response.ok().build();
   }
 }

@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.NotFoundException;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.admin.migrate.RecomputeBuildGrades;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
@@ -117,14 +118,6 @@ public class PackageBuildResource {
           List<Object> toSave = Lists.newArrayList();
           LOGGER.log(Level.INFO, "Marking " + build.getId() + " as " + buildResult.getOutcome());
 
-          build.setOutcome(buildResult.getOutcome());
-          build.setEndTime(System.currentTimeMillis());
-          build.setDuration(build.getEndTime() - build.getStartTime());
-          build.setNativeOutcome(buildResult.getNativeOutcome());
-          build.setResolvedDependencies(buildResult.getResolvedDependencies());
-          build.setBlockingDependencies(buildResult.getBlockingDependencies());
-          toSave.add(build);
-
           List<PackageTestResult> testResults = Lists.newArrayList();
           if (buildResult.getTestResults() != null) {
             for (TestResult result : buildResult.getTestResults()) {
@@ -140,6 +133,21 @@ public class PackageBuildResource {
             }
           }
 
+          build.setOutcome(buildResult.getOutcome());
+          build.setEndTime(System.currentTimeMillis());
+          build.setDuration(build.getEndTime() - build.getStartTime());
+          build.setNativeOutcome(buildResult.getNativeOutcome());
+          build.setResolvedDependencies(buildResult.getResolvedDependencies());
+          build.setBlockingDependencies(buildResult.getBlockingDependencies());
+
+          build.setGrade(RecomputeBuildGrades.computeGrade(
+                  buildResult.getOutcome(),
+                  buildResult.getNativeOutcome(),
+                  testResults));
+
+          toSave.add(build);
+
+
           ObjectifyService.ofy().save().entities(toSave);
 
 
@@ -153,9 +161,6 @@ public class PackageBuildResource {
       }
     });
   }
-
-
-
 
   /**
    *
@@ -182,6 +187,5 @@ public class PackageBuildResource {
       }
     }
   }
-
 
 }

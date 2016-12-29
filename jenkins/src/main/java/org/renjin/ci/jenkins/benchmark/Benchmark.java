@@ -17,27 +17,33 @@ import java.util.List;
  * Identifies a single benchmark
  */
 public class Benchmark {
+  private BenchmarkConvention convention;
   private String name;
-  private FilePath filePath;
+  private FilePath scriptFile;
   private long timeoutMillis;
   
   private List<BenchmarkDataset> datasets = new ArrayList<BenchmarkDataset>();
   private List<PackageDependency> dependencies = new ArrayList<PackageDependency>();
   private List<PackageVersionId> resolvedDependencies = null;
 
-  private Benchmark(String name, FilePath filePath) {
+  public Benchmark(BenchmarkConvention convention, String name, FilePath scriptFile) {
+    this.convention = convention;
     this.name = name;
-    this.filePath = filePath;
+    this.scriptFile = scriptFile;
   }
 
   public String getName() {
     return name;
   }
   
-  public FilePath getDirectory() {
-    return filePath;
+  public FilePath getWorkingDirectory() throws IOException, InterruptedException {
+    return scriptFile.getParent();
   }
-  
+
+  public BenchmarkConvention getConvention() {
+    return convention;
+  }
+
   public String getLocalName() {
     int lastSlash = name.lastIndexOf('/');
     if(lastSlash == -1) {
@@ -56,7 +62,7 @@ public class Benchmark {
   }
   
   public FilePath getScript() {
-    return filePath.child(getLocalName() + ".R");
+    return scriptFile.child(getLocalName() + ".R");
   }
 
   public List<PackageVersionId> getDependencies() {
@@ -65,12 +71,18 @@ public class Benchmark {
     }
     return resolvedDependencies;
   }
-  
-  public static Benchmark read(String namePrefix, FilePath filePath) throws IOException, InterruptedException {
-    
-    Benchmark benchmark = new Benchmark(namePrefix + filePath.getName(), filePath);
-    
-    BufferedReader in = new BufferedReader(new InputStreamReader(getDescriptorPath(filePath).read()));
+
+  /**
+   * Reads a Renjin-style benchmark.
+   *
+   */
+  public static Benchmark fromBenchmarkDir(String namePrefix, FilePath benchmarkDir) throws IOException, InterruptedException {
+
+    FilePath scriptFile = benchmarkDir.child(benchmarkDir.getName() + ".R");
+
+    Benchmark benchmark = new Benchmark(BenchmarkConvention.RENJIN, namePrefix + benchmarkDir.getName(), scriptFile);
+
+    BufferedReader in = new BufferedReader(new InputStreamReader(getDescriptorPath(benchmarkDir).read()));
     String line;
     
     List<String> files = Lists.newArrayList();

@@ -13,17 +13,17 @@ public class BuildExporter extends Mapper<Entity, String, ByteBuffer> {
 
         PackageBuild packageBuild = ObjectifyService.ofy().load().fromEntity(value);
 
+        if(packageBuild.getOutcome() == null) {
+            return;
+        }
+
         // Create CSV Line
-        // GroupId,
-        // Package
-        // PackageVersion
-        // RenjinVersion
-        // Date
 
         StringBuilder line = new StringBuilder();
         line.append(packageBuild.getPackageId().getGroupId()).append(",");
         line.append(packageBuild.getPackageName()).append(",");
         line.append(packageBuild.getVersion()).append(",");
+        line.append(packageBuild.getBuildNumber()).append(",");
         line.append(packageBuild.getRenjinVersion()).append(",");
         line.append(packageBuild.getOutcome()).append(",");
         line.append(packageBuild.getGrade()).append("\n");

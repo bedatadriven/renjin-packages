@@ -26,7 +26,7 @@ public class PackageId implements Serializable {
 
     @Override
     public String toString() {
-        
+
         return groupId + ":"  + packageName;
     }
 

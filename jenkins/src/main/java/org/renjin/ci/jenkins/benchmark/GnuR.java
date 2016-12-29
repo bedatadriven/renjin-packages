@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Installs and runs a version of the GNU R interpreter
@@ -74,7 +75,8 @@ public class GnuR extends Interpreter {
 
   @Override
   public boolean execute(Launcher launcher, TaskListener listener,
-                         Node node, FilePath runScript, List<PackageVersionId> dependencies, boolean dryRun, long timeoutMillis) throws IOException, InterruptedException {
+                         Node node, FilePath runScript, List<PackageVersionId> dependencies,
+                         boolean dryRun, long timeoutMillis) throws IOException, InterruptedException {
 
 
     RScript rscript = installation.getExecutor();
@@ -87,7 +89,7 @@ public class GnuR extends Interpreter {
     } else {
       int exitCode = rscript.runScript(launcher, libraryDir.getPath(), runScript)
           .start()
-          .join();
+          .joinWithTimeout(timeoutMillis, TimeUnit.MILLISECONDS, listener);
       return exitCode == 0;
     }
   }

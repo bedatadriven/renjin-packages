@@ -19,6 +19,7 @@ import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.RootResource;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.ReleasesResource;
+import org.renjin.ci.repo.MavenRepository;
 import org.renjin.ci.source.SourceResources;
 import org.renjin.ci.stats.StatsResources;
 
@@ -59,6 +60,8 @@ public class RenjinCI extends Application {
     classes.add(StatsResources.class);
     
     classes.add(RobotsResource.class);
+
+    classes.add(MavenRepository.class);
 
     return classes;
   }

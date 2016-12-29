@@ -3,6 +3,7 @@ package org.renjin.ci.jenkins.benchmark;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -24,11 +25,13 @@ public class BenchmarkRun {
   private final FilePath workspace;
   private final Launcher launcher;
   private final TaskListener listener;
-  
-  
+
+  private FilePath rbenchHarness;
+
   private Interpreter interpreter;
   private long runId;
   private final Node node;
+  private long timeout;
 
   public BenchmarkRun(Run build, FilePath workspace, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
     this.workspace = workspace;
@@ -50,8 +53,9 @@ public class BenchmarkRun {
     }
     
     this.interpreter.ensureInstalled(node, env, launcher, listener);
+
   }
-  
+
   public void start() throws AbortException, InterruptedException {
     Preconditions.checkState(interpreter != null);
     
@@ -71,8 +75,6 @@ public class BenchmarkRun {
     runId = RenjinCiClient.startBenchmarkRun(benchmarkRun);
 
     listener.getLogger().println("Starting benchmark run #" + runId + "...");
-
-    
   }
   
   public boolean run(List<Benchmark> benchmarks, boolean dryRun) throws IOException, InterruptedException {
@@ -107,15 +109,17 @@ public class BenchmarkRun {
     String runScript = composeHarnessScript(benchmark);
 
     // Ensure that the timing file is cleaned up from previous runs
-    FilePath timingFile = benchmark.getDirectory().child("timing.out");
+    FilePath timingFile = benchmark.getWorkingDirectory().child("timing.out");
     if(timingFile.exists()) {
       timingFile.delete();
     }
 
-    FilePath runScriptFile = benchmark.getDirectory().child("harness.R");
+    FilePath runScriptFile = benchmark.getWorkingDirectory().child("harness.R");
     runScriptFile.write(runScript, Charsets.UTF_8.name());
 
-    boolean completed = interpreter.execute(launcher, listener, node, runScriptFile, benchmark.getDependencies(), dryRun, -1);
+    boolean completed = interpreter.execute(launcher, listener, node, runScriptFile,
+            benchmark.getDependencies(), dryRun,
+            timeout);
 
     if(!dryRun) {
       if (completed && timingFile.exists()) {
@@ -130,12 +134,12 @@ public class BenchmarkRun {
   }
 
   private double parseTiming(FilePath timingFile) throws IOException, InterruptedException {
-    String timing = timingFile.readToString();
+    String[] timing = timingFile.readToString().split("\\n");
     
     // Early versions of Renjin included a comma in the output!
-    timing = timing.replace(",", "");
+    timing[0] = timing[0].replace(",", "");
     
-    return Double.parseDouble(timing);
+    return Double.parseDouble(timing[0]);
   }
   
 
@@ -152,7 +156,7 @@ public class BenchmarkRun {
       
       // If the file already exists, verify its hash,
       // and remove if it's incorrect
-      FilePath datasetPath = benchmark.getDirectory().child(dataset.getFileName());
+      FilePath datasetPath = benchmark.getWorkingDirectory().child(dataset.getFileName());
       if(datasetPath.exists()) {
         if(datasetPath.digest().equals(dataset.getHash())) {
           continue;
@@ -180,10 +184,27 @@ public class BenchmarkRun {
     }
   }
 
-  private String composeHarnessScript(Benchmark benchmark) {
-    return String.format("timing <- system.time(result <- source('%s', local = new.env()));\n" +
-        "cat(timing[[3]]*1000, file='timing.out');\n"
-        , benchmark.getScript().getName());
+  private String composeHarnessScript(Benchmark benchmark) throws IOException {
+
+    if(benchmark.getConvention() == BenchmarkConvention.RENJIN) {
+      return String.format("timing <- system.time(result <- source('%s', local = new.env()));\n" +
+                      "cat(timing[[3]]*1000, file='timing.out');\n"
+              , benchmark.getScript().getName());
+
+    } else {
+
+      String harnessScript = Resources.toString(Resources.getResource(BenchmarkRun.class, "rbench.R"),
+              Charsets.UTF_8);
+
+      return harnessScript.replace("@SCRIPT_FILE@", benchmark.getScript().getRemote());
+    }
   }
 
+  public void setTimeoutMinutes(Double timeoutMinutes) {
+    if(timeoutMinutes == null) {
+      this.timeout = Long.MAX_VALUE;
+    } else {
+      this.timeout = (long)Math.floor(timeoutMinutes * 60d * 1000d);
+    }
+  }
 }

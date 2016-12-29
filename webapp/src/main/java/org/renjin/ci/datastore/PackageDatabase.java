@@ -67,6 +67,8 @@ public class PackageDatabase {
     register(FunctionIndex.class);
     
     register(Loc.class);
+
+    register(Artifact.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {

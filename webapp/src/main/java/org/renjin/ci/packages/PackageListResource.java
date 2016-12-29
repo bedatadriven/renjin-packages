@@ -120,7 +120,12 @@ public class PackageListResource {
 
         for (PackageVersion packageVersion : packages) {
             if(packageVersion.getLastBuildNumber() == 0) {
-                packageVersionIds.add(packageVersion.getPackageVersionId());    
+
+                // Check if this package is replaced:
+                Package pkg = PackageDatabase.getPackageOf(packageVersion.getPackageVersionId());
+                if(!pkg.isReplaced()) {
+                    packageVersionIds.add(packageVersion.getPackageVersionId());
+                }
             }
             if(cutoff.isAfter(packageVersion.getPublicationDate().getTime())) {
                 break;

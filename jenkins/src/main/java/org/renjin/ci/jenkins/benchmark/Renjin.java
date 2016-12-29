@@ -160,6 +160,7 @@ public class Renjin extends Interpreter {
     ArgumentListBuilder args = new ArgumentListBuilder();
     args.add(mavenBinary.getAbsolutePath());
     args.add("-B");
+    args.add("-q");
     args.add("-f");
     args.add(pomFile.getRemote());
     args.add("exec:java");

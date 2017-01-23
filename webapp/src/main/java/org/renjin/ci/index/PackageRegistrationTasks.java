@@ -3,6 +3,7 @@ package org.renjin.ci.index;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.tools.cloudstorage.*;
@@ -53,7 +54,9 @@ public class PackageRegistrationTasks {
   public static void enqueue(PackageVersionId packageVersionId) {
     // Register the package version in our database
     Queue queue = QueueFactory.getDefaultQueue();
-    queue.add(TaskOptions.Builder.withUrl("/tasks/register").param("packageVersionId", packageVersionId.toString()));
+    queue.add(TaskOptions.Builder.withUrl("/tasks/register")
+            .param("packageVersionId", packageVersionId.toString())
+            .retryOptions(RetryOptions.Builder.withTaskRetryLimit(25)));
   }
 
 
@@ -62,7 +65,9 @@ public class PackageRegistrationTasks {
     Queue queue = QueueFactory.getDefaultQueue();
     queue.add(TaskOptions.Builder.withUrl("/tasks/register")
         .param("bioconductorRelease", bioconductorRelease)
-        .param("packageVersionId", packageVersionId.toString()));
+        .param("packageVersionId", packageVersionId.toString())
+        .retryOptions(RetryOptions.Builder.withTaskRetryLimit(25)));
+
   }
 
 

@@ -64,6 +64,15 @@ ul.test-results li:before {
     display: none; 
 }
 
+.change-improvement {
+    font-weight: bold;
+    color: #27ae60;
+}
+
+.change-regression {
+    font-weight: bold;
+    color: #e74c3c;
+}
 
 .btn-success {
     background-color: #27ae60 !important; 

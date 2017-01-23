@@ -24,8 +24,10 @@ import java.util.Date;
 
 @Path("/releases")
 public class ReleasesResource {
-  
-  
+
+
+
+
   @GET
   @Path("latest")
   @Produces(MediaType.TEXT_PLAIN)
@@ -127,5 +129,8 @@ public class ReleasesResource {
         new URI("https://github.com/bedatadriven/renjin/compare/" + 
             fromRelease.now().getCommitSha1() + "..." + toRelease.now().getCommitSha1())).build();
   }
-  
+
+  public static String compareUrl(RenjinVersionId from, RenjinVersionId to) {
+    return "/releases/compare?from=" + from + "&to=" + to;
+  }
 }

@@ -465,6 +465,10 @@ public class PackageDatabase {
         .ancestor(Key.create(BenchmarkMachine.class, machineId))
         .iterable();
   }
+
+  public static LoadResult<BenchmarkSummary> getBenchmarkSummary(String machineId, String benchmarkId) {
+    return ObjectifyService.ofy().load().key(BenchmarkSummary.key(machineId, benchmarkId));
+  }
   
   public static ListVector query(ExternalPtr entityClassPtr, ListVector filters) {
     Class<?> entityClass = (Class<?>) entityClassPtr.getInstance();

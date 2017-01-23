@@ -21,6 +21,7 @@
                 <th align="left">GNU R</th>
                 <th align="left">Renjin</th>
                 <th align="right">Speedup</th>
+                <th align="left">Change</th>
             </tr>
             </thead>
             <tbody>
@@ -39,6 +40,13 @@
                     </td>
                     <td align="right">
                         ${benchmark.speedup}
+                    </td>
+                    <td>
+                        <#if benchmark.summary.regression?? >
+                            <a href="#" class="btn btn-small btn-danger">
+                            ${benchmark.summary.regression}
+                            ${benchmark.summary.regressionSize!0*100}%</a>
+                        </#if>
                     </td>
                 </tr>
                 </#list>

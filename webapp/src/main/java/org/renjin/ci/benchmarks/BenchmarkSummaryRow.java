@@ -47,7 +47,10 @@ public class BenchmarkSummaryRow {
   public String getPath() {
     return "/benchmarks/machine/" + machineId + "/benchmark/" + summary.getBenchmarkName();
   }
-  
+
+  public BenchmarkSummary getSummary() {
+    return summary;
+  }
 
   public class Cell {
     private String interpreter;
@@ -66,14 +69,16 @@ public class BenchmarkSummaryRow {
       return formatRunTime(point.getMeanRunTime());
     }
 
-    private String formatRunTime(double millis) {
-      if(millis < 5000) {
-        return String.format("%.0f ms", millis);
-      } else if(millis < 60_000) {
-        return String.format("%.1f s", millis/1000d);
-      } else {
-        return String.format("%.1f min", millis/1000d/60d);
-      }
+  }
+
+
+  public static String formatRunTime(double millis) {
+    if(millis < 5000) {
+      return String.format("%.0f ms", millis);
+    } else if(millis < 60_000) {
+      return String.format("%.1f s", millis/1000d);
+    } else {
+      return String.format("%.1f min", millis/1000d/60d);
     }
   }
 

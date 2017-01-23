@@ -1,8 +1,10 @@
 package org.renjin.ci.benchmarks;
 
+import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.common.base.Charsets;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
@@ -14,6 +16,11 @@ import org.renjin.ci.model.MachineDescriptor;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +64,44 @@ public class BenchmarksResource {
 
     return new Viewable("/benchmarkResults.ftl", model);
   }
-  
+
+
+  @GET
+  @Path("machine/{machineId}/benchmark/{benchmarkName:.+}.csv")
+  @Produces("text/csv")
+  public StreamingOutput getMachineBenchmarkResults(@PathParam("machineId") String machineId,
+                                                    @PathParam("benchmarkName") String benchmarkName) {
+
+    final QueryResultIterator<BenchmarkResult> it = PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkName).iterator();
+    return new StreamingOutput() {
+
+      @Override
+      public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+        PrintWriter csv = new PrintWriter(new OutputStreamWriter(outputStream, Charsets.UTF_8));
+        csv.println("machine,interpreter,interpreter.version,jdk,blas,time");
+        while(it.hasNext()) {
+          BenchmarkResult result = it.next();
+          if(result.isCompleted()) {
+            csv.print(result.getMachineId());
+            csv.print(",");
+            csv.print(result.getInterpreter());
+            csv.print(",");
+            csv.print(result.getInterpreterVersion());
+            csv.print(",");
+            csv.print(result.getRunVariable("JDK"));
+            csv.print(",");
+            csv.print(result.getRunVariable("BLAS"));
+            csv.print(",");
+            csv.print(result.getRunTime());
+            csv.println();
+          }
+        }
+        csv.flush();
+      }
+    };
+  }
+
+
   private void queueSummarize(String machineId, String benchmarkName) {
     QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/_script")
       .param("script", "analyzeBenchmarks")

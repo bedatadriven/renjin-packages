@@ -3,6 +3,7 @@ package org.renjin.ci.qa;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.releases.ReleasesResource;
 import org.renjin.ci.storage.StorageKeys;
 
 
@@ -77,6 +78,7 @@ public class TestRegression {
   }
   
   public String getComparePath() {
-    return "/releases/compare?from=" + lastGoodRenjinVersion + "&to=" + brokenRenjinVersionId;
+    return ReleasesResource.compareUrl(lastGoodRenjinVersion, brokenRenjinVersionId);
   }
+
 }

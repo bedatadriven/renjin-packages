@@ -36,10 +36,25 @@
             <#if (page.machine.physicalMemory > 0)>${page.machine.physicalMemoryDescription}</#if>
             <#if page.machine.cpuModel??><br>${page.machine.cpuModel}</#if></p>
 
-        
-        <h3></h3>
-        
+
+        <#if page.summary.changePoints?? >
+        <h3>Change Points</h3>
+
+        <ul>
+        <#list page.summary.changePoints as cp>
+            <li><a href="${cp.diffUrl}" target="_blank">${cp.version}</a> - ${cp.meanString}
+                (<#if cp.regression>
+                    <span class="change-regression">&#9650; ${cp.percentageChangeString}</span>
+                <#else>
+                    <span class="change-improvement">&#9660; ${cp.percentageChangeString}</span>
+                </#if>)</li>
+        </#list>
+        </ul>
+        </#if>
+
         <h3>Results</h3>
+
+        <p><a href="${page.resultsPath}">Download CSV</a></p>
 
         <table>
             <thead>

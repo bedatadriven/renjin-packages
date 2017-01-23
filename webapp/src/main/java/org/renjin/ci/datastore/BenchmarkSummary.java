@@ -5,6 +5,7 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.Parent;
+import org.renjin.ci.benchmarks.BenchmarkSummaryRow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -109,6 +110,14 @@ public class BenchmarkSummary {
       this.changePoints = new ArrayList<>();
     }
     changePoints.add(changePoint);
+  }
+
+  public String getBaselineMean() {
+    if(changePoints != null && changePoints.size() > 0) {
+      return BenchmarkSummaryRow.formatRunTime(changePoints.get(0).getPreviousMean());
+    } else {
+      return "N/A";
+    }
   }
 
   @Override

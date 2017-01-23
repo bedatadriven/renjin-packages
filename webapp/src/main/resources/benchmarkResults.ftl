@@ -41,6 +41,7 @@
         <h3>Change Points</h3>
 
         <ul>
+            <li>Baseline - ${page.summary.baselineMean}</li>
         <#list page.summary.changePoints as cp>
             <li><a href="${cp.diffUrl}" target="_blank">${cp.version}</a> - ${cp.meanString}
                 (<#if cp.regression>

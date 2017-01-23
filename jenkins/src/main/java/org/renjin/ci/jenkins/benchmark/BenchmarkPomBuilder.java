@@ -3,11 +3,10 @@ package org.renjin.ci.jenkins.benchmark;
 import com.google.common.collect.Lists;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
-import org.renjin.ci.model.*;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,15 +18,13 @@ public class BenchmarkPomBuilder {
 
 
   private final String renjinVersion;
+  private BlasLibrary blasLibrary;
   private final List<PackageVersionId> dependencies;
 
-  public BenchmarkPomBuilder(String renjinVersion, List<PackageVersionId> dependencies) {
+  public BenchmarkPomBuilder(String renjinVersion, BlasLibrary blasLibrary, List<PackageVersionId> dependencies) {
     this.renjinVersion = renjinVersion;
+    this.blasLibrary = blasLibrary;
     this.dependencies = dependencies;
-  }
-
-  public BenchmarkPomBuilder(String renjinVersion) {
-    this(renjinVersion, Collections.<PackageVersionId>emptyList());
   }
 
   private Model buildPom() throws IOException {
@@ -48,12 +45,27 @@ public class BenchmarkPomBuilder {
 
     // Add JNI Glue for Linux x86_64
     // TODO: other platforms
-    Dependency netlib = new Dependency();
-    netlib.setGroupId("com.github.fommil.netlib");
-    netlib.setArtifactId("netlib-native_system-linux-x86_64");
-    netlib.setVersion("1.1");
-    netlib.setClassifier("natives");
-    model.addDependency(netlib);
+    if(blasLibrary instanceof F2JBlas) {
+      // No dependencies, pure java included by default
+
+    } else if(blasLibrary instanceof DefaultBlas) {
+      // Reference BLAS lib + JNI glue
+      Dependency netlib = new Dependency();
+      netlib.setGroupId("com.github.fommil.netlib");
+      netlib.setArtifactId("netlib-native_ref-linux-x86_64");
+      netlib.setVersion("1.1");
+      netlib.setClassifier("natives");
+      model.addDependency(netlib);
+
+    } else {
+      // Only JNI glue need to link to system library
+      Dependency netlib = new Dependency();
+      netlib.setGroupId("com.github.fommil.netlib");
+      netlib.setArtifactId("netlib-native_system-linux-x86_64");
+      netlib.setVersion("1.1");
+      netlib.setClassifier("natives");
+      model.addDependency(netlib);
+    }
 
     // Add any packages on which this benchmark depends
     for (PackageVersionId packageVersionId : dependencies) {

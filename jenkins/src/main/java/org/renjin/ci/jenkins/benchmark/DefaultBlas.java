@@ -23,6 +23,11 @@ public class DefaultBlas implements BlasLibrary {
   }
 
   @Override
+  public String getLibraryPath() {
+    return null;
+  }
+
+  @Override
   public void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) {
     
   }

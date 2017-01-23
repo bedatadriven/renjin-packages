@@ -46,6 +46,11 @@ public class OpenBlas implements BlasLibrary {
   }
 
   @Override
+  public String getLibraryPath() {
+    return sourcePath.getRemote();
+  }
+
+  @Override
   public void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
     FilePath homePath = node.getRootPath().child("tools").child("OpenBLAS-" + version).child(version);
     sourcePath = homePath.child("OpenBLAS-" + version);
@@ -72,7 +77,15 @@ public class OpenBlas implements BlasLibrary {
         throw new AbortException("make failed for OpenBLAS " + version);
       }
 
+
       homePath.child(".installed").touch(System.currentTimeMillis());
+    }
+
+    // Netlib-java requires this symlink in order to load
+    FilePath libblas = sourcePath.child("libblas.so.3");
+    if(!libblas.exists()) {
+      FilePath libopenblas = sourcePath.child("libopenblas.so");
+      libblas.symlinkTo(libopenblas.getRemote(), taskListener);
     }
   }
 }

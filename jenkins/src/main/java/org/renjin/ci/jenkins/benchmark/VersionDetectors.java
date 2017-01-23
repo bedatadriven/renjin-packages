@@ -8,10 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class VersionDetectors {
-  
-  public static String detectJavaVersion(Launcher launcher) throws IOException, InterruptedException {
-    return parseJavaVersion(execute(launcher, "java", "-version"));
-  }
 
   public static String detectJavaVersion(Launcher launcher, JDK jdk) throws IOException, InterruptedException {
     return parseJavaVersion(execute(launcher, jdk.getBinDir().getAbsolutePath() + "/java", "-version"));
@@ -73,6 +69,7 @@ public class VersionDetectors {
   public static String findSystemBlas(Launcher launcher) throws IOException, InterruptedException {
     return parseSystemBlas(execute(launcher, "ldconfig", "-p"));
   }
+
 
   private static String parseSystemBlas(String[] output) {
     for (String line : output) {

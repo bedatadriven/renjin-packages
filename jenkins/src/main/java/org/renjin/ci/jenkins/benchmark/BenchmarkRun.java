@@ -49,7 +49,7 @@ public class BenchmarkRun {
     } else if("TERR".equalsIgnoreCase(interpreter)) {
       this.interpreter = new Terr(version);
     } else {
-      this.interpreter = new Renjin(jdk, version);
+      this.interpreter = new Renjin(jdk, blasLibrary, version);
     }
     
     this.interpreter.ensureInstalled(node, env, launcher, listener);

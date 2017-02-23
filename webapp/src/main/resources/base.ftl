@@ -97,7 +97,7 @@
         </div>
         <div class="medium-4 grid-item">
             <h3>Support</h3>
-            <p>This project is an initiative of <a href="http://www.bedatadriven.com">BeDataDriven</a>, 
+            <p>This project is an initiative of <a href="http://www.bedatadriven.com" rel="nofollow">BeDataDriven</a>, 
                 a company providing consulting in analytics and decision support systems. 
                 Read about our <a href="http://www.renjin.org/support.html">support options for Renjin</a>. </p>
         </div>

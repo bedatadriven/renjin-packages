@@ -123,6 +123,11 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     String interpreter = run.getEnvironment(listener).expand(this.interpreter);
     List<String> interpreterVersions = expandVersions(interpreter, run, listener);
 
+    // Randomize order of versions and benchmarks to avoid
+    // run-order effects.
+    Collections.shuffle(interpreterVersions);
+    Collections.shuffle(benchmarks);
+
     boolean allPassed = true;
     
     for (String interpreterVersion : interpreterVersions) {

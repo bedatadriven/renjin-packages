@@ -21,7 +21,7 @@ public abstract class Interpreter {
   public abstract String getId();
   
   public abstract String getVersion();
-  
+
   public abstract boolean execute(Launcher launcher, TaskListener listener, Node node,
                                   FilePath runScript, List<PackageVersionId> dependencies,
                                   boolean dryRun, long timeoutMillis) throws IOException, InterruptedException;

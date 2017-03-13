@@ -20,6 +20,14 @@ public interface BlasLibrary {
    */
   String getLibraryPath();
 
+  /**
+   * @return the path to the shared library (libxxxblas.so), or {@code null} if this blas configuration does not
+   * produce a shared library.
+   */
+  String getBlasSharedLibraryPath();
+
+  String getCompilationId();
+
   void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException;
 
 }

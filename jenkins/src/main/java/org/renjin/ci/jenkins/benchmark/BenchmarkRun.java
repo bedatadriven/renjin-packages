@@ -21,6 +21,8 @@ import java.util.List;
  */
 public class BenchmarkRun {
 
+  private static final int HARNESS_VERSION = 4;
+
   private final EnvVars env;
   private final FilePath workspace;
   private final Launcher launcher;
@@ -51,15 +53,14 @@ public class BenchmarkRun {
     } else {
       this.interpreter = new Renjin(jdk, blasLibrary, version);
     }
-    
     this.interpreter.ensureInstalled(node, env, launcher, listener);
-
   }
 
   public void start() throws AbortException, InterruptedException {
     Preconditions.checkState(interpreter != null);
     
     BenchmarkRunDescriptor benchmarkRun = new BenchmarkRunDescriptor();
+    benchmarkRun.setHarnessVersion(HARNESS_VERSION);
     benchmarkRun.setInterpreter(interpreter.getId());
     benchmarkRun.setInterpreterVersion(interpreter.getVersion());
     benchmarkRun.setRepoUrl(env.get("GIT_URL"));

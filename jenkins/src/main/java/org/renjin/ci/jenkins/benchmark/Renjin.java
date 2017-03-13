@@ -83,7 +83,7 @@ public class Renjin extends Interpreter {
       script.append("import(org.netlib.lapack.LAPACK)\n");
     }
     script.append("cat(LAPACK$getInstance()$class$name)\n");
-    script.append("system(sprintf('sh -c \"lsof -p %d > ").append(scriptOutput.getRemote()).append("\"', Sys.getpid()))\n");
+    script.append(BlasDetection.detectionScript(scriptOutput));
 
     scriptFile.write(script.toString(), Charsets.UTF_8.name());
 
@@ -121,7 +121,7 @@ public class Renjin extends Interpreter {
               output.contains("com.github.fommil.netlib.NativeSystemBLAS") ||
                       output.contains("Using system BLAS libraries.")) {
 
-        loadedBlas = findSystemBlas(scriptOutput);
+        loadedBlas = BlasDetection.findSystemBlas(scriptOutput);
 
       } else {
         loadedBlas = "<unknown>";
@@ -141,16 +141,6 @@ public class Renjin extends Interpreter {
     }
   }
 
-  private String findSystemBlas(FilePath scriptOutput) throws IOException, InterruptedException {
-    String[] lines = scriptOutput.readToString().split("\\n");
-    for (String line : lines) {
-      if(line.contains("libopenblas")) {
-        return "OpenBLAS";
-      }
-    }
-    return "reference";
-  }
-
   @Override
   public String getId() {
     return "Renjin";
@@ -160,6 +150,7 @@ public class Renjin extends Interpreter {
   public String getVersion() {
     return version;
   }
+
 
   @Override
   public boolean execute(Launcher launcher, TaskListener listener, Node node, FilePath scriptPath, 

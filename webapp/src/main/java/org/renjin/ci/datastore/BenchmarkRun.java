@@ -53,6 +53,7 @@ public class BenchmarkRun {
    * The version of the interpreter used
    */
   private String interpreterVersion;
+  private int harnessVersion;
 
   public Long getId() {
     return id;
@@ -116,5 +117,13 @@ public class BenchmarkRun {
 
   public void setRunVariables(Map<String, String> runVariables) {
     this.runVariables = runVariables;
+  }
+
+  public void setHarnessVersion(int harnessVersion) {
+    this.harnessVersion = harnessVersion;
+  }
+
+  public int getHarnessVersion() {
+    return harnessVersion;
   }
 }

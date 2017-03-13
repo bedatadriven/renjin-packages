@@ -28,6 +28,16 @@ public class DefaultBlas implements BlasLibrary {
   }
 
   @Override
+  public String getBlasSharedLibraryPath() {
+    return null;
+  }
+
+  @Override
+  public String getCompilationId() {
+    return "0";
+  }
+
+  @Override
   public void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) {
     
   }

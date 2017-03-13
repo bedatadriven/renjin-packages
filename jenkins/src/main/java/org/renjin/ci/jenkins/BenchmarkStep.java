@@ -3,7 +3,6 @@ package org.renjin.ci.jenkins;
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import hudson.AbortException;
 import hudson.Extension;
@@ -41,11 +40,12 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
   private boolean noDependencies;
   private Double timeoutMinutes;
   private String namespace;
+  private int executions = 1;
 
   @DataBoundConstructor
   public BenchmarkStep(String interpreter, String interpreterVersion, String includes,
                        String excludes, String blas, String jdk, boolean dryRun, boolean noDependencies,
-                       Double timeoutMinutes, String namespace) {
+                       Double timeoutMinutes, String namespace, int executions) {
     this.interpreter = interpreter;
     this.interpreterVersion = interpreterVersion;
     this.includes = includes;
@@ -56,6 +56,7 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     this.noDependencies = noDependencies;
     this.timeoutMinutes = timeoutMinutes;
     this.namespace = namespace;
+    this.executions = executions;
   }
 
   public String getInterpreterVersion() {
@@ -98,6 +99,10 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     return namespace;
   }
 
+  public int getExecutions() {
+    return executions;
+  }
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 
@@ -113,14 +118,13 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
         run.getEnvironment(listener).expand(includes),
         run.getEnvironment(listener).expand(excludes), noDependencies);
 
-    List<Benchmark> benchmarks = Lists.newArrayList();
-    findBenchmarks(filter, benchmarks, prefix, workspace);
-    
+    List<Benchmark> benchmarks = findBenchmarks(filter, prefix, workspace);
+
     if(benchmarks.isEmpty()) {
       listener.getLogger().println("No benchmarks found.");
       throw new AbortException();
     }
-    
+
     JDK jdk = findJdk()
         .forNode(((AbstractBuild) run).getBuiltOn(), listener)
         .forEnvironment(run.getEnvironment(listener));
@@ -131,6 +135,8 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     // Randomize order of versions and benchmarks to avoid
     // run-order effects.
     Collections.shuffle(interpreterVersions);
+
+    benchmarks = repeat(benchmarks);
     Collections.shuffle(benchmarks);
 
     boolean allPassed = true;
@@ -166,6 +172,14 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     }
   }
 
+  private List<Benchmark> repeat(List<Benchmark> benchmarks) {
+    List<Benchmark> schedule = new ArrayList<Benchmark>();
+    for (int i = 0; i < executions; i++) {
+      schedule.addAll(benchmarks);
+    }
+    return schedule;
+  }
+
   private JDK findJdk() throws AbortException {
 
     List<JDK> tools = Jenkins.getInstance().getJDKs();
@@ -188,6 +202,10 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
   private BlasLibrary blasLibrary() {
     if("OpenBLAS".equals(blas)) {
       return new OpenBlas();
+    } else if("f2jblas".equalsIgnoreCase(blas)) {
+      return new F2JBlas();
+    } else if("mkl".equalsIgnoreCase(blas)) {
+      return new MKL();
     } else {
       return new DefaultBlas();
     }
@@ -216,6 +234,12 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
       versionStrings.add(renjinVersionId.toString());
     }
     return versionStrings;
+  }
+
+  private List<Benchmark> findBenchmarks(Filter filter, String prefix, FilePath parentDir) throws IOException, InterruptedException {
+    List<Benchmark> list = new ArrayList<Benchmark>();
+    findBenchmarks(filter, list, prefix, parentDir);
+    return list;
   }
 
   private void findBenchmarks(Filter filter, List<Benchmark> benchmarks, String namePrefix, FilePath parentDir) throws IOException, InterruptedException {

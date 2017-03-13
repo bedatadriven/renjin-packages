@@ -8,7 +8,7 @@ import java.util.*;
 
 public class DetailTable {
   
-  public List<BenchmarkResult> results;
+  public final List<BenchmarkResult> rows = new ArrayList<>();
   
   private List<String> variables = new ArrayList<>();
   
@@ -16,8 +16,11 @@ public class DetailTable {
     
     Set<String> variableSet = new HashSet<>();
     for (BenchmarkResult result : results) {
-      if(result.getRunVariables() != null) {
-        variableSet.addAll(result.getRunVariables().keySet());
+      if(result.getHarnessVersion() >= 4) {
+        this.rows.add(result);
+        if (result.getRunVariables() != null) {
+          variableSet.addAll(result.getRunVariables().keySet());
+        }
       }
     }
     this.variables = Lists.newArrayList(variableSet);
@@ -28,7 +31,7 @@ public class DetailTable {
     return variables;
   }
 
-  public List<BenchmarkResult> getResults() {
-    return results;
+  public List<BenchmarkResult> getRows() {
+    return rows;
   }
 }

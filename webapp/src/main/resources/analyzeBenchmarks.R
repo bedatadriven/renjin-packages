@@ -8,6 +8,9 @@
 
 library(changepoint)
 
+latestJdk <- "Oracle-1.8.0_121"
+fastestBlas <- "OpenBLAS"
+
 import(org.renjin.ci.datastore.BenchmarkResult)
 import(org.renjin.ci.datastore.BenchmarkSummary)
 import(org.renjin.ci.datastore.BenchmarkSummaryPoint)
@@ -33,7 +36,21 @@ findLatestVersion <- function(versions) {
 
 summarizeByTerp <- function(interpreter, results) {
 
-    results <-  results[results$interpreter == interpreter, ]
+    # For Renjin and GNU R, configuration variables like JDK and BLAS library
+    # can have a HUGE impact. So we for our comparison purposes, we will compare
+    # using certain standards.
+    # Renjin - latest JDK and fastest open-source BLAS (Open BLAS)
+    # GNU R - fastest open-source BLAS (OpenBLAS)
+    # TERR - no configuration options (Only MKL)
+
+    results <- if(interpreter == "Renjin") {
+        subset(results, interpreter == 'Renjin' & jdk == latestJdk & blas == fastestBlas)
+    } else if(interpreter == "GNU R") {
+        subset(results, interpreter == 'GNU R' & blas == fastestBlas)
+    } else {
+        results[results$interpreter == interpreter, ]
+    }
+
     latestVersion <- findLatestVersion(results$interpreterVersion)
     latestResults <- results[results$interpreterVersion == latestVersion & results$completed, ]
 
@@ -52,14 +69,17 @@ summarizeByTerp <- function(interpreter, results) {
 findChangePoints <- function(summary, results) {
 
     # Find only Renjin's results and order by version number
-    renjin <- subset(results, interpreter == 'Renjin')
-    renjin <- renjin[ order(renjin$interpreterVersion), ]
-    rownames(renjin) <- 1:nrow(renjin)
+    # Stick to a single JDK+BLAS configuration to avoid muddying results
+    renjin <- subset(results, interpreter == 'Renjin' & jdk == latestJdk & blas == fastestBlas)
 
     # Don't attempt changepoint analysis if we only have a few data points...
     if(nrow(renjin) < 10) {
        return(NULL)
     }
+
+    renjin <- renjin[ order(renjin$interpreterVersion), ]
+    rownames(renjin) <- 1:nrow(renjin)
+
 
     # Look for any statistically significant change in running time
     cp <- cpts(cpt.mean(renjin$runTime, method = "BinSeg"))
@@ -112,6 +132,9 @@ findChangePoints <- function(summary, results) {
 }
 
 results <- PackageDatabase$query(BenchmarkResult, list(machineId = machineId, benchmarkName = benchmarkName))
+
+# Exclude results from previous harness versions
+results <- subset(results, harnessVersion >= 4)
 
 summary <- BenchmarkSummary$new( machineId, benchmarkName )
 interpreters <- unique(results$interpreter)

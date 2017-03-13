@@ -38,6 +38,7 @@ public class BenchmarkRunDescriptor {
    * The version of the interpreter used
    */
   private String interpreterVersion;
+  private int harnessVersion;
 
   public String getRepoUrl() {
     return repoUrl;
@@ -94,6 +95,14 @@ public class BenchmarkRunDescriptor {
 
   public void setRunVariables(Map<String, String> runVariables) {
     this.runVariables = runVariables;
+  }
+
+  public void setHarnessVersion(int harnessVersion) {
+    this.harnessVersion = harnessVersion;
+  }
+
+  public int getHarnessVersion() {
+    return harnessVersion;
   }
 }
 

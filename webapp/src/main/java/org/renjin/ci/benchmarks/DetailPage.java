@@ -29,6 +29,7 @@ public class DetailPage {
     this.summary = PackageDatabase.getBenchmarkSummary(machineId, benchmarkId);
     
     results = PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkId).list();
+
     Collections.sort(results, BenchmarkResult.comparator());
 
     this.detailTable = new DetailTable(results);

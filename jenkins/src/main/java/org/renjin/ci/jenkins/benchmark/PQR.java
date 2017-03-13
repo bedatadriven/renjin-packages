@@ -38,6 +38,7 @@ public class PQR extends Interpreter {
   public Map<String, String> getRunVariables() {
     Map<String, String> variables = Maps.newHashMap();
     variables.put(RunVariables.BLAS, "reference");
+    variables.put(RunVariables.COMPILE_ID, sourceInstallation.getCompilationId());
     return variables;
   }
 
@@ -50,6 +51,7 @@ public class PQR extends Interpreter {
   public String getVersion() {
     return version;
   }
+
 
   @Override
   public boolean execute(Launcher launcher, TaskListener listener, Node node,

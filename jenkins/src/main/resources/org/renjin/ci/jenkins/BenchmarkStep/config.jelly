@@ -29,4 +29,7 @@
   <f:entry title="Timeout (minutes)" field="timeoutMinutes">
     <f:textbox/>
   </f:entry>
+  <f:entry title="Number of Executions" field="executions">
+    <f:textbox/>
+  </f:entry>
 </j:jelly>

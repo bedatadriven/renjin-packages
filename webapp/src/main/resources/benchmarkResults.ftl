@@ -50,6 +50,7 @@
             <tr>
                 <th align="left">Interpreter</th>
                 <th align="left">Run</th>
+                <th align="right">Harness Version</th>
                 <th align="right">Run Time (ms)</th>
                 <#list page.detailTable.variables as variable>
                 <th align="left">${variable}</th>
@@ -57,10 +58,11 @@
             </tr>
             </thead>
             <tbody>
-                <#list page.results as result>
+                <#list page.detailTable.rows as result>
                 <tr>
                     <th align="left">${result.interpreter} ${result.interpreterVersion}</th>
                     <td align="left">#${result.runId}</td>
+                    <td align="right">${result.harnessVersion}</td>
                     <td align="right">
                         <#if result.completed>
                             <#if result.runTime??>${result.runTime}</#if>

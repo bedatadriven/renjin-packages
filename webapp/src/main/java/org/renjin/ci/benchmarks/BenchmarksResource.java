@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 public class BenchmarksResource {
 
   private static final Logger LOGGER = Logger.getLogger(BenchmarksResource.class.getName());
+  public static final int MINIMUM_HARNESS_VERSION = 4;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
@@ -81,7 +82,7 @@ public class BenchmarksResource {
         csv.println("machine,interpreter,interpreter.version,jdk,blas,time");
         while(it.hasNext()) {
           BenchmarkResult result = it.next();
-          if(result.isCompleted()) {
+          if(result.isCompleted() && result.getHarnessVersion() >= MINIMUM_HARNESS_VERSION) {
             csv.print(result.getMachineId());
             csv.print(",");
             csv.print(result.getInterpreter());
@@ -122,6 +123,7 @@ public class BenchmarksResource {
 
     BenchmarkRun run = new BenchmarkRun();
     run.setId(nextRunNumber());
+    run.setHarnessVersion(descriptor.getHarnessVersion());
     run.setMachineId(descriptor.getMachine().getId());
     run.setRepoUrl(descriptor.getRepoUrl());
     run.setCommitId(descriptor.getCommitId());
@@ -151,6 +153,7 @@ public class BenchmarksResource {
 
     BenchmarkResult result = new BenchmarkResult();
     result.setRunId(runNumber);
+    result.setHarnessVersion(run.getHarnessVersion());
     result.setMachineId(run.getMachineId());
     result.setBenchmarkName(benchmarkName);
     result.setCompleted(completed);

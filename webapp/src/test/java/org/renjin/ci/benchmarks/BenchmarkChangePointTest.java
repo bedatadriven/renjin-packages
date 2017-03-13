@@ -67,11 +67,14 @@ public class BenchmarkChangePointTest extends AbstractDatastoreTest {
   private BenchmarkResult result(String interpreter, String interpreterVersion, String machineId, long runTime) {
     BenchmarkResult result = new BenchmarkResult();
     result.setInterpreter(interpreter);
+    result.setHarnessVersion(4);
     result.setInterpreterVersion(interpreterVersion);
     result.setBenchmarkName("randomForest");
     result.setMachineId(machineId);
     result.setCompleted(true);
     result.setRunTime(runTime);
+    result.setRunVariable("BLAS", "OpenBLAS");
+    result.setRunVariable("JDK", "Oracle-1.8.0_121");
     return result;
   }
 

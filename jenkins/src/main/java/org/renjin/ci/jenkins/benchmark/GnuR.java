@@ -50,6 +50,7 @@ public class GnuR extends Interpreter {
     variables.put(RunVariables.BLAS, blasLibrary.getName());
     variables.put(RunVariables.BLAS_VERSION, blasLibrary.getNameAndVersion());
     variables.put(RunVariables.GCC_VERSION, installation.getGccVersion());
+    variables.put(RunVariables.COMPILE_ID, installation.getCompilationId());
     
     return variables;
   }
@@ -71,7 +72,6 @@ public class GnuR extends Interpreter {
   public String getVersion() {
     return version;
   }
-
 
   @Override
   public boolean execute(Launcher launcher, TaskListener listener,

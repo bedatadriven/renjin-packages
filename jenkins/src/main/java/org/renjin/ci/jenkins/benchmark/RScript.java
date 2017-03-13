@@ -36,7 +36,9 @@ public class RScript {
     args.add(scriptPath.getName());
 
     Map<String, String> env = new HashMap<String, String>();
-    env.put(userLibsEnvVariable, libraryPath.getRemote());
+    if(libraryPath != null) {
+      env.put(userLibsEnvVariable, libraryPath.getRemote());
+    }
 
     Launcher.ProcStarter ps = launcher.new ProcStarter();
     ps = ps.cmds(args)

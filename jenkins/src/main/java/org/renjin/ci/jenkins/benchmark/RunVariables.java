@@ -18,4 +18,6 @@ public class RunVariables {
   public static final String JDK = "JDK";
   
   public static final String GCC_VERSION = "GCC-Version";
+
+  public static final String COMPILE_ID = "Compilation";
 }

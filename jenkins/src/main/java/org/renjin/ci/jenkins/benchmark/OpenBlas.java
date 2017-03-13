@@ -14,8 +14,10 @@ import java.net.URL;
 public class OpenBlas implements BlasLibrary {
   
   private final String version;
-  
+
   private FilePath sourcePath;
+
+  private String compilationId;
 
   public OpenBlas() {
     version = "0.2.18";
@@ -51,12 +53,27 @@ public class OpenBlas implements BlasLibrary {
   }
 
   @Override
+  public String getBlasSharedLibraryPath() {
+    return sourcePath.child("libopenblas.so").getRemote();
+  }
+
+  @Override
+  public String getCompilationId() {
+    return compilationId;
+  }
+
+  @Override
   public void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
     FilePath homePath = node.getRootPath().child("tools").child("OpenBLAS-" + version).child(version);
     sourcePath = homePath.child("OpenBLAS-" + version);
 
     // check if installation is complete
-    if(!homePath.child(".installed").exists()) {
+    FilePath compilationIdFile = homePath.child(".compilation.id");
+    if(compilationIdFile.exists()) {
+      compilationId = compilationIdFile.readToString();
+
+    } else {
+      compilationId = CompilationId.generate();
 
       // Download and install the source
       homePath.installIfNecessaryFrom(getDownloadUrl(), taskListener, "Installing OpenBLAS " + version + " to " + homePath);
@@ -77,8 +94,7 @@ public class OpenBlas implements BlasLibrary {
         throw new AbortException("make failed for OpenBLAS " + version);
       }
 
-
-      homePath.child(".installed").touch(System.currentTimeMillis());
+      compilationIdFile.write(compilationId, "UTF-8");
     }
 
     // Netlib-java requires this symlink in order to load

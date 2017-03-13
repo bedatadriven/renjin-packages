@@ -4,7 +4,7 @@
 function plotBenchmarkResults(datafile) {
 
     var svg = d3.select("svg"),
-        margin = {top: 20, right: 200, bottom: 30, left: 50},
+        margin = {top: 20, right: 250, bottom: 30, left: 50},
         width = +svg.attr("width") - margin.left - margin.right,
         height = +svg.attr("height") - margin.top - margin.bottom,
         g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -35,12 +35,6 @@ function plotBenchmarkResults(datafile) {
             }
         });
         return configs;
-    };
-
-    var byInterpreter = function (name) {
-        return function (d) {
-            return d.interpreter == name;
-        }
     };
 
     var computeRenjinVersionMeans = function (data, config) {
@@ -120,10 +114,12 @@ function plotBenchmarkResults(datafile) {
             c += "+" + d.jdk;
         }
         c += "+";
-        if (d.blas == "reference-jvm") {
-            c += "f2jblas";
-        } else {
-            c += d.blas;
+        if (d.interpreter != "TERR") {
+            if (d.blas == "reference-jvm") {
+                c += "f2jblas";
+            } else {
+                c += d.blas;
+            }
         }
         return c;
     };
@@ -247,9 +243,7 @@ function plotBenchmarkResults(datafile) {
                 return color(d.key);
             })
             .attr("class", "legend")
-            .text(function (d) {
-                return d.key.substr("Renjin+".length);
-            });
+            .text(function (d) { return d.key; });
 
         g.selectAll("reflines")
             .data(ref)

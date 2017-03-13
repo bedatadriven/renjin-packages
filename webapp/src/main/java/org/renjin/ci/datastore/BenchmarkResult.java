@@ -8,10 +8,7 @@ import com.googlecode.objectify.condition.IfNull;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Entity
@@ -49,6 +46,7 @@ public class BenchmarkResult {
    * Whether the benchmark successfully completed or not
    */
   private boolean completed;
+  private int harnessVersion;
 
 
   public Long getId() {
@@ -176,5 +174,20 @@ public class BenchmarkResult {
     }));
     
     return Ordering.compound(comparators);
+  }
+
+  public void setHarnessVersion(int harnessVersion) {
+    this.harnessVersion = harnessVersion;
+  }
+
+  public int getHarnessVersion() {
+    return harnessVersion;
+  }
+
+  public void setRunVariable(String name, String value) {
+    if(runVariables == null) {
+      runVariables = new HashMap<>();
+    }
+    runVariables.put(name, value);
   }
 }

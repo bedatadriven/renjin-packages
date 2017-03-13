@@ -25,6 +25,8 @@ public class SourceInstallation {
   private BlasLibrary blasLibrary;
   private String gccVersion;
 
+  private String compilationId;
+
   public SourceInstallation(BlasLibrary blasLibrary) {
     this.blasLibrary = blasLibrary;
   }
@@ -69,15 +71,26 @@ public class SourceInstallation {
   public void ensureInstalled(Node node, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
 
     gccVersion = VersionDetectors.detectGccVersion(launcher);
-    
+
     blasLibrary.ensureInstalled(node, launcher, taskListener);
-    
+
     FilePath homePath = node.getRootPath().child("tools").child(installPrefix + "-" + blasLibrary.getNameAndVersion()).child(version);
     sourcePath = homePath.child(sourceDirectoryName);
 
     // check if installation is complete
-    if(!homePath.child(".installed").exists()) {
+    FilePath compilationIdFile = homePath.child(".compile.id");
+    if(compilationIdFile.exists()) {
+      this.compilationId = compilationIdFile.readToString();
 
+    } else {
+
+      this.compilationId = CompilationId.generate();
+
+      // Clear out homepath if it exists
+      if(homePath.exists()) {
+        taskListener.getLogger().println("Removing failed installation...");
+        homePath.deleteRecursive();
+      }
 
       // Download and install the source
       homePath.installIfNecessaryFrom(sourceUrl, taskListener, "Installing " + installPrefix + version + " to " + homePath);
@@ -90,7 +103,7 @@ public class SourceInstallation {
       if(!blasLibrary.getConfigureFlags().isEmpty()) {
         commandLine += " " + blasLibrary.getConfigureFlags();
       }
-      
+
       // Configure && build
       int configureExitCode = launcher.launch()
           .pwd(sourcePath)
@@ -114,9 +127,50 @@ public class SourceInstallation {
         throw new AbortException("make failed for " + installPrefix + version);
       }
 
-      homePath.child(".installed").touch(System.currentTimeMillis());
+      String blasLibrary = this.blasLibrary.getBlasSharedLibraryPath();
+      if(blasLibrary != null) {
+        FilePath rBlas = sourcePath.child("lib").child("libRblas.so");
+        if(!rBlas.exists()) {
+          throw new IllegalStateException("libRblas.so does not exist at " + rBlas.getRemote());
+        }
+        rBlas.delete();
+        rBlas.symlinkTo(blasLibrary, taskListener);
+      }
+
+
+      compilationIdFile.write(compilationId, "UTF-8");
+    }
+
+    // Verify that we are using the version of BLAS that we think we are...
+    verifyBlasLibrary(node, launcher, taskListener);
+  }
+
+  private void verifyBlasLibrary(Node node, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+
+    FilePath scriptFile = node.getRootPath().createTempFile("detect-blas", ".R");
+    FilePath scriptOutput = node.getRootPath().createTempFile("detect-blas", ".txt");
+
+    scriptFile.write(BlasDetection.detectionScript(scriptOutput), "UTF-8");
+
+    int exitCode = getExecutor().runScript(launcher, null, scriptFile).join();
+    if(exitCode != 0) {
+      throw new AbortException("BLAS detection script failed.");
+    }
+
+    String loadedBlas = BlasDetection.findSystemBlas(scriptOutput);
+
+    if(!loadedBlas.equals(blasLibrary.getName())) {
+      listener.getLogger().println("Failed to detect BLAS library used.");
+      listener.getLogger().println("Loaded files:");
+      listener.getLogger().print(scriptOutput.readToString());
+      throw new RuntimeException(blasLibrary.getName() + " was requested, but " + loadedBlas + " was loaded.");
     }
   }
+
+  public String getCompilationId() {
+    return compilationId + blasLibrary.getCompilationId();
+  }
+
 
   public RScript getExecutor() {
     return new RScript(sourcePath.child("bin").child("Rscript"));

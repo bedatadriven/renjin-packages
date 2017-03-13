@@ -2,6 +2,7 @@ package org.renjin.ci.jenkins;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import hudson.AbortException;
@@ -108,8 +109,12 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
       }
     }
 
+    Filter filter = new Filter(
+        run.getEnvironment(listener).expand(includes),
+        run.getEnvironment(listener).expand(excludes), noDependencies);
+
     List<Benchmark> benchmarks = Lists.newArrayList();
-    findBenchmarks(benchmarks, prefix, workspace);
+    findBenchmarks(filter, benchmarks, prefix, workspace);
     
     if(benchmarks.isEmpty()) {
       listener.getLogger().println("No benchmarks found.");
@@ -213,13 +218,13 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     return versionStrings;
   }
 
-  private void findBenchmarks(List<Benchmark> benchmarks, String namePrefix, FilePath parentDir) throws IOException, InterruptedException {
+  private void findBenchmarks(Filter filter, List<Benchmark> benchmarks, String namePrefix, FilePath parentDir) throws IOException, InterruptedException {
     for (FilePath childDir : parentDir.listDirectories()) {
       if (childDir.child("BENCHMARK.dcf").exists() || 
           childDir.child("BENCHMARK").exists()) {
 
         Benchmark benchmark = Benchmark.fromBenchmarkDir(namePrefix, childDir);
-        if (accept(benchmark)) {
+        if (filter.apply(benchmark)) {
           benchmarks.add(benchmark);
         }
       } else {
@@ -227,16 +232,16 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
         // Look for benchmark .lists
         for (FilePath filePath : childDir.list()) {
           if(!filePath.isDirectory() && filePath.getName().endsWith(".list")) {
-            readBenchmarksList(benchmarks, namePrefix + childDir.getName() + "/", filePath);
+            readBenchmarksList(filter, benchmarks, namePrefix + childDir.getName() + "/", filePath);
           }
         }
 
-        findBenchmarks(benchmarks, namePrefix + childDir.getName() + "/", childDir);
+        findBenchmarks(filter, benchmarks, namePrefix + childDir.getName() + "/", childDir);
       }
     }
   }
 
-  private void readBenchmarksList(List<Benchmark> benchmarks, String prefix, FilePath listFile) throws IOException, InterruptedException {
+  private void readBenchmarksList(Predicate<Benchmark> filter, List<Benchmark> benchmarks, String prefix, FilePath listFile) throws IOException, InterruptedException {
     List<String> lines = CharStreams.readLines(new StringReader(listFile.readToString()));
     for (String line : lines) {
 
@@ -255,7 +260,7 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
           FilePath scriptPath =  listFile.getParent().child(columns[0]);
           if(scriptPath.exists()) {
             Benchmark benchmark = new Benchmark(BenchmarkConvention.RBENCH, composeName(prefix, columns[0]), scriptPath);
-            if(accept(benchmark)) {
+            if(filter.apply(benchmark)) {
               benchmarks.add(benchmark);
             }
           }
@@ -280,19 +285,6 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     }
 
     return prefix + Joiner.on('/').join(parts);
-  }
-
-  private boolean accept(Benchmark benchmark) {
-    if(!Strings.isNullOrEmpty(includes) && !benchmark.getName().contains(includes)) {
-      return false;
-    }
-    if(!Strings.isNullOrEmpty(excludes) && benchmark.getName().contains(excludes)) {
-      return false;
-    }
-    if(noDependencies && benchmark.hasDependencies()) {
-      return false;
-    }
-    return true;
   }
 
   @Extension

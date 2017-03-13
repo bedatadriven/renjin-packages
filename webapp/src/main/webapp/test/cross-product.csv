@@ -1,0 +1,305 @@
+machine,interpreter,interpreter.version,jdk,blas,time
+gce-n1-standard-4,Renjin,0.8.2146,OpenJDK-1.8.0_91,,1319
+gce-n1-standard-4,Renjin,0.8.2215,Oracle-1.8.0_121,OpenBLAS,1372
+gce-n1-standard-4,Renjin,0.8.2218,Oracle-1.8.0_121,OpenBLAS,1285
+gce-n1-standard-4,Renjin,0.8.2206,Oracle-1.8.0_121,OpenBLAS,929
+gce-n1-standard-4,Renjin,0.8.2224,Oracle-1.8.0_121,OpenBLAS,936
+gce-n1-standard-4,Renjin,0.8.1900,,,1916
+gce-n1-standard-4,Renjin,0.8.2174,Oracle-1.8.0_121,f2jblas,10939
+gce-n1-standard-4,TERR,4.1.1,,MKL,340
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,716
+gce-n1-standard-4,Renjin,0.8.2182,Oracle-1.8.0_121,OpenBLAS,1146
+gce-n1-standard-4,Renjin,0.8.2242,Oracle-1.8.0_121,OpenBLAS,1319
+gce-n1-standard-4,Renjin,0.8.2198,Oracle-1.7.0_80,reference,1436
+gce-n1-standard-4,Renjin,0.8.2201,Oracle-1.8.0_121,OpenBLAS,888
+gce-n1-standard-4,GNU R,3.3.1,,reference,694
+gce-n1-standard-4,Renjin,0.8.2222,Oracle-1.8.0_121,OpenBLAS,979
+gce-n1-standard-4,Renjin,0.8.2166,Oracle-1.8.0_121,f2jblas,1760
+gce-n1-standard-4,Renjin,0.8.1902,,,1703
+gce-n1-standard-4,Renjin,0.8.2227,Oracle-1.8.0_121,OpenBLAS,1888
+gce-n1-standard-4,Renjin,0.8.2178,Oracle-1.8.0_121,f2jblas,1583
+gce-n1-standard-4,Renjin,0.8.2244,Oracle-1.8.0_102,reference,1351
+gce-n1-standard-4,Renjin,0.8.2168,Oracle-1.8.0_121,f2jblas,1608
+gce-n1-standard-4,Renjin,0.8.2254,Oracle-1.8.0_102,reference,1445
+gce-n1-standard-4,Renjin,0.8.2186,Oracle-1.8.0_121,OpenBLAS,995
+gce-n1-standard-4,Renjin,0.8.2187,Oracle-1.8.0_121,OpenBLAS,965
+gce-n1-standard-4,Renjin,0.8.2169,Oracle-1.8.0_121,f2jblas,1555
+gce-n1-standard-4,GNU R,3.3.1,,,658
+gce-n1-standard-4,GNU R,3.3.1,,reference,738
+gce-n1-standard-4,Renjin,0.8.2145,OpenJDK-1.8.0_91,,1278
+gce-n1-standard-4,Renjin,0.8.2169,OpenJDK-1.8.0_91,,1579
+gce-n1-standard-4,Renjin,0.8.2231,Oracle-1.8.0_121,OpenBLAS,1939
+gce-n1-standard-4,Renjin,0.8.2247,Oracle-1.8.0_102,reference,1646
+gce-n1-standard-4,TERR,4.1.1,,MKL,270
+gce-n1-standard-4,Renjin,0.8.2212,Oracle-1.8.0_121,OpenBLAS,1049
+gce-n1-standard-4,Renjin,0.8.1900,,,1704
+gce-n1-standard-4,Renjin,0.8.2197,Oracle-1.7.0_80,reference,1299
+gce-n1-standard-4,Renjin,0.8.2212,Oracle-1.7.0_80,reference,1276
+gce-n1-standard-4,GNU R,3.3.1,,,653
+gce-n1-standard-4,Renjin,0.8.2181,Oracle-1.8.0_121,f2jblas,1444
+gce-n1-standard-4,Renjin,0.8.2255,Oracle-1.8.0_121,OpenBLAS,1211
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,766
+gce-n1-standard-4,Renjin,0.8.2270,Oracle-1.8.0_121,OpenBLAS,1020
+gce-n1-standard-4,TERR,4.1.1,,MKL,340
+gce-n1-standard-4,Renjin,0.8.2193,OpenJDK-1.8.0_91,reference,1434
+gce-n1-standard-4,Renjin,0.8.2268,Oracle-1.8.0_102,reference,1807
+gce-n1-standard-4,Renjin,0.8.2208,Oracle-1.7.0_80,reference,1590
+gce-n1-standard-4,Renjin,0.8.2257,Oracle-1.8.0_102,reference,1892
+gce-n1-standard-4,Renjin,0.8.2237,Oracle-1.8.0_102,reference,1335
+gce-n1-standard-4,Renjin,0.8.2166,Oracle-1.8.0_121,f2jblas,1398
+gce-n1-standard-4,Renjin,0.8.2174,Oracle-1.8.0_121,OpenBLAS,10780
+gce-n1-standard-4,GNU R,3.3.1,,,670
+gce-n1-standard-4,Renjin,0.8.2172,OpenJDK-1.8.0_91,reference,1378
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,1946
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.8.0_121,OpenBLAS,1064
+gce-n1-standard-4,GNU R,3.3.1,,reference,718
+gce-n1-standard-4,GNU R,3.3.1,,reference,573
+gce-n1-standard-4,Renjin,0.8.2260,Oracle-1.8.0_121,OpenBLAS,1090
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,2167
+gce-n1-standard-4,Renjin,0.8.2150,OpenJDK-1.8.0_91,,1294
+gce-n1-standard-4,Renjin,0.8.2230,Oracle-1.7.0_80,reference,3377
+gce-n1-standard-4,Renjin,0.8.2176,Oracle-1.8.0_121,OpenBLAS,1301
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,2076
+gce-n1-standard-4,Renjin,0.8.2210,Oracle-1.7.0_80,reference,1402
+gce-n1-standard-4,Renjin,0.8.2242,Oracle-1.8.0_102,reference,1353
+gce-n1-standard-4,Renjin,0.8.2216,Oracle-1.7.0_80,reference,1167
+gce-n1-standard-4,Renjin,0.8.2249,Oracle-1.8.0_102,reference,1360
+gce-n1-standard-4,Renjin,0.8.2168,OpenJDK-1.8.0_91,,1511
+gce-n1-standard-4,Renjin,0.8.2228,Oracle-1.8.0_121,OpenBLAS,1897
+gce-n1-standard-4,Renjin,0.8.2265,Oracle-1.8.0_121,OpenBLAS,1237
+gce-n1-standard-4,Renjin,0.8.2220,Oracle-1.7.0_80,reference,1266
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,714
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,653
+gce-n1-standard-4,TERR,4.1.1,,MKL,380
+gce-n1-standard-4,Renjin,0.8.2178,OpenJDK-1.8.0_91,reference,1140
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,1969
+gce-n1-standard-4,Renjin,0.8.2175,OpenJDK-1.8.0_91,reference,1166
+gce-n1-standard-4,Renjin,0.8.2171,Oracle-1.8.0_121,OpenBLAS,1579
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,718
+gce-n1-standard-4,Renjin,0.8.2253,Oracle-1.8.0_102,reference,1559
+gce-n1-standard-4,GNU R,3.3.1,,,564
+gce-n1-standard-4,Renjin,0.8.2240,Oracle-1.8.0_102,reference,1631
+gce-n1-standard-4,Renjin,0.8.2237,Oracle-1.7.0_80,reference,2510
+gce-n1-standard-4,Renjin,0.8.2157,OpenJDK-1.8.0_91,,1345
+gce-n1-standard-4,Renjin,0.8.2265,Oracle-1.8.0_102,reference,1335
+gce-n1-standard-4,GNU R,3.3.1,,,607
+gce-n1-standard-4,Renjin,0.8.1906,,,1612
+gce-n1-standard-4,Renjin,0.8.2180,Oracle-1.8.0_121,f2jblas,990
+gce-n1-standard-4,Renjin,0.8.2192,Oracle-1.8.0_121,OpenBLAS,1076
+gce-n1-standard-4,Renjin,0.8.2226,Oracle-1.8.0_121,OpenBLAS,977
+gce-n1-standard-4,Renjin,0.8.2176,Oracle-1.8.0_121,f2jblas,1109
+gce-n1-standard-4,Renjin,0.8.2220,Oracle-1.8.0_121,OpenBLAS,1120
+gce-n1-standard-4,Renjin,0.8.2179,Oracle-1.8.0_121,f2jblas,1346
+gce-n1-standard-4,Renjin,0.8.2172,Oracle-1.8.0_121,f2jblas,1509
+gce-n1-standard-4,Renjin,0.8.2245,Oracle-1.8.0_121,OpenBLAS,1024
+gce-n1-standard-4,Renjin,0.8.2208,Oracle-1.8.0_121,OpenBLAS,985
+gce-n1-standard-4,Renjin,0.8.2193,Oracle-1.8.0_121,OpenBLAS,955
+gce-n1-standard-4,Renjin,0.8.2185,Oracle-1.8.0_121,OpenBLAS,1234
+gce-n1-standard-4,Renjin,0.8.2216,Oracle-1.8.0_121,OpenBLAS,1013
+gce-n1-standard-4,Renjin,0.8.2223,Oracle-1.8.0_121,OpenBLAS,1042
+gce-n1-standard-4,Renjin,0.8.2250,Oracle-1.8.0_102,reference,1821
+gce-n1-standard-4,Renjin,0.8.2242,Oracle-1.8.0_102,reference,1492
+gce-n1-standard-4,TERR,4.1.1,,MKL,390
+gce-n1-standard-4,Renjin,0.8.2272,Oracle-1.8.0_121,OpenBLAS,1626
+gce-n1-standard-4,Renjin,0.8.2240,Oracle-1.8.0_121,OpenBLAS,1081
+gce-n1-standard-4,Renjin,0.8.2180,Oracle-1.8.0_121,OpenBLAS,1147
+gce-n1-standard-4,Renjin,0.8.2253,Oracle-1.8.0_121,OpenBLAS,1500
+gce-n1-standard-4,Renjin,0.8.2250,Oracle-1.8.0_121,OpenBLAS,1130
+gce-n1-standard-4,GNU R,3.3.1,,reference,854
+gce-n1-standard-4,Renjin,0.8.2169,Oracle-1.8.0_121,OpenBLAS,1572
+gce-n1-standard-4,Renjin,0.8.2199,Oracle-1.8.0_121,OpenBLAS,993
+gce-n1-standard-4,Renjin,0.8.2232,Oracle-1.8.0_121,OpenBLAS,2037
+gce-n1-standard-4,Renjin,0.8.2190,Oracle-1.8.0_121,OpenBLAS,1556
+gce-n1-standard-4,Renjin,0.8.1907,,,1558
+gce-n1-standard-4,Renjin,0.8.2186,OpenJDK-1.8.0_91,reference,1327
+gce-n1-standard-4,TERR,4.1.1,,MKL,340
+gce-n1-standard-4,Renjin,0.8.2205,Oracle-1.7.0_80,reference,1327
+gce-n1-standard-4,TERR,4.1.1,,MKL,380
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,700
+gce-n1-standard-4,Renjin,0.8.2251,Oracle-1.8.0_102,reference,1672
+gce-n1-standard-4,Renjin,0.8.2221,Oracle-1.7.0_80,reference,1424
+gce-n1-standard-4,Renjin,0.8.2202,Oracle-1.7.0_80,reference,1240
+gce-n1-standard-4,GNU R,3.3.1,,reference,670
+gce-n1-standard-4,Renjin,0.8.2286,Oracle-1.8.0_102,reference,1436
+gce-n1-standard-4,Renjin,0.8.2173,OpenJDK-1.8.0_91,reference,23529
+gce-n1-standard-4,Renjin,0.8.2181,OpenJDK-1.8.0_91,reference,1420
+gce-n1-standard-4,Renjin,0.8.2166,OpenJDK-1.8.0_91,,1572
+gce-n1-standard-4,Renjin,0.8.2294,Oracle-1.7.0_80,reference,2312
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,660
+gce-n1-standard-4,TERR,4.1.1,,MKL,420
+gce-n1-standard-4,Renjin,0.8.2233,Oracle-1.8.0_121,OpenBLAS,1736
+gce-n1-standard-4,TERR,4.1.1,,MKL,510
+gce-n1-standard-4,Renjin,0.8.2194,OpenJDK-1.8.0_91,reference,1416
+gce-n1-standard-4,Renjin,0.8.2170,OpenJDK-1.8.0_91,reference,1359
+gce-n1-standard-4,GNU R,3.3.1,,,556
+gce-n1-standard-4,Renjin,0.8.2170,Oracle-1.8.0_121,OpenBLAS,1792
+gce-n1-standard-4,Renjin,0.8.2228,Oracle-1.7.0_80,reference,3002
+gce-n1-standard-4,Renjin,0.8.2176,OpenJDK-1.8.0_91,reference,1149
+gce-n1-standard-4,TERR,4.1.1,,MKL,360
+gce-n1-standard-4,Renjin,0.8.2202,Oracle-1.8.0_121,OpenBLAS,1099
+gce-n1-standard-4,Renjin,0.8.2187,OpenJDK-1.8.0_91,reference,1142
+gce-n1-standard-4,Renjin,0.8.2260,Oracle-1.8.0_102,reference,1519
+gce-n1-standard-4,Renjin,0.8.2196,Oracle-1.7.0_80,reference,1291
+gce-n1-standard-4,Renjin,0.8.2184,OpenJDK-1.8.0_91,reference,1452
+gce-n1-standard-4,GNU R,3.3.1,,reference,571
+gce-n1-standard-4,Renjin,0.8.2213,Oracle-1.7.0_80,reference,1334
+gce-n1-standard-4,Renjin,0.8.2337,Oracle-1.8.0_121,OpenBLAS,1573
+gce-n1-standard-4,TERR,4.1.1,,MKL,390
+gce-n1-standard-4,TERR,4.1.1,,MKL,360
+gce-n1-standard-4,Renjin,0.8.2174,OpenJDK-1.8.0_91,reference,15052
+gce-n1-standard-4,TERR,4.1.1,,MKL,410
+gce-n1-standard-4,Renjin,0.8.2226,Oracle-1.7.0_80,reference,1159
+gce-n1-standard-4,Renjin,0.8.2239,Oracle-1.8.0_102,reference,1560
+gce-n1-standard-4,Renjin,0.8.2215,Oracle-1.7.0_80,reference,1718
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,2018
+gce-n1-standard-4,TERR,4.1.1,,MKL,440
+gce-n1-standard-4,TERR,4.1.1,,MKL,450
+gce-n1-standard-4,Renjin,0.8.2259,Oracle-1.8.0_102,reference,1718
+gce-n1-standard-4,TERR,4.1.1,,MKL,460
+gce-n1-standard-4,Renjin,0.8.2173,OpenJDK-1.8.0_91,reference,24201
+gce-n1-standard-4,GNU R,3.3.1,,reference,691
+gce-n1-standard-4,Renjin,0.8.2225,Oracle-1.8.0_121,OpenBLAS,1266
+gce-n1-standard-4,Renjin,0.8.2204,Oracle-1.7.0_80,reference,1403
+gce-n1-standard-4,Renjin,0.8.2256,Oracle-1.8.0_102,reference,1323
+gce-n1-standard-4,GNU R,3.3.1,,reference,845
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,690
+gce-n1-standard-4,Renjin,0.8.2209,Oracle-1.7.0_80,reference,1273
+gce-n1-standard-4,Renjin,0.8.2179,OpenJDK-1.8.0_91,reference,1176
+gce-n1-standard-4,TERR,4.1.1,,MKL,460
+gce-n1-standard-4,Renjin,0.8.2222,Oracle-1.7.0_80,reference,1371
+gce-n1-standard-4,Renjin,0.8.2225,Oracle-1.7.0_80,reference,1465
+gce-n1-standard-4,Renjin,0.8.2200,Oracle-1.7.0_80,reference,1287
+gce-n1-standard-4,Renjin,0.8.2189,OpenJDK-1.8.0_91,reference,1233
+gce-n1-standard-4,GNU R,3.3.1,,reference,795
+gce-n1-standard-4,Renjin,0.8.2183,OpenJDK-1.8.0_91,reference,1518
+gce-n1-standard-4,GNU R,3.3.1,,reference,628
+gce-n1-standard-4,Renjin,0.8.1905,,,1629
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,2179
+gce-n1-standard-4,Renjin,0.8.2224,Oracle-1.7.0_80,reference,1464
+gce-n1-standard-4,TERR,4.1.1,,MKL,330
+gce-n1-standard-4,TERR,4.1.1,,MKL,390
+gce-n1-standard-4,Renjin,0.8.2192,OpenJDK-1.8.0_91,reference,1251
+gce-n1-standard-4,TERR,4.1.1,,MKL,470
+gce-n1-standard-4,Renjin,0.8.2159,OpenJDK-1.8.0_91,,1355
+gce-n1-standard-4,Renjin,0.8.2227,Oracle-1.7.0_80,reference,3433
+gce-n1-standard-4,Renjin,0.8.2201,Oracle-1.7.0_80,reference,1267
+gce-n1-standard-4,Renjin,0.8.2294,Oracle-1.8.0_102,f2jblas,1706
+gce-n1-standard-4,GNU R,3.3.1,,reference,624
+gce-n1-standard-4,Renjin,0.8.2229,Oracle-1.7.0_80,reference,3117
+gce-n1-standard-4,Renjin,0.8.2172,Oracle-1.8.0_121,OpenBLAS,1653
+gce-n1-standard-4,TERR,4.1.1,,MKL,340
+gce-n1-standard-4,Renjin,0.8.2244,Oracle-1.8.0_121,OpenBLAS,1116
+gce-n1-standard-4,Renjin,0.8.2232,Oracle-1.7.0_80,reference,2904
+gce-n1-standard-4,Renjin,0.8.2252,Oracle-1.8.0_102,reference,1483
+gce-n1-standard-4,Renjin,0.8.2209,Oracle-1.8.0_121,OpenBLAS,968
+gce-n1-standard-4,Renjin,0.8.2214,Oracle-1.7.0_80,reference,1307
+gce-n1-standard-4,TERR,4.1.1,,MKL,360
+gce-n1-standard-4,TERR,4.1.1,,MKL,330
+gce-n1-standard-4,Renjin,0.8.2180,OpenJDK-1.8.0_91,reference,1011
+gce-n1-standard-4,Renjin,0.8.2185,OpenJDK-1.8.0_91,reference,1130
+gce-n1-standard-4,Renjin,0.8.2223,Oracle-1.7.0_80,reference,1506
+gce-n1-standard-4,Renjin,0.8.2154,OpenJDK-1.8.0_91,,1343
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,801
+gce-n1-standard-4,Renjin,0.8.2203,Oracle-1.7.0_80,reference,1401
+gce-n1-standard-4,Renjin,0.8.2207,Oracle-1.7.0_80,reference,1249
+gce-n1-standard-4,Renjin,0.8.2238,Oracle-1.8.0_102,reference,1414
+gce-n1-standard-4,Renjin,0.8.2184,Oracle-1.8.0_121,f2jblas,1720
+gce-n1-standard-4,Renjin,0.8.2141,OpenJDK-1.8.0_91,reference-jvm,1291
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.8.0_121,reference,1325
+gce-n1-standard-4,Renjin,0.8.2191,Oracle-1.8.0_121,OpenBLAS,1031
+gce-n1-standard-4,Renjin,0.8.2237,Oracle-1.8.0_121,OpenBLAS,1127
+gce-n1-standard-4,Renjin,0.8.2196,Oracle-1.8.0_121,OpenBLAS,1142
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,792
+gce-n1-standard-4,Renjin,0.8.2259,Oracle-1.8.0_121,OpenBLAS,1025
+gce-n1-standard-4,Renjin,0.8.2204,Oracle-1.8.0_121,OpenBLAS,1357
+gce-n1-standard-4,Renjin,0.8.1903,,,1874
+gce-n1-standard-4,Renjin,0.8.2230,Oracle-1.8.0_121,OpenBLAS,1968
+gce-n1-standard-4,Renjin,0.8.2210,Oracle-1.8.0_121,OpenBLAS,928
+gce-n1-standard-4,Renjin,0.8.2198,Oracle-1.8.0_121,OpenBLAS,1552
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,709
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,742
+gce-n1-standard-4,Renjin,0.8.2184,Oracle-1.8.0_121,OpenBLAS,1000
+gce-n1-standard-4,Renjin,0.8.2183,Oracle-1.8.0_121,OpenBLAS,987
+gce-n1-standard-4,Renjin,0.8.2181,Oracle-1.8.0_121,OpenBLAS,1057
+gce-n1-standard-4,Renjin,0.8.2175,Oracle-1.8.0_121,f2jblas,969
+gce-n1-standard-4,Renjin,0.8.2233,Oracle-1.7.0_80,reference,3175
+gce-n1-standard-4,Renjin,0.8.1901,,,1575
+gce-n1-standard-4,Renjin,0.8.2257,Oracle-1.8.0_121,OpenBLAS,1017
+gce-n1-standard-4,TERR,4.1.1,,MKL,340
+gce-n1-standard-4,Renjin,0.8.2236,Oracle-1.8.0_121,OpenBLAS,1786
+gce-n1-standard-4,Renjin,0.8.2152,OpenJDK-1.8.0_91,,1400
+gce-n1-standard-4,Renjin,0.8.2255,Oracle-1.8.0_102,reference,1567
+gce-n1-standard-4,Renjin,0.8.2256,Oracle-1.8.0_121,OpenBLAS,1139
+gce-n1-standard-4,Renjin,0.8.2170,Oracle-1.8.0_121,f2jblas,1538
+gce-n1-standard-4,Renjin,0.8.2175,Oracle-1.8.0_121,OpenBLAS,1162
+gce-n1-standard-4,Renjin,0.8.2236,Oracle-1.7.0_80,reference,3482
+gce-n1-standard-4,Renjin,0.8.2218,Oracle-1.7.0_80,reference,1270
+gce-n1-standard-4,GNU R,3.3.1,,,561
+gce-n1-standard-4,Renjin,0.8.2189,Oracle-1.8.0_121,OpenBLAS,919
+gce-n1-standard-4,Renjin,0.8.2251,Oracle-1.8.0_121,OpenBLAS,1350
+gce-n1-standard-4,Renjin,0.8.2267,Oracle-1.8.0_121,OpenBLAS,1061
+gce-n1-standard-4,GNU R,3.3.1,,,719
+gce-n1-standard-4,Renjin,0.8.2248,Oracle-1.8.0_121,OpenBLAS,1545
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.8.0_121,f2jblas,1078
+gce-n1-standard-4,Renjin,0.8.2183,Oracle-1.8.0_121,f2jblas,1129
+gce-n1-standard-4,Renjin,0.8.1908,,,1544
+gce-n1-standard-4,Renjin,0.8.2248,Oracle-1.8.0_102,reference,2027
+gce-n1-standard-4,Renjin,0.8.2199,Oracle-1.7.0_80,reference,1186
+gce-n1-standard-4,Renjin,0.8.2234,Oracle-1.7.0_80,reference,2886
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.8.0_121,f2jblas,1122
+gce-n1-standard-4,GNU R,3.3.1,,reference,795
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,933
+gce-n1-standard-4,Renjin,0.8.2294,Oracle-1.8.0_102,f2jblas,1309
+gce-n1-standard-4,Renjin,0.8.2200,Oracle-1.8.0_121,OpenBLAS,942
+gce-n1-standard-4,TERR,4.1.1,,MKL,360
+gce-n1-standard-4,Renjin,0.8.2245,Oracle-1.8.0_102,reference,1282
+gce-n1-standard-4,Renjin,0.8.2182,OpenJDK-1.8.0_91,reference,1187
+gce-n1-standard-4,Renjin,0.8.2195,Oracle-1.7.0_80,reference,1343
+gce-n1-standard-4,Renjin,0.8.2191,OpenJDK-1.8.0_91,reference,1205
+gce-n1-standard-4,Renjin,0.8.2243,Oracle-1.8.0_102,reference,1567
+gce-n1-standard-4,GNU R,3.3.1,,,867
+gce-n1-standard-4,Renjin,0.8.2190,OpenJDK-1.8.0_91,reference,1183
+gce-n1-standard-4,TERR,4.1.1,,MKL,440
+gce-n1-standard-4,Renjin,0.8.2254,Oracle-1.8.0_121,OpenBLAS,1328
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,2058
+gce-n1-standard-4,TERR,4.1.1,,MKL,380
+gce-n1-standard-4,GNU R,3.3.1,,OpenBLAS,667
+gce-n1-standard-4,Renjin,0.8.2188,OpenJDK-1.8.0_91,reference,1383
+gce-n1-standard-4,Renjin,0.8.2179,Oracle-1.8.0_121,OpenBLAS,1262
+gce-n1-standard-4,Renjin,0.8.2213,Oracle-1.8.0_121,OpenBLAS,940
+gce-n1-standard-4,Renjin,0.8.2320,Oracle-1.7.0_80,f2jblas,2110
+gce-n1-standard-4,Renjin,0.8.2174,OpenJDK-1.8.0_91,reference,15222
+gce-n1-standard-4,GNU R,3.3.1,,,676
+gce-n1-standard-4,TERR,4.1.1,,MKL,350
+gce-n1-standard-4,TERR,4.1.1,,MKL,380
+gce-n1-standard-4,Renjin,0.8.1910,,,1482
+gce-n1-standard-4,Renjin,0.8.2221,Oracle-1.8.0_121,OpenBLAS,1099
+gce-n1-standard-4,Renjin,0.8.2241,Oracle-1.8.0_121,OpenBLAS,1380
+gce-n1-standard-4,Renjin,0.8.2229,Oracle-1.8.0_121,OpenBLAS,1843
+gce-n1-standard-4,Renjin,0.8.2188,Oracle-1.8.0_121,OpenBLAS,1084
+gce-n1-standard-4,Renjin,0.8.2239,Oracle-1.8.0_121,OpenBLAS,1207
+gce-n1-standard-4,Renjin,0.8.2182,Oracle-1.8.0_121,f2jblas,1166
+gce-n1-standard-4,Renjin,0.8.2205,Oracle-1.8.0_121,OpenBLAS,1166
+gce-n1-standard-4,Renjin,0.8.2249,Oracle-1.8.0_121,OpenBLAS,1323
+gce-n1-standard-4,GNU R,3.3.1,,reference,751
+gce-n1-standard-4,Renjin,0.8.2238,Oracle-1.8.0_121,OpenBLAS,1174
+gce-n1-standard-4,Renjin,0.8.2173,Oracle-1.8.0_121,f2jblas,10851
+gce-n1-standard-4,Renjin,0.8.2214,Oracle-1.8.0_121,OpenBLAS,1159
+gce-n1-standard-4,Renjin,0.8.2266,Oracle-1.8.0_121,OpenBLAS,1363
+gce-n1-standard-4,Renjin,0.8.2141,,,1339
+gce-n1-standard-4,Renjin,0.8.1904,,,1623
+gce-n1-standard-4,Renjin,0.8.2171,Oracle-1.8.0_121,f2jblas,1342
+gce-n1-standard-4,Renjin,0.8.2178,Oracle-1.8.0_121,OpenBLAS,1113
+gce-n1-standard-4,Renjin,0.8.2243,Oracle-1.8.0_121,OpenBLAS,1410
+gce-n1-standard-4,Renjin,0.8.2173,Oracle-1.8.0_121,OpenBLAS,10697
+gce-n1-standard-4,Renjin,0.8.2234,Oracle-1.8.0_121,OpenBLAS,2039
+gce-n1-standard-4,Renjin,0.8.2268,Oracle-1.8.0_121,OpenBLAS,1133
+gce-n1-standard-4,Renjin,0.8.2269,Oracle-1.8.0_121,OpenBLAS,1351
+gce-n1-standard-4,Renjin,0.8.2207,Oracle-1.8.0_121,OpenBLAS,1247
+gce-n1-standard-4,Renjin,0.8.2194,Oracle-1.8.0_121,OpenBLAS,1616
+gce-n1-standard-4,Renjin,0.8.1909,,,1750
+gce-n1-standard-4,Renjin,0.8.2258,Oracle-1.8.0_121,OpenBLAS,1657
+gce-n1-standard-4,Renjin,0.8.2197,Oracle-1.8.0_121,OpenBLAS,1149
+gce-n1-standard-4,Renjin,0.8.2247,Oracle-1.8.0_121,OpenBLAS,1385
+gce-n1-standard-4,Renjin,0.8.2203,Oracle-1.8.0_121,OpenBLAS,1246
+gce-n1-standard-4,Renjin,0.8.2252,Oracle-1.8.0_121,OpenBLAS,1072

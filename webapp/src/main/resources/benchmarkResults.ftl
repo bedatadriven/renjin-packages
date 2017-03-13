@@ -3,24 +3,12 @@
 <#include "base.ftl">
 
 <@scaffolding title="Benchmarks - ${page.benchmarkId} - ${page.machine.id}">
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.1/d3.js"></script>
+<script src="/assets/js/benchmarks.js"></script>
 <script type="text/javascript">
-    google.charts.load('current', {'packages':['corechart']});
-    google.charts.setOnLoadCallback(drawChart);
-
-    function drawChart() {
-        var data = google.visualization.arrayToDataTable([${page.detailGraph.array}]);
-
-        var options = {
-            title: 'Runtime (${page.detailGraph.units})',
-            pointSize: 5,
-            legend: { position: 'bottom' }
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('runtime_chart'));
-
-        chart.draw(data, options);
-    }
+    window.addEventListener("load", function() {
+        plotBenchmarkResults("${page.resultsPath}");
+    });
 </script>
 <div class="grid">
     <div class="grid-item medium-12">
@@ -28,8 +16,8 @@
         <h1>Benchmark ${page.benchmarkId}</h1>
         
         <h2>Machine ${page.machine.id}</h2>
-        
-        <div id="runtime_chart"></div>
+
+        <svg width="960" height="500"></svg>
         
         <p>${page.machine.operatingSystem} 
             <#if (page.machine.availableProcessors > 0)>${page.machine.availableProcessors}-core</#if>

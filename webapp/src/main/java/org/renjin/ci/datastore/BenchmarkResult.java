@@ -123,6 +123,28 @@ public class BenchmarkResult {
     this.runVariables = runVariables;
   }
 
+  public String getBlas() {
+    if(runVariables == null) {
+      return null;
+    }
+    String blas = runVariables.get("BLAS");
+    if(Strings.isNullOrEmpty(blas)) {
+      return "unknown-blas";
+    }
+    return blas;
+  }
+
+  public String getJdk() {
+    if(runVariables == null) {
+      return null;
+    }
+    String jdk = runVariables.get("JDK");
+    if(Strings.isNullOrEmpty(jdk)) {
+      return "unknown-jdk";
+    }
+    return jdk;
+  }
+
   public String getRunVariable(String name) {
     String value = null;
     if(runVariables != null) {

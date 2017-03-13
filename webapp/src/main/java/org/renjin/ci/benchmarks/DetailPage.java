@@ -17,7 +17,6 @@ public class DetailPage {
   private String benchmarkId;
   private final LoadResult<BenchmarkMachine> machine;
   private final LoadResult<BenchmarkSummary> summary;
-  private final DetailGraph detailGraph;
   private final DetailTable detailTable;
   private final List<BenchmarkResult> results;
 
@@ -32,7 +31,6 @@ public class DetailPage {
     results = PackageDatabase.getBenchmarkResultsForMachine(machineId, benchmarkId).list();
     Collections.sort(results, BenchmarkResult.comparator());
 
-    this.detailGraph = new DetailGraph(results, "Renjin");
     this.detailTable = new DetailTable(results);
   }
 
@@ -45,9 +43,6 @@ public class DetailPage {
     return detailTable;
   }
 
-  public DetailGraph getDetailGraph() {
-    return detailGraph;
-  }
   public String getBenchmarkId() {
     return benchmarkId;
   }

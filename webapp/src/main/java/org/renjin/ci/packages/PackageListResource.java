@@ -259,10 +259,7 @@ public class PackageListResource {
 
         DependencyResolutionMulti resolver = new DependencyResolutionMulti(roots);
         List<PackageVersionId> dependencies = resolver.resolve();
-        
-        
 
-        // Only support one level right now...
         JSONArray array = new JSONArray();
         int arrayIndex = 0;
         for (PackageVersionId packageVersionId : dependencies) {

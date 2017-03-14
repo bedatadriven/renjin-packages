@@ -14,10 +14,10 @@ public class BenchmarkSummaryRow {
   public BenchmarkSummaryRow(String machineId, BenchmarkSummary summary) {
     this.machineId = machineId;
     this.summary = summary;
-    if(summary.getInterpreters().containsKey("GNU R")) {
+    if(summary.getInterpreters().get("GNU R") != null) {
       gnu = new Cell("GNU R");
     }
-    if(summary.getInterpreters().containsKey("Renjin")) {
+    if(summary.getInterpreters().get("Renjin") != null) {
       renjin = new Cell("Renjin");
     }
   }
@@ -62,10 +62,16 @@ public class BenchmarkSummaryRow {
     }
     
     public String getTitle() {
+      if(point == null) {
+        return "";
+      }
       return interpreter + " " + point.getInterpreterVersion();
     }
     
     public String getTime() {
+      if(point == null) {
+        return "";
+      }
       return formatRunTime(point.getMeanRunTime());
     }
 

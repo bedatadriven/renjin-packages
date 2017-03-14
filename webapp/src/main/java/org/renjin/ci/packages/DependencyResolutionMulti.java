@@ -43,8 +43,7 @@ public class DependencyResolutionMulti {
     // Now do a breadth-first search to resolve transitive
     // dependency conflicts
     resolveConflicts(roots);
-    
-    
+
     for (PackageVersionId root : roots) {
       add(root);
     }

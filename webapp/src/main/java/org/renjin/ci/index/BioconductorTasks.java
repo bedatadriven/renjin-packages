@@ -79,7 +79,8 @@ public class BioconductorTasks {
             String packageName = packageIt.next();
             JsonNode packageNode = packageList.get(packageName);
             String version = packageNode.get("Version").asText();
-            String sourceUrl = String.format("http://master.bioconductor.org/packages/release/%s/%s",
+            String sourceUrl = String.format("http://master.bioconductor.org/packages/%s/%s/%s",
+              releaseNumber,
               type,
               packageNode.get("source.ver").asText());
 

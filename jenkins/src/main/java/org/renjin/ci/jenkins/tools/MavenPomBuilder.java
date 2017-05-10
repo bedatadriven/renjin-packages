@@ -109,7 +109,17 @@ public class MavenPomBuilder {
         addCoreModule(model, "compiler", "provided");
       }
     }
-    
+
+    // If this package uses testthat, add the package to the test scope
+    if(usesTestThat()) {
+      Dependency dependency = new Dependency();
+      dependency.setGroupId("org.renjin.cran");
+      dependency.setArtifactId("testthat");
+      dependency.setVersion("1.0.2-renjin-14");
+      dependency.setScope("test");
+      model.addDependency(dependency);
+    }
+
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
     renjinPlugin.setArtifactId("renjin-maven-plugin");
@@ -153,6 +163,14 @@ public class MavenPomBuilder {
     return model;
   }
 
+  private boolean usesTestThat() {
+    for (PackageDependency packageDependency : description.getSuggests()) {
+      if(packageDependency.getName().equals("testthat")) {
+        return true;
+      }
+    }
+    return false;
+  }
 
 
   private boolean hasJava() {

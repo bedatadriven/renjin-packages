@@ -28,6 +28,8 @@ public class VersionDetectors {
         vendor = "OpenJDK";
       } else if(line.contains("HotSpot")) {
         vendor = "Oracle";
+      } else if(line.contains("Zing")) {
+        vendor = "Zing";
       }
       if(line.contains("version \"")) {
         int startVersion = line.indexOf('"')+1;

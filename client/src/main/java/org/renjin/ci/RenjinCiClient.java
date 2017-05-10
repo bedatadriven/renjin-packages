@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.model.*;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -214,54 +215,96 @@ public class RenjinCiClient {
     client().target(ROOT_URL).path("releases").request().post(Entity.form(form));
   }
 
-  public static void postReplacementRelease(String groupId, String artifactId, String version) {
-    Form form = new Form();
+  public static void postReplacementRelease(final String groupId, final String artifactId, String version) {
+    final Form form = new Form();
     form.param("version", version);
-    
-    client().target(ROOT_URL)
-        .path("package").path(groupId).path(artifactId).path("replacement")
-        .request()
-        .post(Entity.form(form));
+
+    withRetries(new Callable<Void>() {
+      @Override
+      public Void call() {
+        client().target(ROOT_URL)
+            .path("package").path(groupId).path(artifactId).path("replacement")
+            .request()
+            .post(Entity.form(form));
+
+        return null;
+      }
+    });
+
   }
   
-  public static long startBenchmarkRun(BenchmarkRunDescriptor descriptor) {
-    return client().target(ROOT_URL)
-        .path("benchmarks/runs")
-        .request()
-        .post(Entity.entity(descriptor, MediaType.APPLICATION_JSON_TYPE), Long.class);
+  public static long startBenchmarkRun(final BenchmarkRunDescriptor descriptor) {
+    return withRetries(new Callable<Long>() {
+      @Override
+      public Long call() {
+        return client().target(ROOT_URL)
+            .path("benchmarks/runs")
+            .request()
+            .post(Entity.entity(descriptor, MediaType.APPLICATION_JSON_TYPE), Long.class);
+      }
+    });
   }
   
-  public static void postBenchmarkResult(long runId, String name, long milliseconds) {
+  public static void postBenchmarkResult(final long runId, String name, long milliseconds) {
     
-    Form form = new Form();
+    final Form form = new Form();
     form.param("name", name);
     form.param("runTime", Long.toString(milliseconds));
     form.param("completed", "true");
-    
-    client().target(ROOT_URL)
-        .path("benchmarks")
-        .path("run")
-        .path(Long.toString(runId))
-        .path("results")
-        .request()
-        .post(Entity.form(form));
+
+    withRetries(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        client().target(ROOT_URL)
+            .path("benchmarks")
+            .path("run")
+            .path(Long.toString(runId))
+            .path("results")
+            .request()
+            .post(Entity.form(form));
+        return null;
+      }
+    });
   }
 
-  public static void postBenchmarkFailure(long runId, String name) {
+  public static void postBenchmarkFailure(final long runId, String name) {
 
-    Form form = new Form();
+    final Form form = new Form();
     form.param("name", name);
     form.param("completed", "false");
 
-    client().target(ROOT_URL)
-        .path("benchmarks")
-        .path("run")
-        .path(Long.toString(runId))
-        .path("results")
-        .request()
-        .post(Entity.form(form));
+    withRetries(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        client().target(ROOT_URL)
+            .path("benchmarks")
+            .path("run")
+            .path(Long.toString(runId))
+            .path("results")
+            .request()
+            .post(Entity.form(form));
+        return null;
+      }
+    });
   }
-  
+
+  private static <T> T withRetries(Callable<T> callable) {
+    int retries = 8;
+    while(true) {
+      try {
+        return callable.call();
+      } catch (InternalServerErrorException e) {
+        if (retries <= 0) {
+          throw e;
+        }
+        retries--;
+      } catch (RuntimeException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
   
   public static void scheduleStatsUpdate() {
     Response response = client().target(ROOT_URL)

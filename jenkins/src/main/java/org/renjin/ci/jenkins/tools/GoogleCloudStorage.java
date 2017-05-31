@@ -120,8 +120,8 @@ public class GoogleCloudStorage {
         }
     }
 
-    public static LogArchiver newArchiver(BuildContext context, PackageBuild build) throws IOException {
-        return new LogArchiver(context, build, newClient(context.getWorkerContext()));
+    public static GcsLogArchiver newArchiver(BuildContext context, PackageBuild build) throws IOException {
+        return new GcsLogArchiver(context, build, newClient(context.getWorkerContext()));
     }
 
 

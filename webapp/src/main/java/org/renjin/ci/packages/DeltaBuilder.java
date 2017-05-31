@@ -7,10 +7,7 @@ import com.google.common.collect.*;
 import com.googlecode.objectify.ObjectifyService;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.datastore.Package;
-import org.renjin.ci.model.NativeOutcome;
-import org.renjin.ci.model.PackageId;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.model.*;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -264,6 +261,8 @@ public class DeltaBuilder {
 
       Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(tests.get(testName));
 
+      results = excludeFalsePositiveTestThatTests(results);
+
       // Identify regression or progression among the build selected for comparison
       TreeMap<RenjinVersionId, PackageTestResult> byVersion = resultsFromLatestBuilds(buildMap, results);
       
@@ -280,6 +279,33 @@ public class DeltaBuilder {
         delta(progression.get()).getTestProgressions().add(progression.get().getName());
       }
     }
+  }
+
+  private Collection<PackageTestResult> excludeFalsePositiveTestThatTests(Collection<PackageTestResult> results) {
+    boolean isTestThat = false;
+
+    for (PackageTestResult result : results) {
+      if(result.getTestType() == TestType.TEST_THAT) {
+        isTestThat = true;
+        break;
+      }
+    }
+
+    if(!isTestThat) {
+      return results;
+    }
+
+    // Exclude tests from an earlier version of the harness which incorrectly marked failing tests as passing
+    // These can be distinguished from correct results because they will not be marked as TEST_THAT test type.
+
+    List<PackageTestResult> correct = new ArrayList<>();
+    for (PackageTestResult result : results) {
+      if(result.getTestType() == TestType.TEST_THAT) {
+        correct.add(result);
+      }
+    }
+
+    return correct;
   }
 
   /**

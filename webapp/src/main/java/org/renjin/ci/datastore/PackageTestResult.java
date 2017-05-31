@@ -5,9 +5,11 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfFalse;
 import com.googlecode.objectify.condition.IfNull;
+import com.googlecode.objectify.condition.IfTrue;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.model.TestType;
 import org.renjin.ci.storage.StorageKeys;
 
 @Entity
@@ -43,7 +45,18 @@ public class PackageTestResult {
   @Index
   @IgnoreSave(IfFalse.class)
   private boolean manualFail;
-  
+
+  @Unindex
+  @IgnoreSave(IfTrue.class)
+  private boolean output = true;
+
+  @Index
+  private TestType testType = TestType.OTHER;
+
+  @Unindex
+  @IgnoreSave(IfNull.class)
+  private String failureMessage;
+
   @Unindex
   private String manualFailReason;
   
@@ -140,6 +153,14 @@ public class PackageTestResult {
         StorageKeys.testLog(getPackageVersionId(), getPackageBuildNumber(), getName());
   }
 
+  public String getFailureMessage() {
+    return failureMessage;
+  }
+
+  public void setFailureMessage(String failureMessage) {
+    this.failureMessage = failureMessage;
+  }
+
   /**
    * @return true if this test result has been manually marked as a failure.
    */
@@ -161,6 +182,25 @@ public class PackageTestResult {
   
   public String getMarkFormPath() {
     return "/qa/markTestResults?packageId=" + getPackageVersionId().getPackageId() + "&testName=" + name;
+  }
+
+  /**
+   * @return true if this test has output
+   */
+  public boolean isOutput() {
+    return output;
+  }
+
+  public void setOutput(boolean output) {
+    this.output = output;
+  }
+
+  public TestType getTestType() {
+    return testType;
+  }
+
+  public void setTestType(TestType testType) {
+    this.testType = testType;
   }
 
   @Override

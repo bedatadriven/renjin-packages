@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite errors="0" failures="0" hostname="alex-spectre" name="clone" skipped="0" tests="4" time="0.22" timestamp="2017-05-31 12:04:14">
+    <testcase classname="clone" name="Can't_use_reserved_name_'clone'" time="0.19"/>
+    <testcase classname="clone" name="Can't_use_reserved_name_'clone'" time="0.01"/>
+    <testcase classname="clone" name="Can't_use_reserved_name_'clone'" time="0.01"/>
+    <testcase classname="clone" name="Can_disable_cloning" time="0.01"/>
+  </testsuite>
+  <testsuite errors="0" failures="17" hostname="alex-spectre" name="finalizer" skipped="0" tests="17" time="0.31" timestamp="2017-05-31 12:04:14">
+    <testcase classname="finalizer" name="Finalizers_are_called,_portable" time="0.1">
+      <failure message="parenv$peekaboo isn't true." type="failure">parenv$peekaboo isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_are_called,_non-portable" time="0.01">
+      <failure message="parenv$peekaboo isn't true." type="failure">parenv$peekaboo isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_have_the_right_environment,_portable" time="0.01">
+      <failure message="parenv$pub isn't true." type="failure">parenv$pub isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_have_the_right_environment,_portable" time="0.01">
+      <failure message="parenv$priv isn't true." type="failure">parenv$priv isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_have_the_right_environment,_non-portable_#1" time="0.01">
+      <failure message="parenv$pub isn't true." type="failure">parenv$pub isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_have_the_right_environment,_non-portable_#1" time="0.01">
+      <failure message="parenv$priv isn't true." type="failure">parenv$priv isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_have_the_right_environment,_non-portable_#2" time="0.01">
+      <failure message="parenv$pub isn't true." type="failure">parenv$pub isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_have_the_right_environment,_non-portable_#2" time="0.01">
+      <failure message="parenv$priv isn't true." type="failure">parenv$priv isn't true.
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_are_inherited,_portable" time="0.02">
+      <failure message="{" type="failure">{
+        rm(B)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Children_can_override_finalizers,_portable" time="0.02">
+      <failure message="{" type="failure">{
+        rm(B)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Children_can_call_finalizers_in_the_parent,_portable" time="0.01">
+      <failure message="{" type="failure">{
+        rm(B)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_and_two_levels_of_inheritance,_portable" time="0.02">
+      <failure message="{" type="failure">{
+        rm(C)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_are_inherited,_non-portable" time="0.01">
+      <failure message="{" type="failure">{
+        rm(B)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Children_can_override_finalizers,_non-portable" time="0.01">
+      <failure message="{" type="failure">{
+        rm(B)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Children_can_call_finalizers_in_the_parent,_non-portable" time="0.01">
+      <failure message="{" type="failure">{
+        rm(B)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_and_two_levels_of_inheritance,_portable" time="0.02">
+      <failure message="{" type="failure">{
+        rm(C)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+    <testcase classname="finalizer" name="Finalizers_and_two_levels_of_inheritance,_non-portable" time="0.02">
+      <failure message="{" type="failure">{
+        rm(C)
+        gc()
+        } produced no output
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite errors="0" failures="0" hostname="alex-spectre" name="nonportable-inheritance" skipped="0" tests="41" time="0.29" timestamp="2017-05-31 12:04:14">
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.03"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Private_env_is_created_when_all_private_members_are_inherited" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Private_env_is_created_when_all_private_members_are_inherited" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Private_env_is_created_when_all_private_members_are_inherited" time="0.01"/>
+    <testcase classname="nonportable-inheritance" name="Private_env_is_created_when_all_private_members_are_inherited" time="0.01"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" hostname="alex-spectre" name="nonportable" skipped="0" tests="48" time="0.08" timestamp="2017-05-31 12:04:14">
+    <testcase classname="nonportable" name="initialization" time="0.02"/>
+    <testcase classname="nonportable" name="initialization" time="0"/>
+    <testcase classname="nonportable" name="initialization" time="0"/>
+    <testcase classname="nonportable" name="empty_members_and_methods_are_allowed" time="0.01"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0.01"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="nonportable" name="Active_bindings_work" time="0.01"/>
+    <testcase classname="nonportable" name="Active_bindings_work" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0.01"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0.01"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0.01"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Locking_objects" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+    <testcase classname="nonportable" name="Validity_checks_on_creation" time="0"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" hostname="alex-spectre" name="portable-inheritance" skipped="0" tests="61" time="0.08" timestamp="2017-05-31 12:04:14">
+    <testcase classname="portable-inheritance" name="Inheritance" time="0.03"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0.02"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0.01"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_superclass_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_inherited_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_inherited_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance:_enclosing_environments_for_inherited_methods" time="0.01"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_hierarchy_for_super$_methods" time="0"/>
+    <testcase classname="portable-inheritance" name="sub_and_superclass_must_both_be_portable_or_non-portable" time="0"/>
+    <testcase classname="portable-inheritance" name="sub_and_superclass_must_both_be_portable_or_non-portable" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_is_dynamic" time="0"/>
+    <testcase classname="portable-inheritance" name="Inheritance_is_dynamic" time="0"/>
+    <testcase classname="portable-inheritance" name="Private_env_is_created_when_all_private_members_are_inherited" time="0.01"/>
+    <testcase classname="portable-inheritance" name="Private_env_is_created_when_all_private_members_are_inherited" time="0"/>
+  </testsuite>
+  <testsuite errors="0" failures="0" hostname="alex-spectre" name="portable" skipped="0" tests="40" time="0.02" timestamp="2017-05-31 12:04:15">
+    <testcase classname="portable" name="initialization" time="0.01"/>
+    <testcase classname="portable" name="initialization" time="0"/>
+    <testcase classname="portable" name="initialization" time="0"/>
+    <testcase classname="portable" name="empty_members_and_methods_are_allowed" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_members_are_private,_and_self/private_environments" time="0"/>
+    <testcase classname="portable" name="Private_methods_exist_even_when_no_private_fields" time="0.01"/>
+    <testcase classname="portable" name="Private_methods_exist_even_when_no_private_fields" time="0"/>
+    <testcase classname="portable" name="Active_bindings_work" time="0"/>
+    <testcase classname="portable" name="Active_bindings_work" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+    <testcase classname="portable" name="Locking_works" time="0"/>
+  </testsuite>
+  <testsuite errors="0" failures="1" hostname="alex-spectre" name="S3 methods" skipped="0" tests="2" time="0.01" timestamp="2017-05-31 12:04:15">
+    <testcase classname="S3_methods" name="`$`_and_`[[`_methods_don't_interfere_with_R6_operations" time="0.01"/>
+    <testcase classname="S3_methods" name="`$`_and_`[[`_methods_don't_interfere_with_R6_operations" time="0">
+      <failure message="Expected no error, but had error." type="failure">Expected no error, but had error.
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite errors="0" failures="0" hostname="alex-spectre" name="set" skipped="0" tests="25" time="0.01" timestamp="2017-05-31 12:04:15">
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0.01"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_set_values_on_generator" time="0"/>
+    <testcase classname="set" name="Setting_values_with_empty_public_or_private" time="0"/>
+    <testcase classname="set" name="Setting_values_with_empty_public_or_private" time="0"/>
+    <testcase classname="set" name="Locked_class" time="0"/>
+    <testcase classname="set" name="Locked_class" time="0"/>
+    <testcase classname="set" name="Locked_class" time="0"/>
+    <testcase classname="set" name="Locked_class" time="0"/>
+    <testcase classname="set" name="Locked_class" time="0"/>
+  </testsuite>
+</testsuites>

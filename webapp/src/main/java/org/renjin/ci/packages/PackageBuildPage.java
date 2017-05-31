@@ -202,8 +202,7 @@ public class PackageBuildPage {
     
     private PackageTestResult result;
     private boolean regression;
-    private String output;
-    
+
     public Test(PackageTestResult testResult) {
       this.result = testResult;
     }
@@ -226,6 +225,14 @@ public class PackageBuildPage {
     
     public String getLogUrl() {
       return result.getLogUrl();
+    }
+
+    public boolean isOutput() {
+      return result.isOutput();
+    }
+
+    public String getFailureMessage() {
+      return result.getFailureMessage();
     }
   }
 }

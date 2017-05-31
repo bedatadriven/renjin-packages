@@ -148,7 +148,11 @@
             <p><#if test.passed>PASSED<#else>FAILED</#if> after ${test.duration} ms. 
             <a href="${build.packageVersionId.path}/test/${test.name}/history#build-">History</a>
             <#if test.regression>[REGRESSION]</#if></p>
+            <#if test.output>
             <pre class="log test-log" data-log-url="${test.logUrl}">Loading...</pre>
+            <#elseif test.failureMessage?? >
+            <pre class="log test-log">${test.failureMessage}</pre>
+            </#if>
         </#list>
         </#if>
     </div>

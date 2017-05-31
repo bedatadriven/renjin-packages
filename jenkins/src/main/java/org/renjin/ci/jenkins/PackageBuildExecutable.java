@@ -125,7 +125,7 @@ public class PackageBuildExecutable implements Queue.Executable {
         /**
          * Archive the build log file permanently to Google Cloud Storage
          */
-        LogArchiver logArchiver = GoogleCloudStorage.newArchiver(buildContext, build);
+        GcsLogArchiver logArchiver = GoogleCloudStorage.newArchiver(buildContext, build);
 
         logArchiver.archiveLog();
 

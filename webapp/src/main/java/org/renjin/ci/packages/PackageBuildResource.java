@@ -125,6 +125,9 @@ public class PackageBuildResource {
               test.setDuration(result.getDuration());
               test.setPassed(result.isPassed());
               test.setRenjinVersion(build.getRenjinVersion());
+              test.setTestType(result.getTestType());
+              test.setOutput(result.isOutput());
+              test.setFailureMessage(result.getFailureMessage());
               if (result.getDuration() > 0) {
                 test.setDuration(result.getDuration());
               }
@@ -147,9 +150,7 @@ public class PackageBuildResource {
 
           toSave.add(build);
 
-
           ObjectifyService.ofy().save().entities(toSave);
-
 
           maybeUpdateLastSuccessfulBuild(build);
 
@@ -159,6 +160,7 @@ public class PackageBuildResource {
           }
         }
       }
+
     });
   }
 

@@ -2,15 +2,16 @@ package org.renjin.ci.source;
 
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterator;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.cmd.Query;
 import com.googlecode.objectify.cmd.QueryKeys;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.datastore.FunctionIndex;
-import org.renjin.ci.datastore.Loc;
-import org.renjin.ci.datastore.PackageSource;
+import org.renjin.ci.datastore.*;
+import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.source.index.Language;
 import org.renjin.ci.source.index.SourceIndexTasks;
@@ -20,7 +21,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.logging.Logger;
 
 import static java.util.Arrays.asList;
 
@@ -30,6 +33,9 @@ import static java.util.Arrays.asList;
 @Path("/source")
 public class SourceResources {
 
+  private static final Logger LOGGER = Logger.getLogger(SourceResources.class.getName());
+
+  private final MemcacheService memcache = MemcacheServiceFactory.getMemcacheService();
 
   @GET
   @Produces("text/html")
@@ -138,5 +144,14 @@ public class SourceResources {
     return new SourceIndexTasks();
   }
 
+  @Path("redirect/java")
+  public JavaRedirects getJavaRedirect() {
+    return new JavaRedirects();
+  }
+
+  @Path("java")
+  public JavaRedirects getJava() {
+    return new JavaRedirects();
+  }
 
 }

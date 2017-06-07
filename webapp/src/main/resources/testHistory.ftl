@@ -66,7 +66,7 @@
                     <a href="${result.markFormPath}">Mark as failed.</a>
                 </#if>
             </p>
-            <pre class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}">Loading...</pre>
+            <div class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}" data-build-id="${result.buildId.toString()}">Loading...</div>
         </#list>
     </div>
 </div>
@@ -76,5 +76,5 @@
     <a href="${page.packageVersion.jenkinsBuildUrl}" class="btn" target="_blank">Rebuild</a>
 </div>
 
-<script src="/assets/js/logs-v2.js"></script>
+<script src="/assets/js/logs-v8.js"></script>
 </@scaffolding>

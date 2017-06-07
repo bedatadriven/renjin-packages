@@ -31,7 +31,7 @@
 
                         <li><label><input type="checkbox" name="result-${result.webSafeKey}" value="true" checked> 
                             ${page.packageId.packageName} ${result.buildId.packageVersionId.versionString} Build #${result.packageBuildNumber}</label><br>
-                            <pre class="log test-log" data-log-url="${result.logUrl}">Loading...</pre>
+                            <div class="log test-log" data-log-url="${result.logUrl}" data-build-id="${result.buildId.toString()}">Loading...</div>
                         </li>
                     </#if>
                 </#list>
@@ -42,5 +42,5 @@
     </div>
 </div>
 
-<script src="/assets/js/logs-v2.js"></script>
+<script src="/assets/js/logs-v8.js"></script>
 </@scaffolding>

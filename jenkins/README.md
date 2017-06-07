@@ -37,5 +37,8 @@ The Renjin CI plugin relies on certain tool configurations.
 The Renjin CI plugin will look for a Maven install called "M3". This must be added in
 Manage Jenkins > System Configuration > Maven Installations.
 
+### Builder VMs
 
+Individual CRAN and BioConductor packages rely on certain system
+libraries and 
 

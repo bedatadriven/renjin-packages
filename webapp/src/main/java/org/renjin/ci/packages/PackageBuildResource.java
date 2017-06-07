@@ -42,18 +42,9 @@ public class PackageBuildResource {
 
   @GET
   @Produces("text/html")
-  public Viewable get() throws IOException {
-
-    // Start fetching list of builds
-    PackageBuildPage page = ObjectifyService.ofy().transact(new Work<PackageBuildPage>() {
-      @Override
-      public PackageBuildPage run() {
-        return new PackageBuildPage(buildId);
-      }
-    });
-
+  public Viewable get(@QueryParam("builds") String builds) throws IOException {
     Map<String, Object> model = new HashMap<>();
-    model.put("build", page);
+    model.put("build", new PackageBuildPage(buildId));
 
     return new Viewable("/buildResult.ftl", model);
   }

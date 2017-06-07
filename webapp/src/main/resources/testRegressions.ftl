@@ -46,22 +46,22 @@
             <#if regression.lastGoodBuild??>
                 Last passed in
             ${regression.lastGoodRenjinVersion} <a href="${regression.lastGoodBuild.path}">#${regression.lastGoodBuild.buildNumber}</a>
-            <pre class="log log-passed" style="height: 200px" data-log-url="${regression.lastGoodLogUrl}">
+            <div class="log log-passed" style="height: 200px" data-log-url="${regression.lastGoodLogUrl}">
                 Loading..
-            </pre>
+            </div>
             </#if>
         </td>
         <td width="50%">
             Failed on ${regression.brokenRenjinVersionId} <a href="${regression.brokenBuild.path}">#${regression.brokenBuild.buildNumber}</a>
             &#8226; <a href="${regression.testHistoryPath}">Test History</a>
             &#8226;  <a href="${regression.comparePath}" target="_blank">Compare Renjin versions</a>
-            <pre class="log log-failure" style="height: 200px;" data-log-url="${regression.brokenLogUrl}">
+            <div class="log log-failure" style="height: 200px;" data-log-url="${regression.brokenLogUrl}">
                 Loading...
-            </pre>
+            </div>
         </td>
         </tr>
         </table>
         </#list>
 </div>
-<script src="/assets/js/logs-v2.js"></script>
+<script src="/assets/js/logs-v8.js"></script>
 </@scaffolding>

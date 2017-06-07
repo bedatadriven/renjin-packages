@@ -44,7 +44,7 @@ public class PackageBuildResourceTest extends AbstractDatastoreTest {
     ofy().save().entities(mass, survey, build15, build16).now();
 
     PackageBuildResource packageBuildResource = new PackageBuildResource(surveyId, 16);
-    ResourceTest.assertTemplateRenders(packageBuildResource.get());
+    ResourceTest.assertTemplateRenders(packageBuildResource.get(""));
   }
   
   

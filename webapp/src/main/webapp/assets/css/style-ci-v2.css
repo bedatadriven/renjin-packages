@@ -117,6 +117,11 @@ ul.test-results li:before {
     font-size: 0.7em;
 }
 
+th.build-history-gap  {
+    background: url("/assets/img/gap.png") repeat-y;
+    width: 2em;
+}
+
 input.search {
     width: 100%;
     border-radius: 50px;
@@ -239,6 +244,47 @@ td.line {
 .log-passed {
     background-color: #cff6cc !important;
 }
+
+th.gap {
+    background: url("/assets/img/gap30-inverse2.png") center top repeat-y;
+    width: 2em;
+    cursor: col-resize;
+}
+
+.build-history-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+
+div.log {
+    padding: 15px;
+    line-height: 20px;
+    vertical-align: top;
+
+    background: #f6f5f5;
+    box-shadow: inset 0 0 2px 1px rgba(0, 0, 0, 0.1);
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+div.log div.line {
+    overflow: visible;
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 12px;
+    color: #24292e;
+    word-wrap: normal;
+    white-space: pre;
+}
+
+div.log a {
+    color: #24292e;
+}
+
+div.log a:hover {
+    color: #24292e;
+}
+
 
 .floater {
     position: fixed;

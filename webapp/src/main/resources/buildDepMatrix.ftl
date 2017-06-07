@@ -60,6 +60,4 @@
         </table>
     </div>
 </div>
-
-<script src="/assets/js/logs-v2.js"></script>
 </@scaffolding>

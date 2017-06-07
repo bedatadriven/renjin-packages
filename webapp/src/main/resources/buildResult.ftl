@@ -77,26 +77,39 @@
         <p><a href="${build.packageVersionId.path}/buildDependencyMatrix">View Build Dependency Matrix</a></p>
         
         <h3>History</h3>
-        
+
+        <div class="build-history-container">
         <table class="build-history">
-            <tr>
-                <#list build.renjinHistory as renjinVersion>
-                <th>${renjinVersion.label}</th>
+        <tr>
+
+            <#list build.historyGroups as group>
+                <#if !group.visible>
+                    <th class="gap history-group-grip-${group_index}" data-history-group="${group_index}" title="${group.range}">&nbsp;</th>
+                </#if>
+                <#list group.versions as renjinVersion>
+                    <th class="history-group-${group_index}" ${group.hiddenStyle}>${renjinVersion.label}</th>
                 </#list>
-            </tr>
-            <tr>
-                <#list build.renjinHistory as renjinVersion>
-                <td valign="top">
+            </#list>
+        </tr>
+        <tr>
+            <#list build.historyGroups as group>
+                <#if !group.visible>
+                    <td class="history-group-grip-${group_index}"></td>
+                </#if>
+                <#list group.versions as renjinVersion>
+                    <td valign="top" class="history-group-${group_index}" ${group.hiddenStyle}>
                     <#list renjinVersion.builds as build>
-                    <a href="${build.path}" class="btn btn-small ${build.buttonStyle}">
-                        #${build.buildNumber}
-                    </a>
+                        <a href="${build.path}" class="btn btn-small ${build.buttonStyle}">
+                            #${build.buildNumber}
+                        </a>
                     </#list>
-                </td>
+                    </td>
                 </#list>
-            </tr>
+            </#list>
+        </tr>
         </table>
-        
+        </div>
+
         <#if build.gitHubCompareUrl?? >
         <p><a href="${build.gitHubCompareUrl}">Compare with ${build.previousBuildRenjinVersion}</a></p>
         </#if>
@@ -127,7 +140,7 @@
     
             <#else>
                 <h3>Build Log</h3>
-                <pre class="log" data-log-url="${build.logUrl}">Loading...</pre>
+                <div class="log" data-log-url="${build.logUrl}" data-build-id="${build.buildId.toString()}">Loading...</div>
             </#if>
 
         </#if>
@@ -149,7 +162,7 @@
             <a href="${build.packageVersionId.path}/test/${test.name}/history#build-">History</a>
             <#if test.regression>[REGRESSION]</#if></p>
             <#if test.output>
-            <pre class="log test-log" data-log-url="${test.logUrl}">Loading...</pre>
+            <div class="log test-log" data-log-url="${test.logUrl}" data-build-id="${build.buildId.toString()}">Loading...</div>
             <#elseif test.failureMessage?? >
             <pre class="log test-log">${test.failureMessage}</pre>
             </#if>
@@ -167,7 +180,7 @@
 
 
 
-<script src="/assets/js/logs-v2.js"></script>
+<script src="/assets/js/logs-v8.js"></script>
 <script type="application/javascript">
     
     function rebuild() {
@@ -176,5 +189,24 @@
         document.execCommand("copy");
         document.getElementById("rebuild-btn").innerText = "Copied.";
     }
+
+    var historyTable = document.querySelector('table.build-history');
+    historyTable.addEventListener('click', function(e) {
+        var group = e.target.getAttribute('data-history-group');
+        if(group) {
+            // show hidden builds
+            var hidden = historyTable.querySelectorAll('.history-group-' + group);
+            hidden.forEach(function(element) {
+                element.style.display = '';
+            });
+            // hide the gap handle
+            var grip = historyTable.querySelectorAll('.history-group-grip-' + group);
+            grip.forEach(function(element) {
+                element.style.display = 'none';
+            });
+        }
+    });
+
+
 </script>
 </@scaffolding>

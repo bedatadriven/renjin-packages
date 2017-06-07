@@ -4,7 +4,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.*;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.Result;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.model.*;
@@ -38,6 +40,8 @@ public class DeltaBuilder {
   private final Map<Long, BuildDelta> deltas = new HashMap<>();
   private PackageVersion packageVersion;
   private Package packageEntity;
+
+  private Set<Key<PackageTestResult>> badTests = new HashSet<>();
 
   public DeltaBuilder(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
@@ -302,6 +306,8 @@ public class DeltaBuilder {
     for (PackageTestResult result : results) {
       if(result.getTestType() == TestType.TEST_THAT) {
         correct.add(result);
+      } else {
+        badTests.add(Key.create(result));
       }
     }
 
@@ -508,6 +514,18 @@ public class DeltaBuilder {
     DeltaBuilder builder = new DeltaBuilder(packageVersionId);
     PackageVersionDelta deltas = builder.build(newBuild, testResults);
 
+    for (Key<PackageTestResult> badTest : builder.badTests) {
+      LOGGER.severe("Going to delete " + badTest + "!!");
+    }
+    Result<Void> deleteOp = null;
+    if(!builder.badTests.isEmpty()) {
+      deleteOp = ObjectifyService.ofy().delete().keys(builder.badTests);
+    }
+
     ObjectifyService.ofy().save().entity(deltas).now();
+
+    if(deleteOp != null) {
+      deleteOp.now();
+    }
   }
 }

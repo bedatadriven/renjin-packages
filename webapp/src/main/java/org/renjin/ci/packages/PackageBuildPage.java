@@ -1,9 +1,7 @@
 package org.renjin.ci.packages;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.*;
 import com.googlecode.objectify.LoadResult;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.BuildOutcome;
@@ -18,13 +16,14 @@ import java.util.*;
 
 
 public class PackageBuildPage {
+
   private final List<PackageTestResult> testResults;
   private PackageBuildId buildId;
   private PackageBuild build;
   
   private LoadResult<PackageVersionDelta> deltas;
   
-  private List<RenjinBuildHistory> histories = new ArrayList<>();
+  private List<RenjinBuildHistoryGroup> histories;
 
   private final LoadResult<RenjinRelease> renjinVersion;
   private final LoadResult<RenjinRelease> previousRenjinVersion;
@@ -45,7 +44,7 @@ public class PackageBuildPage {
     
     // build a map to the latest 
     TreeMultimap<RenjinVersionId, PackageBuild> buildMap = TreeMultimap.create(
-        Ordering.natural(),
+        Ordering.natural().reverse(),
         PackageBuild.orderByNumber().reverse());
     
     for (PackageBuild build : buildQuery) {
@@ -54,10 +53,7 @@ public class PackageBuildPage {
       }
     }
 
-    for (RenjinVersionId renjinVersion : buildMap.keySet()) {
-      histories.add(new RenjinBuildHistory(renjinVersion, buildMap.get(renjinVersion)));
-    }
-
+    histories = new RenjinBuildGrouper(build, buildMap).group();
 
     // Fetch this Renjin release and the previous
     this.renjinVersion = PackageDatabase.getRenjinRelease(build.getRenjinVersionId());
@@ -68,7 +64,8 @@ public class PackageBuildPage {
       this.previousRenjinVersion = null;
     }
   }
-  
+
+
   public List<String> getUpstreamBuilds() {
     return build.getResolvedDependencies();
   }
@@ -160,7 +157,7 @@ public class PackageBuildPage {
     return getBuild().getStartDate();
   }
 
-  public List<RenjinBuildHistory> getRenjinHistory() {
+  public List<RenjinBuildHistoryGroup> getHistoryGroups() {
     return histories;
   }
   

@@ -86,6 +86,13 @@ public class PackageBuildId {
     return packageVersionId + ":" + buildNumber;
   }
 
+  public static PackageBuildId fromString(String string) {
+    int sep = string.lastIndexOf(':');
+    String versionId = string.substring(0, sep);
+    long buildNumber = Long.parseLong(string.substring(sep+1));
+    return new PackageBuildId(PackageVersionId.fromTriplet(versionId), buildNumber);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

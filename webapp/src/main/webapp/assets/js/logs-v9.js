@@ -48,6 +48,8 @@
     // Should match "	at org.renjin.sexp.PairList$Node.getTag(PairList.java:223)"
     var javaLineRe = /^(\s*at\s*)([A-Za-z0-9_.$]+)\(([^:]+):(\d+)\)$/;
 
+    // Should match "  at validObject()"
+    var renjinLineRe = /^(\s*at\s*)([A-Za-z0-9._]+)\(\)/;
 
     function formatLine(line, buildId) {
         var javaLineMatch = javaLineRe.exec(line);
@@ -56,14 +58,24 @@
             var method = javaLineMatch[2];
             var file = javaLineMatch[3];
             var lineNum = javaLineMatch[4];
-            return indent + method + "(<a class=\"srcref\" href=\"/source/java?" +
+            return indent + method + "(<a href=\"/source/redirect/java?" +
                 "method=" + encodeURIComponent(method) +
                 "&file=" + encodeURIComponent(file) +
                 "&line=" + encodeURIComponent(lineNum) +
-                "&build=" + encodeURIComponent(buildId) +  "\">" + file + ":" + lineNum + "</a>)"
-        } else {
-            return escapeHtml(line);
+                "&build=" + encodeURIComponent(buildId) + "\">" + file + ":" + lineNum + "</a>)";
         }
+
+        var renjinLineMatch = renjinLineRe.exec(line);
+        if(renjinLineMatch) {
+            var indent = renjinLineMatch[1];
+            var functionName = renjinLineMatch[2];
+
+            return indent + "<a href=\"/source/redirect/R?" +
+                "function=" + encodeURIComponent(functionName) +
+                "&build=" + encodeURIComponent(buildId) + "\">" + functionName + "</a>()";
+        }
+
+        return escapeHtml(line);
     }
 
     function escapeHtml(unsafe) {

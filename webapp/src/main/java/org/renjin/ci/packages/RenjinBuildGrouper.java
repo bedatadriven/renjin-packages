@@ -73,8 +73,9 @@ public class RenjinBuildGrouper {
     NavigableSet<RenjinVersionId> versions = buildMap.keySet();
     SortedSet<RenjinVersionId> displayedVersions = new TreeSet<>(Ordering.<RenjinVersionId>natural().reverse());
 
-    // Always show the latest build
+    // Always show the first and latest build
     displayedVersions.add(versions.first());
+    displayedVersions.add(versions.last());
 
     // And show the version for the build we're showing
     displayedVersions.add(build.getRenjinVersionId());

@@ -40,7 +40,18 @@ public class PackageSource {
   }
   
   public String getPath() {
-    return getPackageVersionId().getPath() + "/source/" + getFilename();
+    return getPath(getPackageVersionId(), getFilename());
+  }
+
+  public static String getPath(Key<PackageSource> packageSourceKey) {
+    Key<PackageVersion> parent = packageSourceKey.getParent();
+    PackageVersionId packageVersionId = PackageVersion.idOf(parent);
+    String filename = packageSourceKey.getName();
+    return getPath(packageVersionId, filename);
+  }
+
+  private static String getPath(PackageVersionId packageVersionId, String filename) {
+    return packageVersionId.getPath() + "/source/" + filename;
   }
 
   public void setFilename(String filename) {

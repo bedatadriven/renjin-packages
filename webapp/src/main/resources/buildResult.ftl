@@ -179,8 +179,7 @@
 </div>
 
 
-
-<script src="/assets/js/logs-v8.js"></script>
+<@logScript/>
 <script type="application/javascript">
     
     function rebuild() {

@@ -120,3 +120,7 @@
 </html>
 </#macro>
 
+<#macro logScript>
+<script src="/assets/js/logs-v9.js"></script>
+</#macro>
+

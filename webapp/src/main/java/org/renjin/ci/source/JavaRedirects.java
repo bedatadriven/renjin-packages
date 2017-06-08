@@ -11,11 +11,11 @@ import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.logging.Logger;
@@ -41,7 +41,10 @@ public class JavaRedirects {
     } else if(javaMethod.startsWith("org.renjin")) {
       sourceUrl = findRenjinSource(build, javaMethod, file);
     } else {
-      throw new UnsupportedOperationException("TODO: " + javaMethod);
+      // Try sending to Jenkins...
+      return Response.temporaryRedirect(
+          new URI("http://stacktrace.jenkins-ci.org/search/?query=" + javaMethod + "&entity=method"))
+          .build();
     }
 
     return Response.temporaryRedirect(UriBuilder.fromUri(sourceUrl.toURI()).fragment("L" + lineNumber).build()).build();

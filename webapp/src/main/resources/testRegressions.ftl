@@ -63,5 +63,5 @@
         </table>
         </#list>
 </div>
-<script src="/assets/js/logs-v8.js"></script>
+<@logScript/>
 </@scaffolding>

@@ -76,5 +76,5 @@
     <a href="${page.packageVersion.jenkinsBuildUrl}" class="btn" target="_blank">Rebuild</a>
 </div>
 
-<script src="/assets/js/logs-v8.js"></script>
+<@logScript/>
 </@scaffolding>

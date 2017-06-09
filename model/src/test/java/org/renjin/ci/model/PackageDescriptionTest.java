@@ -52,5 +52,16 @@ public class PackageDescriptionTest {
     assertThat(parseTimeFromPackaged("Wed Aug  8 06:58:05 2007; warnes"),
         equalTo(new LocalDateTime(2007, 8, 8, 6, 58, 5)));
 
+    assertThat(parseTimeFromPackaged("2017-06-07 08:34:30 UTC; dalex"),
+        equalTo(new LocalDateTime(2017, 6, 7, 8, 34, 30)));
+
+  }
+
+  @Test
+  public void parsePublicationDate() {
+
+
+    assertThat(PackageDescription.parsePublicationDate("2017-06-08 04:43:11 UTC"),
+        equalTo(new LocalDateTime(2017, 6, 8, 4, 43, 11)));
   }
 }

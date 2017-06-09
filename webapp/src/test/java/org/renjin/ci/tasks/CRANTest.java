@@ -47,4 +47,12 @@ public class CRANTest {
     assertThat(version, Matchers.equalTo("1.3.4"));
   }
 
+  @Test
+  public void parseVersionNew() throws IOException {
+
+    String version = CRAN.parsePackageVersion(
+        Resources.asByteSource(Resources.getResource("package_detail_new.html")));
+
+    assertThat(version, Matchers.equalTo("2.0"));
+  }
 }

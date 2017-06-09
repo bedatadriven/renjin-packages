@@ -260,11 +260,21 @@ public class PackageDescription {
 		List<String> dateStrings = properties.get("Date/Publication");
 		if (!dateStrings.isEmpty()) {
 			String dateString = dateStrings.get(0);
-			return LocalDateTime.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss"));
+			return parsePublicationDate(dateString);
 		}
 		return null;
 	}
-	
+
+	@VisibleForTesting
+	static LocalDateTime parsePublicationDate(String dateString) {
+		try {
+			return LocalDateTime.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss"));
+		} catch (IllegalArgumentException ignored) {
+			// Try new format with time zone
+			return LocalDateTime.parse(dateString, DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss z"));
+		}
+	}
+
 	public LocalDate getDate() {
 		List<String> dateStrings = properties.get("Date");
 		if(!dateStrings.isEmpty()) {
@@ -308,6 +318,9 @@ public class PackageDescription {
 	
 	@VisibleForTesting
 	static LocalDateTime parseTimeFromPackaged(String packagedValue) {
+
+
+
 		// In the format of:
 		// Mon Nov 27 19:54:13 2006; warnes
 		
@@ -318,8 +331,17 @@ public class PackageDescription {
 		
 		// Remove double spaces
 		packagedValue = packagedValue.replaceAll("\\s+", " ");
-		
-		return LocalDateTime.parse(packagedValue, 
-			DateTimeFormat.forPattern("E MMM d HH:mm:ss YYYY"));
+
+		// New format:
+		// 2017-06-07 08:34:30 UTC; dalex
+		if(packagedValue.startsWith("20")) {
+			return LocalDateTime.parse(packagedValue,
+					DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss z"));
+
+		} else {
+
+			return LocalDateTime.parse(packagedValue,
+					DateTimeFormat.forPattern("E MMM d HH:mm:ss YYYY"));
+		}
 	}
 }

@@ -83,7 +83,8 @@ public class DependencyResolution {
     PackageDescription description = packageVersion.loadDescription();
     Iterable<PackageDependency> declared = concat(
         description.getImports(),
-        description.getDepends());
+        description.getDepends(),
+        description.getLinkingTo());
 
     for (PackageDependency dependency : declared) {
       if(!CorePackages.isCorePackage(dependency.getName()) &&

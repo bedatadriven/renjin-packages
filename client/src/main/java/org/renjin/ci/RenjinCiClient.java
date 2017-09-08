@@ -145,6 +145,29 @@ public class RenjinCiClient {
             .path("build")
             .path(Long.toString(build.getBuildNumber()));
 
+        Response response = buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
+
+        if(response.getStatus() != 200) {
+          throw new RuntimeException("Failed to publish results: " + response.getEntity());
+        }
+
+        return null;
+      }
+    });
+  }
+
+
+  public static void postResult(final PullBuildId pullBuild, final PackageBuildResult result) {
+    withRetries(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        WebTarget buildResource = client().target(ROOT_URL)
+            .path("pull")
+            .path(Long.toString(pullBuild.getPullNumber()))
+            .path("build")
+            .path(Long.toString(pullBuild.getPullBuildNumber()))
+            .path("packageBuild");
+
         buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
 
         return null;

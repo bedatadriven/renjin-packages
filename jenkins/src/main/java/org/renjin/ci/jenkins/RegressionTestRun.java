@@ -29,7 +29,6 @@ public class RegressionTestRun {
     this.packageVersionId = packageVersionId;
     workerContext = new WorkerContext(run, listener);
     maven = new Maven(workerContext);
-
   }
 
   public void run() throws IOException, InterruptedException {
@@ -53,13 +52,11 @@ public class RegressionTestRun {
     maven.test(buildDir);
 
     // Parse the test results
-    List<TestResult> results = TestResultParser.parseResults(workerContext, buildDir, new InMemLogArchiver());
+    List<TestResult> results = TestResultParser.parseResults(workerContext, buildDir, new NullLogArchiver());
     List<TestResult> previousResults = RenjinCiClient.getTestResults(buildId);
 
     checkForRegressions(previousResults, results);
-
   }
-
 
   private FilePath createBuildDir() throws IOException, InterruptedException {
 
@@ -68,7 +65,6 @@ public class RegressionTestRun {
 
     return buildDir;
   }
-
 
   private void checkForRegressions(List<TestResult> results, List<TestResult> previousResults) {
 

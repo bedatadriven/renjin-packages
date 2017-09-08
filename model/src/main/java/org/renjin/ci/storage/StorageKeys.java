@@ -11,28 +11,42 @@ public class StorageKeys {
   public static final String PACKAGE_SOURCE_BUCKET = "renjinci-package-sources";
   public static final String BUILD_LOG_BUCKET = "renjinci-logs";
 
+  public static final String URL_ROOT = "http://storage.googleapis.com/renjinci-logs/";
+
 
   public static String buildLogUrl(PackageBuildId buildId) {
-    return  "http://storage.googleapis.com/renjinci-logs/" +
-        buildLog(buildId.getPackageVersionId(), buildId.getBuildNumber());
+    return URL_ROOT + buildLog(buildId.getPackageVersionId(), buildId.getBuildNumber());
   }
-
-  public static String buildLog(String packageVersionId, long buildId) {
-    return buildLog(PackageVersionId.fromTriplet(packageVersionId), buildId);
-  }
-  
 
 
   public static String buildLog(PackageVersionId packageVersionId, long buildNumber) {
-    return packageVersionId.getGroupId() + "/" + packageVersionId.getPackageName() + "/" + 
-        packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-b" + buildNumber + ".log";
+    return buildLog(packageVersionId, "b" + buildNumber);
   }
 
-  public static String testLog(PackageVersionId packageVersionId, long buildNumber, String testName) {
+  public static String buildLog(PackageVersionId packageVersionId, String buildId) {
     return packageVersionId.getGroupId() + "/" + packageVersionId.getPackageName() + "/" +
-        packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-b" + buildNumber +
+        packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-" + buildId + ".log";
+  }
+
+  public static String buildLogUrl(PackageVersionId packageVersionId, String buildId) {
+    return URL_ROOT + buildLog(packageVersionId, buildId);
+  }
+
+  public static String testLog(PackageVersionId packageVersionId, String buildId, String testName) {
+    return packageVersionId.getGroupId() + "/" + packageVersionId.getPackageName() + "/" +
+        packageVersionId.getPackageName() + "-" + packageVersionId.getVersionString() + "-" + buildId +
         "-" + testName + ".test.log";
   }
+
+
+  public static String testLogUrl(PackageVersionId packageVersionId, String buildId, String testName) {
+    return URL_ROOT + testLog(packageVersionId, buildId, testName);
+  }
+
+  public static String testLogUrl(PackageBuildId buildId, String testName) {
+    return URL_ROOT + testLog(buildId.getPackageVersionId(), "b" + buildId.getBuildNumber(), testName);
+  }
+
 
   public static String packageSource(String groupId, String packageName, String version) {
     return groupId + "/" + packageName + "_" + version + ".tar.gz";
@@ -40,10 +54,5 @@ public class StorageKeys {
 
   public static String packageSource(PackageVersionId packageVersionId) {
     return packageSource(packageVersionId.getGroupId(), packageVersionId.getPackageName(), packageVersionId.getVersionString());
-  }
-
-  public static String testLogUrl(PackageBuildId buildId, String testName) {
-    return  "http://storage.googleapis.com/renjinci-logs/" +
-        testLog(buildId.getPackageVersionId(), buildId.getBuildNumber(), testName);
   }
 }

@@ -87,10 +87,9 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
     try {
       graph = new PackageGraphBuilder(listener, rebuildDependencies, rebuildSuccessfulDependencies)
           .build(expandedFilter, sample);
-    } catch (Exception e) { 
+    } catch (Exception e) {
       throw new AbortException("Failed to build package graph: " + e.getMessage());
     }
-
 
     listener.getLogger().printf("Dependency graph built with %d nodes.\n", graph.size());
 

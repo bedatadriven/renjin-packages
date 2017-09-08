@@ -15,6 +15,9 @@ import java.util.concurrent.Future;
 
 import static java.lang.String.format;
 
+/**
+ * Builds a graph of packages and their dependencies
+ */
 public class PackageGraphBuilder {
 
   private TaskListener taskListener;

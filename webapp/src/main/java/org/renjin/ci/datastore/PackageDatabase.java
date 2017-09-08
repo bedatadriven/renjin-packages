@@ -11,10 +11,7 @@ import com.google.common.collect.Sets;
 import com.googlecode.objectify.*;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
-import org.renjin.ci.model.PackageBuildId;
-import org.renjin.ci.model.PackageId;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.RenjinVersionId;
+import org.renjin.ci.model.*;
 import org.renjin.sexp.ExternalPtr;
 import org.renjin.sexp.ListVector;
 import org.renjin.sexp.NamedValue;
@@ -69,6 +66,11 @@ public class PackageDatabase {
     register(Loc.class);
 
     register(Artifact.class);
+
+    register(Pull.class);
+    register(PullBuild.class);
+    register(PullPackageBuild.class);
+    register(PullTestResult.class);
   }
 
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
@@ -232,6 +234,10 @@ public class PackageDatabase {
   public static Result<Map<Key<PackageVersion>,PackageVersion>> save(PackageVersion... packageVersions) {
     return ObjectifyService.ofy().save().entities(packageVersions);
   }
+
+  public static Result<Map<Key<Object>, Object>> save(List<Object> objects) {
+    return ObjectifyService.ofy().save().entities(objects);
+  }
   
   public static void saveNow(Object entity) {
     ObjectifyService.ofy().save().entity(entity).now();
@@ -305,8 +311,17 @@ public class PackageDatabase {
         .load()
         .type(PackageTestResult.class)
         .ancestor(Package.key(packageId));
-    
+
   }
+
+  public static QueryResultIterable<PullTestResult> getTestResults(PullBuildId pullBuildId, PackageVersionId packageVersionId) {
+    return ObjectifyService.ofy()
+        .load()
+        .type(PullTestResult.class)
+        .ancestor(PullPackageBuild.key(pullBuildId, packageVersionId))
+        .iterable();
+  }
+
 
   public static List<PackageVersion> getPackageVersions(String groupId, String name) {
     return getPackageVersions(new PackageId(groupId, name));
@@ -469,6 +484,20 @@ public class PackageDatabase {
   public static LoadResult<BenchmarkSummary> getBenchmarkSummary(String machineId, String benchmarkId) {
     return ObjectifyService.ofy().load().key(BenchmarkSummary.key(machineId, benchmarkId));
   }
+
+  public static QueryResultIterable<PullPackageBuild> getPullPackageBuilds(long pullNumber) {
+    return ObjectifyService.ofy()
+        .load()
+        .type(PullPackageBuild.class)
+        .ancestor(Pull.key(pullNumber))
+        .iterable();
+  }
+
+  public static LoadResult<PullPackageBuild> getPullPackageBuild(PullBuildId pullBuildId, PackageVersionId packageVersionId) {
+    return ObjectifyService.ofy()
+        .load()
+        .key(PullPackageBuild.key(pullBuildId, packageVersionId));
+  }
   
   public static ListVector query(ExternalPtr entityClassPtr, ListVector filters) {
     Class<?> entityClass = (Class<?>) entityClassPtr.getInstance();
@@ -485,6 +514,5 @@ public class PackageDatabase {
     
     return dataFrame;
   }
-
 
 }

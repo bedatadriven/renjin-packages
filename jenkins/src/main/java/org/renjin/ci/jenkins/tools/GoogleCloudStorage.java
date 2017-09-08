@@ -11,7 +11,6 @@ import com.google.jenkins.plugins.credentials.oauth.GoogleRobotCredentials;
 import hudson.FilePath;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.BuildContext;
 import org.renjin.ci.jenkins.ConfigException;
 import org.renjin.ci.jenkins.WorkerContext;
@@ -124,9 +123,8 @@ public class GoogleCloudStorage {
         }
     }
 
-    public static GcsLogArchiver newArchiver(BuildContext context, PackageBuild build) throws IOException {
-        return new GcsLogArchiver(context, build, newClient(context.getWorkerContext()));
+    public static GcsLogArchiver newArchiver(BuildContext context) throws IOException {
+        return new GcsLogArchiver(context, newClient(context.getWorkerContext()));
     }
-
 
 }

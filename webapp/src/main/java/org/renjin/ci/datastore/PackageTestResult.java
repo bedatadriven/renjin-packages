@@ -142,7 +142,7 @@ public class PackageTestResult {
 
   public String getLogUrl() {
     return "https://storage.googleapis.com/" + StorageKeys.BUILD_LOG_BUCKET + "/" +
-        StorageKeys.testLog(getPackageVersionId(), getPackageBuildNumber(), getName());
+        StorageKeys.testLog(getPackageVersionId(), "b" + getBuildId().getBuildNumber(), getName());
   }
 
   public String getFailureMessage() {

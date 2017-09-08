@@ -22,7 +22,7 @@ public class TestHistoryPage {
 
   private final boolean reliable;
   
-  public TestHistoryPage(PackageVersion packageVersion, String testName) {
+  public TestHistoryPage(PackageVersion packageVersion, String testName, Long pullNumber) {
     this.packageVersion = packageVersion;
     this.testName = testName;
 
@@ -33,6 +33,10 @@ public class TestHistoryPage {
     }
     
     reliable = DeltaBuilder.reliableTest(results);
+
+    if(pullNumber != null) {
+
+    }
   }
 
   public String getTestName() {

@@ -9,15 +9,14 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.graph.PackageNode;
-import org.renjin.ci.model.BuildOutcome;
-import org.renjin.ci.model.CorePackages;
-import org.renjin.ci.model.PackageDependency;
-import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.*;
 import org.renjin.ci.model.PackageDescription.Person;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -30,24 +29,34 @@ public class MavenPomBuilder {
   public static final String[] DEFAULT_PACKAGES = new String[]{
       "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
 
-  private final PackageBuild build;
   private final PackageDescription description;
   private PackageNode packageNode;
 
+  private RenjinVersionId renjinVersionId;
+  private String buildVersion;
 
   public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription, PackageNode packageNode) {
-    this.build = build;
     this.description = packageDescription;
     this.packageNode = packageNode;
+    this.renjinVersionId = build.getRenjinVersionId();
+    this.buildVersion = build.getBuildVersion();
   }
+
+  public MavenPomBuilder(RenjinVersionId renjinVersionId, PackageDescription packageDescription, PackageNode packageNode) {
+    this.description = packageDescription;
+    this.packageNode = packageNode;
+    this.renjinVersionId = renjinVersionId;
+    this.buildVersion = packageDescription.getVersion();
+  }
+
 
   private Model buildPom() throws IOException {
 
     Model model = new Model();
     model.setModelVersion("4.0.0");
     model.setArtifactId(description.getPackage());
-    model.setGroupId(build.getPackageVersionId().getGroupId());
-    model.setVersion(build.getBuildVersion());
+    model.setGroupId(packageNode.getId().getGroupId());
+    model.setVersion(buildVersion);
     model.setDescription(description.getDescription());
     model.setUrl(description.getUrl());
 
@@ -104,7 +113,7 @@ public class MavenPomBuilder {
     
     // Compiler package may needed during namespace evaluation,
     // but unless explicitly imported, not at runtime
-    if(RenjinCapabilities.hasCompiler(build.getRenjinVersionId())) {
+    if(RenjinCapabilities.hasCompiler(renjinVersionId)) {
       if (!runtimeDependencies.contains("compiler")) {
         addCoreModule(model, "compiler", "provided");
       }
@@ -118,13 +127,13 @@ public class MavenPomBuilder {
     Plugin renjinPlugin = new Plugin();
     renjinPlugin.setGroupId("org.renjin");
     renjinPlugin.setArtifactId("renjin-maven-plugin");
-    renjinPlugin.setVersion(build.getRenjinVersionId().toString());
+    renjinPlugin.setVersion(renjinVersionId.toString());
 
-    if(RenjinCapabilities.hasGnurBuild(build.getRenjinVersionId())) {
+    if(RenjinCapabilities.hasGnurBuild(renjinVersionId)) {
       renjinPlugin.addExecution(gnurBuildExecution());
     } else {
       PluginExecution compileExecution = compileExecution();
-      if (RenjinCapabilities.hasUnpackJars(build.getRenjinVersionId()) && hasJava()) {
+      if (RenjinCapabilities.hasUnpackJars(renjinVersionId) && hasJava()) {
         renjinPlugin.addExecution(javaExecution());
       }
       renjinPlugin.addExecution(compileExecution);
@@ -145,15 +154,24 @@ public class MavenPomBuilder {
     DistributionManagement distributionManagement = new DistributionManagement();
     distributionManagement.setRepository(deploymentRepo);
 
-    Repository bddRepo = new Repository();
-    bddRepo.setId("bedatadriven-public");
-    bddRepo.setUrl("https://nexus.bedatadriven.com/content/groups/public/");
+    List<Repository> repos = new ArrayList<Repository>();
 
+    Repository publicRepo = new Repository();
+    publicRepo.setId("bedatadriven-public");
+    publicRepo.setUrl("https://nexus.bedatadriven.com/content/groups/public/");
+    repos.add(publicRepo);
+
+    if(renjinVersionId.isPullRequest()) {
+      Repository pullRepo = new Repository();
+      pullRepo.setId("renjin-pr");
+      pullRepo.setUrl("https://nexus.bedatadriven.com/content/repositories/renjin-pull-requests/");
+      repos.add(pullRepo);
+    }
 
     model.setDistributionManagement(distributionManagement);
     model.setBuild(build);
-    model.setRepositories(Lists.newArrayList(bddRepo));
-    model.setPluginRepositories(Lists.newArrayList(bddRepo));
+    model.setRepositories(Lists.newArrayList(repos));
+    model.setPluginRepositories(Lists.newArrayList(repos));
 
     return model;
   }
@@ -270,7 +288,7 @@ public class MavenPomBuilder {
   }
   
   private PluginExecution legacyCompileExecution() {
-    if(RenjinCapabilities.hasMake(build.getRenjinVersionId())) {
+    if(RenjinCapabilities.hasMake(renjinVersionId)) {
       PluginExecution compileExecution = new PluginExecution();
       compileExecution.setId("gnur-compile");
       compileExecution.addGoal("make-gnur-sources");
@@ -346,7 +364,7 @@ public class MavenPomBuilder {
     Dependency mavenDep = new Dependency();
     mavenDep.setGroupId("org.renjin");
     mavenDep.setArtifactId(name);
-    mavenDep.setVersion(build.getRenjinVersionId().toString());
+    mavenDep.setVersion(renjinVersionId.toString());
     mavenDep.setScope(scope);
     model.addDependency(mavenDep);
   }

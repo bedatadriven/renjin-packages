@@ -5,8 +5,8 @@ import com.google.api.client.http.FileContent;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.StorageObject;
 import hudson.FilePath;
-import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.BuildContext;
+import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.storage.StorageKeys;
 
 import java.io.File;
@@ -18,18 +18,22 @@ import java.io.InputStream;
  */
 public class GcsLogArchiver implements LogArchiver {
   private BuildContext buildContext;
-  private final PackageBuild build;
   private final Storage storage;
+  private final PackageVersionId packageVersionId;
+  private final String buildNumber;
 
-  public GcsLogArchiver(BuildContext buildContext, PackageBuild build, Storage storage) {
+
+  public GcsLogArchiver(BuildContext buildContext, Storage storage) {
     this.buildContext = buildContext;
-    this.build = build;
     this.storage = storage;
+    this.packageVersionId = buildContext.getPackageVersionId();
+    this.buildNumber = buildContext.getBuildNumber();
   }
+
 
   @Override
   public void archiveLog() throws IOException {
-    String objectName = StorageKeys.buildLog(build.getPackageVersionId(), build.getBuildNumber());
+    String objectName = StorageKeys.buildLog(packageVersionId, buildNumber);
     File logFile = buildContext.getLogFile();
 
     StorageObject objectMetadata = new StorageObject()
@@ -51,7 +55,7 @@ public class GcsLogArchiver implements LogArchiver {
 
   @Override
   public void archiveTestOutput(String testName, FilePath outputFile) throws IOException {
-    String objectName = StorageKeys.testLog(build.getPackageVersionId(), build.getBuildNumber(), testName);
+    String objectName = StorageKeys.testLog(packageVersionId, buildNumber, testName);
 
     StorageObject objectMetadata = new StorageObject()
         .setName(objectName)

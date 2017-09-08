@@ -11,34 +11,35 @@ import java.io.IOException;
 
 public class LogFileParser {
 
-    private static final String NATIVE_COMPILATION_SUCCESS = "[INFO] Compilation of GNU R sources succeeded.";
-    private static final String NATIVE_COMPILATION_FAILURE = "[ERROR] Compilation of GNU R sources failed.";
-    private static final String BUILD_SUCCESS = "[INFO] BUILD SUCCESS";
-    private static final String BUILD_FAILURE = "[INFO] BUILD FAILURE";
+  private static final String NATIVE_COMPILATION_SUCCESS = "[INFO] Compilation of GNU R sources succeeded.";
+  private static final String NATIVE_COMPILATION_FAILURE = "[ERROR] Compilation of GNU R sources failed.";
+  private static final String BUILD_SUCCESS = "[INFO] BUILD SUCCESS";
+  private static final String BUILD_FAILURE = "[INFO] BUILD FAILURE";
 
 
-    public static PackageBuildResult parse(BuildContext build) throws IOException {
+  public static PackageBuildResult parse(BuildContext build) throws IOException {
 
-        BuildOutcome outcome = BuildOutcome.FAILURE;
-        NativeOutcome nativeOutcome = NativeOutcome.NA;
-        
-        
-        BufferedReader reader = build.getLogAsCharSource().openBufferedStream();
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith(NATIVE_COMPILATION_FAILURE)) {
-                    nativeOutcome = NativeOutcome.FAILURE;
-                } else if (line.startsWith(NATIVE_COMPILATION_SUCCESS)) {
-                    nativeOutcome = NativeOutcome.SUCCESS;
-                } else if (line.startsWith(BUILD_SUCCESS)) {
-                    outcome = BuildOutcome.SUCCESS;
-                }
-            }
-        } finally {
-            reader.close();
+    BuildOutcome outcome = BuildOutcome.FAILURE;
+    NativeOutcome nativeOutcome = NativeOutcome.NA;
+
+    BufferedReader reader = build.getLogAsCharSource().openBufferedStream();
+    try {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (line.startsWith(NATIVE_COMPILATION_FAILURE)) {
+          nativeOutcome = NativeOutcome.FAILURE;
+        } else if (line.startsWith(NATIVE_COMPILATION_SUCCESS)) {
+          nativeOutcome = NativeOutcome.SUCCESS;
+        } else if (line.startsWith(BUILD_SUCCESS)) {
+          outcome = BuildOutcome.SUCCESS;
         }
-        
-        return new PackageBuildResult(outcome, nativeOutcome);
+      }
+    } finally {
+      reader.close();
     }
+
+    PackageBuildResult result = new PackageBuildResult(outcome, nativeOutcome);
+    result.setPackageVersionId(build.getPackageVersionId());
+    return result;
+  }
 }

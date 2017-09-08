@@ -68,9 +68,9 @@ public class TestRegression {
   public void setBrokenRenjinVersionId(RenjinVersionId brokenRenjinVersionId) {
     this.brokenRenjinVersionId = brokenRenjinVersionId;
   }
-  
+
   public String getBrokenLogUrl() {
-    return StorageKeys.testLogUrl(brokenBuild, testName);
+    return StorageKeys.testLogUrl(getBrokenBuild(), testName);
   }
   
   public String getLastGoodLogUrl() {

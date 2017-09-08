@@ -79,6 +79,7 @@ public class PackageBuildExecutable implements Queue.Executable {
 
     PackageBuildResult result = new PackageBuildResult(BuildOutcome.BLOCKED);
     result.setId(packageBuild.getId().toString());
+    result.setPackageVersionId(packageBuild.getPackageVersionId());
     result.setBlockingDependencies(blockingDependencies);
     result.setResolvedDependencies(node.resolvedDependencies());
     RenjinCiClient.postResult(packageBuild, result);
@@ -93,8 +94,15 @@ public class PackageBuildExecutable implements Queue.Executable {
       WorkerContext workerContext = new WorkerContext(parentRun, listener);
       Maven maven = new Maven(workerContext);
 
-      BuildContext buildContext = new BuildContext(workerContext, maven, parentTask.getPackageNode());
+      /*
+       * Register a new build with the Renjin CI Server and save the build number.
+       */
+      PackageBuild build = RenjinCiClient.startBuild(pvid, parentTask.getRenjinVersion());
 
+      BuildContext buildContext = new BuildContext(workerContext, maven, parentTask.getPackageNode(),
+          "b" + build.getBuildNumber());
+
+      buildContext.log("Starting build #%d on %s...", build.getBuildNumber(), workerContext.getNode().getDisplayName());
 
       try {
       
@@ -105,16 +113,10 @@ public class PackageBuildExecutable implements Queue.Executable {
 
         PackageBuildResult result;
 
-        /*
-         * Register a new build with the Renjin CI Server and save the build number.
-         */
-        PackageBuild build = RenjinCiClient.startBuild(pvid, parentTask.getRenjinVersion());
 
-        buildContext.log("Starting build #%d on %s...", build.getBuildNumber(), workerContext.getNode().getDisplayName());
+        maven.writeReleasePom(buildContext, build);
 
-        maven.writePom(buildContext, build);
-
-        maven.build(buildContext);
+        maven.build(buildContext, "deploy");
 
         /*
          * Parse the result of the build from the log files
@@ -125,7 +127,7 @@ public class PackageBuildExecutable implements Queue.Executable {
         /*
          * Archive the build log file permanently to Google Cloud Storage
          */
-        GcsLogArchiver logArchiver = GoogleCloudStorage.newArchiver(buildContext, build);
+        GcsLogArchiver logArchiver = GoogleCloudStorage.newArchiver(buildContext);
 
         logArchiver.archiveLog();
 

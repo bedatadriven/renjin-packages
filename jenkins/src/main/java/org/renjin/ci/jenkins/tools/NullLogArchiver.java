@@ -4,7 +4,7 @@ import hudson.FilePath;
 
 import java.io.IOException;
 
-public class InMemLogArchiver implements LogArchiver {
+public class NullLogArchiver implements LogArchiver {
   @Override
   public void archiveLog() throws IOException {
   }

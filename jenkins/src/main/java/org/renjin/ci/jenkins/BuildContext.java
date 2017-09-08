@@ -7,6 +7,7 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.jenkins.tools.Maven;
+import org.renjin.ci.model.PackageVersionId;
 
 import java.io.*;
 import java.util.logging.Logger;
@@ -23,17 +24,21 @@ public class BuildContext {
   private Maven maven;
   private PackageNode packageNode;
   private FilePath buildDir;
+  private String buildNumber;
 
   /**
    * Local gzip'd log file
    */
   private File logFile;
 
-  public BuildContext(WorkerContext workerContext, Maven maven, PackageNode packageNode) throws IOException, InterruptedException {
+  public BuildContext(WorkerContext workerContext, Maven maven, PackageNode packageNode, String buildNumber)
+      throws IOException, InterruptedException {
+
     this.workerContext = workerContext;
     this.maven = maven;
     this.packageNode = packageNode;
     this.buildDir = workerContext.child("package");
+    this.buildNumber = buildNumber;
     if(this.buildDir.exists()) {
       buildDir.deleteRecursive();
     }
@@ -54,6 +59,10 @@ public class BuildContext {
 
   public FilePath getBuildDir() {
     return buildDir;
+  }
+
+  public String getBuildNumber() {
+    return buildNumber;
   }
 
   public WorkerContext getWorkerContext() {
@@ -111,5 +120,9 @@ public class BuildContext {
 
   public PackageNode getPackageNode() {
     return packageNode;
+  }
+
+  public PackageVersionId getPackageVersionId() {
+    return packageNode.getId();
   }
 }

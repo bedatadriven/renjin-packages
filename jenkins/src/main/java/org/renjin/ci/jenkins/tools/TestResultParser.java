@@ -20,7 +20,7 @@ import java.util.List;
 
 public class TestResultParser {
 
-  public static List<TestResult> parseResults(BuildContext context, GcsLogArchiver archiver) throws IOException, InterruptedException {
+  public static List<TestResult> parseResults(BuildContext context, LogArchiver archiver) throws IOException, InterruptedException {
     return parseResults(context.getWorkerContext(), context.getBuildDir(), archiver);
   }
 

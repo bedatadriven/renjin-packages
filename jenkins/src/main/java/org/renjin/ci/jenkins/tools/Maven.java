@@ -24,6 +24,7 @@ import org.renjin.ci.jenkins.BuildContext;
 import org.renjin.ci.jenkins.ConfigException;
 import org.renjin.ci.jenkins.WorkerContext;
 import org.renjin.ci.model.PackageDescription;
+import org.renjin.ci.model.RenjinVersionId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,6 +44,8 @@ public class Maven {
     private final File binaryPath;
     private final FilePath configFile;
     private final JDK jdk;
+    private String localRepoPath;
+
 
     public Maven(WorkerContext workerContext) throws IOException, InterruptedException {
         this.workerContext = workerContext;
@@ -50,18 +53,32 @@ public class Maven {
         this.configFile = fetchMavenConfig(workerContext);
         this.jdk = findJdk17();
     }
-    
-    public void writePom(BuildContext context, PackageBuild build) throws IOException, InterruptedException {
 
-        // Load package description from unpacked sources
-        PackageDescription description = PackageDescription.fromString(context.getBuildDir().child("DESCRIPTION").readToString());
-
-        // Write the POM to the workspace
-        MavenPomBuilder pomBuilder = new MavenPomBuilder(build, description, context.getPackageNode());
-        context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
+    public void overrideLocalRepository(String localRepoPath) {
+        this.localRepoPath = localRepoPath;
     }
     
-    public void build(BuildContext buildContext) throws IOException, InterruptedException {
+    public void writeReleasePom(BuildContext context, PackageBuild build) throws IOException, InterruptedException {
+
+        // Write the POM to the workspace
+        PackageDescription packageDescription = readDescription(context);
+        MavenPomBuilder pomBuilder = new MavenPomBuilder(build, packageDescription, context.getPackageNode());
+        context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
+    }
+
+    public void writePom(BuildContext context, RenjinVersionId renjinVersionId) throws IOException, InterruptedException {
+        PackageDescription packageDescription = readDescription(context);
+        MavenPomBuilder pomBuilder = new MavenPomBuilder(renjinVersionId, packageDescription, context.getPackageNode());
+        context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
+    }
+
+    private PackageDescription readDescription(BuildContext context) throws IOException, InterruptedException {
+        // Load package description from unpacked sources
+        return PackageDescription.fromString(context.getBuildDir().child("DESCRIPTION").readToString());
+    }
+
+
+    public void build(BuildContext buildContext, String goal) throws IOException, InterruptedException {
 
         ArgumentListBuilder arguments = new ArgumentListBuilder();
         arguments.add(binaryPath);
@@ -76,10 +93,13 @@ public class Maven {
         arguments.add("-DenvClassifier=linux-x86_64");
         arguments.add("-Dmaven.test.failure.ignore=true");
         arguments.add("-Dignore.gnur.compilation.failure=true");
-      //  arguments.add("-DskipTests");
+
+        if(localRepoPath != null) {
+            arguments.add("-Dmaven.repo.local=" + localRepoPath);
+        }
+
         arguments.add("-B"); // run in batch mode
-        arguments.add("clean");
-        arguments.add("deploy");
+        arguments.add(goal);
 
         EnvVars environmentOverrides = new EnvVars();
         jdk.buildEnvVars(environmentOverrides);

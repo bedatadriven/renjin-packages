@@ -45,7 +45,11 @@ public class RenjinVersionId implements Serializable, Comparable<RenjinVersionId
   public static RenjinVersionId valueOf(String string) {
     return new RenjinVersionId(string);
   }
-  
+
+  public boolean isPullRequest() {
+    return version.startsWith("1000-pr");
+  }
+
   @Override
   public int compareTo(RenjinVersionId o) {
     ArtifactVersion thisVersion = new DefaultArtifactVersion(version);

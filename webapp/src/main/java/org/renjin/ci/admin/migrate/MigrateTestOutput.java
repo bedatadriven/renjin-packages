@@ -68,7 +68,7 @@ public class MigrateTestOutput extends ForEachEntity {
       PackageVersionId packageVersionId = new PackageVersionId(packageId, version);
 
       GcsFilename filename = new GcsFilename(StorageKeys.BUILD_LOG_BUCKET,
-          StorageKeys.testLog(packageVersionId, buildNumber, testName));
+          StorageKeys.testLog(packageVersionId, "b" + buildNumber, testName));
 
       GcsFileOptions options = new GcsFileOptions.Builder()
           .mimeType("text/plain")

@@ -209,10 +209,10 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   @Path("test/{testName}/history")
-  public Viewable getTestHistory(@PathParam("testName") String testName) {
+  public Viewable getTestHistory(@PathParam("testName") String testName, @QueryParam("pull") Long pullNumber) {
     
     Map<String, Object> model = new HashMap<>();
-    model.put("page", new TestHistoryPage(packageVersion, testName));
+    model.put("page", new TestHistoryPage(packageVersion, testName, pullNumber));
     
     return new Viewable("/testHistory.ftl", model);
   }

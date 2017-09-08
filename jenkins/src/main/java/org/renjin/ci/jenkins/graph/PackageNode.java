@@ -15,6 +15,11 @@ import static java.lang.String.format;
 
 
 public class PackageNode implements Serializable {
+
+  /**
+   *
+   */
+  int mark = 0;
   
   private final PackageVersionId packageVersionId;
   
@@ -115,8 +120,13 @@ public class PackageNode implements Serializable {
   
   public void replaced(String version) {
     this.buildResult = new PackageNodeState(version, BuildOutcome.SUCCESS);
+    this.provided = true;
   }
-  
+
+  public void completed(String buildVersion, BuildOutcome outcome) {
+    this.buildResult = new PackageNodeState(buildVersion, outcome);
+  }
+
   public void completed(long buildNumber, BuildOutcome outcome) {
     this.buildResult = new PackageNodeState(packageVersionId, buildNumber, outcome);
   }

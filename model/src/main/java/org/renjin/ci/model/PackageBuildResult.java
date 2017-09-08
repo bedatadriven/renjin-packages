@@ -1,11 +1,15 @@
 package org.renjin.ci.model;
 
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 import java.util.List;
 
 public class PackageBuildResult {
 
   private String id;
+
+  private String packageVersionId;
 
   private BuildOutcome outcome;
 
@@ -42,6 +46,19 @@ public class PackageBuildResult {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getPackageVersionId() {
+    return packageVersionId;
+  }
+
+  @JsonSetter
+  public void setPackageVersionId(String packageVersionId) {
+    this.packageVersionId = packageVersionId;
+  }
+
+  public void setPackageVersionId(PackageVersionId packageVersionId) {
+    this.packageVersionId = packageVersionId.toString();
   }
 
   public BuildOutcome getOutcome() {
@@ -83,4 +100,5 @@ public class PackageBuildResult {
   public void setTestResults(List<TestResult> testResults) {
     this.testResults = testResults;
   }
+
 }

@@ -5,6 +5,7 @@ import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import hudson.FilePath;
 import org.renjin.ci.jenkins.BuildContext;
+import org.renjin.ci.jenkins.WorkerContext;
 import org.renjin.ci.model.TestResult;
 import org.renjin.ci.model.TestType;
 import org.w3c.dom.Document;
@@ -20,10 +21,14 @@ import java.util.List;
 public class TestResultParser {
 
   public static List<TestResult> parseResults(BuildContext context, GcsLogArchiver archiver) throws IOException, InterruptedException {
+    return parseResults(context.getWorkerContext(), context.getBuildDir(), archiver);
+  }
+
+  public static List<TestResult> parseResults(WorkerContext workerContext, FilePath buildDir, LogArchiver archiver) throws IOException, InterruptedException {
 
     List<TestResult> testResults = Lists.newArrayList();
 
-    FilePath reportDir = context.getBuildDir().child("target").child("renjin-test-reports");
+    FilePath reportDir = buildDir.child("target").child("renjin-test-reports");
 
     if(reportDir.exists()) {
       for (FilePath file : reportDir.list()) {
@@ -33,8 +38,8 @@ public class TestResultParser {
           } catch (InterruptedException e) {
             throw e;
           } catch(Exception e) {
-            context.log("Error parsing test file %s: %s", file.getRemote(), e.getMessage());
-            e.printStackTrace(context.getLogger());
+            workerContext.log("Error parsing test file %s: %s", file.getRemote(), e.getMessage());
+            e.printStackTrace(workerContext.getLogger());
           }
         }
       }

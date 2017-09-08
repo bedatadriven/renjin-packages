@@ -25,6 +25,7 @@ import org.renjin.ci.jenkins.ConfigException;
 import org.renjin.ci.jenkins.WorkerContext;
 import org.renjin.ci.model.PackageDescription;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -84,7 +85,7 @@ public class Maven {
         jdk.buildEnvVars(environmentOverrides);
 
         GZIPOutputStream logOut = new GZIPOutputStream(new FileOutputStream(buildContext.getLogFile()));
-        
+
         Proc proc = buildContext.getWorkerContext().getLauncher().launch()
                 .cmds(arguments)
                 .pwd(buildContext.getBuildDir())
@@ -97,12 +98,58 @@ public class Maven {
         try {
             exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, buildContext.getListener());
         } catch(InterruptedException e) {
-            buildContext.log("Timed out after %d minutes.", TIMEOUT_MINUTES); 
+            buildContext.log("Timed out after %d minutes.", TIMEOUT_MINUTES);
         } finally {
             try {
                 logOut.close();
             } catch (Exception ignored) {
             }
+        }
+    }
+
+    public void test(FilePath buildDir) throws IOException {
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        ArgumentListBuilder arguments = new ArgumentListBuilder();
+        arguments.add(binaryPath);
+
+        arguments.add("-s");
+        arguments.add(configFile.getRemote());
+
+        arguments.add("-e"); // show full stack traces
+
+        arguments.add("-U"); // recheck for missing dependencies
+
+        arguments.add("-B"); // run in batch mode
+
+        arguments.add("-Dmaven.test.failure.ignore=true");
+
+        arguments.add("clean");
+        arguments.add("test");
+
+        EnvVars environmentOverrides = new EnvVars();
+        jdk.buildEnvVars(environmentOverrides);
+
+        Proc proc = workerContext.getLauncher().launch()
+            .cmds(arguments)
+            .pwd(buildDir)
+            .envs(environmentOverrides)
+            .stdout(output)
+            .stderr(output)
+            .start();
+
+        int exitCode;
+        try {
+            exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, workerContext.getListener());
+        } catch(InterruptedException e) {
+            workerContext.log("Timed out after %d minutes.", TIMEOUT_MINUTES);
+            return;
+        }
+
+        if(exitCode != 0) {
+            workerContext.getLogger().println("Maven failed with exit code: " + exitCode);
+            output.writeTo(workerContext.getLogger());
         }
     }
     

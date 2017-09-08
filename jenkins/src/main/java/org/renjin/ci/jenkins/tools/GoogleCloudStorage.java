@@ -61,13 +61,13 @@ public class GoogleCloudStorage {
     }
 
 
-    private static TarArchiveInputStream fetchSource(BuildContext context, PackageVersionId packageVersionId) throws IOException {
-        Storage storage = GoogleCloudStorage.newClient(context.getWorkerContext());
+    private static TarArchiveInputStream fetchSource(PackageVersionId packageVersionId, WorkerContext workerContext) throws IOException {
+        Storage storage = GoogleCloudStorage.newClient(workerContext);
         Storage.Objects.Get request = storage.objects().get(
                 StorageKeys.PACKAGE_SOURCE_BUCKET,
                 StorageKeys.packageSource(packageVersionId));
 
-        context.log("Retrieving sources from gs://%s/%s...", request.getBucket(), request.getObject());
+        workerContext.log("Retrieving sources from gs://%s/%s...", request.getBucket(), request.getObject());
 
         try {
             InputStream inputStream = request.executeMediaAsInputStream();
@@ -75,13 +75,13 @@ public class GoogleCloudStorage {
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error downloading sources", e);
 
-            context.getLogger().println(format("ERROR: IOException downloading sources: %s", e.getMessage()));
+            workerContext.log("ERROR: IOException downloading sources: %s", e.getMessage());
             throw e;
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error downloading sources", e);
 
-            context.log("ERROR: %s downloading sources: %s", e.getClass().getName(), e.getMessage());
+            workerContext.log("ERROR: %s downloading sources: %s", e.getClass().getName(), e.getMessage());
 
             throw new IOException(e);
         }
@@ -93,28 +93,32 @@ public class GoogleCloudStorage {
         return name.substring(slash+1);
     }
 
-
     public static void downloadAndUnpackSources(BuildContext context, PackageVersionId packageVersionId) throws IOException, InterruptedException {
+        downloadAndUnpackSources(context.getWorkerContext(), context.getBuildDir(), packageVersionId);
+    }
+
+
+    public static void downloadAndUnpackSources(WorkerContext workerContext, FilePath buildDir, PackageVersionId packageVersionId) throws IOException, InterruptedException {
 
         Closer closer = Closer.create();
-        TarArchiveInputStream tarIn = closer.register(fetchSource(context, packageVersionId));
+        TarArchiveInputStream tarIn = closer.register(fetchSource(packageVersionId, workerContext));
         try {
 
             TarArchiveEntry entry;
             while((entry=tarIn.getNextTarEntry())!=null) {
                 if(entry.isFile()) {
-                    context.getBuildDir().child(stripPackageDir(entry.getName())).copyFrom(tarIn);
+                   buildDir.child(stripPackageDir(entry.getName())).copyFrom(tarIn);
                 }
             }
         } catch(Exception e) {
-            context.log("Failed to fetch package sources: " + e.getMessage());
+            workerContext.log("Failed to fetch package sources: " + e.getMessage());
             throw closer.rethrow(e);
         } finally {
             closer.close();
         }
         
         // Band-aid required for compiling older files:
-        FilePath namespaceFile = context.getBuildDir().child("NAMESPACE");
+        FilePath namespaceFile = buildDir.child("NAMESPACE");
         if(!namespaceFile.exists()) {
             namespaceFile.write("exportPattern( \".\" )\n", Charsets.UTF_8.name());
         }

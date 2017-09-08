@@ -86,4 +86,8 @@ public class WorkerContext {
   public TaskListener getListener() {
     return listener;
   }
+
+  public void log(String format, Object... arguments) {
+    getLogger().println(String.format(format, arguments));
+  }
 }

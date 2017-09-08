@@ -116,25 +116,25 @@ public class PackageBuildExecutable implements Queue.Executable {
 
         maven.build(buildContext);
 
-        /**
+        /*
          * Parse the result of the build from the log files
          */
         result = LogFileParser.parse(buildContext);
         result.setResolvedDependencies(buildContext.getPackageNode().resolvedDependencies());
 
-        /**
+        /*
          * Archive the build log file permanently to Google Cloud Storage
          */
         GcsLogArchiver logArchiver = GoogleCloudStorage.newArchiver(buildContext, build);
 
         logArchiver.archiveLog();
 
-        /**
+        /*
          * Test results
          */
         result.setTestResults(TestResultParser.parseResults(buildContext, logArchiver));
 
-        /**
+        /*
          * Report the build result to ci.renjin.org
          */
         RenjinCiClient.postResult(build, result);

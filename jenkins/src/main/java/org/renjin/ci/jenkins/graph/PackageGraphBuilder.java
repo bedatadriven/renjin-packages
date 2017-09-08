@@ -45,13 +45,8 @@ public class PackageGraphBuilder {
     /*
      * Step 1: Enqueue all packages that MUST be (re)built, even if there is an existing built
      */
-    if(filter.contains(":")) {
-      // consider as packageId
-      PackageVersionId packageVersionId = PackageVersionId.fromTriplet(filter);
-      enqueueForBuild(packageVersionId);
-    } else {
-      enqueueForBuild(filter, filterParameters, sample);
-    }
+
+    enqueueForBuild(filter, filterParameters, sample);
 
     /*
      * Step 2: For all packages that we WANT to build, determine their dependencies and either resolve
@@ -62,7 +57,7 @@ public class PackageGraphBuilder {
       resolveDependencies(packageNode);
     }
 
-    /**
+    /*
      * Step 3: Compute the number of ultimate dependencies of each node, and sort is descending order.
      * This will allow use to take the greatest advantage of parallel executors.
      */
@@ -74,11 +69,7 @@ public class PackageGraphBuilder {
   }
 
   private void enqueueForBuild(String filter, Map<String, String> filterParameters, Double sample) throws InterruptedException {
-    taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
-    List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter);
-    taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
-
-    List<PackageVersionId> sampled = sample(packageVersionIds, sample);
+    List<PackageVersionId> sampled = queryList(taskListener, filter, sample);
 
     taskListener.getLogger().println("Building dependency graph...");
     taskListener.getLogger().flush();
@@ -89,10 +80,25 @@ public class PackageGraphBuilder {
     }
   }
 
+  public static List<PackageVersionId> queryList(TaskListener taskListener, String filter, Double sample) {
+
+    if(filter.contains(":")) {
+      // consider as packageId
+      PackageVersionId packageVersionId = PackageVersionId.fromTriplet(filter);
+      return Collections.singletonList(packageVersionId);
+    }
+
+    taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
+    List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter);
+    taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
+
+    return sample(taskListener, packageVersionIds, sample);
+  }
+
   /**
    * Samples a proportion or a fixed sample size of packages to build, generally for testing purposes.
    */
-  private List<PackageVersionId> sample(List<PackageVersionId> packageVersionIds, Double sample) {
+  private static List<PackageVersionId> sample(TaskListener taskListener, List<PackageVersionId> packageVersionIds, Double sample) {
     if(sample == null) {
       return packageVersionIds;
     } else {

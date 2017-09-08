@@ -6,10 +6,7 @@ import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfFalse;
 import com.googlecode.objectify.condition.IfNull;
 import com.googlecode.objectify.condition.IfTrue;
-import org.renjin.ci.model.PackageBuildId;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.RenjinVersionId;
-import org.renjin.ci.model.TestType;
+import org.renjin.ci.model.*;
 import org.renjin.ci.storage.StorageKeys;
 
 @Entity
@@ -126,11 +123,6 @@ public class PackageTestResult {
   public void setPassed(boolean passed) {
     this.passed = passed;
   }
-  
-  public String getOutput() {
-    return "";
-  }
-
 
   public String getError() {
     return error;
@@ -210,5 +202,16 @@ public class PackageTestResult {
         ", renjinVersion='" + renjinVersion + '\'' +
         ", passed=" + passed +
         '}';
+  }
+
+  public TestResult toTestResult() {
+    TestResult result = new TestResult();
+    result.setName(name);
+    result.setTestType(getTestType());
+    result.setDuration(duration);
+    result.setPassed(passed);
+    result.setOutput(isOutput());
+    result.setFailureMessage(getFailureMessage());
+    return result;
   }
 }

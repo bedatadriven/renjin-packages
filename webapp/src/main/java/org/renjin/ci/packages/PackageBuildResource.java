@@ -2,8 +2,10 @@ package org.renjin.ci.packages;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.googlecode.objectify.*;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.NotFoundException;
+import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.RecomputeBuildGrades;
 import org.renjin.ci.datastore.PackageBuild;
@@ -15,6 +17,7 @@ import org.renjin.ci.packages.results.TestRegressionPage;
 
 import javax.ws.rs.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +72,18 @@ public class PackageBuildResource {
     script.append(format("echo Build directory created in %s\n", dirName));
     script.append(format("echo To build: cd %s && mvn clean install\n", dirName));
     return script.toString();
+  }
+
+  @GET
+  @Path("testResults")
+  @Produces("application/json")
+  public List<TestResult> getTestResults() {
+    List<TestResult> results = new ArrayList<>();
+    for (PackageTestResult testResult : PackageDatabase.getTestResults(buildId)) {
+      results.add(testResult.toTestResult());
+    }
+
+    return results;
   }
   
   @GET

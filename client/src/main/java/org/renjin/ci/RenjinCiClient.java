@@ -16,11 +16,11 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -95,17 +95,12 @@ public class RenjinCiClient {
   public static PackageBuildId queryLastSuccessfulBuild(PackageVersionId packageVersionId) {
     String buildVersion = packageVersion(packageVersionId)
         .path("lastSuccessfulBuild")
-        .request().get(String.class);
+        .request()
+        .get(String.class);
     
     return new PackageBuildId(packageVersionId, buildVersion);
   }
 
-  public static List<TestCase> queryPackageTestCases(PackageVersionId packageVersionId) {
-    return Arrays.asList(packageVersion(packageVersionId)
-        .path("examples")
-        .request().get(TestCase[].class));
-  }
-  
 
   public static long postBuild(PackageVersionId packageVersionId, String renjinVersion) {
     Preconditions.checkNotNull(renjinVersion, "renjinVersion cannot be null");
@@ -136,17 +131,25 @@ public class RenjinCiClient {
   }
 
 
-  public static void postResult(PackageBuild build, PackageBuildResult result) {
-    PackageVersionId packageVersionId = build.getPackageVersionId();
-    WebTarget buildResource = client().target(ROOT_URL)
-        .path("package")
-        .path(packageVersionId.getGroupId())
-        .path(packageVersionId.getPackageName())
-        .path(packageVersionId.getVersionString())
-        .path("build")
-        .path(Long.toString(build.getBuildNumber()));
+  public static void postResult(final PackageBuild build, final PackageBuildResult result) {
+    final PackageVersionId packageVersionId = build.getPackageVersionId();
 
-    buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
+    withRetries(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        WebTarget buildResource = client().target(ROOT_URL)
+            .path("package")
+            .path(packageVersionId.getGroupId())
+            .path(packageVersionId.getPackageName())
+            .path(packageVersionId.getVersionString())
+            .path("build")
+            .path(Long.toString(build.getBuildNumber()));
+
+        buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
+
+        return null;
+      }
+    });
   }
 
 
@@ -173,6 +176,20 @@ public class RenjinCiClient {
       packageVersionIds.add(PackageVersionId.fromTriplet(id));
     }
     return packageVersionIds;
+  }
+
+
+  public static List<TestResult> getTestResults(PackageBuildId buildId) {
+    return client().target(ROOT_URL)
+        .path("package")
+        .path(buildId.getGroupId())
+        .path(buildId.getPackageName())
+        .path(buildId.getPackageVersionId().getVersionString())
+        .path("build")
+        .path(Long.toString(buildId.getBuildNumber()))
+        .path("testResults")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .get(new GenericType<List<TestResult>>(){});
   }
 
   public static RenjinVersionId getLatestRenjinRelease() {

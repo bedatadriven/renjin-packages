@@ -112,12 +112,7 @@ public class MavenPomBuilder {
 
     // If this package uses testthat, add the package to the test scope
     if(usesTestThat()) {
-      Dependency dependency = new Dependency();
-      dependency.setGroupId("org.renjin.cran");
-      dependency.setArtifactId("testthat");
-      dependency.setVersion("1.0.2-renjin-14");
-      dependency.setScope("test");
-      model.addDependency(dependency);
+      model.addDependency(testThatDependency());
     }
 
     Plugin renjinPlugin = new Plugin();
@@ -163,6 +158,15 @@ public class MavenPomBuilder {
     return model;
   }
 
+  public static Dependency testThatDependency() {
+    Dependency dependency = new Dependency();
+    dependency.setGroupId("org.renjin.cran");
+    dependency.setArtifactId("testthat");
+    dependency.setVersion("1.0.2-renjin-14");
+    dependency.setScope("test");
+    return dependency;
+  }
+
   private boolean usesTestThat() {
     for (PackageDependency packageDependency : description.getSuggests()) {
       if(packageDependency.getName().equals("testthat")) {
@@ -195,7 +199,11 @@ public class MavenPomBuilder {
     included.addAll(CorePackages.CORE_PACKAGES);
 
     // Add the packages specified in the Imports and Depends fields of the DESCRIPTION file
-    for (PackageDependency packageDep : Iterables.concat(description.getDepends(), description.getImports())) {
+    for (PackageDependency packageDep : Iterables.concat(
+        description.getDepends(),
+        description.getImports(),
+        description.getLinkingTo())) {
+      
       included.add(packageDep.getName());
     }
     return included;
@@ -291,7 +299,7 @@ public class MavenPomBuilder {
     }
   }
 
-  private PluginExecution testExecution() {
+  public static PluginExecution testExecution() {
     PluginExecution testExecution = new PluginExecution();
     testExecution.setId("renjin-test");
     testExecution.addGoal("test");
@@ -343,9 +351,8 @@ public class MavenPomBuilder {
     model.addDependency(mavenDep);
   }
 
-  public String getXml()  {
+  public static String toXml(Model pom) {
     try {
-      Model pom = buildPom();
       StringWriter fileWriter = new StringWriter();
       MavenXpp3Writer writer = new MavenXpp3Writer();
       writer.write(fileWriter, pom);
@@ -354,5 +361,9 @@ public class MavenPomBuilder {
     } catch(Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public String getXml() throws IOException {
+    return toXml(buildPom());
   }
 }

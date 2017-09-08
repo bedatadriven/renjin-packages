@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -18,12 +19,7 @@ public class PackageDescriptionTest {
   @Test
   public void testCollate() throws IOException {
 
-    InputStream in = getClass().getResourceAsStream("/testthat");
-    if(in == null) {
-      throw new AssertionError("Can't find test file");
-    }
-    
-    PackageDescription description = PackageDescription.fromInputStream(in);
+    PackageDescription description = fromResource("testthat");
 
     List<String> sourceFiles = description.getCollate().get();
     
@@ -40,6 +36,15 @@ public class PackageDescriptionTest {
     "utils.r", "watcher.r"));
 
 
+  }
+
+  private PackageDescription fromResource(final String name) throws IOException {
+    InputStream in = getClass().getResourceAsStream("/" + name);
+    if(in == null) {
+      throw new AssertionError("Can't find test file");
+    }
+
+    return PackageDescription.fromInputStream(in);
   }
 
   @Test
@@ -60,8 +65,17 @@ public class PackageDescriptionTest {
   @Test
   public void parsePublicationDate() {
 
-
     assertThat(PackageDescription.parsePublicationDate("2017-06-08 04:43:11 UTC"),
         equalTo(new LocalDateTime(2017, 6, 8, 4, 43, 11)));
+  }
+
+  @Test
+  public void parseNewReleaseDate() throws IOException, ParseException {
+
+    PackageDescription mapproj = fromResource("mapproj");
+
+    // 2017-06-08 04:43:11 UTC
+    assertThat(mapproj.findReleaseDate(), equalTo(new LocalDateTime(2017, 6, 8, 4, 43, 11)));
+
   }
 }

@@ -259,8 +259,7 @@ public class PackageDescription {
 	public LocalDateTime getPublicationDate() throws ParseException {
 		List<String> dateStrings = properties.get("Date/Publication");
 		if (!dateStrings.isEmpty()) {
-			String dateString = dateStrings.get(0);
-			return parsePublicationDate(dateString);
+			return parsePublicationDate(dateStrings.get(0));
 		}
 		return null;
 	}

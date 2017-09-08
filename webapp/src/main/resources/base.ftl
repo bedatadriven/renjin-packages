@@ -17,7 +17,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>
     <![endif]-->
     <link href="/assets/css/style.css" rel="stylesheet" media="all">
-    <link href="/assets/css/style-ci-v2.css" rel="stylesheet" media="all">
+    <link href="/assets/css/style-ci-v3.css" rel="stylesheet" media="all">
 </head>
 <body>
 <nav id="nav" role="navigation">

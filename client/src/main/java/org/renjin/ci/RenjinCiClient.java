@@ -1,7 +1,9 @@
 package org.renjin.ci;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -20,6 +22,8 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +54,8 @@ public class RenjinCiClient {
     build.setRenjinVersion(renjinVersion);
     return build;
   }
-  
+
+
 
   public static ResolvedDependencySet resolveDependencies(PackageVersionId packageVersionId) {
     return packageVersion(packageVersionId)
@@ -104,8 +109,10 @@ public class RenjinCiClient {
 
   public static long postBuild(PackageVersionId packageVersionId, String renjinVersion) {
     Preconditions.checkNotNull(renjinVersion, "renjinVersion cannot be null");
-    
-    PackageBuild build;Form form = new Form();
+
+    PackageBuild build;
+
+    Form form = new Form();
     form.param("renjinVersion", renjinVersion);
 
     WebTarget builds = packageVersion(packageVersionId).path("builds");
@@ -120,6 +127,20 @@ public class RenjinCiClient {
       throw new RuntimeException("Failed to get next build number from " + builds.getUri() + ": " + e.getMessage());
     }
     return build.getBuildNumber();
+  }
+
+
+  public static void postPullRequestBuild(long pullNumber, int buildNumber, String commitId) {
+    Form form = new Form();
+    form.param("buildNumber", Integer.toString(buildNumber));
+    form.param("commitId", commitId);
+
+    rootTarget()
+        .path("pull")
+        .path(Long.toString(pullNumber))
+        .path("build")
+        .request()
+        .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
   }
 
   private static WebTarget packageVersion(PackageVersionId packageVersionId) {
@@ -148,7 +169,7 @@ public class RenjinCiClient {
         Response response = buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
 
         if(response.getStatus() != 200) {
-          throw new RuntimeException("Failed to publish results: " + response.getEntity());
+          throw new RuntimeException("Failed to publish results: " + response.getStatus());
         }
 
         return null;
@@ -357,4 +378,41 @@ public class RenjinCiClient {
     LOGGER.info("scheduleStatsUpdate: " + response.getStatus());
 
   }
+
+  public static String getPatchedVersionId(PackageVersionId pvid) throws IOException {
+
+    Response response = client()
+        .target(String.format("https://api.github.com/repos/bedatadriven/%s.%s/branches/patched-%s",
+            pvid.getGroupId(),
+            pvid.getPackageName(),
+            pvid.getVersionString()))
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+
+    if(response.getStatus() == 404) {
+      return null;
+    }
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectNode root = (ObjectNode) objectMapper.readTree(response.readEntity(String.class));
+    ObjectNode commit = (ObjectNode) root.get("commit");
+    return commit.get("sha").asText();
+  }
+
+
+  public static URL getPatchedVersionUrl(PackageVersionId pvid) {
+    try {
+      return new URL(String.format("https://github.com/bedatadriven/%s.%s/archive/patched-%s.zip",
+          pvid.getGroupId(),
+          pvid.getPackageName(),
+          pvid.getVersionString()));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static String getPatchedArchiveFileName(PackageVersionId pvid) {
+    return "patched-" + pvid.getVersionString() + ".zip";
+  }
+
 }

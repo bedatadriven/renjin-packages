@@ -64,7 +64,12 @@
             (<a href="${build.buildId.repoPomLink}">pom</a> | <a href="${build.buildId.repoJarLink}">jar</a>)
         </#if>
         </p>
-        
+
+        <#if build.patchId?? >
+            <div class="note">This build has been <a href="${build.patchUrl}">patched</a> to help make this
+                package compatible with Renjin.</div>
+        </#if>
+
         <#if build.upstreamBuilds??>
         <h3>Upstream builds</h3>
         <ul>

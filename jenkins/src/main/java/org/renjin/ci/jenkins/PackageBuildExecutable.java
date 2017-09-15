@@ -1,6 +1,7 @@
 package org.renjin.ci.jenkins;
 
 import com.google.common.collect.Iterables;
+import hudson.FilePath;
 import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -14,17 +15,18 @@ import org.renjin.ci.model.PackageBuildResult;
 import org.renjin.ci.model.PackageVersionId;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
 public class PackageBuildExecutable implements Queue.Executable {
-  
+
   private Run<?, ?> parentRun;
   private TaskListener listener;
   private PackageBuildTask parentTask;
-  
+
 
   public PackageBuildExecutable(Run<?, ?> parentRun, TaskListener listener, PackageBuildTask parentTask) {
     this.parentRun = parentRun;
@@ -43,10 +45,10 @@ public class PackageBuildExecutable implements Queue.Executable {
     // Ballpark "typical" time required for package build
     return TimeUnit.SECONDS.toMillis(30);
   }
-  
+
   @Override
   public void run() {
-    
+
     List<String> blockingDependencies = parentTask.getPackageNode().blockingDependencies();
     if(blockingDependencies.isEmpty()) {
       build();
@@ -57,7 +59,7 @@ public class PackageBuildExecutable implements Queue.Executable {
 
   private void reportBlocked(List<String> blockingDependencies) {
 
-    
+
     PackageNode node = parentTask.getPackageNode();
 
     listener.getLogger().println(format("%s: Blocked by failed dependencies %s", node.getId(),
@@ -65,7 +67,7 @@ public class PackageBuildExecutable implements Queue.Executable {
 
 
     // Mark the node as failed.
-    
+
     // Report the failure immediately, we can't proceed with the build
     PackageBuild packageBuild = null;
     try {
@@ -83,7 +85,7 @@ public class PackageBuildExecutable implements Queue.Executable {
     result.setBlockingDependencies(blockingDependencies);
     result.setResolvedDependencies(node.resolvedDependencies());
     RenjinCiClient.postResult(packageBuild, result);
-    
+
   }
 
 
@@ -105,14 +107,18 @@ public class PackageBuildExecutable implements Queue.Executable {
       buildContext.log("Starting build #%d on %s...", build.getBuildNumber(), workerContext.getNode().getDisplayName());
 
       try {
-      
-        /*
-         * Download and unpack the original source of this package
-         */
-        GoogleCloudStorage.downloadAndUnpackSources(buildContext, pvid);
 
         PackageBuildResult result;
 
+        /*
+         * Download and unpack the original source of this package
+         */
+        String patchId = null;
+
+        patchId = tryDownloadPatchedVersion(buildContext, pvid);
+        if(patchId == null) {
+          GoogleCloudStorage.downloadAndUnpackSources(buildContext, pvid);
+        }
 
         maven.writeReleasePom(buildContext, build);
 
@@ -122,6 +128,7 @@ public class PackageBuildExecutable implements Queue.Executable {
          * Parse the result of the build from the log files
          */
         result = LogFileParser.parse(buildContext);
+        result.setPatchId(patchId);
         result.setResolvedDependencies(buildContext.getPackageNode().resolvedDependencies());
 
         /*
@@ -147,11 +154,12 @@ public class PackageBuildExecutable implements Queue.Executable {
         parentTask.getPackageNode().completed(build.getBuildNumber(), result.getOutcome());
 
       } finally {
+
         /*
          * Make sure we clean up our workspace so we don't fill the builder's storage
          */
-        buildContext.cleanup();
-        
+      //  buildContext.getWorkerContext().getWorkspace().deleteContents();
+
       }
     } catch (InterruptedException e) {
       parentTask.getPackageNode().cancelled();
@@ -162,6 +170,27 @@ public class PackageBuildExecutable implements Queue.Executable {
       parentTask.getPackageNode().crashed();
       e.printStackTrace(listener.getLogger());
     }
+  }
+
+  private String tryDownloadPatchedVersion(BuildContext buildContext, PackageVersionId pvid) throws IOException, InterruptedException {
+    String patchId = RenjinCiClient.getPatchedVersionId(pvid);
+    buildContext.log("Found patch " + patchId);
+    if(patchId != null) {
+      FilePath patchedArchive = buildContext.getWorkerContext().child("patched.zip");
+      buildContext.log("Downloading patched archive to " + patchedArchive.getRemote() + "...");
+      patchedArchive.copyFrom(RenjinCiClient.getPatchedVersionUrl(pvid));
+
+      FilePath targetDir = buildContext.getWorkerContext().getWorkspace();
+      buildContext.log("Unpacking patched sources into " + targetDir.getRemote() + "...");
+      patchedArchive.unzip(targetDir);
+
+      buildContext.setBuildDir(targetDir.child(String.format("%s.%s-patched-%s",
+          pvid.getGroupId(),
+          pvid.getPackageName(),
+          pvid.getVersionString())));
+
+    }
+    return patchId;
   }
 
 }

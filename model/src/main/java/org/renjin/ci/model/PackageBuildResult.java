@@ -16,10 +16,15 @@ public class PackageBuildResult {
   private NativeOutcome nativeOutcome;
   
   private List<String> blockingDependencies;
-  
+
   private List<String> resolvedDependencies;
   
   private List<TestResult> testResults;
+
+  /**
+   * The GIT commit id of the patched version of this package used.
+   */
+  private String patchId;
 
   private PackageBuildResult() {
   }
@@ -101,4 +106,11 @@ public class PackageBuildResult {
     this.testResults = testResults;
   }
 
+  public String getPatchId() {
+    return patchId;
+  }
+
+  public void setPatchId(String patchId) {
+    this.patchId = patchId;
+  }
 }

@@ -1,5 +1,7 @@
 package org.renjin.ci.jenkins;
 
+import com.google.common.base.Strings;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.maven.MavenBuild;
@@ -44,7 +46,11 @@ public class RenjinCiNotifier extends Notifier {
     }
     
     listener.getLogger().println("Renjin ci starting on " + build.getClass().getName());
-    
+
+    EnvVars env = build.getEnvironment(listener);
+    if(!Strings.isNullOrEmpty(env.get("ghprbPullId"))) {
+      submitPullRequestBuild(build, env);
+    }
     if(build instanceof hudson.maven.MavenModuleSetBuild) {
       MavenModuleSetBuild mavenBuild = (MavenModuleSetBuild) build;
       Map<MavenModule, List<MavenBuild>> moduleBuilds = mavenBuild.getModuleBuilds();
@@ -60,6 +66,14 @@ public class RenjinCiNotifier extends Notifier {
       }
     }
     return true;
+  }
+
+  private void submitPullRequestBuild(AbstractBuild<?, ?> build, EnvVars env) {
+    long pullNumber = Long.parseLong(env.get("ghprbPullId"));
+    String commitId = env.get("ghprbActualCommit");
+
+    RenjinCiClient.postPullRequestBuild(pullNumber, build.getNumber(), commitId);
+
   }
 
   private void notifyRenjinRelease(BuildListener listener, MavenModuleSetBuild mavenBuild, MavenModule module) throws IOException {

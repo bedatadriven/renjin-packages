@@ -16,6 +16,7 @@ import org.renjin.ci.model.*;
 import org.renjin.ci.packages.results.TestRegressionPage;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,7 +97,7 @@ public class PackageBuildResource {
 
   @POST
   @Consumes("application/json")
-  public void postResult(final PackageBuildResult buildResult) {
+  public Response postResult(final PackageBuildResult buildResult) {
 
     LOGGER.info("Received build results for " + packageVersionId + "-b" + buildNumber + ": " + buildResult.getOutcome());
 
@@ -142,6 +143,7 @@ public class PackageBuildResource {
             }
           }
 
+          build.setPatchId(buildResult.getPatchId());
           build.setOutcome(buildResult.getOutcome());
           build.setEndTime(System.currentTimeMillis());
           build.setDuration(build.getEndTime() - build.getStartTime());
@@ -168,6 +170,8 @@ public class PackageBuildResource {
       }
 
     });
+
+    return Response.ok().build();
   }
 
   /**

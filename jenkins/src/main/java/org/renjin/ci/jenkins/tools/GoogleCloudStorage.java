@@ -93,6 +93,7 @@ public class GoogleCloudStorage {
     }
 
     public static void downloadAndUnpackSources(BuildContext context, PackageVersionId packageVersionId) throws IOException, InterruptedException {
+        context.setBuildDir(context.getWorkerContext().child("package"));
         downloadAndUnpackSources(context.getWorkerContext(), context.getBuildDir(), packageVersionId);
     }
 

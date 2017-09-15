@@ -78,6 +78,13 @@
         
         <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
 
+        <#if version.latestBuild??>
+        <#if version.latestBuild.patchId?? >
+            <div class="note">This build has been <a href="${version.latestBuild.patchUrl}">patched</a> to help make this
+                package compatible with Renjin.</div>
+        </#if>
+        </#if>
+
         <#if (version.dependencies?size > 0)>
         <h3>Dependencies</h3>
         <p>

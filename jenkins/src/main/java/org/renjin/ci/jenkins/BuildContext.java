@@ -37,7 +37,7 @@ public class BuildContext {
     this.workerContext = workerContext;
     this.maven = maven;
     this.packageNode = packageNode;
-    this.buildDir = workerContext.child("package");
+    this.buildDir = workerContext.getWorkspace();
     this.buildNumber = buildNumber;
     if(this.buildDir.exists()) {
       buildDir.deleteRecursive();
@@ -59,6 +59,10 @@ public class BuildContext {
 
   public FilePath getBuildDir() {
     return buildDir;
+  }
+
+  public void setBuildDir(FilePath buildDir) {
+    this.buildDir = buildDir;
   }
 
   public String getBuildNumber() {

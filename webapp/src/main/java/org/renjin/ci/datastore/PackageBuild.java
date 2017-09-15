@@ -72,6 +72,9 @@ public class PackageBuild {
   @Index
   private String grade;
 
+  @Unindex
+  private String patchId;
+
   public PackageBuild() {
   }
 
@@ -92,6 +95,14 @@ public class PackageBuild {
     long buildNumber = key.getId();
     PackageVersionId packageVersionId = PackageVersion.idOf(key.<PackageVersion>getParent());
     return new PackageBuildId(packageVersionId, buildNumber);
+  }
+
+  public String getPatchUrl() {
+    return String.format("https://github.com/bedatadriven/%s.%s/compare/%s...patched-%s",
+        getGroupId(),
+        getPackageName(),
+        getVersion(),
+        getVersion());
   }
 
   public String getLogPath() {
@@ -154,6 +165,14 @@ public class PackageBuild {
 
   public void setOutcome(BuildOutcome outcome) {
     this.outcome = outcome;
+  }
+
+  public String getPatchId() {
+    return patchId;
+  }
+
+  public void setPatchId(String patchId) {
+    this.patchId = patchId;
   }
 
   public String getRenjinVersion() {

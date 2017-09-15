@@ -46,9 +46,21 @@ public class PackageResource {
     }
   }
 
+  @GET
+  @Path("badge")
+  @Produces("image/svg+xml")
+  public Viewable getRenjinIcon() {
+    Package packageEntity = loadPackage();
+    if(packageEntity.isReplaced()) {
+      Map<String, Object> model = new HashMap<>();
+      model.put("status", "Available");
+    } else {
+
+    }
+    return new Viewable("/icon.ftl");
+  }
+
   private Viewable getReplacementPage(Package packageEntity) {
-    
-    
     Map<String, Object> model = new HashMap<>();
     model.put("package", packageEntity);
     model.put("replacement", new ReplacementVersionPage(packageEntity));

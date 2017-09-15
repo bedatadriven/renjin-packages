@@ -52,6 +52,41 @@ public class PackageVersionResource {
   public PackageBuildResource getBuild(@PathParam("buildNumber") int buildNumber) {
     return new PackageBuildResource(packageVersion.getPackageVersionId(), buildNumber);
   }
+
+  @GET
+  @Path("shield")
+  @Produces("image/svg+xml")
+  public Viewable getShield() {
+
+    Map<String, Object> model = new HashMap<>();
+
+    if(!packageVersion.hasBuild()) {
+      model.put("status", "n/a");
+      model.put("statusColor", "gray");
+    } else {
+
+      PackageBuild build = PackageDatabase.getBuild(packageVersion.getLastBuildId()).now();
+      switch (build.getGrade()) {
+        case "A":
+          model.put("status", "ok");
+          model.put("statusColor", "#87b13f");
+          break;
+        case "B":
+        case "C":
+          model.put("status", "warnings");
+          model.put("statusColor", "#dd8822");
+          break;
+        default:
+        case "D":
+        case "F":
+          model.put("status", "errors");
+          model.put("statusColor", "#e05d44");
+          break;
+      }
+    }
+
+    return new Viewable("/shield.ftl");
+  }
   
   @GET
   @Path("lastSuccessfulBuild")

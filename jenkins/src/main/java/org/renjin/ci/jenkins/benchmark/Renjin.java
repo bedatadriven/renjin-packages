@@ -195,7 +195,7 @@ public class Renjin extends Interpreter {
     args.add(pomFile.getRemote());
     args.add("exec:java");
     args.add("-Dexec.mainClass=org.renjin.cli.Main");
-    args.add("-Dexec.args=-f " + scriptPath.getName());
+    args.add("-Dexec.args=--profile -f " + scriptPath.getName());
 
     Launcher.ProcStarter ps = launcher.new ProcStarter();
     ps = ps.cmds(args).pwd(scriptPath.getParent());

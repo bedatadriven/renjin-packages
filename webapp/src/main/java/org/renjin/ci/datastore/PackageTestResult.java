@@ -87,6 +87,10 @@ public class PackageTestResult {
     return getBuildId().getPackageVersionId();
   }
 
+  public PackageId getPackageId() {
+    return getPackageVersionId().getPackageId();
+  }
+
   public PackageBuildId getBuildId() {
     return PackageBuild.idOf(buildKey);
   }

@@ -167,7 +167,7 @@
             <a href="${build.packageVersionId.path}/test/${test.name}/history#build-">History</a>
             <#if test.regression>[REGRESSION]</#if></p>
             <#if test.output>
-            <div class="log test-log" data-log-url="${test.logUrl}" data-build-id="${build.buildId.toString()}">Loading...</div>
+            <div class="log test-log" data-log-url="${test.logUrl}" data-library="${build.getPackageVersionId().getPackageId().toString()}" data-build-id="${build.buildId.toString()}">Loading...</div>
             <#elseif test.failureMessage?? >
             <pre class="log test-log">${test.failureMessage}</pre>
             </#if>

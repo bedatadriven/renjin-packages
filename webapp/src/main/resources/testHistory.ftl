@@ -66,7 +66,7 @@
                     <a href="${result.markFormPath}">Mark as failed.</a>
                 </#if>
             </p>
-            <div class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}" data-build-id="${result.buildId.toString()}">Loading...</div>
+            <div class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}" data-library="${result.packageId}" data-build-id="${result.buildId.toString()}">Loading...</div>
         </#list>
     </div>
 </div>

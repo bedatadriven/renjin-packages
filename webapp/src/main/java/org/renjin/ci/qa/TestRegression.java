@@ -1,6 +1,7 @@
 package org.renjin.ci.qa;
 
 import org.renjin.ci.model.PackageBuildId;
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.releases.ReleasesResource;
@@ -18,6 +19,10 @@ public class TestRegression {
 
   public PackageVersionId getPackageVersionId() {
     return packageVersionId;
+  }
+
+  public PackageId getPackageId() {
+    return packageVersionId.getPackageId();
   }
 
   public void setPackageVersionId(PackageVersionId packageVersionId) {

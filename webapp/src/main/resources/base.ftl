@@ -103,7 +103,7 @@
         </div>
     </div>
 </footer>
-<textarea id="clipboard-target"></textarea>
+<textarea id="clipboard-target" aria-hidden="true"></textarea>
 
 <!-- spy on out visitors ;-) -->
 <script>
@@ -121,6 +121,6 @@
 </#macro>
 
 <#macro logScript>
-<script src="/assets/js/logs-v22.js"></script>
+<script src="/assets/js/logs-v23.js"></script>
 </#macro>
 

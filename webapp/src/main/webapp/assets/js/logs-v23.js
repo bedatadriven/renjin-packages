@@ -135,10 +135,15 @@
     function handleCopyClick(event) {
         if(event.target.classList.contains("copy-log")) {
             event.preventDefault();
+            var code = "";
 
             var logDiv = event.target.parentElement;
+            var library = logDiv.getAttribute("data-library");
+            if(library) {
+                code += "library(\"" + library + "\")\n";
+            }
+
             var stmts = logDiv.getElementsByClassName("stmt");
-            var code = "";
             var i;
             for(i = 0; i < stmts.length; ++i) {
                code += stmts.item(i).innerText + "\n";

@@ -29,8 +29,11 @@ import java.util.Map;
 
 public class RenjinCiNotifier extends Notifier {
 
+  private boolean testFailuresIgnored;
+
   @DataBoundConstructor
-  public RenjinCiNotifier() {
+  public RenjinCiNotifier(boolean testFailuresIgnored) {
+    this.testFailuresIgnored = testFailuresIgnored;
   }
 
   @Override
@@ -40,9 +43,15 @@ public class RenjinCiNotifier extends Notifier {
 
   @Override
   public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-    
-    if(build.getResult() != Result.SUCCESS) {
-      return true;
+
+    if(testFailuresIgnored) {
+      if(build.getResult() != Result.SUCCESS && build.getResult() != Result.UNSTABLE) {
+        return true;
+      }
+    } else {
+      if (build.getResult() != Result.SUCCESS) {
+        return true;
+      }
     }
     
     listener.getLogger().println("Renjin ci starting on " + build.getClass().getName());
@@ -107,6 +116,14 @@ public class RenjinCiNotifier extends Notifier {
       throw new IOException("No last revision");
     }
     return sha1;
+  }
+
+  public boolean isTestFailuresIgnored() {
+    return testFailuresIgnored;
+  }
+
+  public void setTestFailuresIgnored(boolean testFailuresIgnored) {
+    this.testFailuresIgnored = testFailuresIgnored;
   }
 
 

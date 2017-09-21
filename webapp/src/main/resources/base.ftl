@@ -17,7 +17,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>
     <![endif]-->
     <link href="/assets/css/style.css" rel="stylesheet" media="all">
-    <link href="/assets/css/style-ci-v3.css" rel="stylesheet" media="all">
+    <link href="/assets/css/style-ci-v6.css" rel="stylesheet" media="all">
 </head>
 <body>
 <nav id="nav" role="navigation">
@@ -103,7 +103,7 @@
         </div>
     </div>
 </footer>
-
+<textarea id="clipboard-target"></textarea>
 
 <!-- spy on out visitors ;-) -->
 <script>
@@ -121,6 +121,6 @@
 </#macro>
 
 <#macro logScript>
-<script src="/assets/js/logs-v9.js"></script>
+<script src="/assets/js/logs-v22.js"></script>
 </#macro>
 

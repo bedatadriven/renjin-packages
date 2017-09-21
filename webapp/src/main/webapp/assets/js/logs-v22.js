@@ -11,6 +11,7 @@
     
     function loadLog(logDiv) {
         var logUrl = logDiv.getAttribute("data-log-url");
+        var logType = logDiv.getAttribute("data-log-type");
         var buildId = logDiv.getAttribute("data-build-id");
         if(logUrl) {
             if(!logDiv.getAttribute("data-loading")) {
@@ -20,7 +21,11 @@
                 request.open('GET', logUrl, true);
                 request.onload = function () {
                     if (request.status >= 200 && request.status < 400) {
-                        logDiv.innerHTML = formatLog(request.responseText, buildId);
+                        var replOutput = isReplOutput(request.responseText);
+                        if(replOutput) {
+                            logDiv.classList.add("repl");
+                        }
+                        logDiv.innerHTML = formatLog(request.responseText, replOutput, buildId);
                     } else {
                         logDiv.innerHTML = "Error loading log"
                     }
@@ -33,12 +38,25 @@
         }
     }
 
-    function formatLog(log, buildId) {
+    function isReplOutput(log) {
+        return log.startsWith("Renjin ");
+    }
+
+    function formatLog(log, repl, buildId) {
         var lines = log.split(/[\r\n]+/g);
         var html = "";
+        var context = { };
+
+        if(repl) {
+            context.prompt = 1;
+        }
+
+        if(repl) {
+            html += "<a class=\"copy-log\" href='#'>Copy</a>";
+        }
 
         lines.forEach(function (line) {
-            html += "<div class=\"line\">" + formatLine(line, buildId) + "</div>";
+            html += "<div class=\"line\">" + formatLine(context, line, buildId) + "</div>";
         });
 
         return html;
@@ -51,7 +69,24 @@
     // Should match "  at validObject()"
     var renjinLineRe = /^(\s*at\s*)([A-Za-z0-9._]+)\(\)/;
 
-    function formatLine(line, buildId) {
+    function formatLine(context, line, buildId) {
+
+        if(context.prompt === 1 && line.startsWith("> ")) {
+            // Transition to state prompt 1 and format the first line of a repl input
+            context.prompt = 2;
+            return "<span class='prompt'>&gt; </span><span class='stmt'>" +
+                escapeHtml(line.substr(2)) + "</span>";
+        }
+        if(context.prompt === 2) {
+            // previous line was >
+            if (line.startsWith("> ") || line.startsWith("+ ")) {
+                return "<span class='prompt'>" + escapeHtml(line.substr(0, 2)) + "</span>" +
+                       "<span class='stmt'>" + escapeHtml(line.substr(2)) + "</span>";
+            } else {
+                context.prompt = 1;
+            }
+        }
+
         var javaLineMatch = javaLineRe.exec(line);
         if(javaLineMatch) {
             var indent = javaLineMatch[1];
@@ -96,7 +131,27 @@
             }
         }    
     }
-    
+
+    function handleCopyClick(event) {
+        if(event.target.classList.contains("copy-log")) {
+            event.preventDefault();
+
+            var logDiv = event.target.parentElement;
+            var stmts = logDiv.getElementsByClassName("stmt");
+            var code = "";
+            var i;
+            for(i = 0; i < stmts.length; ++i) {
+               code += stmts.item(i).innerText + "\n";
+            }
+            console.log("Code:\n" + code);
+            var clipboardTarget = document.getElementById("clipboard-target");
+            clipboardTarget.value = code;
+            clipboardTarget.select();
+            document.execCommand("copy");
+        }
+    }
+
     window.addEventListener("load", loadLogsInView);
     window.addEventListener("scroll", loadLogsInView);
+    window.addEventListener("click", handleCopyClick);
 })();

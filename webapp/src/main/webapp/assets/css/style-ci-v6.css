@@ -268,6 +268,8 @@ div.log {
     margin-bottom: 20px;
 
     overflow: auto;
+
+    position: relative;
 }
 
 div.log div.line {
@@ -287,9 +289,40 @@ div.log a:hover {
     color: #24292e;
 }
 
+div.log a.copy-log {
+    position: absolute;
+    right: 0;
+    font-size: 0.75em;
+}
 
 .floater {
     position: fixed;
     left: 10px;
     bottom: 10px;
+}
+
+div.log.repl div.line {
+    color: gray;
+}
+
+div.log.repl span.prompt {
+    color: black;
+    font-weight: bold;
+}
+
+div.log.repl span.stmt {
+    color: black;
+}
+
+div.log.repl a {
+    color: gray;
+}
+
+#clipboard-target {
+    font-size: 12pt;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    left: -9999px;
 }

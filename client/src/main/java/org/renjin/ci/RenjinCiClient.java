@@ -381,6 +381,19 @@ public class RenjinCiClient {
 
   public static String getPatchedVersionId(PackageVersionId pvid) throws IOException {
 
+    // Avoiding hitting the API to check whether the branch exists in order to avoid rate limits
+    Response head = client()
+        .target(String.format("https://github.com/bedatadriven/%s.%s/tree/patched-%s",
+            pvid.getGroupId(),
+            pvid.getPackageName(),
+            pvid.getVersionString()))
+        .request()
+        .head();
+
+    if(head.getStatus() == 404) {
+      return null;
+    }
+
     Response response = client()
         .target(String.format("https://api.github.com/repos/bedatadriven/%s.%s/branches/patched-%s",
             pvid.getGroupId(),

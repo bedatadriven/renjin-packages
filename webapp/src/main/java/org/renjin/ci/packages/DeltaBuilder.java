@@ -86,7 +86,7 @@ public class DeltaBuilder {
             PackageDatabase.getTestResults(packageVersionId),
             newTestResults);
 
-        checkBuildHistory(buildMap);
+        checkBuildHistory(testResults, buildMap);
         checkCompilationHistory(buildMap);
         checkTestResults(buildMap, testResults);
 
@@ -192,15 +192,26 @@ public class DeltaBuilder {
     }
   }
 
-  private void checkBuildHistory(TreeMap<RenjinVersionId, PackageBuild> buildMap) {
-    Optional<PackageBuild> buildRegression = findRegression(buildMap.values(), buildSucceeded());
-    if(buildRegression.isPresent()) {
-      delta(buildRegression.get()).setBuildDelta(-1);
+  private void checkBuildHistory(Iterable<PackageTestResult> testResults, TreeMap<RenjinVersionId, PackageBuild> buildMap) {
+    if(oneTestHasOnceEverPassed(testResults)) {
+      Optional<PackageBuild> buildRegression = findRegression(buildMap.values(), buildSucceeded());
+      if (buildRegression.isPresent()) {
+        delta(buildRegression.get()).setBuildDelta(-1);
+      }
     }
     Optional<PackageBuild> buildProgression = findProgression(buildMap.values(), buildSucceeded());
     if(buildProgression.isPresent()) {
       delta(buildProgression.get()).setBuildDelta(+1);
     }
+  }
+
+  private boolean oneTestHasOnceEverPassed(Iterable<PackageTestResult> testResults) {
+    for (PackageTestResult testResult : testResults) {
+      if(testResult.isPassed()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private List<PackageBuild> selectWithSameDependencyVersions(List<PackageBuild> builds) {

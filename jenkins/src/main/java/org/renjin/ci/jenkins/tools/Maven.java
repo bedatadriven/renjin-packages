@@ -99,6 +99,10 @@ public class Maven {
         }
 
         arguments.add("-B"); // run in batch mode
+
+        if(goal.equals("deploy")) {
+            arguments.add("-Dmaven.install.skip=true");
+        }
         arguments.add(goal);
 
         EnvVars environmentOverrides = new EnvVars();

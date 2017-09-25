@@ -271,7 +271,8 @@ public class DeltaBuilder {
   private void checkTestResults(TreeMap<RenjinVersionId, PackageBuild> buildMap, Iterable<PackageTestResult> testResults) {
 
     // Now do the same for tests, one test at a time
-    Multimap<String, PackageTestResult> tests = indexByName(testResults);
+    Multimap<String, PackageTestResult> tests = indexByName(
+        excludeDuplicatedTestThatTests(testResults));
     for (String testName : tests.keySet()) {
 
       Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(tests.get(testName));
@@ -322,6 +323,23 @@ public class DeltaBuilder {
       }
     }
 
+    return correct;
+  }
+
+  private static Collection<PackageTestResult> excludeDuplicatedTestThatTests(Iterable<PackageTestResult> tests) {
+    Set<String> names = new HashSet<>();
+    for (PackageTestResult test : tests) {
+      names.add(test.getName());
+    }
+
+    List<PackageTestResult> correct = new ArrayList<>();
+    for (PackageTestResult test : tests) {
+      if(!names.contains(test.getName() + "_E1")) {
+        correct.add(test);
+      } else {
+        LOGGER.severe("Excluding test undeduplicated test " + test.getName());
+      }
+    }
     return correct;
   }
 

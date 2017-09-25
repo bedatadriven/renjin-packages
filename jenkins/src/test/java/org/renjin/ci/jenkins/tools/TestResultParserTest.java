@@ -32,7 +32,7 @@ public class TestResultParserTest {
     List<TestResult> results = TestResultParser.parseResult(new FilePath(resourceFile), archiver);
 
     TestResult success = results.get(0);
-    assertThat(success.getName(), equalTo("clone.Can't_use_reserved_name_'clone'"));
+    assertThat(success.getName(), equalTo("clone.Can't_use_reserved_name_'clone'_E1"));
     assertThat(success.isOutput(), equalTo(false));
     assertThat(success.isPassed(), equalTo(true));
     assertThat(success.getTestType(), equalTo(TestType.TEST_THAT));
@@ -68,5 +68,21 @@ public class TestResultParserTest {
 
   }
 
+  @Test
+  public void testThatDuplicates() throws IOException, InterruptedException {
 
+    URL resourceURL = getClass().getResource("ThreeArmedTrials.xml");
+    File resourceFile = new File(resourceURL.getFile());
+    assert resourceFile.exists();
+
+    LogArchiver archiver = createNiceMock(LogArchiver.class);
+    replay(archiver);
+
+    List<TestResult> results = TestResultParser.parseResult(new FilePath(resourceFile), archiver);
+    TestResult e1 = results.get(1);
+    TestResult e2 = results.get(2);
+
+    assertThat(e1.getName(), equalTo("Negative_binomial_distribution:_test_RET.p-value_E1"));
+    assertThat(e2.getName(), equalTo("Negative_binomial_distribution:_test_RET.p-value_E2"));
+  }
 }

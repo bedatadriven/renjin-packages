@@ -15,8 +15,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TestResultParser {
 
@@ -70,7 +69,6 @@ public class TestResultParser {
       String name = testCase.getAttribute("name");
       String time = testCase.getAttribute("time");
 
-
       TestResult result = new TestResult();
       result.setName(formatName(className, name));
       result.setPassed(isPassed(testCase));
@@ -86,7 +84,34 @@ public class TestResultParser {
       results.add(result);
     }
 
+    disambiguateNames(results);
+
     return results;
+  }
+
+  private static void disambiguateNames(List<TestResult> results) {
+    Set<String> duplicates = new HashSet<String>();
+    Set<String> seen = new HashSet<String>();
+
+    for (TestResult result : results) {
+      if(!seen.contains(result.getName())) {
+        seen.add(result.getName());
+      } else {
+        duplicates.add(result.getName());
+      }
+    }
+
+    HashMap<String, Integer> numbers = new HashMap<String, Integer>();
+    for (TestResult result : results) {
+      if (duplicates.contains(result.getName())) {
+        Integer number = numbers.get(result.getName());
+        if (number == null) {
+          number = 1;
+        }
+        numbers.put(result.getName(), number + 1);
+        result.setName(result.getName() + "_E" + number);
+      }
+    }
   }
 
   private static String failureMessage(Element testCase) {
@@ -102,7 +127,6 @@ public class TestResultParser {
     }
 
     return null;
-
   }
 
   private static boolean isPassed(Element testCase) {

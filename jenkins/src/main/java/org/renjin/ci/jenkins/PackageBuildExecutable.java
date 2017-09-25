@@ -158,7 +158,7 @@ public class PackageBuildExecutable implements Queue.Executable {
         /*
          * Make sure we clean up our workspace so we don't fill the builder's storage
          */
-      //  buildContext.getWorkerContext().getWorkspace().deleteContents();
+        buildContext.getWorkerContext().getWorkspace().deleteContents();
 
       }
     } catch (InterruptedException e) {

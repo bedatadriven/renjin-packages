@@ -10,14 +10,12 @@ import com.googlecode.objectify.Work;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
-import org.kohsuke.github.HttpConnector;
+import org.renjin.ci.GitHubFactory;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.RenjinCommit;
 import org.renjin.ci.datastore.RenjinRelease;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,21 +27,7 @@ public class IndexCommit extends Job1<Void, String> {
 
   private static final Logger LOGGER = Logger.getLogger(IndexCommit.class.getName());
 
-  private static class AppEngineGitHubConnector implements HttpConnector {
 
-    @Override
-    public HttpURLConnection connect(URL url) throws IOException {
-      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      connection.setRequestProperty("User-Agent", "Renjin CI");
-
-      return connection;
-    }
-  }
-
-  /**
-   * Personal OAUTH token that provides read-only access to public repos
-   */
-  private static final String OAUTH_TOKEN = "ce8814c5a7468b95a353af728d343aa59cc44ca3";
 
   private static final String RELEASE_MESSAGE_PREFIX = "[maven-release-plugin] prepare release parent-";
 
@@ -98,8 +82,7 @@ public class IndexCommit extends Job1<Void, String> {
   @VisibleForTesting
   static RenjinCommit fetchCommit(String commitHash) throws IOException {
 
-    GitHub github = GitHub.connectUsingOAuth(OAUTH_TOKEN);
-    github.setConnector(new AppEngineGitHubConnector());
+    GitHub github = GitHubFactory.create();
     GHRepository repo = github.getRepository("bedatadriven/renjin");
     GHCommit gitHubCommit = repo.getCommit(commitHash);
 

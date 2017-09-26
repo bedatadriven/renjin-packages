@@ -59,11 +59,10 @@ public class PackageVersionResource {
   public Viewable getShield() {
 
     Map<String, Object> model = new HashMap<>();
+    model.put("status", "n/a");
+    model.put("statusColor", "gray");
 
-    if(!packageVersion.hasBuild()) {
-      model.put("status", "n/a");
-      model.put("statusColor", "gray");
-    } else {
+    if(packageVersion.hasBuild()) {
 
       PackageBuild build = PackageDatabase.getBuild(packageVersion.getLastBuildId()).now();
       switch (build.getGrade()) {
@@ -85,7 +84,7 @@ public class PackageVersionResource {
       }
     }
 
-    return new Viewable("/shield.ftl");
+    return new Viewable("/shield.ftl", model);
   }
   
   @GET
@@ -111,7 +110,7 @@ public class PackageVersionResource {
     if(Strings.isNullOrEmpty(renjinVersion)) {
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
-    
+
     return ObjectifyService.ofy().transactNew(new Work<PackageBuild>() {
       @Override
       public PackageBuild run() {
@@ -251,5 +250,34 @@ public class PackageVersionResource {
     
     return new Viewable("/testHistory.ftl", model);
   }
-  
+
+  @GET
+  @Produces("text/csv")
+  @Path("test/{testName}/timings.csv")
+  public String getTestTimings(@PathParam("testName") String testName) {
+
+    StringBuilder csv = new StringBuilder();
+
+    // Headers
+    csv.append("interpreter,version,jdk,blas,time,passed\n");
+
+    // Write timings as rows
+    Iterable<PackageTestResult> results = PackageDatabase.getTestResults(packageVersion.getPackageVersionId(), testName);
+    for (PackageTestResult result : results) {
+      if(result.getDuration() != 0) {
+        csv.append("Renjin,");
+        csv.append(result.getRenjinVersion());
+        csv.append(",Unknown,f2jblas,");
+        csv.append(result.getDuration());
+        if(result.isPassed()) {
+          csv.append(",true");
+        } else {
+          csv.append(",false");
+        }
+        csv.append("\n");
+      }
+    }
+
+    return csv.toString();
+  }
 }

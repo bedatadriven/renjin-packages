@@ -140,7 +140,15 @@
             var logDiv = event.target.parentElement;
             var library = logDiv.getAttribute("data-library");
             if(library) {
-                code += "library(\"" + library + "\")\n";
+                var packageId = library.split(":");
+                code += "if(identical(R.Version()$engine, 'Renjin')) { library('" + library + "') } ";
+                if(packageId[0] == 'org.renjin.cran') {
+                    code += " else { install.packages('" + packageId[1] + "'); library('" + packageId[1] + "'); }"
+                }
+                if(packageId[0] == 'org.renjin.bioconductor') {
+                    code += " else { source('https://bioconductor.org/biocLite.R'); biocLite('" + packageId[1] + "'); }";
+                }
+                code += "\n";
             }
 
             var stmts = logDiv.getElementsByClassName("stmt");

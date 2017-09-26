@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import org.renjin.ci.datastore.BuildDelta;
 import org.renjin.ci.datastore.PackageVersionDelta;
-import org.renjin.ci.model.PackageBuildId;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -16,31 +15,23 @@ import java.util.List;
 /**
  * Page model showing all test regressions
  */
-public class TestRegressionPage {
+public class TestRegressionsPage {
 
   private List<TestRegression> regressions = Lists.newArrayList();
 
-  public TestRegressionPage(Iterable<PackageVersionDelta> deltas, Predicate<PackageVersionDelta> filter) {
-    
+  public TestRegressionsPage(Iterable<PackageVersionDelta> deltas, Predicate<TestRegression> filter) {
+
     for (PackageVersionDelta delta : deltas) {
-      if(filter.apply(delta)) {
-        for (BuildDelta buildDelta : delta.getBuilds()) {
-          for (String testName : buildDelta.getTestRegressions()) {
-            TestRegression regression = new TestRegression();
-            regression.setPackageVersionId(delta.getPackageVersionId());
-            regression.setTestName(testName);
-            regression.setBrokenBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber()));
-            regression.setBrokenRenjinVersionId(buildDelta.getRenjinVersionId());
-            if (buildDelta.getLastSuccessfulBuild() != 0) {
-              regression.setLastGoodBuild(new PackageBuildId(delta.getPackageVersionId(), buildDelta.getLastSuccessfulBuild()));
-              regression.setLastGoodRenjinVersion(buildDelta.getLastSuccessfulRenjinVersionId().get());
-            }
+      for (BuildDelta buildDelta : delta.getBuilds()) {
+        for (String testName : buildDelta.getTestRegressions()) {
+          TestRegression regression = new TestRegression(delta, buildDelta, testName);
+          if(filter.apply(regression)) {
             regressions.add(regression);
           }
         }
       }
     }
-    
+
     Ordering<TestRegression> byPackage = Ordering.natural().onResultOf(new Function<TestRegression, Comparable>() {
       @Nullable
       @Override
@@ -48,7 +39,7 @@ public class TestRegressionPage {
         return input.getPackageVersionId().getPackageName();
       }
     });
-    
+
     Ordering<TestRegression> byTest = Ordering.natural().onResultOf(new Function<TestRegression, Comparable>() {
       @Nullable
       @Override
@@ -56,10 +47,11 @@ public class TestRegressionPage {
         return input.getTestName().toLowerCase();
       }
     });
-    
+
     Collections.sort(regressions, Ordering.compound(Arrays.asList(byPackage, byTest)));
-    
+
   }
+
 
   public List<TestRegression> getRegressions() {
     return regressions;

@@ -1,5 +1,7 @@
 package org.renjin.ci.qa;
 
+import org.renjin.ci.datastore.BuildDelta;
+import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
@@ -16,6 +18,19 @@ public class TestRegression {
   private RenjinVersionId lastGoodRenjinVersion;
   private PackageBuildId brokenBuild;
   private RenjinVersionId brokenRenjinVersionId;
+
+
+  public TestRegression(PackageVersionDelta delta, BuildDelta buildDelta, String testName) {
+    this.packageVersionId = delta.getPackageVersionId();
+    this.testName = testName;
+    this.brokenBuild = new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber());
+    this.brokenRenjinVersionId = buildDelta.getRenjinVersionId();
+
+    if (buildDelta.getLastSuccessfulBuild() != 0) {
+      lastGoodBuild = new PackageBuildId(delta.getPackageVersionId(), buildDelta.getLastSuccessfulBuild());
+      lastGoodRenjinVersion = buildDelta.getLastSuccessfulRenjinVersionId().get();
+    }
+  }
 
   public PackageVersionId getPackageVersionId() {
     return packageVersionId;
@@ -52,7 +67,7 @@ public class TestRegression {
   public void setLastGoodRenjinVersion(RenjinVersionId lastGoodRenjinVersion) {
     this.lastGoodRenjinVersion = lastGoodRenjinVersion;
   }
-  
+
   
   public PackageBuildId getBrokenBuild() {
     return brokenBuild;
@@ -86,4 +101,12 @@ public class TestRegression {
     return ReleasesResource.compareUrl(lastGoodRenjinVersion, brokenRenjinVersionId);
   }
 
+  public String getDetailPath() {
+    return "/qa/testRegression/" + getPackageVersionId().getGroupId() + "/" + getPackageId().getPackageName() + "/" +
+        getPackageVersionId().getVersionString() + "/" + testName;
+  }
+
+  public String getMarkFormPath() {
+    return "/qa/markTestResults?packageId=" + getPackageVersionId().getPackageId() + "&testName=" + testName;
+  }
 }

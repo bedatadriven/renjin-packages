@@ -118,22 +118,32 @@ public class QaResources {
         .filter("regression", true)
         .iterable();
 
-    Predicate<PackageVersionDelta> filter = Predicates.alwaysTrue();
+    Predicate<TestRegression> filter = Predicates.alwaysTrue();
     if(!Strings.isNullOrEmpty(renjinVersion)) {
-      filter = new Predicate<PackageVersionDelta>() {
+      filter = new Predicate<TestRegression>() {
         @Override
-        public boolean apply(PackageVersionDelta input) {
-          return input.getRenjinVersions().contains(renjinVersion);
+        public boolean apply(TestRegression input) {
+          return input.getBrokenRenjinVersionId().equals(RenjinVersionId.valueOf(renjinVersion));
         }
       };
     }
     
-    TestRegressionPage page = new TestRegressionPage(deltas, filter);
+    TestRegressionsPage page = new TestRegressionsPage(deltas, filter);
     
     Map<String, Object> model = new HashMap<>();
     model.put("page", page);
     
     return new Viewable("/testRegressions.ftl", model);
+  }
+
+  @Path("testRegression/{groupId}/{packageName}/{packageVersion}/{testName}")
+  public TestRegressionResource getTestRegression(@PathParam("groupId") String groupId,
+                                                  @PathParam("packageName") String packageName,
+                                                  @PathParam("packageVersion") String packageVersion,
+                                                  @PathParam("testName") String testName) {
+
+    PackageVersionId pvid = new PackageVersionId(groupId, packageName, packageVersion);
+    return new TestRegressionResource(pvid, testName);
   }
   
   @GET

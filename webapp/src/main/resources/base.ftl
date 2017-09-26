@@ -121,6 +121,6 @@
 </#macro>
 
 <#macro logScript>
-<script src="/assets/js/logs-v23.js"></script>
+<script src="/assets/js/logs-v26.js"></script>
 </#macro>
 

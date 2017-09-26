@@ -1,6 +1,7 @@
 package org.renjin.ci.index;
 
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.renjin.ci.AbstractDatastoreTest;
 import org.renjin.ci.datastore.RenjinCommit;
@@ -11,6 +12,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 
+@Ignore
 public class IndexCommitTest extends AbstractDatastoreTest {
 
   @Test

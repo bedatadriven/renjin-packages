@@ -56,4 +56,8 @@ public class RenjinVersionId implements Serializable, Comparable<RenjinVersionId
     ArtifactVersion thatVersion = new DefaultArtifactVersion(o.version);
     return thisVersion.compareTo(thatVersion);
   }
+
+  public boolean isNewerThan(RenjinVersionId other) {
+    return compareTo(other) > 0;
+  }
 }

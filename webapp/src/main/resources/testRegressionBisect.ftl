@@ -1,6 +1,4 @@
 <#-- @ftlvariable name="regression" type="org.renjin.ci.qa.TestRegression" -->
-<#-- @ftlvariable name="goodCommitId" type="java.lang.String" -->
-<#-- @ftlvariable name="badCommitId" type="java.lang.String" -->
 
 <#include "base.ftl">
 
@@ -23,27 +21,17 @@
                 <div><input type="submit" value="Run"></div>
             </form>
 
-            <h3 id="lastgood">Last Passing Build</h3>
-            <#if regression.lastGoodBuild??>
-                Last passed in
-            ${regression.lastGoodRenjinVersion} <a href="${regression.lastGoodBuild.path}">#${regression.lastGoodBuild.buildNumber}</a>
-                <div class="log log-passed" data-log-url="${regression.lastGoodLogUrl}" data-library="${regression.packageId}" data-build-id="${regression.lastGoodBuild}">
-                    Loading..
-                </div>
+            <#if regression.lastGoodResult?? >
+                <h3 id="lastgood">Last Good Build - ${regression.lastGoodResult.renjinVersion}</h3>
+                <@testResult result=regression.lastGoodResult/>
             </#if>
-
-            <h3>Failure</h3>
-            Failed on ${regression.brokenRenjinVersionId} <a href="${regression.brokenBuild.path}">#${regression.brokenBuild.buildNumber}</a>
-            <div class="log log-failure" data-log-url="${regression.brokenLogUrl}" data-library="${regression.packageId}" data-build-id="${regression.brokenBuild}">
-                Loading...
-            </div>
 
         </div>
     </div>
 </div>
 
 <div class="floater">
-    <a href="${regression.detailPath}" class="btn">&x2190; Summary</a>
+    <a href="${regression.detailPath}" class="btn">&laquo; Summary</a>
     <a href="${regression.markFormPath}" class="btn btn-danger">False Positive</a>
 </div>
 

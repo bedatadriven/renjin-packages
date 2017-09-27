@@ -275,7 +275,8 @@ public class DeltaBuilder {
         excludeDuplicatedTestThatTests(testResults));
     for (String testName : tests.keySet()) {
 
-      Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(tests.get(testName));
+      Collection<PackageTestResult> allTestResults = tests.get(testName);
+      Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(allTestResults);
 
       results = excludeFalsePositiveTestThatTests(results);
 
@@ -437,26 +438,6 @@ public class DeltaBuilder {
       map.put(testResult.getName(), testResult);
     }
     return map;
-  }
-
-  private static Collection<TreeMap<RenjinVersionId, PackageTestResult>> indexTests(
-      Iterable<PackageTestResult> testResults) {
-
-
-    Map<String, TreeMap<RenjinVersionId, PackageTestResult>> map = new HashMap<>();
-    for (PackageTestResult result : testResults) {
-
-      // Get this test's renjin => result map
-      TreeMap<RenjinVersionId, PackageTestResult> versionMap = map.get(result.getName());
-      if(versionMap == null) {
-        versionMap = new TreeMap<>();
-        map.put(result.getName(), versionMap);
-      }
-
-      // Add this result to the map keyed by the renjin version with which it was run
-      versionMap.put(result.getRenjinVersionId(), result);
-    }
-    return map.values();
   }
 
   @VisibleForTesting

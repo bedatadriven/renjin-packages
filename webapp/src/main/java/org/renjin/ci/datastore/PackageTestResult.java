@@ -218,4 +218,12 @@ public class PackageTestResult {
     result.setFailureMessage(getFailureMessage());
     return result;
   }
+
+  public boolean isNewerThan(PackageTestResult result) {
+    int versionComparison = getRenjinVersionId().compareTo(result.getRenjinVersionId());
+    if(versionComparison != 0) {
+      return versionComparison > 0;
+    }
+    return getPackageBuildNumber() > result.getPackageBuildNumber();
+  }
 }

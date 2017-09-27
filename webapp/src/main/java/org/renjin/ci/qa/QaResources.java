@@ -118,11 +118,11 @@ public class QaResources {
         .filter("regression", true)
         .iterable();
 
-    Predicate<TestRegression> filter = Predicates.alwaysTrue();
+    Predicate<TestRegressionEntry> filter = Predicates.alwaysTrue();
     if(!Strings.isNullOrEmpty(renjinVersion)) {
-      filter = new Predicate<TestRegression>() {
+      filter = new Predicate<TestRegressionEntry>() {
         @Override
-        public boolean apply(TestRegression input) {
+        public boolean apply(TestRegressionEntry input) {
           return input.getBrokenRenjinVersionId().equals(RenjinVersionId.valueOf(renjinVersion));
         }
       };

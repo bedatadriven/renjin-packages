@@ -1,35 +1,69 @@
 package org.renjin.ci.qa;
 
 import org.renjin.ci.datastore.BuildDelta;
+import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.releases.ReleasesResource;
-import org.renjin.ci.storage.StorageKeys;
 
 
 public class TestRegression {
   private PackageVersionId packageVersionId;
   private String testName;
-  
-  private PackageBuildId lastGoodBuild;
-  private RenjinVersionId lastGoodRenjinVersion;
-  private PackageBuildId brokenBuild;
-  private RenjinVersionId brokenRenjinVersionId;
+  private final BuildDelta buildDelta;
+  private final PackageBuildId brokenBuild;
+
+  private final Iterable<PackageTestResult> testResults;
+  private PackageTestResult brokenResult;
+  private PackageTestResult latestResult;
+  private PackageTestResult lastGoodResult;
 
 
-  public TestRegression(PackageVersionDelta delta, BuildDelta buildDelta, String testName) {
+  public TestRegression(PackageVersionDelta delta, String testName) {
     this.packageVersionId = delta.getPackageVersionId();
     this.testName = testName;
+    this.buildDelta = findBuildWithRegression(delta, testName);
     this.brokenBuild = new PackageBuildId(delta.getPackageVersionId(), buildDelta.getBuildNumber());
-    this.brokenRenjinVersionId = buildDelta.getRenjinVersionId();
+    this.testResults = PackageDatabase.getTestResults(packageVersionId, testName);
 
-    if (buildDelta.getLastSuccessfulBuild() != 0) {
-      lastGoodBuild = new PackageBuildId(delta.getPackageVersionId(), buildDelta.getLastSuccessfulBuild());
-      lastGoodRenjinVersion = buildDelta.getLastSuccessfulRenjinVersionId().get();
+    // find the broken test result,
+    // the most recent good build
+    for (PackageTestResult testResult : testResults) {
+      if (testResult.getBuildId().equals(brokenBuild)) {
+        brokenResult = testResult;
+      }
+      if (testResult.isPassed()) {
+        if(lastGoodResult == null || testResult.isNewerThan(lastGoodResult)) {
+          lastGoodResult = testResult;
+        }
+      }
+      if(latestResult == null || testResult.isNewerThan(latestResult)) {
+        latestResult = testResult;
+      }
     }
+  }
+
+  public String getSourceUrl() {
+    if(packageVersionId.getGroupId().equals("org.renjin.cran")) {
+      return "https://github.com/cran/" + packageVersionId.getPackageName() +
+          "/tree/" + packageVersionId.getVersionString();
+    } else if(packageVersionId.getGroupId().equals("org.renjin.bioconductor")) {
+      return "https://github.com/bioconductor/" + packageVersionId.getPackageName();
+    } else {
+      return null;
+    }
+  }
+
+  private static BuildDelta findBuildWithRegression(PackageVersionDelta versionDelta, String testName) {
+    for (BuildDelta buildDelta : versionDelta.getBuilds()) {
+      if(buildDelta.getTestRegressions().contains(testName)) {
+        return buildDelta;
+      }
+    }
+    throw new IllegalStateException();
   }
 
   public PackageVersionId getPackageVersionId() {
@@ -40,65 +74,32 @@ public class TestRegression {
     return packageVersionId.getPackageId();
   }
 
-  public void setPackageVersionId(PackageVersionId packageVersionId) {
-    this.packageVersionId = packageVersionId;
-  }
-
   public String getTestName() {
     return testName;
   }
 
-  public void setTestName(String testName) {
-    this.testName = testName;
-  }
-  
-  public PackageBuildId getLastGoodBuild() {
-    return lastGoodBuild;
-  }
-
-  public void setLastGoodBuild(PackageBuildId lastGoodBuild) {
-    this.lastGoodBuild = lastGoodBuild;
-  }
-
-  public RenjinVersionId getLastGoodRenjinVersion() {
-    return lastGoodRenjinVersion;
-  }
-
-  public void setLastGoodRenjinVersion(RenjinVersionId lastGoodRenjinVersion) {
-    this.lastGoodRenjinVersion = lastGoodRenjinVersion;
-  }
-
-  
-  public PackageBuildId getBrokenBuild() {
-    return brokenBuild;
-  }
-
-  public void setBrokenBuild(PackageBuildId brokenBuild) {
-    this.brokenBuild = brokenBuild;
-  }
-
-  public RenjinVersionId getBrokenRenjinVersionId() {
-    return brokenRenjinVersionId;
-  }
-  
   public String getTestHistoryPath() {
     return packageVersionId.getPath() + "/test/" + testName + "/history";
   }
 
-  public void setBrokenRenjinVersionId(RenjinVersionId brokenRenjinVersionId) {
-    this.brokenRenjinVersionId = brokenRenjinVersionId;
+  public boolean isNewerResult() {
+    return latestResult != brokenResult;
   }
 
-  public String getBrokenLogUrl() {
-    return StorageKeys.testLogUrl(getBrokenBuild(), testName);
+  public PackageTestResult getBrokenResult() {
+    return brokenResult;
   }
-  
-  public String getLastGoodLogUrl() {
-    return StorageKeys.testLogUrl(lastGoodBuild, testName);
+
+  public PackageTestResult getLatestResult() {
+    return latestResult;
   }
-  
+
+  public PackageTestResult getLastGoodResult() {
+    return lastGoodResult;
+  }
+
   public String getComparePath() {
-    return ReleasesResource.compareUrl(lastGoodRenjinVersion, brokenRenjinVersionId);
+    return ReleasesResource.compareUrl(lastGoodResult.getRenjinVersionId(), brokenResult.getRenjinVersionId());
   }
 
   public String getDetailPath() {

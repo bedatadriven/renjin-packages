@@ -124,3 +124,23 @@
 <script src="/assets/js/logs-v26.js"></script>
 </#macro>
 
+<#macro testResult result>
+    <p>
+        <#if result.manualFail>
+            MARKED AS FAILED: ${result.manualFailReason}
+        <#elseif result.passed>
+            PASSED
+        <#else>
+            FAILED
+        </#if> after ${result.duration} ms during
+        <a href="${result.buildId.path}">Build #${result.packageBuildNumber}</a>.
+        <#if result.passed>
+            <a href="${result.markFormPath}">Mark as failed.</a>
+        </#if>
+    </p>
+    <#if result.output>
+    <div class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}" data-library="${result.packageId}" data-build-id="${result.buildId.toString()}">Loading...</div>
+    <#elseif result.failureMessage?? >
+    <pre class="log test-log">${result.failureMessage}</pre>
+    </#if>
+</#macro>

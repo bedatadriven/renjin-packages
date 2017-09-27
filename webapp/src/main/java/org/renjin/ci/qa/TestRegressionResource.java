@@ -6,7 +6,6 @@ import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.renjin.ci.GitHubFactory;
-import org.renjin.ci.datastore.BuildDelta;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.datastore.RenjinRelease;
@@ -24,29 +23,20 @@ import java.util.Map;
 public class TestRegressionResource {
   private final PackageVersionId packageVersionId;
   private final PackageVersionDelta versionDelta;
-  private final BuildDelta buildDelta;
   private String testName;
   private TestRegression regression;
 
   public TestRegressionResource(PackageVersionId packageVersionId, String testName) {
     this.packageVersionId = packageVersionId;
     this.versionDelta = PackageDatabase.getDelta(packageVersionId).now();
-    this.buildDelta = findDelta(versionDelta, testName);
     this.testName = testName;
-    this.regression = new TestRegression(versionDelta, buildDelta, testName);
+    this.regression = new TestRegression(versionDelta, testName);
   }
 
-  private static BuildDelta findDelta(PackageVersionDelta delta, String testName) {
-    for (BuildDelta buildDelta : delta.getBuilds()) {
-      if(buildDelta.getTestRegressions().contains(testName)) {
-        return buildDelta;
-      }
-    }
-    return null;
-  }
 
   @GET
   public Viewable getSummary() {
+
     Map<String, Object> model = new HashMap<>();
     model.put("regression", regression);
 
@@ -56,8 +46,8 @@ public class TestRegressionResource {
   @GET
   @Path("diff")
   public Viewable getDiff() throws IOException {
-    LoadResult<RenjinRelease> lastGood = PackageDatabase.getRenjinRelease(regression.getLastGoodRenjinVersion());
-    LoadResult<RenjinRelease> broken = PackageDatabase.getRenjinRelease(regression.getBrokenRenjinVersionId());
+    LoadResult<RenjinRelease> lastGood = PackageDatabase.getRenjinRelease(regression.getLastGoodResult().getRenjinVersionId());
+    LoadResult<RenjinRelease> broken = PackageDatabase.getRenjinRelease(regression.getBrokenResult().getRenjinVersionId());
 
     GitHub github = GitHubFactory.create();
     GHRepository repo = github.getRepository("bedatadriven/renjin");
@@ -74,8 +64,8 @@ public class TestRegressionResource {
   @GET
   @Path("bisect")
   public Viewable getBisectForm() throws IOException {
-    LoadResult<RenjinRelease> lastGood = PackageDatabase.getRenjinRelease(regression.getLastGoodRenjinVersion());
-    LoadResult<RenjinRelease> broken = PackageDatabase.getRenjinRelease(regression.getBrokenRenjinVersionId());
+    LoadResult<RenjinRelease> lastGood = PackageDatabase.getRenjinRelease(regression.getLastGoodResult().getRenjinVersionId());
+    LoadResult<RenjinRelease> broken = PackageDatabase.getRenjinRelease(regression.getBrokenResult().getRenjinVersionId());
 
     Map<String, Object> model = new HashMap<>();
     model.put("regression", regression);

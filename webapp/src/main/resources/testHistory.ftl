@@ -53,20 +53,7 @@
         
         <#list page.results?sort_by("packageBuildNumber") as result>
             <h3 id="build-${result.packageBuildNumber}">Renjin ${result.renjinVersion} </h3>
-            <p>
-            <#if result.manualFail>
-                MARKED AS FAILED: ${result.manualFailReason}    
-            <#elseif result.passed>
-                PASSED
-            <#else>
-                FAILED
-            </#if> after ${result.duration} ms during
-                <a href="${result.buildId.path}">Build #${result.packageBuildNumber}</a>.
-                <#if result.passed>
-                    <a href="${result.markFormPath}">Mark as failed.</a>
-                </#if>
-            </p>
-            <div class="log test-log <#if !result.passed>log-failure</#if> <#if result.passed>log-passed</#if>" data-log-url="${result.logUrl}" data-library="${result.packageId}" data-build-id="${result.buildId.toString()}">Loading...</div>
+            <@testResult result=result/>
         </#list>
     </div>
 </div>

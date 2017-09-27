@@ -4,10 +4,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.googlecode.objectify.Key;
 import org.renjin.ci.datastore.BuildDelta;
+import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersionDelta;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -17,14 +20,14 @@ import java.util.List;
  */
 public class TestRegressionsPage {
 
-  private List<TestRegression> regressions = Lists.newArrayList();
+  private List<TestRegressionEntry> regressions = Lists.newArrayList();
 
-  public TestRegressionsPage(Iterable<PackageVersionDelta> deltas, Predicate<TestRegression> filter) {
+  public TestRegressionsPage(Iterable<PackageVersionDelta> deltas, Predicate<TestRegressionEntry> filter) {
 
     for (PackageVersionDelta delta : deltas) {
       for (BuildDelta buildDelta : delta.getBuilds()) {
         for (String testName : buildDelta.getTestRegressions()) {
-          TestRegression regression = new TestRegression(delta, buildDelta, testName);
+          TestRegressionEntry regression = new TestRegressionEntry(delta, buildDelta, testName);
           if(filter.apply(regression)) {
             regressions.add(regression);
           }
@@ -32,18 +35,20 @@ public class TestRegressionsPage {
       }
     }
 
-    Ordering<TestRegression> byPackage = Ordering.natural().onResultOf(new Function<TestRegression, Comparable>() {
+    fetchTimings(regressions);
+
+    Ordering<TestRegressionEntry> byPackage = Ordering.natural().onResultOf(new Function<TestRegressionEntry, Comparable>() {
       @Nullable
       @Override
-      public Comparable apply(TestRegression input) {
+      public Comparable apply(TestRegressionEntry input) {
         return input.getPackageVersionId().getPackageName();
       }
     });
 
-    Ordering<TestRegression> byTest = Ordering.natural().onResultOf(new Function<TestRegression, Comparable>() {
+    Ordering<TestRegressionEntry> byTest = Ordering.natural().onResultOf(new Function<TestRegressionEntry, Comparable>() {
       @Nullable
       @Override
-      public Comparable apply(@Nullable TestRegression input) {
+      public Comparable apply(@Nullable TestRegressionEntry input) {
         return input.getTestName().toLowerCase();
       }
     });
@@ -52,8 +57,16 @@ public class TestRegressionsPage {
 
   }
 
+  private void fetchTimings(List<TestRegressionEntry> regressions) {
+    List<Key<PackageTestResult>> testResultKeys = new ArrayList<>();
+    for (TestRegressionEntry regression : regressions) {
+      testResultKeys.add(PackageTestResult.key(regression.getBrokenBuild(), regression.getTestName()));
+    }
 
-  public List<TestRegression> getRegressions() {
+  }
+
+
+  public List<TestRegressionEntry> getRegressions() {
     return regressions;
   }
 }

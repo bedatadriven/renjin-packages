@@ -176,7 +176,7 @@ public class PackageVersionResource {
     return Lists.newArrayList(PackageDatabase.getBuilds(packageVersionId));
   }
   
-  @GET
+  @POST
   @Path("updateDeltas")
   @Produces(MediaType.TEXT_PLAIN)
   public String updateDeltas() {

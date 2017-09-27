@@ -87,6 +87,10 @@
             }
         }
 
+        if(context.prompt == 1 && line.startsWith("ERROR: ")) {
+            return "<span class='error'>" + escapeHtml(line) + "</span>";
+        }
+
         var javaLineMatch = javaLineRe.exec(line);
         if(javaLineMatch) {
             var indent = javaLineMatch[1];
@@ -146,7 +150,7 @@
                     code += " else { install.packages('" + packageId[1] + "'); library('" + packageId[1] + "'); }"
                 }
                 if(packageId[0] == 'org.renjin.bioconductor') {
-                    code += " else { source('https://bioconductor.org/biocLite.R'); biocLite('" + packageId[1] + "'); }";
+                    code += " else { source('https://bioconductor.org/biocLite.R'); biocLite('" + packageId[1] + "'); library('" + packageId[1] + "'}";
                 }
                 code += "\n";
             }

@@ -4,10 +4,7 @@ package org.renjin.ci.packages;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.googlecode.objectify.Key;
-import com.googlecode.objectify.LoadResult;
-import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.Work;
+import com.googlecode.objectify.*;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
 import org.renjin.ci.archive.ExamplesExtractor;
@@ -180,7 +177,12 @@ public class PackageVersionResource {
   @Path("updateDeltas")
   @Produces(MediaType.TEXT_PLAIN)
   public String updateDeltas() {
-    DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
+    PackageDatabase.ofy().transact(new VoidWork() {
+      @Override
+      public void vrun() {
+        DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
+      }
+    });
     return "Done.";
   }
   

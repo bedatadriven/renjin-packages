@@ -1,6 +1,7 @@
 package org.renjin.ci.packages;
 
-import com.google.common.base.Optional;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.NotFoundException;
@@ -161,17 +162,23 @@ public class PackageBuildResource {
           ObjectifyService.ofy().save().entities(toSave);
 
           maybeUpdateLastSuccessfulBuild(build);
-
-          // Update the delta (regression/progression) flags for this build
-          if(build.getOutcome() != BuildOutcome.BLOCKED) {
-            DeltaBuilder.update(packageVersionId, Optional.of(build), testResults);
-          }
         }
       }
 
     });
 
+    // Update the delta (regression/progression) flags for this build
+    if(buildResult.getOutcome() != BuildOutcome.BLOCKED) {
+      scheduleDeltaUpdate(packageVersionId);
+    }
+
     return Response.ok().build();
+  }
+
+  private void scheduleDeltaUpdate(PackageVersionId packageVersionId) {
+    QueueFactory.getDefaultQueue().add(
+        TaskOptions.Builder.withUrl(packageVersionId.getPath() + "/updateDeltas")
+        .method(TaskOptions.Method.POST));
   }
 
   /**

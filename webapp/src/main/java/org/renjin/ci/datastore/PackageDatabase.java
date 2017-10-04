@@ -73,6 +73,10 @@ public class PackageDatabase {
     register(PullTestResult.class);
   }
 
+  public static Objectify ofy() {
+    return ObjectifyService.ofy();
+  }
+
   public static Optional<PackageVersion> getPackageVersion(PackageVersionId id) {
     return Optional.fromNullable(ObjectifyService.ofy().load().key(PackageVersion.key(id)).now());
   }
@@ -302,6 +306,7 @@ public class PackageDatabase {
             .load()
             .type(PackageTestResult.class)
             .ancestor(PackageVersion.key(packageVersionId))
+            .chunk(200)
             .iterable();
   }
 

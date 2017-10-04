@@ -69,6 +69,9 @@ public class DeltaBuilder {
   public PackageVersionDelta build(Optional<PackageBuild> newBuild, List<PackageTestResult> newTestResults) {
 
     packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
+    if(packageVersion.isDisabled()) {
+      return new PackageVersionDelta(packageVersionId, Collections.<BuildDelta>emptySet());
+    }
     packageEntity = PackageDatabase.getPackageOf(packageVersionId);
     
     if(!packageEntity.isReplaced() && !packageVersion.isDisabled()) {

@@ -219,6 +219,9 @@ public class PackageVersionPage {
   }
 
   public PackageBuild getLatestBuild() {
+    if(latestBuild == null) {
+      return null;
+    }
     return latestBuild.now();
   }
 

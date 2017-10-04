@@ -1,7 +1,8 @@
 package org.renjin.ci.packages;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import com.googlecode.objectify.LoadResult;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.BuildOutcome;
@@ -21,7 +22,7 @@ public class PackageBuildPage {
   private PackageBuildId buildId;
   private PackageBuild build;
   
-  private LoadResult<PackageVersionDelta> deltas;
+  private LoadResult<PackageVersionDelta> versionDelta;
   
   private List<RenjinBuildHistoryGroup> histories;
 
@@ -36,7 +37,7 @@ public class PackageBuildPage {
     // Start queries running in background
     Iterable<PackageBuild> buildQuery = PackageDatabase.getBuilds(buildId.getPackageVersionId()).iterable();
     Iterable<PackageTestResult> testsQuery = PackageDatabase.getTestResults(buildId);
-    deltas = PackageDatabase.getDelta(buildId.getPackageVersionId());
+    versionDelta = PackageDatabase.getDelta(buildId.getPackageVersionId());
     
     // Aggregate query results together
     this.testResults = Lists.newArrayList(testsQuery);
@@ -129,20 +130,14 @@ public class PackageBuildPage {
       
       tests = new ArrayList<>();
       
-      Set<String> regressions = Collections.emptySet();
-      Set<String> progressions = Collections.emptySet();
-
-      if (deltas.now() != null) {
-        Optional<BuildDelta> delta = deltas.now().getBuild(buildId);
-        if (delta.isPresent()) {
-          regressions = delta.get().getTestRegressions();
-          progressions = delta.get().getTestProgressions();
-        }
+      Set<String> regressions = new HashSet<>();
+      if (versionDelta.now() != null) {
+        regressions.addAll(versionDelta.now().getTestRegressions());
       }
 
       for (PackageTestResult testResult : testResults) {
         Test test = new Test(testResult);
-        test.regression = regressions.contains(testResult.getName());
+        test.regression =  regressions.contains(testResult.getName());
         tests.add(test);
       }
     }

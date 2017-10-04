@@ -120,6 +120,14 @@ public class PackageBuildExecutable implements Queue.Executable {
           GoogleCloudStorage.downloadAndUnpackSources(buildContext, pvid);
         }
 
+        // Check that this package has a NAMESPACE. We will not build ancient
+        // packages without namespaces anymore.
+        FilePath namespaceFile = buildContext.getBuildDir().child("NAMESPACE");
+        if(!namespaceFile.exists()) {
+          listener.error("We are no longer building packages without NAMESPACEs. Skipping " + pvid);
+          return;
+        }
+
         maven.writeReleasePom(buildContext, build);
 
         maven.build(buildContext, "deploy");

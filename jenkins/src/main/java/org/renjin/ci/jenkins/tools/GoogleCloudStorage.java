@@ -5,7 +5,6 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.storage.Storage;
-import com.google.common.base.Charsets;
 import com.google.common.io.Closer;
 import com.google.jenkins.plugins.credentials.oauth.GoogleRobotCredentials;
 import hudson.FilePath;
@@ -115,12 +114,6 @@ public class GoogleCloudStorage {
             throw closer.rethrow(e);
         } finally {
             closer.close();
-        }
-        
-        // Band-aid required for compiling older files:
-        FilePath namespaceFile = buildDir.child("NAMESPACE");
-        if(!namespaceFile.exists()) {
-            namespaceFile.write("exportPattern( \".\" )\n", Charsets.UTF_8.name());
         }
     }
 

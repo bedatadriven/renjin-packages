@@ -51,6 +51,7 @@ public class AdminResources {
         MigrateTestOutput.class,
         ReindexTestResults.class,
         RecomputeBuildGrades.class,
+        PackagesWithoutNamespaces.class,
         LocCounter.class));
     
     return new Viewable("/admin.ftl", model);

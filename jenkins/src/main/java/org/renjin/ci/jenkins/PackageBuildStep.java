@@ -70,9 +70,11 @@ public class PackageBuildStep extends Builder implements SimpleBuildStep {
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 
-    
+
+    String expandedRenjinVersion = run.getEnvironment(listener).expand(this.renjinVersion);
+
     RenjinVersionId renjinVersion;
-    if(Strings.isNullOrEmpty(this.renjinVersion) || this.renjinVersion.equals("LATEST")) {
+    if(Strings.isNullOrEmpty(expandedRenjinVersion) || expandedRenjinVersion.equals("LATEST")) {
       renjinVersion = RenjinCiClient.getLatestRenjinRelease();
     } else {  
       renjinVersion = RenjinVersionId.valueOf(run.getEnvironment(listener).expand(this.renjinVersion));

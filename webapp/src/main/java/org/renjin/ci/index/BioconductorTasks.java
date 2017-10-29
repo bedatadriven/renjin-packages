@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.taskqueue.*;
+import com.google.appengine.api.urlfetch.ResponseTooLargeException;
 import com.google.common.base.Optional;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
@@ -34,7 +35,7 @@ public class BioconductorTasks {
     public Response updateBioConductor(@QueryParam("release") String releaseNumber) {
         
         if(Strings.isNullOrEmpty(releaseNumber)) {
-            releaseNumber = "3.3";
+            releaseNumber = "3.5";
         }
 
         String types[] = new String[] { "bioc", "data/annotation", "data/experiment" };
@@ -115,7 +116,15 @@ public class BioconductorTasks {
         } else {
             LOGGER.info("Ingesting new package version " + packageVersionId);
 
-            PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
+            try {
+                PackageRegistrationTasks.archiveSource(packageVersionId, sourceUrl);
+            } catch (ResponseTooLargeException e) {
+                LOGGER.severe("Package " + packageVersionId + " is too large to ingest.");
+
+                // Return 200 to avoid this task being retried.
+                return Response.ok().build();
+            }
+
             PackageRegistrationTasks.enqueueBioconductor(bioconductorRelease, packageVersionId);
 
         }

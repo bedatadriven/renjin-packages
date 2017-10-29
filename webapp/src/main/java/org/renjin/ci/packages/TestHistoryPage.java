@@ -33,10 +33,6 @@ public class TestHistoryPage {
     }
     
     reliable = DeltaBuilder.reliableTest(results);
-
-    if(pullNumber != null) {
-
-    }
   }
 
   public String getTestName() {

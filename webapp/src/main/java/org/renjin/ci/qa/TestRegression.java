@@ -46,6 +46,10 @@ public class TestRegression {
     }
   }
 
+  public String getTestId() {
+    return packageVersionId.toString() + ":" + testName;
+  }
+
   public String getSourceUrl() {
     if(packageVersionId.getGroupId().equals("org.renjin.cran")) {
       return "https://github.com/cran/" + packageVersionId.getPackageName() +

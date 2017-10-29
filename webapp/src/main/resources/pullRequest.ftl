@@ -10,8 +10,12 @@
 
         <h1>Pull Request #${page.number}</h1>
 
-        <#if page.builds??>
-        <h2>Package Builds</h2>
+        <#list page.builds as build>
+
+        <h2>Build ${build.buildNumber}</h2>
+
+        <#if build.packages??>
+        <h3>Package Builds</h3>
 
         <table class="table">
             <thead>
@@ -23,25 +27,25 @@
             </tr>
             </thead>
             <tbody>
-            <#list page.builds as build>
+            <#list build.packages as pkg>
 
                 <tr>
-                    <td><a href="${build.path}">${build.packageVersionId}</a></td>
-                    <td>${build.outcome}</td>
+                    <td><a href="${pkg.path}">${pkg.packageVersionId}</a></td>
+                    <td>${pkg.outcome}</td>
                     <td>
-                        <#if build.nativeRegression>
-                            <a href="${build.path}" class="btn btn-small btn-danger">Broken</a>
+                        <#if pkg.nativeRegression>
+                            <a href="${pkg.path}" class="btn btn-small btn-danger">Broken</a>
                         </#if>
-                        <#if build.nativeProgression>
-                            <a href="${build.path}" class="btn btn-small btn-success">Fixed</a>
+                        <#if pkg.nativeProgression>
+                            <a href="${pkg.path}" class="btn btn-small btn-success">Fixed</a>
                         </#if>
                     </td>
                     <td>
-                        <#if (build.testRegressionCount > 0)>
-                            <a href="${build.path}" class="btn btn-small btn-danger">-${build.testRegressionCount}</a>
+                        <#if (pkg.testRegressionCount > 0)>
+                            <a href="${pkg.path}" class="btn btn-small btn-danger">-${pkg.testRegressionCount}</a>
                         </#if>
-                        <#if (build.testProgressionCount > 0)>
-                            <a href="${build.path}" class="btn btn-small btn-success">+${build.testProgressionCount}</a>
+                        <#if (pkg.testProgressionCount > 0)>
+                            <a href="${pkg.path}" class="btn btn-small btn-success">+${pkg.testProgressionCount}</a>
                         </#if>
                     </td>
                 </tr>
@@ -49,6 +53,10 @@
             </tbody>
         </table>
         </#if>
+
+
+        </#list>
+
     </div>
 </div>
 

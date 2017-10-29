@@ -1,6 +1,7 @@
 package org.renjin.ci.packages;
 
 import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.Key;
@@ -178,7 +179,8 @@ public class PackageBuildResource {
   private void scheduleDeltaUpdate(PackageVersionId packageVersionId) {
     QueueFactory.getDefaultQueue().add(
         TaskOptions.Builder.withUrl(packageVersionId.getPath() + "/updateDeltas")
-        .method(TaskOptions.Method.POST));
+            .retryOptions(RetryOptions.Builder.withTaskRetryLimit(3))
+            .method(TaskOptions.Method.POST));
   }
 
   /**

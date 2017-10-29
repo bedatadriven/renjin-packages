@@ -158,6 +158,32 @@ public class AdminResources {
   }
 
   @POST
+  @Path("/exportPackageVersions")
+  public Response exportPackageVersions() {
+    DatastoreInput input = new DatastoreInput("PackageVersion", 10);
+    PackageVersionExporter mapper = new PackageVersionExporter();
+    Reducer<String, ByteBuffer, ByteBuffer> reducer = new ValueProjectionReducer<>();
+    GoogleCloudStorageFileOutput output = new GoogleCloudStorageFileOutput("renjinci-exports", "package-versions-%d.csv", "text/csv");
+
+    MapReduceSpecification<Entity, String, ByteBuffer, ByteBuffer, GoogleCloudStorageFileSet>
+        spec = new MapReduceSpecification.Builder<>(input, mapper, reducer, output)
+        .setKeyMarshaller(Marshallers.getStringMarshaller())
+        .setValueMarshaller(Marshallers.getByteBufferMarshaller())
+        .setJobName("Export Package Versions List")
+        .setNumReducers(10)
+        .build();
+
+    MapReduceSettings settings = new MapReduceSettings.Builder()
+        .setBucketName("renjinci-map-reduce")
+        .build();
+
+    MapReduceJob<Entity, String, ByteBuffer, ByteBuffer, GoogleCloudStorageFileSet> job = new MapReduceJob<>(spec, settings);
+    String jobId = PipelineServiceFactory.newPipelineService().startNewPipeline(job);
+
+    return Pipelines.redirectToStatus(jobId);
+  }
+
+  @POST
   @Path("addGitHubRepo")
   public Response addGitHubRepo(@FormParam("repo") String repoId) {
     

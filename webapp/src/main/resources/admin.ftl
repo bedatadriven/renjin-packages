@@ -29,7 +29,7 @@
         <form action="/admin/queueUpdateTotalCounts" method="post">
             <input type="submit" class="btn btn-default" value="Update LOC statistics">
         </form>
-        
+
         <h2>CRAN Archiving Fetching</h2>
 
         <form action="/tasks/index/cran/fetchArchives" method="post">
@@ -51,7 +51,9 @@
         <form action="/admin/exportBuilds" method="post">
             <input type="submit" class="btn btn-default" value="Export Builds">
         </form>
-        
+        <form action="/admin/exportPackageVersions" method="post">
+            <input type="submit" class="btn btn-default" value="Export Package Versions">
+        </form>
     </div>
 </div>
 </@scaffolding>

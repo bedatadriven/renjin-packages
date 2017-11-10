@@ -85,7 +85,7 @@ public class DependencyResolutionMulti {
 
   private void resolve(PackageVersion version) {
     DependencyResolution resolution = new DependencyResolution(version);
-    ResolvedDependencySet set = resolution.resolve();
+    ResolvedDependencySet set = resolution.resolve(null);
     for (ResolvedDependency resolvedDependency : set.getDependencies()) {
       PackageVersionId resolveId = resolvedDependency.getPackageVersionId();
       dependencyMap.put(version.getPackageVersionId(), resolveId);

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -293,7 +294,38 @@ public class RenjinCiClient {
     });
 
   }
-  
+
+  public static void postSystemRequirement(String name, String version) {
+    Form form = new Form();
+    form.param("name", name);
+    form.param("version", version);
+
+    Response response = client().target(ROOT_URL).path("systemRequirement")
+        .request()
+        .post(Entity.form(form));
+
+    if(response.getStatus() != 200) {
+      throw new RuntimeException("Failed: " + response.getStatus());
+    }
+  }
+
+  public static Optional<String> getSystemRequirementVersion(String name) {
+    Response response = client().target(ROOT_URL).path("systemRequirement")
+        .path(name)
+        .path("version")
+        .request()
+        .get();
+
+    if(response.getStatus() == 404) {
+      return Optional.absent();
+    } else if(response.getStatus() == 200) {
+      return Optional.of(response.readEntity(String.class));
+    } else {
+      throw new RuntimeException("Failed to retrieve latest version of system requirement " +
+          name);
+    }
+  }
+
   public static long startBenchmarkRun(final BenchmarkRunDescriptor descriptor) {
     return withRetries(new Callable<Long>() {
       @Override

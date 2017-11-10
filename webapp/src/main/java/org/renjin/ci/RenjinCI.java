@@ -66,6 +66,8 @@ public class RenjinCI extends Application {
 
     classes.add(PullRequestResources.class);
 
+    classes.add(SystemRequirementResource.class);
+
     return classes;
   }
 

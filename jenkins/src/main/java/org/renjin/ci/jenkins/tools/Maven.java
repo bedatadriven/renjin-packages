@@ -62,13 +62,15 @@ public class Maven {
 
         // Write the POM to the workspace
         PackageDescription packageDescription = readDescription(context);
-        MavenPomBuilder pomBuilder = new MavenPomBuilder(build, packageDescription, context.getPackageNode());
+        MavenPomBuilder pomBuilder = new MavenPomBuilder(build, packageDescription, context.getPackageNode(),
+            context.getBuildDir());
         context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
     }
 
     public void writePom(BuildContext context, RenjinVersionId renjinVersionId) throws IOException, InterruptedException {
         PackageDescription packageDescription = readDescription(context);
-        MavenPomBuilder pomBuilder = new MavenPomBuilder(renjinVersionId, packageDescription, context.getPackageNode());
+        MavenPomBuilder pomBuilder = new MavenPomBuilder(renjinVersionId, packageDescription, context.getPackageNode(),
+            context.getBuildDir());
         context.getBuildDir().child("pom.xml").write(pomBuilder.getXml(), Charsets.UTF_8.name());
     }
 

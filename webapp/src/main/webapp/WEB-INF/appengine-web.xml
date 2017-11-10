@@ -11,7 +11,7 @@
 
   <use-google-connector-j>true</use-google-connector-j>
   <threadsafe>true</threadsafe>
-  <instance-class>F1</instance-class>
+  <instance-class>F2</instance-class>
   <warmup-requests-enabled>true</warmup-requests-enabled>
   
   <static-files>

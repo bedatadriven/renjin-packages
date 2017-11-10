@@ -17,6 +17,10 @@ public class ResolvedDependencySet {
   public ResolvedDependencySet() {
   }
 
+  public ResolvedDependencySet(List<ResolvedDependency> list) {
+    dependencies.addAll(list);
+  }
+
   public List<ResolvedDependency> getDependencies() {
     return dependencies;
   }

@@ -160,11 +160,14 @@ public class PackageBuildResource {
 
           toSave.add(build);
 
+          maybeUpdateBestGrade(build, toSave);
+
           ObjectifyService.ofy().save().entities(toSave);
 
           maybeUpdateLastSuccessfulBuild(build);
         }
       }
+
 
     });
 
@@ -205,6 +208,20 @@ public class PackageBuildResource {
 
       } else {
         LOGGER.log(Level.INFO, "Last successful build number remains at " + buildNumber);
+      }
+    }
+  }
+
+
+  private void maybeUpdateBestGrade(PackageBuild build, List<Object> toSave) {
+    if(build.getOutcome() == BuildOutcome.SUCCESS && build.getGradeInteger() > 0) {
+      org.renjin.ci.datastore.Package packageEntity = PackageDatabase.getPackageOf(build.getPackageVersionId());
+      if(packageEntity.getBestGrade() == null ||
+          build.getGradeInteger() > packageEntity.getBestGradeInteger()) {
+
+        packageEntity.setBestGrade(build.getGrade());
+
+        toSave.add(packageEntity);
       }
     }
   }

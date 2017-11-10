@@ -71,6 +71,8 @@ public class PackageDatabase {
     register(PullBuild.class);
     register(PullPackageBuild.class);
     register(PullTestResult.class);
+
+    register(SystemRequirement.class);
   }
 
   public static Objectify ofy() {
@@ -262,12 +264,13 @@ public class PackageDatabase {
   }
 
   public static Optional<Package> getPackageIfExists(PackageId packageId) {
-    return Optional.fromNullable(
-        ObjectifyService.ofy()
-            .load()
-            .key(Key.create(Package.class, packageId.toString()))
-            .now());
-    
+    return Optional.fromNullable(getPackage(packageId).now());
+  }
+
+  public static LoadResult<Package> getPackage(PackageId packageId) {
+    return ObjectifyService.ofy()
+        .load()
+        .key(Key.create(Package.class, packageId.toString()));
   }
 
   public static Package getPackageOf(PackageVersionId packageVersionId) {

@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
+import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.ObjectifyService;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
@@ -18,11 +19,9 @@ import org.renjin.ci.model.*;
 import javax.annotation.Nullable;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +31,8 @@ import static com.google.common.collect.Iterables.concat;
 public class DependencyResolution {
 
   private static final Logger LOGGER = Logger.getLogger(DependencyResolution.class.getName());
+  public static final String CRAN_GROUP = "org.renjin.cran";
+  private static final String BIOC_GROUP = "org.renjin.bioconductor";
 
   private PackageVersion packageVersion;
 
@@ -42,18 +43,108 @@ public class DependencyResolution {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public ResolvedDependencySet resolve() {
-
+  public ResolvedDependencySet resolve(@QueryParam("method") String method) {
 
     // Extract the declared dependencies from the DESCRIPTION file
     Map<String, PackageDependency> declared = enumerateDeclared();
 
     LOGGER.info("Declared: " + declared);
 
+    if ("strict".equals(method)) {
+      return resolveStrict(declared);
+    } else {
+      return resolveLatest(declared);
+    }
+  }
 
+  public ResolvedDependencySet resolve() {
+    return resolve(null);
+  }
+
+  private ResolvedDependencySet resolveLatest(Map<String, PackageDependency> declared) {
+
+    if(packageVersion.getGroupId().equals(CRAN_GROUP)) {
+      return resolveLatestCran(declared);
+
+    } else if(packageVersion.getGroupId().equals(BIOC_GROUP)) {
+      return resolveLatestBioc(declared);
+
+    } else {
+      return resolveStrict(declared);
+    }
+  }
+
+  private ResolvedDependencySet resolveLatestCran(Map<String, PackageDependency> declared) {
+    Map<String, LoadResult<Package>> packages = new HashMap<>();
+
+    for (String packageName : declared.keySet()) {
+      packages.put(packageName, PackageDatabase.getPackage(new PackageId(CRAN_GROUP, packageName)));
+    }
+
+    List<ResolvedDependency> list = new ArrayList<>();
+    for (String packageName : declared.keySet()) {
+      list.add(dependency(packageName, packages.get(packageName).now()));
+    }
+
+    return new ResolvedDependencySet(list);
+  }
+
+  private ResolvedDependencySet resolveLatestBioc(Map<String, PackageDependency> declared) {
+    Map<String, LoadResult<Package>> cran = new HashMap<>();
+    Map<String, LoadResult<Package>> bioc = new HashMap<>();
+    List<ResolvedDependency> resolved = new ArrayList<>();
+
+    for (String packageName : declared.keySet()) {
+      cran.put(packageName, PackageDatabase.getPackage(new PackageId(CRAN_GROUP, packageName)));
+      bioc.put(packageName, PackageDatabase.getPackage(new PackageId(BIOC_GROUP, packageName)));
+    }
+
+    List<ResolvedDependency> list = new ArrayList<>();
+    for (String packageName : declared.keySet()) {
+      Package biocPackage = bioc.get(packageName).now();
+      if(biocPackage != null) {
+        resolved.add(dependency(packageName, biocPackage));
+      } else {
+        resolved.add(dependency(packageName, cran.get(packageName).now()));
+      }
+    }
+
+    return new ResolvedDependencySet(resolved);
+  }
+
+  private ResolvedDependency dependency(String packageName, Package pkg) {
+
+    if(pkg != null && pkg.isReplaced()) {
+      ResolvedDependency replaced = new ResolvedDependency();
+      replaced.setName(packageName);
+      replaced.setPackageVersionId(pkg.getLatestVersionId());
+      replaced.setReplacementVersion(pkg.getLatestReplacementVersion());
+      return replaced;
+
+    } else if(pkg == null || pkg.getLatestVersionId() == null) {
+      ResolvedDependency unresolved = new ResolvedDependency();
+      unresolved.setName(packageName);
+      return unresolved;
+
+    } else {
+      ResolvedDependency resolved = new ResolvedDependency();
+      resolved.setName(packageName);
+      resolved.setPackageVersionId(pkg.getLatestVersionId());
+
+      Optional<PackageVersion> packageVersion = PackageDatabase.getPackageVersion(pkg.getLatestVersionId());
+      if(packageVersion.isPresent() && packageVersion.get().hasSuccessfulBuild()) {
+        resolved.setBuildNumber(packageVersion.get().getLastSuccessfulBuildNumber());
+        resolved.setBuildOutcome(BuildOutcome.SUCCESS);
+      }
+
+      return resolved;
+    }
+  }
+
+  private ResolvedDependencySet resolveStrict(Map<String, PackageDependency> declared) {
     // Then fetch a list of all candidate PackageVersions
     Map<String, Iterable<PackageVersion>> candidateVersions = new HashMap<>();
-    
+
     for (String packageName : declared.keySet()) {
       if (!CorePackages.isCorePackage(packageName)) {
         candidateVersions.put(packageName, queryCandidateVersions(packageName));
@@ -67,7 +158,7 @@ public class DependencyResolution {
       ResolvedDependency selected = select(declared.get(packageName), candidateVersions.get(packageName));
       result.getDependencies().add(selected);
     }
-    
+
     LOGGER.info("Resolution: " + result.getDependencies());
 
     return result;

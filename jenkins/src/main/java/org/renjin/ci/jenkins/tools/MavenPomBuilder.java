@@ -4,9 +4,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import hudson.FilePath;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.apache.oro.io.GlobFilenameFilter;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.build.PackageBuild;
 import org.renjin.ci.jenkins.graph.PackageNode;
 import org.renjin.ci.model.*;
@@ -34,19 +37,22 @@ public class MavenPomBuilder {
 
   private RenjinVersionId renjinVersionId;
   private String buildVersion;
+  private FilePath buildDir;
 
-  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription, PackageNode packageNode) {
+  public MavenPomBuilder(PackageBuild build, PackageDescription packageDescription, PackageNode packageNode, FilePath buildDir) {
     this.description = packageDescription;
     this.packageNode = packageNode;
     this.renjinVersionId = build.getRenjinVersionId();
     this.buildVersion = build.getBuildVersion();
+    this.buildDir = buildDir;
   }
 
-  public MavenPomBuilder(RenjinVersionId renjinVersionId, PackageDescription packageDescription, PackageNode packageNode) {
+  public MavenPomBuilder(RenjinVersionId renjinVersionId, PackageDescription packageDescription, PackageNode packageNode, FilePath buildDir) {
     this.description = packageDescription;
     this.packageNode = packageNode;
     this.renjinVersionId = renjinVersionId;
     this.buildVersion = packageDescription.getVersion();
+    this.buildDir = buildDir;
   }
 
 
@@ -110,13 +116,21 @@ public class MavenPomBuilder {
         }
       }
     }
-    
+
     // Compiler package may needed during namespace evaluation,
     // but unless explicitly imported, not at runtime
     if(RenjinCapabilities.hasCompiler(renjinVersionId)) {
       if (!runtimeDependencies.contains("compiler")) {
         addCoreModule(model, "compiler", "provided");
       }
+    }
+
+    if(hasCxxSources()) {
+      Dependency dependency = new Dependency();
+      dependency.setGroupId("org.renjin");
+      dependency.setArtifactId("libstdcxx");
+      dependency.setVersion(RenjinCiClient.getSystemRequirementVersion("libstdcxx").get());
+      model.addDependency(dependency);
     }
 
     // If this package uses testthat, add the package to the test scope
@@ -175,6 +189,15 @@ public class MavenPomBuilder {
 
     return model;
   }
+
+  private boolean hasCxxSources() throws IOException {
+    try {
+      return !buildDir.child("src").list(new GlobFilenameFilter("*.cpp")).isEmpty();
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted");
+    }
+  }
+
 
   public static Dependency testThatDependency() {
     Dependency dependency = new Dependency();

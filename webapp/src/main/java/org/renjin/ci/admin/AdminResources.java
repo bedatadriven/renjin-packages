@@ -52,7 +52,8 @@ public class AdminResources {
         ReindexTestResults.class,
         RecomputeBuildGrades.class,
         PackagesWithoutNamespaces.class,
-        LocCounter.class));
+        LocCounter.class,
+        UpdateBestGrade.class));
     
     return new Viewable("/admin.ftl", model);
   }

@@ -28,7 +28,13 @@ import java.util.List;
     isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PackageBuild {
-  
+
+
+  public static final int GRADE_A = 5;
+  public static final int GRADE_B = 4;
+  public static final int GRADE_C = 3;
+  public static final int GRADE_D = 2;
+  public static final int GRADE_F = 0;
 
   @Parent
   private Key<PackageVersion> versionKey;
@@ -187,22 +193,27 @@ public class PackageBuild {
     return grade;
   }
 
-  public Integer getGradeInteger() {
-    if(grade != null) {
-      switch (grade) {
-        case "A":
-          return 5;
-        case "B":
-          return 4;
-        case "C":
-          return 3;
-        case "D":
-          return 2;
-        case "F":
-          return 0;
-      }
+  public int getGradeInteger() {
+    return getGradeInteger(grade);
+  }
+
+  public static int getGradeInteger(String grade) {
+    if(grade == null) {
+      return GRADE_F;
     }
-    return null;
+    switch (grade) {
+      case "A":
+        return GRADE_A;
+      case "B":
+        return GRADE_B;
+      case "C":
+        return GRADE_C;
+      case "D":
+        return GRADE_D;
+      default:
+      case "F":
+        return GRADE_F;
+    }
   }
 
   public void setGrade(char grade) {

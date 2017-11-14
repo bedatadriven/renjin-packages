@@ -5,7 +5,6 @@ import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.tools.cloudstorage.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -30,7 +29,6 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -73,16 +71,9 @@ public class PackageRegistrationTasks {
 
   public static void archiveSource(PackageVersionId packageVersionId, String sourceUrl) throws IOException {
 
-    HTTPRequest request = new HTTPRequest(new URL(sourceUrl), HTTPMethod.GET, 
-            FetchOptions.Builder.followRedirects().setDeadline(60d * 5d));
-  
-    URLFetchService fetchService = URLFetchServiceFactory.getURLFetchService();
-    HTTPResponse response = fetchService.fetch(request);
-    
-    if(response.getResponseCode() == 200) {
-      archiveSource(packageVersionId, new ByteArrayInputStream(response.getContent()));
-    } else {
-      throw new IOException("HTTP Status Code " + response.getResponseCode() + " received while fetching " + sourceUrl);
+    URL url = new URL(sourceUrl);
+    try(InputStream stream = url.openStream()) {
+      archiveSource(packageVersionId, stream);
     }
   }
 

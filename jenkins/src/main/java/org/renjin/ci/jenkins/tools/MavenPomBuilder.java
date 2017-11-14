@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins.tools;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -7,7 +8,6 @@ import com.google.common.collect.Sets;
 import hudson.FilePath;
 import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
-import org.apache.oro.io.GlobFilenameFilter;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.build.PackageBuild;
@@ -117,6 +117,25 @@ public class MavenPomBuilder {
       }
     }
 
+    // Add "SystemRequirements"
+    for (PackageDependency systemRequirement : description.getSystemRequirements()) {
+      Optional<String> version = RenjinCiClient.getSystemRequirementVersion(systemRequirement.getName());
+      if(version.isPresent()) {
+        Dependency dependency = new Dependency();
+        dependency.setGroupId("org.renjin");
+        dependency.setArtifactId(systemRequirement.getName());
+        dependency.setVersion(version.get());
+        model.addDependency(dependency);
+
+        Dependency headers = new Dependency();
+        headers.setGroupId("org.renjin");
+        headers.setArtifactId(systemRequirement.getName());
+        headers.setVersion(version.get());
+        headers.setClassifier("headers");
+        model.addDependency(headers);
+      }
+    }
+
     // Compiler package may needed during namespace evaluation,
     // but unless explicitly imported, not at runtime
     if(RenjinCapabilities.hasCompiler(renjinVersionId)) {
@@ -192,10 +211,18 @@ public class MavenPomBuilder {
 
   private boolean hasCxxSources() throws IOException {
     try {
-      return !buildDir.child("src").list(new GlobFilenameFilter("*.cpp")).isEmpty();
+      FilePath srcDir = buildDir.child("src");
+      if(srcDir.exists()) {
+        for (FilePath src : srcDir.list()) {
+          if (src.getName().endsWith(".cpp")) {
+            return true;
+          }
+        }
+      }
     } catch (InterruptedException e) {
       throw new IOException("Interrupted");
     }
+    return false;
   }
 
 

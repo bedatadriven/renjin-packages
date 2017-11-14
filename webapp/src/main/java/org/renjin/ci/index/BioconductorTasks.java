@@ -77,8 +77,15 @@ public class BioconductorTasks {
 
         Iterator<String> packageIt = packageList.fieldNames();
         while(packageIt.hasNext()) {
+
             String packageName = packageIt.next();
             JsonNode packageNode = packageList.get(packageName);
+
+            if(packageNode.get("source.ver") == null) {
+                LOGGER.warning("Package " + packageName + " has no source.ver field");
+                continue;
+            }
+
             String version = packageNode.get("Version").asText();
             String sourceUrl = String.format("http://master.bioconductor.org/packages/%s/%s/%s",
               releaseNumber,

@@ -19,6 +19,7 @@ import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.RootResource;
 import org.renjin.ci.pulls.PullRequestResources;
 import org.renjin.ci.qa.QaResources;
+import org.renjin.ci.releases.InstallResource;
 import org.renjin.ci.releases.ReleasesResource;
 import org.renjin.ci.repo.MavenRepository;
 import org.renjin.ci.source.SourceResources;
@@ -44,6 +45,7 @@ public class RenjinCI extends Application {
     classes.add(FreemarkerMvcFeature.class);
 
     classes.add(ReleasesResource.class);
+    classes.add(InstallResource.class);
     
     classes.add(RootResource.class);
     classes.add(PackageResource.class);

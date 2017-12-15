@@ -55,4 +55,10 @@ public class StorageKeys {
   public static String packageSource(PackageVersionId packageVersionId) {
     return packageSource(packageVersionId.getGroupId(), packageVersionId.getPackageName(), packageVersionId.getVersionString());
   }
+
+
+  public static String packageSourceUrl(PackageVersionId packageVersionId) {
+    return "http://storage.googleapis.com/" + PACKAGE_SOURCE_BUCKET + "/" +
+       packageSource(packageVersionId.getGroupId(), packageVersionId.getPackageName(), packageVersionId.getVersionString());
+  }
 }

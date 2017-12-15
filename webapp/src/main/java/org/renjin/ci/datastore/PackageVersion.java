@@ -13,6 +13,7 @@ import com.googlecode.objectify.condition.IfTrue;
 import com.googlecode.objectify.condition.IfZero;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.joda.time.LocalDate;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageId;
@@ -210,6 +211,10 @@ public class PackageVersion implements Comparable<PackageVersion> {
   
   public Date getPublicationDate() {
     return publicationDate;
+  }
+
+  public LocalDate getLocalPublicationDate() {
+    return new LocalDate(publicationDate);
   }
 
   public void setPublicationDate(Date publicationDate) {

@@ -10,6 +10,7 @@ import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.ObjectifyService;
 import org.joda.time.DateTime;
 import org.renjin.ci.datastore.*;
+import org.renjin.ci.datastore.Package;
 import org.renjin.ci.model.PackageDependency;
 import org.renjin.ci.model.PackageDescription;
 import org.renjin.ci.model.PackageVersionId;
@@ -26,6 +27,7 @@ public class PackageVersionPage {
   private static final Logger LOGGER = Logger.getLogger(PackageVersionPage.class.getName());
 
   private final PackageVersionId id;
+  private final LoadResult<Package> thePackage;
   private final Supplier<PackageDescription> description;
   private final LoadResult<PackageBuild> latestBuild;
   private final LoadResult<Loc> loc;
@@ -35,6 +37,7 @@ public class PackageVersionPage {
   private Iterable<PackageTestResult> testResults;
   private Iterable<PackageVersionId> otherVersions;
 
+
   /**
    * Constructs the PageModel for the given PackageVersion, loading the datastore as necessary.
    */
@@ -42,6 +45,7 @@ public class PackageVersionPage {
     this.id = packageVersion.getPackageVersionId();
     this.packageVersion = packageVersion;
     this.description = packageVersion.getDescription();
+    this.thePackage = PackageDatabase.getPackage(packageVersion.getPackageId());
 
     this.otherVersions = PackageDatabase.getPackageVersionIds(packageVersion.getPackageId());
     this.loc = ObjectifyService.ofy().load().key(Loc.key(id));
@@ -60,6 +64,35 @@ public class PackageVersionPage {
     }
     this.compatibilityAlert = new CompatibilityAlert(packageVersion, latestBuild, testResults);
     
+  }
+
+  public boolean isOlderVersionBetter() {
+
+    // Disabled...
+    if(latestBuild == null) {
+      return false;
+    }
+
+    Package thisPackage = thePackage.now();
+    if(thisPackage == null) {
+      return false;
+    }
+
+    // If "this" package version has a better build, then stop.
+    PackageBuild thisBuild = latestBuild.now();
+    if(thisBuild != null && thisBuild.getGradeInteger() >= thisPackage.getBestGradeInteger()) {
+      return false;
+    }
+
+    // Otherwise, is the "best" build of a previous package version?
+    if(packageVersion.getPackageVersionId().isNewer(thisPackage.getBestPackageVersionId())) {
+      return true;
+    }
+    return false;
+  }
+
+  public PackageVersionId getBestPackageVersionId() {
+    return thePackage.safe().getBestPackageVersionId();
   }
 
   public String getGroupId() {

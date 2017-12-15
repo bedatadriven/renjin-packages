@@ -9,6 +9,7 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.renjin.ci.datastore.Package;
@@ -16,8 +17,8 @@ import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.datastore.PackageVersionDelta;
 import org.renjin.ci.index.PackageSearchIndex;
-import org.renjin.ci.model.PackageId;
-import org.renjin.ci.model.PackageVersionId;
+import org.renjin.ci.model.*;
+import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -29,13 +30,13 @@ public class PackageListResource {
     private static final int MAX_RESULTS = 50;
 
     private final SearchService searchService = SearchServiceFactory.getSearchService();
-    
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable getIndex() {
         return getIndex("A");
     }
-    
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("{letter:[A-Z]}")
@@ -64,24 +65,25 @@ public class PackageListResource {
         }
         return packageVersionIds;
     }
-    
+
     @GET
     @Path("/unbuilt")
     @Produces(MediaType.APPLICATION_JSON)
     public List<PackageVersionId> getUnbuilt() {
-        List<PackageVersionId> packageVersionIds = new ArrayList<>();
-        QueryResultIterable<Key<PackageVersion>> packages = ObjectifyService.ofy()
+        List<PackageVersionId> results = new ArrayList<>();
+        QueryResultIterable<Package> packages = ObjectifyService.ofy()
             .load()
-            .type(PackageVersion.class)
-            .filter("built", false)
-            .chunk(1000)
-            .keys()
+            .type(Package.class)
+            .chunk(3000)
             .iterable();
 
-        for (Key<PackageVersion> packageVersionKey : packages) {
-            packageVersionIds.add(PackageVersion.idOf(packageVersionKey));
+        for (Package aPackage : packages) {
+            if(!aPackage.isReplaced() && aPackage.getLatestVersion() != null &&
+                aPackage.getBestGrade() == null) {
+                results.add(aPackage.getLatestVersionId());
+            }
         }
-        return packageVersionIds;
+        return results;
     }
 
     @GET
@@ -103,10 +105,10 @@ public class PackageListResource {
 
         return packageVersionIds;
     }
-    
+
     @GET
     @Path("/new")
-    @Produces(MediaType.APPLICATION_JSON) 
+    @Produces(MediaType.APPLICATION_JSON)
     public List<PackageVersionId> getNew() {
         List<PackageVersionId> packageVersionIds = new ArrayList<>();
         QueryResultIterable<PackageVersion> packages = ObjectifyService.ofy()
@@ -217,8 +219,6 @@ public class PackageListResource {
         return results;
     }
 
-
-
     @GET
     @Path("/{name}.html")
     public Response getPackageLocation(@Context UriInfo uriInfo, @PathParam("name") String packageName) {
@@ -228,7 +228,51 @@ public class PackageListResource {
             .build();
     }
 
-    
+    @GET
+    @Path("/resolveDependencySnapshot")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResolvedDependencySet resolveDependenciesGet(@QueryParam("beforeDate") String beforeDate, @QueryParam("p") List<String> packageNames) {
+        DependencySnapshotRequest request = new DependencySnapshotRequest();
+        request.setBeforeDate(beforeDate);
+        request.getDependencies().addAll(packageNames);
+        return resolveDependencies(request);
+    }
+
+  @GET
+  @Path("/resolveDependencySnapshotScript")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String resolveDependenciesScript(@QueryParam("beforeDate") String beforeDate, @QueryParam("p") List<String> packageNames) {
+    ResolvedDependencySet set = resolveDependenciesGet(beforeDate, packageNames);
+    StringBuilder script = new StringBuilder();
+    for (ResolvedDependency resolvedDependency : set.getDependencies()) {
+      script.append(String.format("install.packages(\"%s\", repos = NULL)\n",
+          StorageKeys.packageSourceUrl(resolvedDependency.getPackageVersionId())));
+    }
+
+    return script.toString();
+  }
+
+
+    @POST
+    @Path("/resolveDependencySnapshot")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResolvedDependencySet resolveDependencies(DependencySnapshotRequest request) {
+
+        try {
+            SnapshotResolution resolution = new SnapshotResolution(LocalDate.parse(request.getBeforeDate()));
+            for (String packageName : request.getDependencies()) {
+                resolution.addPackage(packageName);
+            }
+            return resolution.build();
+        } catch (Exception e) {
+            throw new WebApplicationException(Response
+                .status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(e.getMessage())
+                .build());
+        }
+    }
+
     @GET
     @Path("/resolveDependencies")
     public Response resolveDependencies(@Context UriInfo uriInfo) throws JSONException {
@@ -244,7 +288,7 @@ public class PackageListResource {
         for (Package aPackage : packageList) {
             map.put(aPackage.getName(), aPackage.getPackageId());
         }
-        
+
         // Now query package versions
         List<PackageVersionId> roots = new ArrayList<>();
         for (String rootPackage : packages.keySet()) {
@@ -252,7 +296,7 @@ public class PackageListResource {
             String version = packages.getFirst(rootPackage);
             if(rootPackageId == null) {
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                .entity("Could not find package named '" + rootPackage + "'").build());
+                    .entity("Could not find package named '" + rootPackage + "'").build());
             }
             roots.add(new PackageVersionId(rootPackageId, version));
         }
@@ -303,7 +347,7 @@ public class PackageListResource {
 
         return new Viewable("/packageSearch.ftl", model);
     }
- 
+
     public static class SearchResult {
         private final ScoredDocument document;
 
@@ -340,5 +384,5 @@ public class PackageListResource {
         }
     }
 
-    
+
 }

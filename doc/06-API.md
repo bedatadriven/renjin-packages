@@ -1,12 +1,12 @@
 
 ## API
 
-### Resolving Dependencies
+### Resolving Dependency Snapshots
 
 You can query packages.renjin.org's database of packages to resolve
 a set of historical dependencies.
 
-POST: http://packages.renjin.org/packages/resolveDependencies
+POST: http://packages.renjin.org/packages/resolveDependencySnapshot
 
 Expected body:
 

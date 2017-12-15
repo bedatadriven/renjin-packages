@@ -7,7 +7,11 @@ import java.io.Serializable;
  * Combination of groupId and packageName that uniquely identifies a package
  */
 public class PackageId implements Serializable {
-    
+
+    public static final String CRAN_GROUP = "org.renjin.cran";
+    public static final String BIOC_GROUP = "org.renjin.bioconductor";
+
+
     private final String groupId;
     private final String packageName;
 

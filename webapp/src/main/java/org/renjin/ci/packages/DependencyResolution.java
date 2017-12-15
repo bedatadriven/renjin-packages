@@ -31,13 +31,10 @@ import static com.google.common.collect.Iterables.concat;
 public class DependencyResolution {
 
   private static final Logger LOGGER = Logger.getLogger(DependencyResolution.class.getName());
-  public static final String CRAN_GROUP = "org.renjin.cran";
-  private static final String BIOC_GROUP = "org.renjin.bioconductor";
 
   private PackageVersion packageVersion;
 
   public DependencyResolution(PackageVersion packageVersion) {
-
     this.packageVersion = packageVersion;
   }
 
@@ -63,10 +60,10 @@ public class DependencyResolution {
 
   private ResolvedDependencySet resolveLatest(Map<String, PackageDependency> declared) {
 
-    if(packageVersion.getGroupId().equals(CRAN_GROUP)) {
+    if(packageVersion.getGroupId().equals(PackageId.CRAN_GROUP)) {
       return resolveLatestCran(declared);
 
-    } else if(packageVersion.getGroupId().equals(BIOC_GROUP)) {
+    } else if(packageVersion.getGroupId().equals(PackageId.BIOC_GROUP)) {
       return resolveLatestBioc(declared);
 
     } else {
@@ -78,7 +75,7 @@ public class DependencyResolution {
     Map<String, LoadResult<Package>> packages = new HashMap<>();
 
     for (String packageName : declared.keySet()) {
-      packages.put(packageName, PackageDatabase.getPackage(new PackageId(CRAN_GROUP, packageName)));
+      packages.put(packageName, PackageDatabase.getPackage(new PackageId(PackageId.CRAN_GROUP, packageName)));
     }
 
     List<ResolvedDependency> list = new ArrayList<>();
@@ -95,8 +92,8 @@ public class DependencyResolution {
     List<ResolvedDependency> resolved = new ArrayList<>();
 
     for (String packageName : declared.keySet()) {
-      cran.put(packageName, PackageDatabase.getPackage(new PackageId(CRAN_GROUP, packageName)));
-      bioc.put(packageName, PackageDatabase.getPackage(new PackageId(BIOC_GROUP, packageName)));
+      cran.put(packageName, PackageDatabase.getPackage(new PackageId(PackageId.CRAN_GROUP, packageName)));
+      bioc.put(packageName, PackageDatabase.getPackage(new PackageId(PackageId.BIOC_GROUP, packageName)));
     }
 
     List<ResolvedDependency> list = new ArrayList<>();

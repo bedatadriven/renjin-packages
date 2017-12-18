@@ -79,7 +79,7 @@ public class PackageListResource {
 
         for (Package aPackage : packages) {
             if(!aPackage.isReplaced() && aPackage.getLatestVersion() != null &&
-                aPackage.getBestGrade() == null) {
+                aPackage.getGrade() == null) {
                 results.add(aPackage.getLatestVersionId());
             }
         }
@@ -245,8 +245,12 @@ public class PackageListResource {
     ResolvedDependencySet set = resolveDependenciesGet(beforeDate, packageNames);
     StringBuilder script = new StringBuilder();
     for (ResolvedDependency resolvedDependency : set.getDependencies()) {
-      script.append(String.format("install.packages(\"%s\", repos = NULL)\n",
-          StorageKeys.packageSourceUrl(resolvedDependency.getPackageVersionId())));
+        if(resolvedDependency.isVersionResolved()) {
+            script.append(String.format("install.packages(\"%s\", repos = NULL)\n",
+                StorageKeys.packageSourceUrl(resolvedDependency.getPackageVersionId())));
+        } else {
+            script.append(String.format("# Unresolved: %s\n", resolvedDependency.getName()));
+        }
     }
 
     return script.toString();

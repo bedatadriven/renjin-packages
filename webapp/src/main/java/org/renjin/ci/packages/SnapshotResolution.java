@@ -42,23 +42,25 @@ public class SnapshotResolution {
     if(latestVersion == null) {
       ResolvedDependency unresolved = new ResolvedDependency(packageName);
       resolution.add(unresolved);
-    }
 
-    PackageDescription description = latestVersion.getDescription().get();
-    Iterable<PackageDependency> dependencies = Iterables.concat(
-        description.getImports(),
-        description.getDepends(),
-        description.getLinkingTo());
+    } else {
 
-    for (PackageDependency dependency : dependencies) {
-      if(!CorePackages.isPartOfRenjin(dependency.getName())) {
-        if (!packageMap.contains(dependency.getName())) {
-          addPackage(dependency.getName());
+      PackageDescription description = latestVersion.getDescription().get();
+      Iterable<PackageDependency> dependencies = Iterables.concat(
+          description.getImports(),
+          description.getDepends(),
+          description.getLinkingTo());
+
+      for (PackageDependency dependency : dependencies) {
+        if (!CorePackages.isPartOfRenjin(dependency.getName())) {
+          if (!packageMap.contains(dependency.getName())) {
+            addPackage(dependency.getName());
+          }
         }
       }
-    }
 
-    resolution.add(new ResolvedDependency(latestVersion.getPackageVersionId()));
+      resolution.add(new ResolvedDependency(latestVersion.getPackageVersionId()));
+    }
   }
 
   public ResolvedDependencySet build() {

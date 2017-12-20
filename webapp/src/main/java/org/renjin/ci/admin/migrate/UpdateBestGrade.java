@@ -5,6 +5,7 @@ import com.googlecode.objectify.VoidWork;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
+import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.pipelines.ForEachEntityAsBean;
 
@@ -28,6 +29,10 @@ public class UpdateBestGrade extends ForEachEntityAsBean<PackageBuild> {
   @Override
   public void apply(final PackageBuild build) {
 
+    if(build.getOutcome() != BuildOutcome.SUCCESS) {
+      return;
+    }
+
     if(build.getGradeInteger() == PackageBuild.GRADE_F) {
       return;
     }
@@ -48,8 +53,8 @@ public class UpdateBestGrade extends ForEachEntityAsBean<PackageBuild> {
         }
 
         if(isBetter(packageEntity, build)) {
-          packageEntity.setBestGrade(build.getGrade());
-          packageEntity.setBestPackageVersion(build.getVersion());
+          packageEntity.setGrade(build.getGrade());
+          packageEntity.setBestVersion(build.getVersion());
           PackageDatabase.ofy().save().entity(packageEntity).now();
         }
         packageCache.put(build.getPackageId(), packageEntity);
@@ -61,14 +66,14 @@ public class UpdateBestGrade extends ForEachEntityAsBean<PackageBuild> {
     if(build.getGradeInteger() == 0) {
       return false;
     }
-    if(packageEntity.getBestGradeInteger() > build.getGradeInteger()) {
+    if(packageEntity.getGradeInteger() > build.getGradeInteger()) {
       return false;
     }
-    if(build.getGradeInteger() > packageEntity.getBestGradeInteger()) {
+    if(build.getGradeInteger() > packageEntity.getGradeInteger()) {
       return true;
     }
     // Otherwise, need to compare package versions.
-    if(packageEntity.getBestPackageVersion() == null) {
+    if(packageEntity.getBestVersion() == null) {
       return true;
     }
     if(build.getPackageVersionId().isNewer(packageEntity.getBestPackageVersionId())) {

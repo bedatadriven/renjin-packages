@@ -50,6 +50,7 @@ public class PackageDatabase {
     register(PackageExampleRun.class);
     register(ReplacementRelease.class);
     register(RenjinVersionStats.class);
+    register(RenjinVersionTotals.class);
     register(RenjinCommit.class);
     register(RenjinRelease.class);
     register(LastEventTime.class);
@@ -244,7 +245,12 @@ public class PackageDatabase {
   public static Result<Map<Key<Object>, Object>> save(List<Object> objects) {
     return ObjectifyService.ofy().save().entities(objects);
   }
-  
+
+
+  public static Result<Map<Key<Object>, Object>> save(Object... objects) {
+    return ObjectifyService.ofy().save().entities(objects);
+  }
+
   public static void saveNow(Object entity) {
     ObjectifyService.ofy().save().entity(entity).now();
   }
@@ -480,6 +486,13 @@ public class PackageDatabase {
         .iterable();
   }
 
+
+  public static Query<RenjinVersionTotals> getRenjinVersionTotals() {
+    return ObjectifyService.ofy()
+        .load()
+        .type(RenjinVersionTotals.class)
+        .chunk(50);
+  }
 
   public static QueryResultIterable<BenchmarkSummary> getBenchmarkSummaries(String machineId) {
     return ObjectifyService.ofy()

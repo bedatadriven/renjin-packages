@@ -75,7 +75,12 @@
         <#if version.publicationDate??>
         <p class="sec">Released ${version.publicationDate?date} by ${version.authorList}</p>
         </#if>
-        
+
+        <#if version.olderVersionBetter>
+        <div class="note">An <a href="${version.bestPackageVersionId.path}">older version</a> of this package is
+            more compatible with Renjin.</div>
+        </#if>
+
         <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
 
         <#if version.latestBuild??>

@@ -29,6 +29,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PackageBuild {
 
+  public static final int MAX_GRADE = 5;
 
   public static final int GRADE_A = 5;
   public static final int GRADE_B = 4;

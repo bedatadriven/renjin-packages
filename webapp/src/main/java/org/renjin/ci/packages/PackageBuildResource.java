@@ -216,10 +216,10 @@ public class PackageBuildResource {
   private void maybeUpdateBestGrade(PackageBuild build, List<Object> toSave) {
     if(build.getOutcome() == BuildOutcome.SUCCESS && build.getGradeInteger() > 0) {
       org.renjin.ci.datastore.Package packageEntity = PackageDatabase.getPackageOf(build.getPackageVersionId());
-      if(packageEntity.getBestGrade() == null ||
-          build.getGradeInteger() > packageEntity.getBestGradeInteger()) {
+      if(packageEntity.getGrade() == null ||
+          build.getGradeInteger() > packageEntity.getGradeInteger()) {
 
-        packageEntity.setBestGrade(build.getGrade());
+        packageEntity.setGrade(build.getGrade());
 
         toSave.add(packageEntity);
       }

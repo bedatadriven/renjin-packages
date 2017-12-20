@@ -42,6 +42,9 @@ public class PackageVersion implements Comparable<PackageVersion> {
   
   @Unindex
   private long lastBuildNumber;
+
+  @Unindex
+  private long lastTestRunNumber;
   
   @Index
   private boolean needsCompilation;
@@ -157,6 +160,14 @@ public class PackageVersion implements Comparable<PackageVersion> {
 
   public void setLastBuildNumber(long lastBuildNumber) {
     this.lastBuildNumber = lastBuildNumber;
+  }
+
+  public long getLastTestRunNumber() {
+    return lastTestRunNumber;
+  }
+
+  public void setLastTestRunNumber(long lastTestRunNumber) {
+    this.lastTestRunNumber = lastTestRunNumber;
   }
 
   public long getLastSuccessfulBuildNumber() {

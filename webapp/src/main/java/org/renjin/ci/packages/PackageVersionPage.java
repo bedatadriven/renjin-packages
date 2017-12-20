@@ -80,7 +80,7 @@ public class PackageVersionPage {
 
     // If "this" package version has a better build, then stop.
     PackageBuild thisBuild = latestBuild.now();
-    if(thisBuild != null && thisBuild.getGradeInteger() >= thisPackage.getBestGradeInteger()) {
+    if(thisBuild != null && thisBuild.getGradeInteger() >= thisPackage.getGradeInteger()) {
       return false;
     }
 

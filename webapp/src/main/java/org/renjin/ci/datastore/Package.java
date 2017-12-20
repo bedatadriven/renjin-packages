@@ -21,13 +21,13 @@ public class  Package {
   /**
    * The best Renjin "grade" for this build to date.
    */
-  private String bestGrade;
+  private String grade;
 
   /**
    * The package version with the best grade.
    */
   @Unindex
-  private String bestPackageVersion;
+  private String bestVersion;
 
 
   /**
@@ -123,34 +123,34 @@ public class  Package {
     this.latestReplacementVersion = latestReplacementVersion;
   }
 
-  public String getBestGrade() {
-    return bestGrade;
+  public String getGrade() {
+    return grade;
   }
 
-  public int getBestGradeInteger() {
-    if(bestGrade == null) {
+  public int getGradeInteger() {
+    if(grade == null) {
       return 0;
     }
-    return PackageBuild.getGradeInteger(bestGrade);
+    return PackageBuild.getGradeInteger(grade);
   }
 
-  public void setBestGrade(String bestGrade) {
-    this.bestGrade = bestGrade;
+  public void setGrade(String grade) {
+    this.grade = grade;
   }
 
-  public String getBestPackageVersion() {
-    return bestPackageVersion;
+  public String getBestVersion() {
+    return bestVersion;
   }
 
-  public void setBestPackageVersion(String bestPackageVersion) {
-    this.bestPackageVersion = bestPackageVersion;
+  public void setBestVersion(String bestVersion) {
+    this.bestVersion = bestVersion;
   }
 
   public PackageVersionId getBestPackageVersionId() {
-    if(bestPackageVersion == null) {
+    if(bestVersion == null) {
       return null;
     }
-    return new PackageVersionId(getPackageId(), bestPackageVersion);
+    return new PackageVersionId(getPackageId(), bestVersion);
   }
 
   public String getGroupId() {

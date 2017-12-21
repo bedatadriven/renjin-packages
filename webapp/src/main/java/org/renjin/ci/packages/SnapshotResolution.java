@@ -19,7 +19,7 @@ public class SnapshotResolution {
 
   private LocalDate latestDate;
 
-  private Set<String> packageMap = new HashSet<>();
+  private Set<String> visited = new HashSet<>();
   private List<ResolvedDependency> resolution = new ArrayList<>();
 
   public SnapshotResolution(LocalDate latestDate) {
@@ -27,17 +27,21 @@ public class SnapshotResolution {
   }
 
   public void addPackage(String packageName) {
+
+    // Stop if we've already started resolving this package
+    if(!visited.add(packageName)) {
+      return;
+    }
+
     List<PackageVersion> versions = PackageDatabase.getPackageVersions(new PackageId(PackageId.CRAN_GROUP, packageName));
     PackageVersion latestVersion = null;
     for (PackageVersion version : versions) {
       if(version.getLocalPublicationDate().isBefore(latestDate)) {
-        if(latestVersion == null || version.getPackageVersionId().isNewer(latestVersion.getPackageVersionId())) {
+        if(latestVersion == null || isNewerThan(latestVersion, version)) {
           latestVersion = version;
         }
       }
     }
-
-    packageMap.add(packageName);
 
     if(latestVersion == null) {
       ResolvedDependency unresolved = new ResolvedDependency(packageName);
@@ -53,14 +57,17 @@ public class SnapshotResolution {
 
       for (PackageDependency dependency : dependencies) {
         if (!CorePackages.isPartOfRenjin(dependency.getName())) {
-          if (!packageMap.contains(dependency.getName())) {
-            addPackage(dependency.getName());
-          }
+          addPackage(dependency.getName());
         }
       }
 
       resolution.add(new ResolvedDependency(latestVersion.getPackageVersionId()));
     }
+  }
+
+  private boolean isNewerThan(PackageVersion latestVersion, PackageVersion version) {
+    // Lexiographical comparison:
+    return version.getPackageVersionId().isNewer(latestVersion.getPackageVersionId());
   }
 
   public ResolvedDependencySet build() {

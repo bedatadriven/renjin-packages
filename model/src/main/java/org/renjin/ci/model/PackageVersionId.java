@@ -2,8 +2,6 @@ package org.renjin.ci.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.io.Serializable;
 
@@ -51,8 +49,8 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     return version;
   }
 
-  public ArtifactVersion getVersion() {
-    return new DefaultArtifactVersion(version);
+  public String getVersion() {
+    return version;
   }
 
   public static PackageVersionId fromTriplet(String id) {
@@ -111,10 +109,41 @@ public class PackageVersionId implements Serializable, Comparable<PackageVersion
     if(!packageName.equals(o.packageName)) {
       return packageName.compareTo(o.packageName);
     }
-    return getVersion().compareTo(o.getVersion());
+    return compareVersions(this.version, o.version);
   }
 
   public PackageId getPackageId() {
     return new PackageId(groupId, packageName);
+  }
+
+  public static int compareVersions(String x, String y) {
+    int[] xn = parse(x);
+    int[] yn = parse(y);
+
+    for (int i = 0; i < xn.length && i < yn.length; i++) {
+      if(xn[i] < yn[i]) {
+        return -1;
+      }
+      if(xn[i] > yn[i]) {
+        return +1;
+      }
+    }
+
+    if(xn.length < yn.length) {
+      return -1;
+    }
+    if(xn.length > yn.length) {
+      return +1;
+    }
+    return 0;
+  }
+
+  private static int[] parse(String versionString) {
+    String[] stringParts = versionString.split("[^0-9]");
+    int[] parts = new int[stringParts.length];
+    for (int i = 0; i < parts.length; i++) {
+      parts[i] = Integer.parseInt(stringParts[i]);
+    }
+    return parts;
   }
 }

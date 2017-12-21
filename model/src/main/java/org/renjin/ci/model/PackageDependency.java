@@ -83,7 +83,7 @@ public class PackageDependency {
 
 
 	public static Iterable<PackageDependency> parseList(String list) {
-		return Iterables.transform(Arrays.asList(list.split("\\s*,\\s*")), new PackageDependencyParser());
+		return Iterables.transform(Arrays.asList(list.trim().split("\\s*,\\s*")), new PackageDependencyParser());
 	}
 
 

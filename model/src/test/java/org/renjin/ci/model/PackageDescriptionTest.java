@@ -1,5 +1,6 @@
 package org.renjin.ci.model;
 
+import com.google.api.client.util.Lists;
 import org.hamcrest.Matchers;
 import org.joda.time.LocalDateTime;
 import org.junit.Test;
@@ -76,6 +77,15 @@ public class PackageDescriptionTest {
 
     // 2017-06-08 04:43:11 UTC
     assertThat(mapproj.findReleaseDate(), equalTo(new LocalDateTime(2017, 6, 8, 4, 43, 11)));
+
+  }
+
+  @Test
+  public void whitespaceInDependencies() throws IOException {
+    PackageDescription description = fromResource("factominer");
+    List<PackageDependency> imports = Lists.newArrayList(description.getImports());
+
+    assertThat(imports.get(0).getName(), equalTo("car"));
 
   }
 }

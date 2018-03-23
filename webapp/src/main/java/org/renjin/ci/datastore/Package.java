@@ -146,6 +146,10 @@ public class  Package {
     this.bestVersion = bestVersion;
   }
 
+  public void setBestVersion(PackageVersionId packageVersionId) {
+    this.bestVersion = packageVersionId.getVersionString();
+  }
+
   public PackageVersionId getBestPackageVersionId() {
     if(bestVersion == null) {
       return null;
@@ -167,4 +171,7 @@ public class  Package {
   }
 
 
+  public boolean isNeedsCompilation() {
+    return needsCompilation;
+  }
 }

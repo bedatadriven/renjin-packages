@@ -217,9 +217,12 @@ public class PackageBuildResource {
     if(build.getOutcome() == BuildOutcome.SUCCESS && build.getGradeInteger() > 0) {
       org.renjin.ci.datastore.Package packageEntity = PackageDatabase.getPackageOf(build.getPackageVersionId());
       if(packageEntity.getGrade() == null ||
-          build.getGradeInteger() > packageEntity.getGradeInteger()) {
+          build.getGradeInteger() > packageEntity.getGradeInteger() ||
+          (build.getGradeInteger() == packageEntity.getGradeInteger() &&
+           build.getPackageVersionId().isNewer(packageEntity.getBestPackageVersionId()))) {
 
         packageEntity.setGrade(build.getGrade());
+        packageEntity.setBestVersion(build.getPackageVersionId());
 
         toSave.add(packageEntity);
       }

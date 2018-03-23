@@ -23,6 +23,7 @@ import org.renjin.ci.pipelines.Pipelines;
 import org.renjin.ci.source.index.LocCounter;
 import org.renjin.ci.source.index.UpdateLocStats;
 import org.renjin.ci.stats.StatPipelines;
+import org.renjin.ci.stats.StatsResources;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -124,6 +125,14 @@ public class AdminResources {
   }
 
   @POST
+  @Path("queueUpdateTotalGrades")
+  public Response updateGradeTotals() {
+    StatsResources.scheduleGradeTotals();
+
+    return Response.ok().entity("Enqueued.").build();
+  }
+
+  @POST
   @Path("/updateTotalCounts")
   public Response updateTotalCounts() {
     UpdateLocStats stats = new UpdateLocStats();
@@ -208,6 +217,6 @@ public class AdminResources {
     GitHubTasks.enqueue(repoParts[0], repoParts[1]);
     
     return Response.ok().entity("Enqueued.").build();
-    
   }
+
 }

@@ -25,6 +25,8 @@
 
             <p>Reason to mark this test as failed: <input name="reason" type="text" size="100"></p>
 
+            <input type="submit" class="btn" value="Update">
+
             <ul>
                 <#list page.results?sort_by("packageVersionId") as result>
                     <#if result.passed>

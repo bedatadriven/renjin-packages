@@ -80,12 +80,30 @@ public class RenjinCiClient {
     }
     
     ArrayNode versions = path.request().get(ArrayNode.class);
-    
+
     List<PackageVersionId> versionIds = new ArrayList<>();
     for (JsonNode version : versions) {
       versionIds.add(PackageVersionId.fromTriplet(version.asText()));
     }
     return versionIds;
+  }
+
+  public static ResolvedDependencySet resolveSuggests(final List<PackageDependency> dependencies) {
+
+    return withRetries(new Callable<ResolvedDependencySet>() {
+      @Override
+      public ResolvedDependencySet call() throws Exception {
+        WebTarget target = client().target(ROOT_URL)
+            .path("packages")
+            .path("resolveSuggests");
+
+        for (PackageDependency dependency : dependencies) {
+          target = target.queryParam("p", dependency.getName());
+        }
+
+        return target.request().get(ResolvedDependencySet.class);
+      }
+    });
   }
   
   public static ListenableFuture<ResolvedDependencySet> resolveDependencies(ListeningExecutorService service, 

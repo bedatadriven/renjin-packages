@@ -28,19 +28,20 @@ public class StatsResources {
   @POST
   @Path("/scheduleCountUpdate")
   public Response scheduleStatsUpdate() {
+
+    // Update counts of regerssions and progressions
     StatPipelines.startUpdateBuildStats();
+
+    // Update total grade counts
+    scheduleGradeTotals();
 
     return Response.ok().build();
   }
 
-  @POST
-  @Path("/scheduleGradeTotals")
-  public Response scheduleGradeTotals() {
+  public static void scheduleGradeTotals() {
     QueueFactory.getDefaultQueue().add(TaskOptions.Builder
         .withUrl("/stats/updateGradeTotals")
         .retryOptions(RetryOptions.Builder.withTaskRetryLimit(3)));
-
-    return Response.ok().build();
   }
 
 

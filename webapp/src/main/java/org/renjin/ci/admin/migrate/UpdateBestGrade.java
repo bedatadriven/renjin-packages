@@ -7,12 +7,14 @@ import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageId;
+import org.renjin.ci.model.RenjinVersionId;
 import org.renjin.ci.pipelines.ForEachEntityAsBean;
 
 import java.util.HashMap;
 
 public class UpdateBestGrade extends ForEachEntityAsBean<PackageBuild> {
 
+  public static final RenjinVersionId MIN_RENJIN_VERSION = RenjinVersionId.valueOf("0.8.0");
   private transient HashMap<PackageId, Package> packageCache;
 
   public UpdateBestGrade() {
@@ -28,6 +30,10 @@ public class UpdateBestGrade extends ForEachEntityAsBean<PackageBuild> {
 
   @Override
   public void apply(final PackageBuild build) {
+
+    if(!build.getRenjinVersionId().isNewerThan(MIN_RENJIN_VERSION)) {
+      return;
+    }
 
     if(build.getOutcome() != BuildOutcome.SUCCESS) {
       return;

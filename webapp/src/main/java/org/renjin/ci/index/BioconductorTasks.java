@@ -35,7 +35,7 @@ public class BioconductorTasks {
     public Response updateBioConductor(@QueryParam("release") String releaseNumber) {
         
         if(Strings.isNullOrEmpty(releaseNumber)) {
-            releaseNumber = "3.5";
+            releaseNumber = "3.7";
         }
 
         String types[] = new String[] { "bioc", "data/annotation", "data/experiment" };

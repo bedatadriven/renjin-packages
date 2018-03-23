@@ -133,6 +133,10 @@ public class PackageVersionPage {
     return packageVersion.getPublicationDate();
   }
 
+  public PackageDescription.Person getMaintainer() {
+    return description.get().getMaintainer().orNull();
+  }
+
   public String getAuthorList() {
     StringBuilder authors = new StringBuilder();
     for(PackageDescription.Person person : description.get().getAuthors()) {

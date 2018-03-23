@@ -12,6 +12,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.index.PackageSearchIndex;
@@ -274,6 +275,40 @@ public class PackageListResource {
     return script.toString();
   }
 
+  @GET
+  @Path("/resolveSuggests")
+  @Produces(MediaType.APPLICATION_JSON)
+  public ResolvedDependencySet resolvedSuggests(@QueryParam("p") List<String> packageNames) {
+    SuggestsResolution suggestsResolution = new SuggestsResolution();
+    return suggestsResolution.resolve(packageNames);
+  }
+
+  @GET
+  @Path("/resolve")
+  @Produces(MediaType.APPLICATION_JSON)
+  public String resolve(@QueryParam("p") List<String> dependencies) throws JSONException {
+    SuggestsResolution suggestsResolution = new SuggestsResolution();
+    ResolvedDependencySet set = suggestsResolution.resolve(dependencies);
+
+    JSONArray array = new JSONArray();
+    for (ResolvedDependency resolvedDependency : set.getDependencies()) {
+      JSONObject dependency = new JSONObject();
+      dependency.put("package", resolvedDependency.getName());
+      if(resolvedDependency.isVersionResolved()) {
+        dependency.put("resolved", true);
+        dependency.put("groupId", resolvedDependency.getPackageVersionId().getGroupId());
+        if(resolvedDependency.isReplaced()) {
+          dependency.put("version", resolvedDependency.getReplacementVersion());
+        } else {
+          if(resolvedDependency.hasBuild()) {
+            dependency.put("version", resolvedDependency.getBuildId().getBuildVersion());
+          }
+        }
+      }
+      array.put(dependency);
+    }
+    return array.toString();
+  }
 
   @POST
   @Path("/resolveDependencySnapshot")

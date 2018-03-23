@@ -73,15 +73,16 @@
         </#if>
         
         <#if version.publicationDate??>
-        <p class="sec">Released ${version.publicationDate?date} by ${version.authorList}</p>
+        <p class="sec">Released ${version.publicationDate?date} <#if version.maintainer??>by ${version.maintainer.name}</#if></p>
         </#if>
 
-        <#if version.olderVersionBetter>
-        <div class="note">An <a href="${version.bestPackageVersionId.path}">older version</a> of this package is
-            more compatible with Renjin.</div>
-        </#if>
-
-        <div class="${version.compatibilityAlert.alertStyle}">${version.compatibilityAlert.message}</div>
+        <div class="${version.compatibilityAlert.alertStyle}">
+            ${version.compatibilityAlert.message}
+            <#if version.olderVersionBetter>
+               An <a href="${version.bestPackageVersionId.path}">older version</a> of this package is
+                    more compatible with Renjin.
+            </#if>
+        </div>
 
         <#if version.latestBuild??>
         <#if version.latestBuild.patchId?? >

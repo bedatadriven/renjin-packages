@@ -185,6 +185,19 @@ public class PackageDatabase {
         .list();
 
   }
+
+
+  public static List<PackageVersion> getPackageVersionsByName(String packageName) {
+
+    // PackageVersions are keyed by groupId:packageName:versionXXX so we can use
+    // lexical graphical ordering properties to query by key
+
+    return ObjectifyService.ofy().load()
+        .type(PackageVersion.class)
+        .filter("packageName", packageName)
+        .list();
+
+  }
   
   public static Iterable<PackageVersionId> getPackageVersionIds(PackageId packageId) {
     QueryResultIterable<Key<PackageVersion>> versions = ObjectifyService.ofy()

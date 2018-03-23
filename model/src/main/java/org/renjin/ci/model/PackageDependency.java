@@ -14,7 +14,6 @@ public class PackageDependency {
 	private String version;
   private String versionRange;
 	private String versionSpec;
-  private boolean singleVersion;
 
   public PackageDependency(String spec) {
     int versionSpecStart = spec.indexOf('(');

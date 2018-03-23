@@ -30,6 +30,10 @@
             <input type="submit" class="btn btn-default" value="Update LOC statistics">
         </form>
 
+        <form action="/admin/queueUpdateTotalGrades" method="post">
+            <input type="submit" class="btn btn-default" value="Update Package grade statistics">
+        </form>
+
         <h2>CRAN Archiving Fetching</h2>
 
         <form action="/tasks/index/cran/fetchArchives" method="post">

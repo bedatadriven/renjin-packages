@@ -51,7 +51,7 @@ public class Maven {
         this.workerContext = workerContext;
         this.binaryPath = findMavenBinary();
         this.configFile = fetchMavenConfig(workerContext);
-        this.jdk = findJdk17();
+        this.jdk = findJdk18().forNode(workerContext.getNode(), workerContext.getListener());
     }
 
     public void overrideLocalRepository(String localRepoPath) {
@@ -104,6 +104,7 @@ public class Maven {
 
         if(goal.equals("deploy")) {
             arguments.add("-Dmaven.install.skip=true");
+            arguments.add("dependency:list");
         }
         arguments.add(goal);
 
@@ -215,13 +216,13 @@ public class Maven {
         return findMavenBinary(workerContext.getNode(), workerContext.getListener(), workerContext.getEnv());
     }
 
-    private static JDK findJdk17() {
+    private static JDK findJdk18() {
         for (JDK jdk : Jenkins.getInstance().getJDKs()) {
-            if(jdk.getName().contains("1.7")) {
+            if(jdk.getName().contains("1.8")) {
                 return jdk;
             }
         }
-        throw new ConfigException("Couldn't find JDK containing '1.7' in its name.");
+        throw new ConfigException("Couldn't find JDK containing '1.8' in its name.");
     }
 
     

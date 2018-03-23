@@ -17,10 +17,7 @@ import org.renjin.ci.model.PackageDescription.Person;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Constructs a Maven Project Object Model (POM) from a GNU-R style
@@ -152,9 +149,31 @@ public class MavenPomBuilder {
       model.addDependency(dependency);
     }
 
-    // If this package uses testthat, add the package to the test scope
-    if(usesTestThat()) {
-      model.addDependency(testThatDependency());
+
+    // Add "Suggests" Dependencies if Possible
+    // We add them as "optional" dependencies rather than
+    // test dependencies, because the scope will override transitive dependencies
+    // making them unavailable.
+    List<PackageDependency> suggests = Lists.newArrayList(description.getSuggests());
+    if(!suggests.isEmpty()) {
+      ResolvedDependencySet resolved = RenjinCiClient.resolveSuggests(suggests);
+      for (ResolvedDependency resolvedDependency : resolved.getDependencies()) {
+        if (!runtimeDependencies.contains(resolvedDependency.getName()) &&
+            (resolvedDependency.hasBuild() || resolvedDependency.isReplaced())) {
+          Dependency dependency = new Dependency();
+          dependency.setGroupId(resolvedDependency.getPackageVersionId().getGroupId());
+          dependency.setArtifactId(resolvedDependency.getPackageVersionId().getPackageName());
+          if(resolvedDependency.isReplaced()) {
+            dependency.setVersion(resolvedDependency.getReplacementVersion());
+          } else {
+            dependency.setVersion(resolvedDependency.getBuildId().getBuildVersion());
+          }
+          dependency.setExclusions(excludeThisBuild());
+          dependency.setOptional(true);
+
+          model.addDependency(dependency);
+        }
+      }
     }
 
     Plugin renjinPlugin = new Plugin();
@@ -209,6 +228,13 @@ public class MavenPomBuilder {
     return model;
   }
 
+  private List<Exclusion> excludeThisBuild() {
+    Exclusion exclusion = new Exclusion();
+    exclusion.setGroupId(packageNode.getId().getGroupId());
+    exclusion.setArtifactId(packageNode.getId().getPackageName());
+    return Collections.singletonList(exclusion);
+  }
+
   private boolean hasCxxSources() throws IOException {
     try {
       FilePath srcDir = buildDir.child("src");
@@ -233,15 +259,6 @@ public class MavenPomBuilder {
     dependency.setVersion("1.0.2-renjin-14");
     dependency.setScope("test");
     return dependency;
-  }
-
-  private boolean usesTestThat() {
-    for (PackageDependency packageDependency : description.getSuggests()) {
-      if(packageDependency.getName().equals("testthat")) {
-        return true;
-      }
-    }
-    return false;
   }
 
 

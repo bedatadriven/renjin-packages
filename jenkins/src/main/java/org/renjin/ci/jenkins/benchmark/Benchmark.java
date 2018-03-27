@@ -82,37 +82,37 @@ public class Benchmark {
 
     Benchmark benchmark = new Benchmark(BenchmarkConvention.RENJIN, namePrefix + benchmarkDir.getName(), scriptFile);
 
-    BufferedReader in = new BufferedReader(new InputStreamReader(getDescriptorPath(benchmarkDir).read()));
-    String line;
-    
     List<String> files = Lists.newArrayList();
     List<String> sources = Lists.newArrayList();
     List<String> hash = Lists.newArrayList();
-    
-    while((line=in.readLine())!=null) {
-      if(!line.trim().isEmpty()) {
-        String[] keyValue = line.trim().split(":", 2);
-        if (keyValue.length != 2) {
-          throw new DcfFormatException("Malformed line: " + line);
+
+    try(BufferedReader in = new BufferedReader(new InputStreamReader(getDescriptorPath(benchmarkDir).read()))) {
+      String line;
+      while ((line = in.readLine()) != null) {
+        if (!line.trim().isEmpty()) {
+          String[] keyValue = line.trim().split(":", 2);
+          if (keyValue.length != 2) {
+            throw new DcfFormatException("Malformed line: " + line);
+          }
+          String key = keyValue[0].trim();
+          String value = keyValue[1].trim();
+
+          if (key.equals("Depends")) {
+            Iterables.addAll(benchmark.dependencies, PackageDependency.parseList(value.trim()));
+
+          } else if (key.equals("Timeout")) {
+            benchmark.timeoutMillis = parseTimeout(value);
+
+          } else if (key.equals("File")) {
+            files.add(value);
+
+          } else if (key.equals("Source")) {
+            sources.add(value);
+
+          } else if (key.equals("Hash")) {
+            hash.add(value);
+          }
         }
-        String key = keyValue[0].trim();
-        String value = keyValue[1].trim();
-
-        if (key.equals("Depends")) {
-          Iterables.addAll(benchmark.dependencies, PackageDependency.parseList(value.trim()));
-
-        } else if (key.equals("Timeout")) {
-          benchmark.timeoutMillis = parseTimeout(value);
-          
-        } else if (key.equals("File")) {
-          files.add(value);
-          
-        } else if(key.equals("Source")) {
-          sources.add(value);
-        
-        } else if(key.equals("Hash")) {
-          hash.add(value);
-        } 
       }
     }
 

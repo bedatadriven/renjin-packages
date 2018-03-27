@@ -123,9 +123,8 @@ public class Maven {
                 .stdout(logOut)
                 .start();
 
-        int exitCode;
         try {
-            exitCode = proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, buildContext.getListener());
+            proc.joinWithTimeout(TIMEOUT_MINUTES, TimeUnit.MINUTES, buildContext.getListener());
         } catch(InterruptedException e) {
             buildContext.log("Timed out after %d minutes.", TIMEOUT_MINUTES);
         } finally {

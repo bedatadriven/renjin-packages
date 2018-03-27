@@ -17,6 +17,7 @@ import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.jenkins.benchmark.*;
 import org.renjin.ci.model.RenjinVersionId;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -180,6 +181,7 @@ public class BenchmarkStep extends Builder implements SimpleBuildStep {
     return schedule;
   }
 
+  @Nonnull
   private JDK findJdk() throws AbortException {
 
     List<JDK> tools = Jenkins.getInstance().getJDKs();

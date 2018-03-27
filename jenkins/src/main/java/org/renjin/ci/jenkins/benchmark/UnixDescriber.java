@@ -54,8 +54,7 @@ public class UnixDescriber implements Callable<MachineDescriptor, IOException> {
   }
   
   private long findPhysicalMemory() throws IOException {
-    try {
-      BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"));
+    try(BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"))) {
       String line;
       while((line=reader.readLine()) != null) {
         if(line.startsWith("MemTotal:")) {
@@ -73,8 +72,7 @@ public class UnixDescriber implements Callable<MachineDescriptor, IOException> {
   }
   
   private String findCpuModel() throws IOException {
-    try {
-      BufferedReader reader = new BufferedReader(new FileReader("/proc/cpuinfo"));
+    try(BufferedReader reader = new BufferedReader(new FileReader("/proc/cpuinfo"))) {
       String line;
       while((line=reader.readLine()) != null) {
         String[] keyValue = line.split(":", 2);

@@ -26,7 +26,7 @@ import java.util.*;
  */
 public class MavenPomBuilder {
 
-  public static final String[] DEFAULT_PACKAGES = new String[]{
+  private static final String[] DEFAULT_PACKAGES = new String[]{
       "methods", "stats", "utils", "grDevices", "graphics", "datasets"};
 
   private final PackageDescription description;

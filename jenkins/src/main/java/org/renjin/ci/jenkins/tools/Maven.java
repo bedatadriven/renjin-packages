@@ -30,6 +30,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
@@ -186,14 +188,26 @@ public class Maven {
         String fileContent = config.content;
 
         final Map<String, StandardUsernameCredentials> resolvedCredentials =
-                CredentialsHelper.resolveCredentials(workerContext.getJob(), config.getServerCredentialMappings());
+                CredentialsHelper.resolveCredentials(workerContext.getRun(),
+                    config.getServerCredentialMappings(),
+                    workerContext.getListener());
+
+        List<String> temporaryFiles = new ArrayList<>();
 
         if (!resolvedCredentials.isEmpty()) {
             try {
-                fileContent = CredentialsHelper.fillAuthentication(fileContent, true, resolvedCredentials);
+                boolean isReplaceAllServerDefinitions = true;
+                fileContent = CredentialsHelper.fillAuthentication(
+                    fileContent,
+                    isReplaceAllServerDefinitions, resolvedCredentials,
+                    workerContext.getWorkspace(), temporaryFiles);
             } catch (Exception e) {
                 throw new ConfigException("Exception resolving credentials for maven settings file: " + e.getMessage());
             }
+        }
+
+        for (String temporaryFile : temporaryFiles) {
+            workerContext.getListener().getLogger().println("Temporary file created: " + temporaryFile);
         }
 
         return workerContext.getWorkspace().createTextTempFile("settings", ".xml", fileContent, false);

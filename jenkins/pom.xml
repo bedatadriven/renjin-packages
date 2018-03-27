@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.609.3</version>
+    <version>2.11</version>
   </parent>
 
   <groupId>org.renjin.ci</groupId>
@@ -19,17 +19,17 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>config-file-provider</artifactId>
-      <version>2.10.0</version>
+      <version>2.18</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>maven-plugin</artifactId>
-      <version>2.10</version>
+      <version>3.1</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
-      <version>2.4.1</version>
+      <version>3.8.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -61,6 +61,12 @@
       <groupId>org.renjin.ci</groupId>
       <artifactId>renjin-ci-client</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.3</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

@@ -13,6 +13,9 @@ import org.renjin.ci.model.PackageVersionId;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +76,14 @@ public class TestRegressionResource {
     model.put("badCommitId", broken.now().getCommitSha1());
 
     return new Viewable("/testRegressionBisect.ftl", model);
+  }
+
+  @GET
+  @Path("next")
+  public Response nextRegression(@Context UriInfo uriInfo) {
+    return Response.seeOther(
+      QaResources.findNextRegression(uriInfo, packageVersionId, testName))
+        .build();
   }
 
 }

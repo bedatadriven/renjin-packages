@@ -64,6 +64,10 @@ public class PackageTestResult {
   public static Key<PackageTestResult> key(PackageBuildId buildId, String testName) {
     return Key.create(PackageBuild.key(buildId), PackageTestResult.class, testName);
   }
+
+  public static PackageBuildId buildIdOf(Key<PackageTestResult> key) {
+    return PackageBuild.idOf(key.<PackageBuild>getParent());
+  }
   
   public PackageTestResult(Key<PackageBuild> buildKey, String name) {
     this.buildKey = buildKey;

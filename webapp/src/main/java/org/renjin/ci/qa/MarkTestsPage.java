@@ -14,10 +14,14 @@ public class MarkTestsPage {
   private final PackageId packageId;
   private final String testName;
 
-  public MarkTestsPage(PackageId packageVersion, String testName) {
-    this.packageId = packageVersion;
+  public MarkTestsPage(PackageId packageId, String testName) {
+    this.packageId = packageId;
     this.testName = testName;
-    results = PackageDatabase.getTestResults(packageId, testName);
+    if(testName.equals("ALL")) {
+      results = PackageDatabase.getTestResults(this.packageId);
+    } else {
+      results = PackageDatabase.getTestResults(this.packageId, testName);
+    }
   }
 
   public Iterable<PackageTestResult> getResults() {

@@ -23,7 +23,7 @@
 
         <form method="post" action="updateTestResults">
 
-            <p>Reason to mark this test as failed: <input name="reason" type="text" size="100"></p>
+            <p>Reason to mark this test as failed: <input name="reason" type="text" size="100" autofocus></p>
 
             <input type="submit" class="btn" value="Update">
 

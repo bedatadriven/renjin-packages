@@ -2,6 +2,9 @@ package org.renjin.ci.qa;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.RetryOptions;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.common.base.Optional;
@@ -17,10 +20,12 @@ import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
-import org.renjin.ci.packages.DeltaBuilder;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -136,6 +141,49 @@ public class QaResources {
     return new Viewable("/testRegressions.ftl", model);
   }
 
+
+  public static URI findNextRegression(UriInfo uriInfo, Key<PackageTestResult> key) {
+    PackageBuildId packageBuildId = PackageTestResult.buildIdOf(key);
+    String testName = key.getName();
+
+    return findNextRegression(uriInfo, packageBuildId.getPackageVersionId(), testName);
+  }
+
+  public static URI findNextRegression(UriInfo uriInfo, PackageVersionId packageVersionId, String testName) {
+    Iterable<PackageVersionDelta> deltas = ofy().load().type(PackageVersionDelta.class)
+        .filter("regression", true)
+        .filterKey(">=", PackageVersionDelta.key(packageVersionId))
+        .chunk(5)
+        .iterable();
+
+    for (PackageVersionDelta delta : deltas) {
+      List<String> regressions = Lists.newArrayList(delta.getTestRegressions());
+      Collections.sort(regressions);
+      for (String regressionName : regressions) {
+        if (delta.getPackageVersionId().compareTo(packageVersionId) > 0 ||
+            regressionName.compareTo(testName) > 0) {
+
+          // Redirect to this test's page
+          return uriInfo.getBaseUriBuilder()
+              .path("qa")
+              .path("testRegression")
+              .path(delta.getPackageVersionId().getGroupId())
+              .path(delta.getPackageVersionId().getPackageName())
+              .path(delta.getPackageVersionId().getVersion())
+              .path(regressionName)
+              .build();
+        }
+      }
+    }
+
+    // If this is the last test, then
+    // Redirect to history page
+    return uriInfo.getBaseUriBuilder()
+        .path("qa")
+        .path("testRegressions")
+        .build();
+  }
+
   @Path("testRegression/{groupId}/{packageName}/{packageVersion}/{testName}")
   public TestRegressionResource getTestRegression(@PathParam("groupId") String groupId,
                                                   @PathParam("packageName") String packageName,
@@ -242,17 +290,15 @@ public class QaResources {
       }
     });
 
-    // Recalculate deltas
+    // Schedule recalculate deltas
     for (PackageVersionId packageVersionId : packageVersionIds) {
-      DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
+      QueueFactory.getDefaultQueue().add(TaskOptions.Builder
+          .withUrl(packageVersionId.getPath() + "/updateDeltas")
+          .retryOptions(RetryOptions.Builder.withTaskRetryLimit(3)));
     }
 
-    // Redirect to history page
-    UriBuilder historyUri = uriInfo.getBaseUriBuilder()
-        .path("qa")
-        .path("testRegressions");
 
-    return Response.seeOther(historyUri.build()).build();
-
+    return Response.seeOther(findNextRegression(uriInfo, toUpdate.get(0))).build();
   }
+
 }

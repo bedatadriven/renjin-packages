@@ -111,6 +111,10 @@ public class TestRegression {
         getPackageVersionId().getVersionString() + "/" + testName;
   }
 
+  public String getNextPath() {
+    return getDetailPath() + "/next";
+  }
+
   public String getMarkFormPath() {
     return "/qa/markTestResults?packageId=" + getPackageVersionId().getPackageId() + "&testName=" + testName;
   }

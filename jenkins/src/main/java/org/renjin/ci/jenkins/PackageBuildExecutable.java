@@ -166,15 +166,15 @@ public class PackageBuildExecutable implements Queue.Executable {
         /*
          * Make sure we clean up our workspace so we don't fill the builder's storage
          */
-        buildContext.getWorkerContext().getWorkspace().deleteContents();
-
+        buildContext.cleanup();
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       parentTask.getPackageNode().cancelled();
       throw new RuntimeException("Cancelled", e);
 
     } catch (Exception e) {
-      listener.getLogger().printf("Exception building: %s\n", e.getMessage());
+      listener.getLogger().printf("Exception building: %s%n", e.getMessage());
       parentTask.getPackageNode().crashed();
       e.printStackTrace(listener.getLogger());
     }

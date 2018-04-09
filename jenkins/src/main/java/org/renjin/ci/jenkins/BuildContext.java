@@ -92,7 +92,7 @@ public class BuildContext {
   
   public void cleanup() {
     try {
-      buildDir.deleteRecursive();
+      workerContext.getWorkspace().deleteRecursive();
     } catch (Exception e) {
       LOGGER.severe("Failed to delete build directory " + buildDir);
     }

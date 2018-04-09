@@ -38,10 +38,13 @@ public class DeltaBuilder {
 
   private final PackageVersionId packageVersionId;
   private final Map<Long, BuildDelta> deltas = new HashMap<>();
+  private final Map<String, TestRegression> openRegressions = new HashMap<>();
+
   private PackageVersion packageVersion;
   private Package packageEntity;
 
   private Set<Key<PackageTestResult>> badTests = new HashSet<>();
+  private Multimap<String, PackageTestResult> testResultMap;
 
   public DeltaBuilder(PackageVersionId packageVersionId) {
     this.packageVersionId = packageVersionId;
@@ -66,7 +69,7 @@ public class DeltaBuilder {
   }
 
 
-  public PackageVersionDelta build(Optional<PackageBuild> newBuild, List<PackageTestResult> newTestResults) {
+  public PackageVersionDelta build() {
 
     packageVersion = PackageDatabase.getPackageVersion(packageVersionId).get();
     if(packageVersion.isDisabled()) {
@@ -82,12 +85,10 @@ public class DeltaBuilder {
         // Build a simplified list, mapping each renjin version in order to a build
         // If there have been multiple builds for a given Renjin Version, use the last build
         TreeMap<RenjinVersionId, PackageBuild> buildMap = latestBuildPerRenjinVersion(
-            selectWithSameDependencyVersions(builds), newBuild);
+            selectWithSameDependencyVersions(builds));
 
         // Query the test results for all builds - we need the data to assess reliability
-        Iterable<PackageTestResult> testResults = Iterables.concat(
-            PackageDatabase.getTestResults(packageVersionId),
-            newTestResults);
+        Iterable<PackageTestResult> testResults = PackageDatabase.getTestResults(packageVersionId);
 
         checkBuildHistory(testResults, buildMap);
         checkCompilationHistory(buildMap);
@@ -106,6 +107,39 @@ public class DeltaBuilder {
     return new PackageVersionDelta(packageVersionId, deltas.values());
   }
 
+  private Map<String, TestRegression> queryPreviousRegressions() {
+    Map<String, TestRegression> map = new HashMap<>();
+    for (TestRegression testRegression : PackageDatabase.getTestRegressions(packageVersionId).iterable()) {
+      map.put(testRegression.getKeyName(), testRegression);
+    }
+    return map;
+  }
+
+  public List<TestRegression> buildRegressionUpdates() {
+
+    LOGGER.info("Building updates to test regressions: " + openRegressions.size() + " open regression(s)");
+
+    List<TestRegression> toUpdate = new ArrayList<>();
+
+    // Find all the (currently) open regressions that do not yet have a record
+    Map<String, TestRegression> existing = queryPreviousRegressions();
+    for (TestRegression openRegression : openRegressions.values()) {
+      if(!existing.containsKey(openRegression.getKeyName())) {
+        toUpdate.add(openRegression);
+      }
+    }
+
+    // Now close any open regressions that are no longer failing
+    for (TestRegression regression : existing.values()) {
+      if(!openRegressions.containsKey(regression.getKeyName())) {
+        toUpdate.add(closeRegression(regression));
+      }
+    }
+
+    return toUpdate;
+  }
+
+
   private PackageBuild findPreviousSuccessfulBuild(RenjinVersionId renjinVersionId, TreeMap<RenjinVersionId, PackageBuild> buildMap) {
     Map.Entry<RenjinVersionId, PackageBuild> previous = buildMap.lowerEntry(renjinVersionId);
     if(previous == null) {
@@ -120,25 +154,18 @@ public class DeltaBuilder {
     return previous.getValue();
   }
 
-  private TreeMap<RenjinVersionId, PackageBuild> latestBuildPerRenjinVersion(List<PackageBuild> builds, Optional<PackageBuild> newBuild) {
+  private TreeMap<RenjinVersionId, PackageBuild> latestBuildPerRenjinVersion(List<PackageBuild> builds) {
 
     TreeMap<RenjinVersionId, PackageBuild> buildMap = Maps.newTreeMap();
     for (PackageBuild build : builds) {
       RenjinVersionId rv = build.getRenjinVersionId();
-      if(isValidRenjinVersion(rv)) {
+      if (isValidRenjinVersion(rv)) {
         PackageBuild lastBuild = buildMap.get(rv);
 
         if (lastBuild == null || build.getBuildNumber() > lastBuild.getBuildNumber()) {
           buildMap.put(rv, build);
         }
       }
-    }
-
-    // If we have just updated a new build within the same transaction, it may not yet be
-    // returned by getFinishedBuilds(), or may be out of date. 
-    // Ensure that we use the updated version here
-    if(newBuild.isPresent()) {
-      buildMap.put(newBuild.get().getRenjinVersionId(), newBuild.get());
     }
 
     return buildMap;
@@ -162,9 +189,9 @@ public class DeltaBuilder {
 
     markCppFailures(nativeCompilation);
     
-    Optional<PackageBuild> nativeRegression = findRegression(nativeCompilation, nativeCompilationSucceeded());
+    Optional<Regression<PackageBuild>> nativeRegression = findRegression(nativeCompilation, nativeCompilationSucceeded());
     if(nativeRegression.isPresent()) {
-      delta(nativeRegression.get()).setCompilationDelta(-1);
+      delta(nativeRegression.get().getBroken()).setCompilationDelta(-1);
     }
     Optional<PackageBuild> nativeProgression = findProgression(nativeCompilation, nativeCompilationSucceeded());
     if(nativeProgression.isPresent()) {
@@ -197,9 +224,9 @@ public class DeltaBuilder {
 
   private void checkBuildHistory(Iterable<PackageTestResult> testResults, TreeMap<RenjinVersionId, PackageBuild> buildMap) {
     if(oneTestHasOnceEverPassed(testResults)) {
-      Optional<PackageBuild> buildRegression = findRegression(buildMap.values(), buildSucceeded());
+      Optional<Regression<PackageBuild>> buildRegression = findRegression(buildMap.values(), buildSucceeded());
       if (buildRegression.isPresent()) {
-        delta(buildRegression.get()).setBuildDelta(-1);
+        delta(buildRegression.get().getBroken()).setBuildDelta(-1);
       }
     }
     Optional<PackageBuild> buildProgression = findProgression(buildMap.values(), buildSucceeded());
@@ -225,7 +252,6 @@ public class DeltaBuilder {
     List<PackageBuild> matching = Lists.newArrayList();
     for (PackageBuild build : builds) {
       if(sameDependencyVersions(build, latestBuild)) {
-       // LOGGER.info("Build #" + build.getBuildNumber() + " matches = " + build.getResolvedDependencyIds());
         matching.add(build);
       }
     }
@@ -254,10 +280,7 @@ public class DeltaBuilder {
 
   /**
    * Sometimes regressions are caused because we updated our dependency resolution algorithm. This ensures that
-   * we only compare results 
-   * @param build
-   * @param latestBuild
-   * @return
+   * we only compare results
    */
   private boolean sameDependencyVersions(PackageBuild build, PackageBuild latestBuild) {
     Map<PackageId, PackageVersionId> dependencies = versionMap(build);
@@ -274,11 +297,11 @@ public class DeltaBuilder {
   private void checkTestResults(TreeMap<RenjinVersionId, PackageBuild> buildMap, Iterable<PackageTestResult> testResults) {
 
     // Now do the same for tests, one test at a time
-    Multimap<String, PackageTestResult> tests = indexByName(
-        excludeDuplicatedTestThatTests(testResults));
-    for (String testName : tests.keySet()) {
+    testResultMap = indexByName(excludeDuplicatedTestThatTests(testResults));
 
-      Collection<PackageTestResult> allTestResults = tests.get(testName);
+    for (String testName : testResultMap.keySet()) {
+
+      Collection<PackageTestResult> allTestResults = testResultMap.get(testName);
       Collection<PackageTestResult> results = excludeTestsThatProbablyTimedOut(allTestResults);
 
       results = excludeFalsePositiveTestThatTests(results);
@@ -286,12 +309,12 @@ public class DeltaBuilder {
       // Identify regression or progression among the build selected for comparison
       TreeMap<RenjinVersionId, PackageTestResult> byVersion = resultsFromLatestBuilds(buildMap, results);
       
-      //LOGGER.info("Comparing results for " + testName + " = " + byVersion);
-      
-      Optional<PackageTestResult> regression = findRegression(byVersion.values(), testSucceeded());
+      Optional<Regression<PackageTestResult>> regression = findRegression(byVersion.values(), testSucceeded());
       if(regression.isPresent()) {
         if(reliableTest(results)) {
-          delta(regression.get()).getTestRegressions().add(regression.get().getName());
+          delta(regression.get().getBroken()).getTestRegressions().add(regression.get().getBroken().getName());
+          TestRegression testRegression = newTestRegression(regression.get());
+          openRegressions.put(testRegression.getKeyName(), testRegression);
         }
       }
       Optional<PackageTestResult> progression = findProgression(byVersion.values(), testSucceeded());
@@ -299,6 +322,61 @@ public class DeltaBuilder {
         delta(progression.get()).getTestProgressions().add(progression.get().getName());
       }
     }
+  }
+
+  /**
+   * Create a new test regression record for a newly failing test.
+   */
+  private TestRegression newTestRegression(Regression<PackageTestResult> regression) {
+    TestRegression testRegression = new TestRegression(regression.getBroken().getBuildId(), regression.getBroken().getName());
+    testRegression.setOpen(true);
+    testRegression.setStatus(TestRegressionStatus.UNCONFIRMED);
+    testRegression.setRenjinVersion(regression.getBroken().getRenjinVersion());
+    testRegression.setLastGoodBuildNumber(regression.getLastGood().getPackageBuildNumber());
+    testRegression.setLastGoodRenjinVersion(regression.getLastGood().getRenjinVersion());
+    testRegression.setTriageIndex(true);
+
+    return testRegression;
+  }
+
+
+  /**
+   * Close an an existing regression record.
+   */
+  private TestRegression closeRegression(TestRegression regression) {
+
+    PackageTestResult closingResult = findClosingBuild(regression);
+    if(closingResult == null) {
+      LOGGER.severe("Cannot find closing result for " + regression.getKeyName());
+    } else {
+
+      regression.setOpen(false);
+      regression.setDateClosed(new Date());
+      regression.setClosingBuild(closingResult.getBuildId());
+      regression.setClosingRenjinVersion(closingResult.getRenjinVersionId());
+      regression.setTriageIndex(false);
+    }
+    return regression;
+  }
+
+  private PackageTestResult findClosingBuild(TestRegression regression) {
+
+    // Find the first build, after the build that caused this regression, where the test succeeds.
+
+    PackageTestResult closingResult = null;
+
+    for (PackageTestResult testResult : testResultMap.get(regression.getTestName())) {
+      if(testResult.isPassed() && testResult.getRenjinVersionId().isNewerThan(regression.getRenjinVersionId())) {
+
+        // This test past, and came "after" the Renjin version that broke this test.
+        // Is it the earliest build, or did it come after some other succesful build?
+        if(closingResult == null || testResult.isNewerThan(closingResult)) {
+          closingResult = testResult;
+        }
+      }
+    }
+
+    return closingResult;
   }
 
   private Collection<PackageTestResult> excludeFalsePositiveTestThatTests(Collection<PackageTestResult> results) {
@@ -444,7 +522,7 @@ public class DeltaBuilder {
   }
 
   @VisibleForTesting
-  static <T> Optional<T> findRegression(Iterable<T> builds, Predicate<T> predicate) {
+  static <T> Optional<Regression<T>> findRegression(Iterable<T> builds, Predicate<T> predicate) {
 
     // Order the builds from the build against the most recent version of Renjin to the build
     // against the oldest version of Renjin
@@ -473,7 +551,7 @@ public class DeltaBuilder {
 
           T build = it.next();
           if (predicate.apply(build)) {
-            return Optional.of(previousBuild);
+            return Optional.of(new Regression<>(previousBuild, build));
           }
           previousBuild = build;
         }
@@ -523,19 +601,24 @@ public class DeltaBuilder {
   }
 
 
-  public static void update(PackageVersionId packageVersionId, Optional<PackageBuild> newBuild, List<PackageTestResult> testResults) {
+  public static void update(PackageVersionId packageVersionId) {
     DeltaBuilder builder = new DeltaBuilder(packageVersionId);
-    PackageVersionDelta deltas = builder.build(newBuild, testResults);
+    PackageVersionDelta deltas = builder.build();
 
     for (Key<PackageTestResult> badTest : builder.badTests) {
       LOGGER.severe("Going to delete " + badTest + "!!");
     }
+
     Result<Void> deleteOp = null;
     if(!builder.badTests.isEmpty()) {
       deleteOp = ObjectifyService.ofy().delete().keys(builder.badTests);
     }
 
-    ObjectifyService.ofy().save().entity(deltas).now();
+    List<Object> toUpdate = new ArrayList<>();
+    toUpdate.add(deltas);
+    toUpdate.addAll(builder.buildRegressionUpdates());
+
+    ObjectifyService.ofy().save().entities(toUpdate).now();
 
     if(deleteOp != null) {
       deleteOp.now();

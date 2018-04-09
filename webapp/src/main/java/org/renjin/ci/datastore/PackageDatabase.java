@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.googlecode.objectify.*;
+import com.googlecode.objectify.cmd.LoadType;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.*;
@@ -44,6 +45,7 @@ public class PackageDatabase {
     register(PackageVersionDescription.class);
     register(PackageVersionDelta.class);
     register(PackageTestResult.class);
+    register(TestRegression.class);
 
     register(PackageExample.class);
     register(PackageExampleSource.class);
@@ -138,24 +140,6 @@ public class PackageDatabase {
         .filter("name <", upperKey)
         .chunk(1000)
         .iterable();
-  }
-
-  public static long newBuildNumber(final PackageVersionId packageVersionId) {
-    return ObjectifyService.ofy().transact(new Work<Long>() {
-
-      @Override
-      public Long run() {
-        PackageVersion pv = ObjectifyService.ofy().load().key(Key.create(PackageVersion.class, packageVersionId.toString())).safe();
-        long number = pv.getLastBuildNumber();
-        if (number == 0) {
-          number = 200;
-        }
-        number++;
-        pv.setLastBuildNumber(number);
-        ObjectifyService.ofy().save().entity(pv).now();
-        return number;
-      }
-    });
   }
 
 
@@ -354,6 +338,35 @@ public class PackageDatabase {
     return getPackageVersions(new PackageId(groupId, name));
   }
 
+  public static Query<TestRegression> getOpenTestRegressions() {
+    return getTestRegressions()
+        .filter("open", true);
+  }
+
+  public static LoadType<TestRegression> getTestRegressions() {
+    return ObjectifyService.ofy()
+        .load()
+        .type(TestRegression.class);
+  }
+
+  public static LoadResult<Key<TestRegression>> getNextOpenTestRegression(Key<TestRegression> regressionKey) {
+    return getTestRegressions()
+        .orderKey(false)
+        .filterKey(">", regressionKey)
+        .keys()
+        .first();
+  }
+
+  public static Query<TestRegression> getTestRegressions(PackageVersionId packageVersionId) {
+    return getTestRegressions()
+        .ancestor(PackageVersionDelta.key(packageVersionId));
+  }
+
+  public static LoadResult<TestRegression> getTestRegression(PackageBuildId packageBuildId, String testName) {
+    return ObjectifyService.ofy()
+        .load()
+        .key(TestRegression.key(packageBuildId, testName));
+  }
 
   public static Loader load() {
     return ObjectifyService.ofy().load();
@@ -549,4 +562,7 @@ public class PackageDatabase {
     return dataFrame;
   }
 
+  public static LoadResult<PackageTestResult> getTestResult(PackageBuildId buildId, String testName) {
+    return ofy().load().key(PackageTestResult.key(buildId, testName));
+  }
 }

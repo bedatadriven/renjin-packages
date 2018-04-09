@@ -45,7 +45,11 @@ public class PackageVersionDelta {
   public static Key<PackageVersionDelta> key(PackageVersionId versionId) {
     return Key.create(PackageVersionDelta.class, versionId.toString());
   }
-  
+
+  public static PackageVersionId idOf(Key<PackageVersionDelta> key) {
+    return PackageVersionId.fromTriplet(key.getName());
+  }
+
   public PackageVersionDelta() {
   }
 

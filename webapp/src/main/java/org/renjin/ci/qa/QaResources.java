@@ -9,11 +9,12 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.*;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.VoidWork;
+import com.googlecode.objectify.Work;
+import com.googlecode.objectify.cmd.Query;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageBuildId;
@@ -21,6 +22,7 @@ import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.RenjinVersionId;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
@@ -119,27 +121,57 @@ public class QaResources {
   @Path("testRegressions")
   public Viewable getTestRegressions(@QueryParam("renjinVersion") final String renjinVersion) {
 
-    Iterable<PackageVersionDelta> deltas = ofy().load().type(PackageVersionDelta.class)
-        .filter("regression", true)
-        .iterable();
-
-    Predicate<TestRegressionEntry> filter = Predicates.alwaysTrue();
+    Query<TestRegression> query = PackageDatabase.getOpenTestRegressions();
     if(!Strings.isNullOrEmpty(renjinVersion)) {
-      filter = new Predicate<TestRegressionEntry>() {
-        @Override
-        public boolean apply(TestRegressionEntry input) {
-          return input.getBrokenRenjinVersionId().equals(RenjinVersionId.valueOf(renjinVersion));
-        }
-      };
+      query = query.filter("renjinVersion", renjinVersion);
     }
-    
-    TestRegressionsPage page = new TestRegressionsPage(deltas, filter);
-    
+
+    Iterable<TestRegression> pending = Iterables.filter(query, new Predicate<TestRegression>() {
+      @Override
+      public boolean apply(@Nullable TestRegression input) {
+        return input.isOpen() && input.getStatus() != TestRegressionStatus.INVALID;
+      }
+    });
+
+    TestRegressionIndexPage page = new TestRegressionIndexPage(pending);
+
     Map<String, Object> model = new HashMap<>();
     model.put("page", page);
     
     return new Viewable("/testRegressions.ftl", model);
   }
+
+
+  @GET
+  @Path("testRegressions/unconfirmed")
+  public Viewable getUnconfirmedRegressions() {
+    QueryResultIterable<TestRegression> unconfirmed = PackageDatabase.getTestRegressions()
+        .order("triage")
+        .iterable();
+
+    TestRegressionIndexPage page = new TestRegressionIndexPage(unconfirmed);
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", page);
+
+    return new Viewable("/testRegressions.ftl", model);
+  }
+
+  @GET
+  @Path("testRegressions/closed")
+  public Viewable getClosedTestRegressions() {
+
+    Query<TestRegression> query = PackageDatabase.getTestRegressions()
+        .order("-dateClosed");
+
+    TestRegressionIndexPage page = new TestRegressionIndexPage(query);
+
+    Map<String, Object> model = new HashMap<>();
+    model.put("page", page);
+
+    return new Viewable("/testRegressionsClosed.ftl", model);
+  }
+
 
 
   public static URI findNextRegression(UriInfo uriInfo, Key<PackageTestResult> key) {
@@ -163,15 +195,6 @@ public class QaResources {
         if (delta.getPackageVersionId().compareTo(packageVersionId) > 0 ||
             regressionName.compareTo(testName) > 0) {
 
-          // Redirect to this test's page
-          return uriInfo.getBaseUriBuilder()
-              .path("qa")
-              .path("testRegression")
-              .path(delta.getPackageVersionId().getGroupId())
-              .path(delta.getPackageVersionId().getPackageName())
-              .path(delta.getPackageVersionId().getVersion())
-              .path(regressionName)
-              .build();
         }
       }
     }
@@ -184,14 +207,27 @@ public class QaResources {
         .build();
   }
 
-  @Path("testRegression/{groupId}/{packageName}/{packageVersion}/{testName}")
+  @Path("testRegression/{groupId}/{packageName}/{packageVersion}/{testName}/{buildNumber}")
   public TestRegressionResource getTestRegression(@PathParam("groupId") String groupId,
                                                   @PathParam("packageName") String packageName,
                                                   @PathParam("packageVersion") String packageVersion,
-                                                  @PathParam("testName") String testName) {
+                                                  @PathParam("testName") final String testName,
+                                                  @PathParam("buildNumber") final long buildNumber) {
 
-    PackageVersionId pvid = new PackageVersionId(groupId, packageName, packageVersion);
-    return new TestRegressionResource(pvid, testName);
+
+    final PackageVersionId pvid = new PackageVersionId(groupId, packageName, packageVersion);
+    TestRegression regression = ObjectifyService.ofy().transactNew(new Work<TestRegression>() {
+      @Override
+      public TestRegression run() {
+        return PackageDatabase.getTestRegression(new PackageBuildId(pvid, buildNumber), testName).now();
+      }
+    });
+
+    if(regression == null) {
+      throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("No such regression").build());
+    }
+
+    return new TestRegressionResource(regression);
   }
   
   @GET

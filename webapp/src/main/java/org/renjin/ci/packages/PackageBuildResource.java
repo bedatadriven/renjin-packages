@@ -15,7 +15,6 @@ import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.datastore.PackageTestResult;
 import org.renjin.ci.datastore.PackageVersion;
 import org.renjin.ci.model.*;
-import org.renjin.ci.packages.results.TestRegressionPage;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -87,14 +86,6 @@ public class PackageBuildResource {
     }
 
     return results;
-  }
-  
-  @GET
-  @Path("tests/regression/${testName}")
-  public Viewable getRegression(@PathParam("testName") String testName) {
-    TestRegressionPage regressionPage = TestRegressionPage.query(buildId, testName);
- 
-    throw new UnsupportedOperationException();
   }
 
   @POST

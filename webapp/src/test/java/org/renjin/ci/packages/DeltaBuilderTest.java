@@ -1,6 +1,8 @@
 package org.renjin.ci.packages;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -8,6 +10,7 @@ import org.junit.Test;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.model.BuildOutcome;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 
 import static java.util.Arrays.asList;
@@ -15,7 +18,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.renjin.ci.datastore.PackageBuild.buildSucceeded;
 import static org.renjin.ci.packages.DeltaBuilder.findProgression;
-import static org.renjin.ci.packages.DeltaBuilder.findRegression;
 
 
 public class DeltaBuilderTest {
@@ -99,6 +101,16 @@ public class DeltaBuilderTest {
     PackageBuild build = new PackageBuild();
     build.setOutcome(success ? BuildOutcome.SUCCESS : BuildOutcome.FAILURE);
     return build;
+  }
+
+  private <T> Optional<T> findRegression(Iterable<T> builds, Predicate<T> predicate) {
+    return DeltaBuilder.findRegression(builds, predicate).transform(new Function<Regression<T>, T>() {
+      @Nullable
+      @Override
+      public T apply(Regression<T> input) {
+        return input.getBroken();
+      }
+    });
   }
 
   private <T> Matcher<Optional<T>> present(final Matcher<T> matcher) {

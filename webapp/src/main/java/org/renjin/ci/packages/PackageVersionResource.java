@@ -180,7 +180,7 @@ public class PackageVersionResource {
     PackageDatabase.ofy().transact(new VoidWork() {
       @Override
       public void vrun() {
-        DeltaBuilder.update(packageVersionId, Optional.<PackageBuild>absent(), Collections.<PackageTestResult>emptyList());
+        DeltaBuilder.update(packageVersionId);
       }
     });
     return "Done.";

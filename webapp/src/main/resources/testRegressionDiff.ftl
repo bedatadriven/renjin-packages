@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="regression" type="org.renjin.ci.qa.TestRegression" -->
+<#-- @ftlvariable name="regression" type="org.renjin.ci.qa.TestRegressionPage" -->
 <#-- @ftlvariable name="diff" type="org.renjin.ci.qa.DiffPage" -->
 
 <#include "base.ftl">

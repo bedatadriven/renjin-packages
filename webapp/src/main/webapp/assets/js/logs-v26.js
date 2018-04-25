@@ -69,7 +69,11 @@
     // Should match "  at validObject()"
     var renjinLineRe = /^(\s*at\s*)([A-Za-z0-9._]+)\(\)/;
 
+    var plotLineRe = /^<<<<plot:([A-Za-z0-9]+\.svg)>>>>/;
+
     function formatLine(context, line, buildId) {
+
+
 
         if(context.prompt === 1 && line.startsWith("> ")) {
             // Transition to state prompt 1 and format the first line of a repl input
@@ -89,6 +93,12 @@
 
         if(context.prompt == 1 && line.startsWith("ERROR: ")) {
             return "<span class='error'>" + escapeHtml(line) + "</span>";
+        }
+
+        var plotMatch = plotLineRe.exec(line);
+        if(plotMatch) {
+            var plotName = plotMatch[1];
+            return "<img class=\"plot\" src=\"https://storage.googleapis.com/renjinci-logs/plot/" + plotName +"\">"
         }
 
         var javaLineMatch = javaLineRe.exec(line);

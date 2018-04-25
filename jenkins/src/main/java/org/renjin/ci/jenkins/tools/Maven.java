@@ -113,6 +113,9 @@ public class Maven {
         EnvVars environmentOverrides = new EnvVars();
         jdk.buildEnvVars(environmentOverrides);
 
+
+        environmentOverrides.put("RENJINCI_PLOT_DIR", buildContext.getPlotDir().getRemote());
+
         GZIPOutputStream logOut = new GZIPOutputStream(new FileOutputStream(buildContext.getLogFile()));
 
         Proc proc = buildContext.getWorkerContext().getLauncher().launch()

@@ -70,6 +70,34 @@ public class GcsLogArchiver implements LogArchiver {
     request.execute();
   }
 
+  public void archivePlots(FilePath plotDir) throws IOException, InterruptedException {
+    for (FilePath filePath : plotDir.list()) {
+      archivePlot(filePath);
+    }
+  }
+
+  private void archivePlot(FilePath filePath) throws IOException {
+    String objectName = "plot/" + filePath.getName();
+    String contentType = "image/svg+xml";
+
+    StorageObject objectMetadata = new StorageObject()
+        .setName(objectName)
+        .setContentType(contentType)
+        .setCacheControl("public immutable");
+
+    Storage.Objects.Insert request = storage.objects().insert(
+        StorageKeys.BUILD_LOG_BUCKET,
+        objectMetadata,
+        new FilePathContent(contentType, filePath));
+
+    // Setting to 0 makes the operation succeed only if there are no live versions of the object.
+    request.setIfGenerationMatch(0L);
+
+
+    request.setPredefinedAcl("publicread");
+    request.execute();
+  }
+
 
   private static class FilePathContent extends AbstractInputStreamContent {
 

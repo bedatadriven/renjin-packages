@@ -151,6 +151,9 @@ public class PackageBuildExecutable implements Queue.Executable {
          */
         result.setTestResults(TestResultParser.parseResults(buildContext, logArchiver));
 
+        logArchiver.archivePlots(buildContext.getPlotDir());
+
+
         /*
          * Report the build result to ci.renjin.org
          */

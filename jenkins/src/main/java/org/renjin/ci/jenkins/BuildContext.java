@@ -24,6 +24,7 @@ public class BuildContext {
   private Maven maven;
   private PackageNode packageNode;
   private FilePath buildDir;
+  private FilePath plotDir;
   private String buildNumber;
 
   /**
@@ -54,11 +55,19 @@ public class BuildContext {
         throw new IOException("Failed to create working directory on " + workerContext.getNode().getDisplayName(), e);
       }
     }
+
+    plotDir = buildDir.child("plots");
+    plotDir.mkdirs();
+
     logFile = File.createTempFile("package", ".log.gz");
   }
 
   public FilePath getBuildDir() {
     return buildDir;
+  }
+
+  public FilePath getPlotDir() {
+    return plotDir;
   }
 
   public void setBuildDir(FilePath buildDir) {

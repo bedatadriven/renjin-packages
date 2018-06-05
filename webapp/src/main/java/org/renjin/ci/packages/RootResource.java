@@ -1,19 +1,19 @@
 package org.renjin.ci.packages;
 
-import org.glassfish.jersey.server.mvc.Viewable;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/")
 public class RootResource {
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public Viewable get() {
+  public Response get() {
     return new PackageListResource().getIndex();
   }
 
@@ -25,6 +25,6 @@ public class RootResource {
       .status(Response.Status.MOVED_PERMANENTLY)
         .location(uriInfo.getAbsolutePathBuilder().build()).build();
   }
-  
+
 
 }

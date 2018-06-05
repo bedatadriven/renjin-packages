@@ -6,7 +6,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.googlecode.objectify.*;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.renjin.ci.admin.migrate.ReComputeBuildDeltas;
+import org.renjin.ci.NoRobots;
 import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageVersionId;
@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 /**
  * Specific version of a package
  */
+@NoRobots
 public class PackageVersionResource {
   
   private static final Logger LOGGER = Logger.getLogger(PackageVersionResource.class.getName());
@@ -37,10 +38,21 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   public Viewable getPage() {
+    return getPage(false);
+  }
+
+
+  /**
+   *
+   * @param index true if this page may be indexed by robots
+   * @return
+   */
+  Viewable getPage(boolean index) {
     PackageVersionPage viewModel = new PackageVersionPage(packageVersion);
   
     Map<String, Object> model = new HashMap<>();
     model.put("version", viewModel);
+    model.put("index", index);
 
     return new Viewable("/packageVersion.ftl", model);
   }
@@ -102,6 +114,7 @@ public class PackageVersionResource {
   @Path("builds")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
+  @NoRobots
   public PackageBuild startBuild(@FormParam("renjinVersion") final String renjinVersion) {
     
     if(Strings.isNullOrEmpty(renjinVersion)) {
@@ -168,6 +181,7 @@ public class PackageVersionResource {
   
   @GET
   @Path("builds")
+  @NoRobots
   @Produces(MediaType.APPLICATION_JSON)
   public List<PackageBuild> getBuilds() {
     return Lists.newArrayList(PackageDatabase.getBuilds(packageVersionId));
@@ -185,16 +199,7 @@ public class PackageVersionResource {
     });
     return "Done.";
   }
-  
-  @GET
-  @Path("check")
-  public Response check() {
-    ReComputeBuildDeltas markBuildDeltas = new ReComputeBuildDeltas();
-    markBuildDeltas.map(PackageVersion.key(packageVersionId).getRaw());
 
-    return Response.ok("Done").build();
-  }
-  
   @Path("resolveDependencies")
   public DependencyResolution resolveDependencies() {
     try {
@@ -208,6 +213,7 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   @Path("source")
+  @NoRobots
   public Viewable getSourceIndex() {
     Map<String, Object> model = new HashMap<>();
     model.put("version", packageVersion);
@@ -219,6 +225,7 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   @Path("source/{file:.+}")
+  @NoRobots
   public Viewable getSourceFile(@PathParam("file") String filename) {
 
     LoadResult<PackageSource> source = PackageDatabase.getSource(packageVersionId, filename);
@@ -234,6 +241,7 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   @Path("buildDependencyMatrix")
+  @NoRobots
   public Viewable compareDependencies(@QueryParam("test") String testName) {
 
     Map<String, Object> model = new HashMap<>();
@@ -245,6 +253,7 @@ public class PackageVersionResource {
   @GET
   @Produces("text/html")
   @Path("test/{testName}/history")
+  @NoRobots
   public Viewable getTestHistory(@PathParam("testName") String testName, @QueryParam("pull") Long pullNumber) {
     
     Map<String, Object> model = new HashMap<>();
@@ -256,6 +265,7 @@ public class PackageVersionResource {
   @GET
   @Produces("text/csv")
   @Path("test/{testName}/timings.csv")
+  @NoRobots
   public String getTestTimings(@PathParam("testName") String testName) {
 
     StringBuilder csv = new StringBuilder();

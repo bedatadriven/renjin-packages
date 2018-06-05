@@ -9,6 +9,7 @@ import com.googlecode.objectify.NotFoundException;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.NoRobots;
 import org.renjin.ci.admin.migrate.RecomputeBuildGrades;
 import org.renjin.ci.datastore.PackageBuild;
 import org.renjin.ci.datastore.PackageDatabase;
@@ -30,6 +31,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 import static java.lang.String.format;
 import static org.renjin.ci.datastore.PackageBuild.key;
 
+@NoRobots
 public class PackageBuildResource {
 
   private static final Logger LOGGER = Logger.getLogger(PackageBuildResource.class.getName());

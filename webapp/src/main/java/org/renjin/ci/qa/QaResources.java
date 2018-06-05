@@ -16,6 +16,7 @@ import com.googlecode.objectify.VoidWork;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.Query;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.NoRobots;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
@@ -36,6 +37,7 @@ import java.util.logging.Logger;
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 @Path("/qa")
+@NoRobots
 public class QaResources {
   
   private static Logger LOGGER = Logger.getLogger(QaResources.class.getName());

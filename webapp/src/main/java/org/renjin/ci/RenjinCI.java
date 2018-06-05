@@ -70,6 +70,8 @@ public class RenjinCI extends Application {
 
     classes.add(SystemRequirementResource.class);
 
+    classes.add(NoRobotsFeature.class);
+
     return classes;
   }
 

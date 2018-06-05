@@ -3,11 +3,14 @@ package org.renjin.ci.packages;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.VoidWork;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.renjin.ci.NoRobots;
+import org.renjin.ci.NoRobotsFilter;
 import org.renjin.ci.datastore.Package;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageId;
@@ -42,7 +45,7 @@ public class PackageResource {
     if(packageEntity.isReplaced()) {
       return getReplacementPage(packageEntity);
     } else {
-      return getVersion(packageEntity.getLatestVersion()).getPage();
+      return getVersion(packageEntity.getLatestVersion()).getPage(true);
     }
   }
 
@@ -77,12 +80,19 @@ public class PackageResource {
   }
 
   @Path("{version: [0-9][0-9\\-\\._A-Za-z]*}")
-  public PackageVersionResource getVersion(@PathParam("version") String version) {
+  public PackageVersionResource getVersion(@HeaderParam("user-agent") String userAgent, @PathParam("version") String version) {
+    NoRobotsFilter.checkNotRobot(userAgent);
+    return getVersion(version);
+  }
+
+  @VisibleForTesting
+  PackageVersionResource getVersion(String version) {
     PackageVersionId packageVersionId = new PackageVersionId(groupId, packageName, version);
     Optional<PackageVersion> packageVersion = PackageDatabase.getPackageVersion(packageVersionId);
     if(!packageVersion.isPresent()) {
       throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
+
     return new PackageVersionResource(packageVersion.get());
   }
 
@@ -119,6 +129,7 @@ public class PackageResource {
 
 
   @GET
+  @NoRobots
   @Produces("text/html")
   @Path("disabled")
   public Viewable getDisableForm(@Context UriInfo uriInfo,

@@ -2,6 +2,9 @@ package org.renjin.ci.packages;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.appengine.api.memcache.Expiration;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.search.*;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -22,29 +25,67 @@ import org.renjin.ci.storage.StorageKeys;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/packages")
 public class PackageListResource {
 
+  private static final Logger LOGGER = Logger.getLogger(PackageListResource.class.getName());
+
   private static final int MAX_RESULTS = 50;
+
+  /**
+   * Cache package index page 10 hours.
+   */
+  private static final int INDEX_CACHE_SECONDS = 10 * 60 * 60;
 
   private final SearchService searchService = SearchServiceFactory.getSearchService();
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getIndex() {
+  public Response getIndex() {
     return getIndex("A");
   }
 
   @GET
   @Produces(MediaType.TEXT_HTML)
   @Path("{letter:[A-Z]}")
-  public Viewable getIndex(@PathParam("letter") String letter) {
+  public Response getIndex(@PathParam("letter") String letter) {
 
     Map<String, Object> model = new HashMap<>();
     model.put("letters", Lists.charactersOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
-    model.put("packages", PackageDatabase.getPackagesStartingWithLetter(letter.charAt(0)));
-    return new Viewable("/packageIndex.ftl", model);
+    model.put("packages", getPackagesStartingWithLetter(letter.charAt(0)));
+
+    CacheControl cacheControl = new CacheControl();
+    cacheControl.setMaxAge(INDEX_CACHE_SECONDS);
+    cacheControl.setPrivate(false);
+
+    return
+        Response.ok(new Viewable("/packageIndex.ftl", model))
+        .cacheControl(cacheControl)
+        .expires(new Date(System.currentTimeMillis() + (INDEX_CACHE_SECONDS * 1000)))
+        .build();
+  }
+
+  private List<Package> getPackagesStartingWithLetter(char letter) {
+
+    MemcacheService memcacheService = MemcacheServiceFactory.getMemcacheService();
+    String memcacheKey = "packages-" + letter;
+
+    List<Package> list = null;
+    try {
+      list = (List<Package>) memcacheService.get(memcacheKey);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE,"Exception retrieving package list " + memcacheKey + " from memcache", e);
+    }
+
+    if(list == null) {
+      list = PackageDatabase.getPackagesStartingWithLetter(letter);
+      memcacheService.put(memcacheKey, list, Expiration.byDeltaSeconds(INDEX_CACHE_SECONDS));
+    }
+
+    return list;
   }
 
   @GET

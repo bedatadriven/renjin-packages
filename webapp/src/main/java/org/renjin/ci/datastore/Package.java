@@ -6,8 +6,10 @@ import com.googlecode.objectify.condition.IfNull;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
+import java.io.Serializable;
+
 @Entity
-public class  Package {
+public class Package implements Serializable {
 
   @Id
   private String id;

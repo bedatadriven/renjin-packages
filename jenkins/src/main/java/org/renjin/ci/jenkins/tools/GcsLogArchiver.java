@@ -1,5 +1,6 @@
 package org.renjin.ci.jenkins.tools;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.storage.Storage;
@@ -95,7 +96,13 @@ public class GcsLogArchiver implements LogArchiver {
 
 
     request.setPredefinedAcl("publicread");
-    request.execute();
+    try {
+      request.execute();
+    } catch (GoogleJsonResponseException e) {
+      if(e.getStatusCode() == 412) {
+        // Already present, no need to upload
+      }
+    }
   }
 
 

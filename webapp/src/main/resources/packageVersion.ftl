@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="version" type="org.renjin.ci.packages.PackageVersionPage" -->
 <#include "base.ftl">
 
-<@scaffolding title="${version.packageName} ${version.version}" description="${version.pageDescription}">
+<@scaffolding title="${version.packageName} ${version.version}" description="${version.pageDescription}" index=index>
 
 <#-- Shows breadcrumbs in search results -->
 <script type="application/ld+json">
@@ -79,7 +79,7 @@
         <div class="${version.compatibilityAlert.alertStyle}">
             ${version.compatibilityAlert.message}
             <#if version.olderVersionBetter>
-               An <a href="${version.bestPackageVersionId.path}">older version</a> of this package is
+               An <a href="${version.bestPackageVersionId.path}" rel="nofollow">older version</a> of this package is
                     more compatible with Renjin.
             </#if>
         </div>
@@ -95,7 +95,7 @@
         <h3>Dependencies</h3>
         <p>
         <#list version.dependencies as dependency>
-            <a href="${dependency.url}" class="${dependency.style}">${dependency.label}</a>
+            <a href="${dependency.url}" class="${dependency.style}" rel="nofollow">${dependency.label}</a>
         </#list>
         </p>
         </#if>
@@ -112,7 +112,7 @@
         <a href="http://docs.renjin.org/en/latest/library/project-setup.html">Read more</a> 
         about embedding Renjin in JVM-based projects.</p>
         <pre>${version.pomReference?html}</pre>
-        <p><a href="${version.latestBuildUrl}">View build log</a></p>
+        <p><a href="${version.latestBuildUrl}" rel="nofollow">View build log</a></p>
         
         <h3>Renjin CLI</h3>
         <p>If you're using Renjin from the command line, you load this library by invoking:</p>
@@ -128,7 +128,7 @@
         <ul class="test-results">
             <#list version.testResults as test>
             <li>
-                <a href="${version.latestBuildUrl}#test-${test.name}" class="<#if test.passed>btn btn-success<#else>btn btn-danger</#if>">${test.name}</a>
+                <a href="${version.latestBuildUrl}#test-${test.name}" class="<#if test.passed>btn btn-success<#else>btn btn-danger</#if>" rel="nofollow">${test.name}</a>
             </li>
             </#list>
         </ul>
@@ -146,7 +146,7 @@
         <h3>Release History</h3>
         <ul>
             <#list version.otherVersions as other>
-            <li><a href="${other.path}">${other.version}</a></li>
+            <li><a href="${other.path}" rel="nofollow">${other.version}</a></li>
             </#list>
         </ul>
         </div>

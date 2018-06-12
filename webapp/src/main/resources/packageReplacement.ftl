@@ -26,7 +26,7 @@
       "position": 2,
       "item":
       {
-        "@id": "http://packages.renjin.org/packages/${package.groupId}/${package.name}",
+        "@id": "http://packages.renjin.org/package/${package.groupId}/${package.name}",
         "name": "${package.name}"
       }
     }

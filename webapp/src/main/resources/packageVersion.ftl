@@ -24,7 +24,7 @@
       "position": 2,
       "item":
       {
-        "@id": "http://packages.renjin.org/packages/${version.groupId}/${version.packageName}",
+        "@id": "http://packages.renjin.org/package/${version.groupId}/${version.packageName}",
         "name": "${version.packageName}"
       }
     },
@@ -33,7 +33,7 @@
       "position": 3,
       "item":
       {
-        "@id": "http://packages.renjin.org/packages/${version.groupId}/${version.packageName}/${version.version}",
+        "@id": "http://packages.renjin.org/package/${version.groupId}/${version.packageName}/${version.version}",
         "name": "${version.version}"
       }
     }

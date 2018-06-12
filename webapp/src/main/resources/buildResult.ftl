@@ -24,7 +24,7 @@
       "position": 2,
       "item":
       {
-        "@id": "http://packages.renjin.org/packages/${build.versionId.groupId}/${build.versionId.packageName}",
+        "@id": "http://packages.renjin.org/package/${build.versionId.groupId}/${build.versionId.packageName}",
         "name": "${build.versionId.packageName}"
       }
     },

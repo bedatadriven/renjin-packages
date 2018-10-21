@@ -26,6 +26,7 @@ public class NoRobotsFilter implements ContainerRequestFilter {
     }
     String agentLowered = userAgentString.toLowerCase();
     return agentLowered.contains("bot") ||
+           agentLowered.contains("megaindex.ru") ||
            agentLowered.equals("ia_archiver");
   }
 

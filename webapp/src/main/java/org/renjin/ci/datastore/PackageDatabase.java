@@ -13,6 +13,9 @@ import com.googlecode.objectify.cmd.LoadType;
 import com.googlecode.objectify.cmd.Loader;
 import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.*;
+import org.renjin.ci.repo.apt.AptArtifact;
+import org.renjin.ci.repo.apt.AptDist;
+import org.renjin.ci.repo.apt.PgpKey;
 import org.renjin.sexp.ExternalPtr;
 import org.renjin.sexp.ListVector;
 import org.renjin.sexp.NamedValue;
@@ -76,6 +79,10 @@ public class PackageDatabase {
     register(PullTestResult.class);
 
     register(SystemRequirement.class);
+
+    register(AptArtifact.class);
+    register(AptDist.class);
+    register(PgpKey.class);
   }
 
   public static Objectify ofy() {

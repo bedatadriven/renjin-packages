@@ -1,7 +1,9 @@
 package org.renjin.ci.qa;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterable;
+import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
@@ -161,15 +163,23 @@ public class QaResources {
 
   @GET
   @Path("testRegressions/closed")
-  public Viewable getClosedTestRegressions() {
+  public Viewable getClosedTestRegressions(@QueryParam("cursor") String cursor) {
 
     Query<TestRegression> query = PackageDatabase.getTestRegressions()
-        .order("-dateClosed");
+        .order("-dateClosed")
+        .limit(200);
 
-    TestRegressionIndexPage page = new TestRegressionIndexPage(query);
+    if(!Strings.isNullOrEmpty(cursor)) {
+      query = query.startAt(Cursor.fromWebSafeString(cursor));
+    }
+
+    QueryResultIterator<TestRegression> it = query.iterator();
+
+    TestRegressionIndexPage page = new TestRegressionIndexPage(it);
 
     Map<String, Object> model = new HashMap<>();
     model.put("page", page);
+    model.put("cursor", it.getCursor().toWebSafeString());
 
     return new Viewable("/testRegressionsClosed.ftl", model);
   }

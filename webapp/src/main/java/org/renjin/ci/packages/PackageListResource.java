@@ -260,6 +260,28 @@ public class PackageListResource {
     }
     return results;
   }
+
+  @GET
+  @Path("/passing")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PackageVersionId> getPassing() {
+    List<PackageVersionId> results = new ArrayList<>();
+    QueryResultIterable<Package> packages = ObjectifyService.ofy()
+        .load()
+        .type(Package.class)
+        .chunk(3000)
+        .iterable();
+
+    for (Package aPackage : packages) {
+      if(!aPackage.isReplaced() &&
+          aPackage.getLatestVersion() != null &&
+          aPackage.getGradeInteger() == PackageBuild.GRADE_A) {
+        results.add(aPackage.getLatestVersionId());
+      }
+    }
+    return results;
+  }
+
   @GET
   @Path("/latest")
   @Produces(MediaType.APPLICATION_JSON)

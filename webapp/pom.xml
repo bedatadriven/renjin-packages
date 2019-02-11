@@ -16,8 +16,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-  <parent>
+    <parent>
     <groupId>org.renjin.ci</groupId>
     <artifactId>renjin-ci-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -105,7 +117,12 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.3</version>
+      <version>1.18</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpg-jdk15on</artifactId>
+      <version>1.61</version>
     </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
@@ -158,6 +175,11 @@
       <groupId>org.glassfish</groupId>
       <artifactId>javax.json</artifactId>
       <version>1.0.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ocpsoft.prettytime</groupId>
+      <artifactId>prettytime</artifactId>
+      <version>4.0.1.Final</version>
     </dependency>
   </dependencies>
 

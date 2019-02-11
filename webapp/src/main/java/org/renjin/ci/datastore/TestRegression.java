@@ -3,6 +3,7 @@ package org.renjin.ci.datastore;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
 import com.googlecode.objectify.condition.IfNull;
+import org.ocpsoft.prettytime.PrettyTime;
 import org.renjin.ci.model.PackageBuildId;
 import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
@@ -166,6 +167,11 @@ public class TestRegression {
 
   public Date getDateClosed() {
     return dateClosed;
+  }
+
+  public String getPrettyDateClosed() {
+    PrettyTime p = new PrettyTime();
+    return p.format(dateClosed);
   }
 
   public void setDateClosed(Date dateClosed) {

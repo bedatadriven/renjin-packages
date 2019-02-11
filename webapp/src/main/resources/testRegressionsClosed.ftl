@@ -14,6 +14,7 @@
         <table class="table table-striped">
         <thead>
             <tr>
+                <th>Date Closed</th>
                 <th>Package</th>
                 <th>Package Version</th>
                 <th>Test Name</th>
@@ -23,8 +24,9 @@
             </tr>
         </thead>
         <tbody>
-        <#list page.regressions as regression>
+        <#list page.regressions as regresson>
             <tr>
+                <td>${regression.prettyDateClosed}</td>
                 <td>${regression.packageId.packageName}</td>
                 <td>${regression.packageVersionId.versionString}</td>
                 <td><a href="${regression.path}">${regression.testName}</a></td>
@@ -35,6 +37,11 @@
         </#list>
         </tbody>
         </table>
+
+        <#if cursor??>
+            <a href="?cursor=${cursor}">Next &raquo;</a>
+        </#if>
+
 </div>
 </div>
 </div>

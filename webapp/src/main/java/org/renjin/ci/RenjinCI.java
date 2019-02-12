@@ -21,9 +21,9 @@ import org.renjin.ci.pulls.PullRequestResources;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.InstallResource;
 import org.renjin.ci.releases.ReleasesResource;
-import org.renjin.ci.repo.MavenRepository;
 import org.renjin.ci.repo.apt.AptRepository;
 import org.renjin.ci.repo.apt.KeyServer;
+import org.renjin.ci.repo.maven.MavenRepository;
 import org.renjin.ci.source.SourceResources;
 import org.renjin.ci.stats.StatsResources;
 

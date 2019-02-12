@@ -295,6 +295,16 @@ public class RenjinCiClient {
     client().target(ROOT_URL).path("releases").request().post(Entity.form(form));
   }
 
+  public static void registerArtifacts(String renjinVersion, List<String> objectNames) {
+    Form form = new Form();
+    form.param("renjinVersion", renjinVersion);
+    for (String objectName : objectNames) {
+      form.param("objectName", objectName);
+    }
+
+    client().target(ROOT_URL).path("m2").request().post(Entity.form(form));
+  }
+
   public static void postReplacementRelease(final String groupId, final String artifactId, String version) {
     final Form form = new Form();
     form.param("version", version);
@@ -461,7 +471,6 @@ public class RenjinCiClient {
     ObjectNode commit = (ObjectNode) root.get("commit");
     return commit.get("sha").asText();
   }
-
 
   public static URL getPatchedVersionUrl(PackageVersionId pvid) {
     try {

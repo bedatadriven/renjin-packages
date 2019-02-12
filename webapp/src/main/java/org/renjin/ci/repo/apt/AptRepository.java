@@ -15,7 +15,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.logging.Logger;
 
-@Path("/debian")
+@Path("/repo/apt")
 public class AptRepository {
 
   private static final Logger LOGGER = Logger.getLogger(AptRepository.class.getName());

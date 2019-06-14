@@ -1,4 +1,4 @@
-package org.renjin.ci.jenkins.graph;
+package org.renjin.ci.gradle.graph;
 
 import java.util.ArrayList;
 import java.util.List;

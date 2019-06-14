@@ -1,4 +1,4 @@
-package org.renjin.ci.jenkins.graph;
+package org.renjin.ci.gradle.graph;
 
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageBuildId;

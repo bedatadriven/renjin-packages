@@ -74,6 +74,10 @@ public class BuildContext {
     this.buildDir = buildDir;
   }
 
+  /**
+   *
+   * @return a string containing the build number, prefixed by "b". For example: "b211"
+   */
   public String getBuildNumber() {
     return buildNumber;
   }

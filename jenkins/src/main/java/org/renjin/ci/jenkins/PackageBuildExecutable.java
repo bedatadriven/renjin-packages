@@ -16,6 +16,7 @@ import org.renjin.ci.model.PackageVersionId;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -130,6 +131,7 @@ public class PackageBuildExecutable implements Queue.Executable {
 
         maven.writeReleasePom(buildContext, build);
 
+        // TODO: change to package once we are ready to shutdown nexus
         maven.build(buildContext, "deploy");
 
         /*
@@ -138,6 +140,13 @@ public class PackageBuildExecutable implements Queue.Executable {
         result = LogFileParser.parse(buildContext);
         result.setPatchId(patchId);
         result.setResolvedDependencies(buildContext.getPackageNode().resolvedDependencies());
+
+        /*
+         * Archive the pom and jar
+         */
+        if(result.getOutcome() == BuildOutcome.SUCCESS) {
+          archiveArtifacts(buildContext);
+        }
 
         /*
          * Archive the build log file permanently to Google Cloud Storage
@@ -181,6 +190,41 @@ public class PackageBuildExecutable implements Queue.Executable {
       parentTask.getPackageNode().crashed();
       e.printStackTrace(listener.getLogger());
     }
+  }
+
+  private void archiveArtifacts(BuildContext buildContext) throws IOException, InterruptedException {
+
+    PackageVersionId pvid = buildContext.getPackageVersionId();
+    String buildVersion = pvid.getVersionString() + "-" + buildContext.getBuildNumber();
+
+
+    FilePath pomFile = buildContext.getBuildDir().child(format("%s-%s.pom",
+        pvid.getPackageName(),
+        buildVersion));
+
+    buildContext.getBuildDir().child("pom.xml").copyTo(pomFile);
+
+    FilePath jarFile = buildContext.getBuildDir().child(String.format("target/%s-%s.jar",
+      pvid.getPackageName(),
+      buildVersion));
+
+    List<String> cmd = new ArrayList<>();
+    cmd.add("gsutil");
+    cmd.add("-m");
+    cmd.add("cp");
+
+    cmd.add(pomFile.getRemote());
+    cmd.addAll(RenjinCiDeployer.computeDigests(pomFile, buildContext.getListener()));
+
+    cmd.add(jarFile.getRemote());
+    cmd.addAll(RenjinCiDeployer.computeDigests(jarFile, buildContext.getListener()));
+
+    cmd.add(String.format("gs://renjinci-artifacts/%s/%s/%s/",
+        pvid.getGroupId(),
+        pvid.getPackageName(),
+        buildVersion));
+
+    buildContext.getWorkerContext().getLauncher().launch().cmds(cmd).start().join();
   }
 
   private String tryDownloadPatchedVersion(BuildContext buildContext, PackageVersionId pvid) throws IOException, InterruptedException {

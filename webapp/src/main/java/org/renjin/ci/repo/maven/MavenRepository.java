@@ -18,7 +18,6 @@ public class MavenRepository {
 
   private Logger LOGGER = Logger.getLogger(MavenRepository.class.getName());
 
-  private List<String> HASHES = Lists.newArrayList("md5", "sha1");
 
   @POST
   public Response register(@FormParam("renjinVersion") String renjinVersion, @FormParam("objectName") List<String> objectNames) {
@@ -63,33 +62,20 @@ public class MavenRepository {
     return Response.ok().build();
   }
 
-  @Path("{release}/{path:.+}")
-  public ArtifactResource getResource(@PathParam("release") String release, @PathParam("path") String path) {
+  @GET
+  @Path("stable/{path:.+}")
+  public Response query(@PathParam("path") String path) {
 
-//    // Is a hash being requested?
-//    String hash = null;
-//    for (String hashExt : HASHES) {
-//      if(path.endsWith("." + hashExt)) {
-//        hash = hashExt;
-//        path = path.substring(0, path.length() - hashExt.length() - 1);
-//      }
-//    }
-//
-//    // Find the filename
-//    int filenameStart = path.lastIndexOf('/');
-//    if(filenameStart == -1) {
-//      throw new WebApplicationException(Response.Status.NOT_FOUND);
-//    }
-//    String filename = path.substring(filenameStart + 1);
-//
-//    // Handle special cases
-//    if(filename.endsWith("maven-metadata.xml")) {
-//      return new MetadataResource();
-//    }
-//
-//    //
+    if(MavenMetadataRequest.matches(path)) {
+      // TODO
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
 
-    return new ArtifactResource(release, path);
+    MavenArtifactRequest artifactRequest = MavenArtifactRequest.parse(path);
+
+    return Response.ok()
+        .header("X-AppEngine-BlobKey", artifactRequest.getBlobKey().getKeyString())
+        .build();
   }
 
 }

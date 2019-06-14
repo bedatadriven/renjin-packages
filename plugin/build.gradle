@@ -1,0 +1,7 @@
+
+
+dependencies {
+    compile project(':model')
+    compile project(':client')
+    implementation gradleApi()
+}

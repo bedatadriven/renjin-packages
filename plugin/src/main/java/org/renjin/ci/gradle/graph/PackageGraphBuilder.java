@@ -1,9 +1,8 @@
-package org.renjin.ci.jenkins.graph;
+package org.renjin.ci.gradle.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import hudson.model.TaskListener;
 import org.renjin.ci.RenjinCiClient;
 import org.renjin.ci.model.BuildOutcome;
 import org.renjin.ci.model.PackageVersionId;
@@ -12,15 +11,16 @@ import org.renjin.ci.model.ResolvedDependencySet;
 
 import java.util.*;
 import java.util.concurrent.Future;
-
-import static java.lang.String.format;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Builds a graph of packages and their dependencies
  */
 public class PackageGraphBuilder {
 
-  private TaskListener taskListener;
+  private static final Logger LOGGER = Logger.getLogger(PackageGraphBuilder.class.getName());
+
   private boolean rebuildFailedDependencies;
   private boolean rebuildAllDependencies;
 
@@ -32,58 +32,27 @@ public class PackageGraphBuilder {
   private final Map<PackageNode, Future<ResolvedDependencySet>> toResolve = Maps.newHashMap();
 
 
-  public PackageGraphBuilder(TaskListener taskListener, boolean rebuildFailedDependencies, boolean rebuildAllDependencies) {
-    this.taskListener = taskListener;
+  public PackageGraphBuilder(boolean rebuildFailedDependencies, boolean rebuildAllDependencies) {
     this.rebuildFailedDependencies = rebuildFailedDependencies;
     this.rebuildAllDependencies = rebuildAllDependencies;
   }
 
-
-  public PackageGraph build(String filter, Double sample) throws Exception {
-    return build(filter, Collections.<String, String>emptyMap(), sample);
+  public void add(String filter) throws InterruptedException {
+    add(filter, null);
   }
 
-  public PackageGraph build(String filter, Map<String, String> filterParameters, Double sample) throws Exception {
+  public void add(String filter, Double sample) throws InterruptedException {
+    List<PackageVersionId> sampled = queryList(filter, sample);
 
-    /*
-     * Step 1: Enqueue all packages that MUST be (re)built, even if there is an existing built
-     */
-
-    enqueueForBuild(filter, filterParameters, sample);
-
-    /*
-     * Step 2: For all packages that we WANT to build, determine their dependencies and either resolve
-     * to an existing build or schedule a new one.
-     */
-    List<PackageNode> toResolve = Lists.newArrayList(nodes.values());
-    for (PackageNode packageNode : toResolve) {
-      resolveDependencies(packageNode);
-    }
-
-    /*
-     * Step 3: Compute the number of ultimate dependencies of each node, and sort is descending order.
-     * This will allow use to take the greatest advantage of parallel executors.
-     */
-    for (PackageNode packageNode : nodes.values()) {
-      packageNode.computeDownstream();
-    }
-
-    return new PackageGraph(nodes);
-  }
-
-  private void enqueueForBuild(String filter, Map<String, String> filterParameters, Double sample) throws InterruptedException {
-    List<PackageVersionId> sampled = queryList(taskListener, filter, sample);
-
-    taskListener.getLogger().println("Building dependency graph...");
-    taskListener.getLogger().flush();
+    LOGGER.info("Building dependency graph...");
 
     for (PackageVersionId packageVersionId : sampled) {
-      taskListener.getLogger().println(packageVersionId);
-      enqueueForBuild(packageVersionId);
+      LOGGER.fine(packageVersionId.toString());
+      add(packageVersionId);
     }
   }
 
-  public static List<PackageVersionId> queryList(TaskListener taskListener, String filter, Double sample) {
+  public static List<PackageVersionId> queryList(String filter, Double sample) {
 
     if(filter.contains(":")) {
       // consider as packageId
@@ -91,27 +60,27 @@ public class PackageGraphBuilder {
       return Collections.singletonList(packageVersionId);
     }
 
-    taskListener.getLogger().println(format("Querying list of '%s' packages...\n", filter));
+    LOGGER.info(String.format("Querying list of '%s' packages...", filter));
     List<PackageVersionId> packageVersionIds = RenjinCiClient.queryPackageList(filter);
-    taskListener.getLogger().printf("Found %d packages.\n", packageVersionIds.size());
+    LOGGER.info(String.format("Found %d packages.", packageVersionIds.size()));
 
-    return sample(taskListener, packageVersionIds, sample);
+    return sample(packageVersionIds, sample);
   }
 
   /**
    * Samples a proportion or a fixed sample size of packages to build, generally for testing purposes.
    */
-  private static List<PackageVersionId> sample(TaskListener taskListener, List<PackageVersionId> packageVersionIds, Double sample) {
+  private static List<PackageVersionId> sample(List<PackageVersionId> packageVersionIds, Double sample) {
     if(sample == null) {
       return packageVersionIds;
     } else {
       double fraction;
       if(sample > 1) {
-        taskListener.getLogger().println(format("Sampling %.0f packages randomly", sample));
+        LOGGER.info(String.format("Sampling %.0f packages randomly", sample));
         fraction = sample / (double)packageVersionIds.size();
       } else {
         fraction = sample;
-        taskListener.getLogger().println(format("Sampling %7.6f of packages randomly", sample));
+        LOGGER.info(String.format("Sampling %7.6f of packages randomly", sample));
       }
 
       List<PackageVersionId> sampled = new ArrayList<PackageVersionId>();
@@ -121,7 +90,7 @@ public class PackageGraphBuilder {
           sampled.add(packageVersionId);
         }
       }
-      taskListener.getLogger().println(format("Sampled %d packages", sampled.size()));
+      LOGGER.info(String.format("Sampled %d packages", sampled.size()));
 
       return sampled;
     }
@@ -130,7 +99,7 @@ public class PackageGraphBuilder {
   /**
    * Creates a packageNode for a specific packageVersion, and queues it for dependency resolution
    */
-  private void enqueueForBuild(PackageVersionId packageVersionId) throws InterruptedException {
+  private void add(PackageVersionId packageVersionId) throws InterruptedException {
 
     Preconditions.checkState(!nodes.containsKey(packageVersionId),
         "%s has already been added to the graph.", packageVersionId);
@@ -194,15 +163,14 @@ public class PackageGraphBuilder {
     if (Thread.interrupted()) {
       throw new InterruptedException();
     }
-    taskListener.getLogger().println(format("Resolving dependencies of %s...", node.getId()));
+    LOGGER.info(String.format("Resolving dependencies of %s...", node.getId()));
 
     ResolvedDependencySet resolution;
     try {
       resolution = RenjinCiClient.resolveDependencies(node.getId());
 
     } catch (Exception e) {
-      taskListener.getLogger().println(format("Failed to resolve dependencies of %s: %s", node.getId(), e.getMessage()));
-      e.printStackTrace(taskListener.getLogger());
+      LOGGER.log(Level.SEVERE, String.format("Failed to resolve dependencies of %s: %s", node.getId(), e.getMessage()), e);
       node.orphan();
       return;
     }
@@ -215,4 +183,19 @@ public class PackageGraphBuilder {
       }
     }
   }
+
+  public PackageGraph build() throws Exception {
+
+    /*
+     * For all packages that we WANT to build, determine their dependencies and either resolve
+     * to an existing build or schedule a new one.
+     */
+    List<PackageNode> toResolve = Lists.newArrayList(nodes.values());
+    for (PackageNode packageNode : toResolve) {
+      resolveDependencies(packageNode);
+    }
+
+    return new PackageGraph(nodes);
+  }
+
 }

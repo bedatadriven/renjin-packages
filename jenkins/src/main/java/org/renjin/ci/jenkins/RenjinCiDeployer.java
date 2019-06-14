@@ -3,6 +3,7 @@ package org.renjin.ci.jenkins;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -10,6 +11,7 @@ import hudson.maven.*;
 import hudson.maven.reporters.MavenArtifact;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.util.InvocationInterceptor;
 import org.apache.maven.artifact.Artifact;
@@ -44,6 +46,7 @@ public class RenjinCiDeployer extends MavenReporter  {
   @Override
   public boolean preBuild(MavenBuildProxy build, MavenProject pom, BuildListener listener) throws InterruptedException, IOException {
     listener.getLogger().println("[Renjin] " + toString() + " preBuild on " + pom.getArtifactId());
+    artifacts = new ArrayList<>();
     return true;
   }
 
@@ -82,7 +85,11 @@ public class RenjinCiDeployer extends MavenReporter  {
     try {
       if (pom.getFile() != null) {// goals like 'clean' runs without loading POM, apparently.
         // record POM
-        artifacts.add(pom.getFile().getAbsolutePath());
+        File qualifiedPom = new File(pom.getFile().getParentFile(),
+            pom.getArtifactId() + "-" + pom.getVersion() + ".pom");
+        Files.copy(pom.getFile(), qualifiedPom);
+
+        artifacts.add(qualifiedPom.getAbsolutePath());
 
         // record main artifact (if packaging is POM, this doesn't exist)
         final MavenArtifact mainArtifact = MavenArtifact.create(pom.getArtifact());
@@ -154,9 +161,8 @@ public class RenjinCiDeployer extends MavenReporter  {
       listener.getLogger().println("[Renjin] Deploying " + artifact);
 
       cmd.add(artifact);
-      cmd.addAll(computeDigests(workspace, listener, artifact));
+      cmd.addAll(computeDigests(workspace.child(artifact), listener));
     }
-
 
     cmd.add("gs://renjinci-artifacts/" + objectPath);
 
@@ -172,9 +178,9 @@ public class RenjinCiDeployer extends MavenReporter  {
     return true;
   }
 
-  private List<String> computeDigests(FilePath workspace, BuildListener listener, String artifact) {
+  public static List<String> computeDigests(FilePath artifactFile, TaskListener listener) {
     try {
-      return workspace.child(artifact).act(new FilePath.FileCallable<List<String>>() {
+      return artifactFile.act(new FilePath.FileCallable<List<String>>() {
         @Override
         public List<String> invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
 

@@ -115,7 +115,7 @@ public class AptRepository {
   public Response artifact(@PathParam("filename") String filename) {
     AptArtifact artifact = PackageDatabase.ofy().load().key(Key.create(AptArtifact.class, filename)).now();
     BlobKey blobKey = BlobstoreServiceFactory.getBlobstoreService().createGsBlobKey(
-        "/gs/" + StorageKeys.ARTIFACTS_BUCKET + "/" + artifact.getObjectName());
+        "/gs/" + StorageKeys.REPO_BUCKET + "/deb/" + artifact.getObjectName());
 
     return Response.ok()
         .header("X-AppEngine-BlobKey", blobKey.getKeyString())

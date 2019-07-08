@@ -101,7 +101,7 @@ public class AptPackageParser {
   }
 
   public AptArtifact parsePackage(String objectName) throws IOException {
-    GcsFilename filename = new GcsFilename(StorageKeys.ARTIFACTS_BUCKET, objectName);
+    GcsFilename filename = new GcsFilename(StorageKeys.REPO_BUCKET, "deb/" + objectName);
 
     LOGGER.info("Reading " + filename.toString());
 

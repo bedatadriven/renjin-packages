@@ -1,11 +1,11 @@
 package org.renjin.ci.repo.maven;
 
-import com.google.appengine.api.taskqueue.Queue;
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.common.collect.Lists;
 import org.renjin.ci.datastore.PackageDatabase;
 import org.renjin.ci.repo.ArtifactResource;
+import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -19,24 +19,6 @@ public class MavenRepository {
   private Logger LOGGER = Logger.getLogger(MavenRepository.class.getName());
 
   private List<String> HASHES = Lists.newArrayList("md5", "sha1");
-
-  @POST
-  public Response register(@FormParam("renjinVersion") String renjinVersion, @FormParam("objectName") List<String> objectNames) {
-    Queue queue = QueueFactory.getDefaultQueue();
-    for (String objectName : objectNames) {
-      queue.add(TaskOptions.Builder.withDefaults()
-          .param("renjinVersion", renjinVersion)
-          .param("objectName", objectName)
-          .url("/repo/m2/task"));
-
-      if(objectName.endsWith(".deb")) {
-        queue.add(TaskOptions.Builder.withDefaults()
-          .param("objectName", objectName)
-          .url("/repo/apt"));
-      }
-    }
-    return Response.ok().build();
-  }
 
   @POST
   @Path("task")
@@ -63,33 +45,18 @@ public class MavenRepository {
     return Response.ok().build();
   }
 
-  @Path("{release}/{path:.+}")
-  public ArtifactResource getResource(@PathParam("release") String release, @PathParam("path") String path) {
+  @GET
+  @Path("3.5-beta/{path:.+}")
+  public Response getBetaArtifact(@PathParam("path") String path) {
 
-//    // Is a hash being requested?
-//    String hash = null;
-//    for (String hashExt : HASHES) {
-//      if(path.endsWith("." + hashExt)) {
-//        hash = hashExt;
-//        path = path.substring(0, path.length() - hashExt.length() - 1);
-//      }
-//    }
-//
-//    // Find the filename
-//    int filenameStart = path.lastIndexOf('/');
-//    if(filenameStart == -1) {
-//      throw new WebApplicationException(Response.Status.NOT_FOUND);
-//    }
-//    String filename = path.substring(filenameStart + 1);
-//
-//    // Handle special cases
-//    if(filename.endsWith("maven-metadata.xml")) {
-//      return new MetadataResource();
-//    }
-//
-//    //
+    String gsPath = "/gs/" + StorageKeys.REPO_BUCKET + "/m2/3.5-beta/" + path;
+    BlobKey blobKey = BlobstoreServiceFactory.getBlobstoreService().createGsBlobKey(gsPath);
 
-    return new ArtifactResource(release, path);
+    LOGGER.info("Serving " + gsPath);
+
+    return Response.ok()
+        .header("X-AppEngine-BlobKey", blobKey.getKeyString())
+        .build();
   }
 
 }

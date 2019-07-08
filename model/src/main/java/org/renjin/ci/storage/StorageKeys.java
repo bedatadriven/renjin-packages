@@ -10,7 +10,7 @@ public class StorageKeys {
 
   public static final String PACKAGE_SOURCE_BUCKET = "renjinci-package-sources";
   public static final String BUILD_LOG_BUCKET = "renjinci-logs";
-  public static final String ARTIFACTS_BUCKET = "renjinci-artifacts";
+  public static final String REPO_BUCKET = "renjinci-repo";
 
   public static final String URL_ROOT = "http://storage.googleapis.com/renjinci-logs/";
 

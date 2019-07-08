@@ -1,5 +1,6 @@
 package org.renjin.ci.repo.apt;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
+@Ignore
 public class AptPackageParserTest {
 
   @Test

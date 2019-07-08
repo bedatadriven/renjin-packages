@@ -25,23 +25,11 @@
     <a href="#" title="Hide navigation">Hide navigation</a> 
     <ul>
 
-        <li><a href="http://www.renjin.org/index.html">Home</a></li>
+        <li><a href="https://www.renjin.org/index.html">Home</a></li>
 
-
-        <li><a href="http://www.renjin.org/downloads.html">Downloads</a></li>
-
-
-        <li class="active"><a href="/packages">Packages</a></li>
-
-
-        <li><a href="http://docs.renjin.org">Documentation</a></li>
-
+        <li><a href="https://www.renjin.org/resources.html">Resources</a></li>
 
         <li><a href="http://www.renjin.org/support.html">Support</a></li>
-
-
-        <li><a href="http://www.renjin.org/about.html">About</a></li>
-
 
         <li><a href="http://www.renjin.org/blog">Blog</a></li>
 
@@ -80,11 +68,10 @@
             </ul>
         </div>
         <div class="medium-4 grid-item">
-            <h3>Documentation</h3>
-            <p>We have documentation on how to use Renjin in Java projects as well as on Renjin's internals.</p>
+            <h3>Resources</h3>
             <ul>
-                <li><a href="http://docs.renjin.org/">Using Renjin in your Java project</a></li>
-                <li><a href="https://github.com/bedatadriven/renjin/wiki">Wiki on GitHub about Renjin's internals</a></li>
+                <li><a href="http://docs.renjin.org/">Documentation</a></li>
+                <li><a href="/resources.html#case-studies">Case studies</a></li>
             </ul>
         </div>
         <div class="medium-4 grid-item">
@@ -97,9 +84,10 @@
         </div>
         <div class="medium-4 grid-item">
             <h3>Support</h3>
-            <p>This project is an initiative of <a href="http://www.bedatadriven.com" rel="nofollow">BeDataDriven</a>, 
-                a company providing consulting in analytics and decision support systems. 
-                Read about our <a href="http://www.renjin.org/support.html">support options for Renjin</a>. </p>
+            <ul>
+                <li><a href="/enterprise.html">Renjin Enterprise Support</a></li>
+                <li><a href="http://stackoverflow.com/questions/tagged/renjin">StackOverflow</a></li>
+            </ul>
         </div>
     </div>
 </footer>

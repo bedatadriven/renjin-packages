@@ -2,8 +2,10 @@ package org.renjin.ci.gradle;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.tools.ant.taskdefs.Pack;
 import org.renjin.ci.gradle.graph.PackageGraph;
 import org.renjin.ci.gradle.graph.PackageNode;
+import org.renjin.ci.model.PackageDescription;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +55,16 @@ public class ProjectBuilder {
     updateSettingsFile();
   }
 
-  private void writeBuildFile(PackageNode packageNode, File file, PrintWriter writer) {
+  private void writeBuildFile(PackageNode packageNode, File packageDir, PrintWriter writer) {
+
+
+    File descriptionFile = new File(packageDir, "DESCRIPTION");
+    try {
+      PackageDescription description = PackageDescription.fromCharSource(Files.asCharSource(descriptionFile, Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
 
     writer.println("group = '" + packageNode.getId().getGroupId() + "'");
     writer.println();
@@ -72,6 +83,7 @@ public class ProjectBuilder {
     for (PackageNode dependency : packageNode.getDependencies()) {
       writer.println("  compile project(':" + parentModule + ":" + dependency.getId().getPackageName() + "')");
     }
+
     writer.println("}");
   }
 

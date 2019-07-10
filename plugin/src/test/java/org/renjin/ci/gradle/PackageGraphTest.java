@@ -14,7 +14,9 @@ public class PackageGraphTest {
     PackageGraphBuilder builder = new PackageGraphBuilder(false, true);
     builder.add("org.renjin.cran:MASS:7.3-51.4", null);
     builder.add("org.renjin.cran:Matrix:1.2-17");
-//    builder.add("org.renjin.cran:ggplot2:3.1.1", null);
+    builder.add("org.renjin.cran:ggplot2:3.1.1", null);
+    builder.add("org.renjin.cran:testthat:2.1.1", null);
+
 
     PackageGraph graph = builder.build();
 

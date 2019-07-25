@@ -19,10 +19,12 @@ It runs on Google AppEngine and depends on several Google cloud services:
 The `webapp` module also provides a RESTful API that exposes package metadata and allows the Jenkin Plugin to 
 report results.
   
-## Jenkins Plugin
+## Builder
 
-The `jenkins` module is a plugin for Jenkins CI. It provides a "Package Build Step" which will query the webapp
-for a list of packages and their dependencies, and build each against a specific version of Renjin.
+The `builder` module queries the package database via the web app and constructs
+a giant gradle build that can be subsequently executed to build, test,
+and deploy artifacts for CRAN and BioConductor packages.
+
 
 ## Nexus Repository
 

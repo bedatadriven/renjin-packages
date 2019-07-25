@@ -2,8 +2,8 @@
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
 
   <application>renjinci</application>
-  <module>default</module>
-  <version>9</version>
+  <module>packages</module>
+  <version>10</version>
 
   <runtime>java8</runtime>
   <url-stream-handler>native</url-stream-handler>

@@ -2,5 +2,5 @@ rootProject.name = 'renjinci'
 
 include 'model'
 include 'client'
-include 'plugin'
-//include 'webapp'
+include 'builder'
+include 'webapp'

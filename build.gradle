@@ -9,9 +9,10 @@ buildscript {
         maven { url "https://nexus.bedatadriven.com/content/groups/public" }
     }
     dependencies {
-        //classpath "net.ltgt.gradle:gradle-apt-plugin:0.15"
         classpath "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
         classpath "org.owasp:dependency-check-gradle:4.0.2"
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.0.0'
+
     }
 }
 

@@ -3,3 +3,6 @@ target
 *.iml
 jenkins/work
 .Rproj.user
+out
+build
+.gradle

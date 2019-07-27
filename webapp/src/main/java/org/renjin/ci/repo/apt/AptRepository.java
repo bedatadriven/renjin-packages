@@ -2,6 +2,10 @@ package org.renjin.ci.repo.apt;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
+import com.google.appengine.api.urlfetch.HTTPResponse;
+import com.google.appengine.api.urlfetch.URLFetchService;
+import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
+import com.google.appengine.tools.cloudstorage.*;
 import com.googlecode.objectify.Key;
 import org.bouncycastle.openpgp.PGPException;
 import org.renjin.ci.datastore.PackageDatabase;
@@ -11,6 +15,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.ByteBuffer;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.logging.Logger;
@@ -20,40 +27,87 @@ public class AptRepository {
 
   private static final Logger LOGGER = Logger.getLogger(AptRepository.class.getName());
 
+  @GET
+  @Path("ingest")
+  public Response ingestRelease(@QueryParam("renjinVersion") String renjinVersion) throws IOException, PGPException {
+
+    URL archiveUrl = new URL(String.format("https://nexus.bedatadriven.com/content/groups/public/org/renjin/renjin-debian-package/%s/renjin-debian-package-%s.deb",
+        renjinVersion,
+        renjinVersion));
+
+    URLFetchService fetchService = URLFetchServiceFactory.getURLFetchService();
+
+    HTTPResponse response = fetchService.fetch(archiveUrl);
+
+    String objectName = "debian/renjin-" + renjinVersion + ".deb";
+    GcsFilename debFilename = new GcsFilename(StorageKeys.ARTIFACTS_BUCKET, objectName);
+
+    GcsService gcsService =
+        GcsServiceFactory.createGcsService(RetryParams.getDefaultInstance());
+
+    gcsService.createOrReplace(debFilename, new GcsFileOptions.Builder().build(),
+        ByteBuffer.wrap(response.getContent()));
+
+    return ingestArtifact(objectName);
+
+  }
+
+
   @POST
   public Response ingestArtifact(@FormParam("objectName") String objectName) throws IOException, PGPException {
 
     AptPackageParser parser = new AptPackageParser();
     AptArtifact artifact = parser.parsePackage(objectName);
 
-    PackageDatabase.ofy().save().entity(artifact).now();
+    AptPackage aptPackage = new AptPackage();
+    aptPackage.setName(artifact.getName());
+    aptPackage.setLatestVersion(artifact.getVersion());
+    aptPackage.setLatestArtifact(Key.create(artifact));
 
-    index(artifact);
+    PackageDatabase.ofy().save().entities(artifact, aptPackage).now();
+
+    index();
 
     return Response.ok().build();
   }
 
+  public Response index() throws IOException, PGPException {
 
-  public Response index(AptArtifact artifact) throws IOException, PGPException {
+    LOGGER.info("Rebuilding index...");
 
     ControlFileBuilder packageIndex = new ControlFileBuilder();
-    packageIndex.write(artifact.getControlFile());
-    packageIndex.writeField("Filename", "pool/" + artifact.getFilename());
-    for(AptHash hash : artifact.getHashes()) {
-      packageIndex.writeField(hash.getName(), hash.getHash());
+
+    String repositoryVersion = "1.0";
+
+    for (AptPackage aptPackage : PackageDatabase.ofy().load().type(AptPackage.class).iterable()) {
+
+      LOGGER.info("Indexing package " + aptPackage.getName());
+
+      AptArtifact artifact = PackageDatabase.ofy().load().key(aptPackage.getLatestArtifact()).now();
+
+
+      if(aptPackage.getName().equals("Renjin")) {
+        repositoryVersion = aptPackage.getLatestVersion();
+      }
+
+      packageIndex.write(artifact.getControlFile());
+      packageIndex.writeField("Filename", "pool/" + artifact.getFilename());
+      for (AptHash hash : artifact.getHashes()) {
+        packageIndex.writeField(hash.getName(), hash.getHash());
+      }
+      packageIndex.writeField("Size", artifact.getSize());
     }
-    packageIndex.writeField("Size", artifact.getSize());
 
     ControlFileBuilder releaseIndex = new ControlFileBuilder();
-    releaseIndex.writeField("Origin", "BeDataDriven BV");
-    releaseIndex.writeField("Label", "Renjin Stable Repository");
-    releaseIndex.writeField("Suite", "stable");
-    releaseIndex.writeField("Codename", "stable");
-    releaseIndex.writeField("Version", artifact.getVersion());
-    releaseIndex.writeField("Date", ZonedDateTime.now(ZoneOffset.UTC));
-    releaseIndex.writeField("Architectures", "amd64 i386");
-    releaseIndex.writeField("Components", "main");
-    releaseIndex.writeField("Description", "Renjin's latest stable builds");
+      releaseIndex.writeField("Origin", "BeDataDriven BV");
+      releaseIndex.writeField("Label", "Renjin Stable Repository");
+      releaseIndex.writeField("Suite", "stable");
+      releaseIndex.writeField("Codename", "stable");
+      releaseIndex.writeField("Version", repositoryVersion);
+      releaseIndex.writeField("Date", ZonedDateTime.now(ZoneOffset.UTC));
+      releaseIndex.writeField("Architectures", "amd64 i386");
+      releaseIndex.writeField("Components", "main");
+      releaseIndex.writeField("Description", "Renjin's latest stable builds");
 
     releaseIndex.write(
         new PackageIndex("main/binary-amd64/Packages", packageIndex.toString()),

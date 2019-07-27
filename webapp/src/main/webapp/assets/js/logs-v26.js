@@ -74,7 +74,6 @@
     function formatLine(context, line, buildId) {
 
 
-
         if(context.prompt === 1 && line.startsWith("> ")) {
             // Transition to state prompt 1 and format the first line of a repl input
             context.prompt = 2;
@@ -107,11 +106,17 @@
             var method = javaLineMatch[2];
             var file = javaLineMatch[3];
             var lineNum = javaLineMatch[4];
-            return indent + method + "(<a href=\"/source/redirect/java?" +
+
+            var formatted = indent + method + "(<a href=\"/source/redirect/java?" +
                 "method=" + encodeURIComponent(method) +
                 "&file=" + encodeURIComponent(file) +
                 "&line=" + encodeURIComponent(lineNum) +
                 "&build=" + encodeURIComponent(buildId) + "\">" + file + ":" + lineNum + "</a>)";
+
+
+            if(!context.stacktrace) {
+                // first line of a stack trace
+            }
         }
 
         var renjinLineMatch = renjinLineRe.exec(line);

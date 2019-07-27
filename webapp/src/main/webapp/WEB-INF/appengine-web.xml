@@ -3,7 +3,7 @@
 
   <application>renjinci</application>
   <module>packages</module>
-  <version>9</version>
+  <version>10</version>
 
   <runtime>java8</runtime>
   <url-stream-handler>native</url-stream-handler>

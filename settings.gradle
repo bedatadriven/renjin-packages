@@ -1,0 +1,6 @@
+rootProject.name = 'renjinci'
+
+include 'model'
+include 'client'
+include 'builder'
+include 'webapp'

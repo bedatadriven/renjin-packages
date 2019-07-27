@@ -50,6 +50,13 @@ public class PackageResource {
   }
 
   @GET
+  @Produces("text/plain")
+  public String getLastGoodBuild() {
+    String latestVersion = loadPackage().getLatestVersion();
+    return latestVersion;
+  }
+
+  @GET
   @Path("badge")
   @Produces("image/svg+xml")
   public Viewable getRenjinIcon() {

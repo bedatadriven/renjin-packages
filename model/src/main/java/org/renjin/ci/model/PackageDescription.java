@@ -240,7 +240,7 @@ public class PackageDescription {
 	}
 
 
-	private Iterable<PackageDependency> getPackageDependencyList(String property) {
+	public Iterable<PackageDependency> getPackageDependencyList(String property) {
 		String list = getFirstProperty(property);
 		if(Strings.isNullOrEmpty(list)) {
 			return Collections.emptySet();

@@ -15,6 +15,7 @@ import com.googlecode.objectify.cmd.Query;
 import org.renjin.ci.model.*;
 import org.renjin.ci.repo.apt.AptArtifact;
 import org.renjin.ci.repo.apt.AptDist;
+import org.renjin.ci.repo.apt.AptPackage;
 import org.renjin.ci.repo.apt.PgpKey;
 import org.renjin.ci.repo.maven.MavenArtifact;
 import org.renjin.sexp.ExternalPtr;
@@ -83,6 +84,7 @@ public class PackageDatabase {
 
     register(AptArtifact.class);
     register(AptDist.class);
+    register(AptPackage.class);
 
     register(MavenArtifact.class);
 

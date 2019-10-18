@@ -29,7 +29,7 @@ public class ReplacedPackageProvider {
 
   public void appendIncludeBuilds(StringBuilder settingFile) {
     for (String packageName : replaced) {
-      settingFile.append("includeBuild '../renjin-replacements/").append(packageName).append("'\n");
+      settingFile.append("includeBuild '../replacements/").append(packageName).append("'\n");
     }
   }
 }

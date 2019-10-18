@@ -152,7 +152,7 @@ public class ProjectBuilder {
 
     StringBuilder updated = new StringBuilder();
     for (String line : lines) {
-      if(!line.startsWith("include '" + parentModule + ":") && !line.startsWith("includeBuild '../renjin-replacements/")) {
+      if(!line.startsWith("include '" + parentModule + ":") && !line.startsWith("includeBuild '../replacements/")) {
         updated.append(line).append("\n");
       }
     }

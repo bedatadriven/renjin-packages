@@ -77,7 +77,6 @@ public class ProjectBuilder {
       .stream()
       .collect(Collectors.toMap(d -> d.getId().getPackageName(), d -> d));
 
-    String renjinVersion = "${renjinVersion}";
 
     writer.println("group = '" + packageNode.getId().getGroupId() + "'");
     writer.println();
@@ -105,7 +104,7 @@ public class ProjectBuilder {
       writer.println("  compile 'org.renjin:libstdcxx:4.7.4-b34'");
     }
     if(packageNode.getId().getPackageName().equals("testthat")) {
-      writer.println("  compile 'org.renjin:xml2:+'");
+      writer.println("  compile 'org.renjin.cran:xml2:+'");
     }
 
     writer.println("}");

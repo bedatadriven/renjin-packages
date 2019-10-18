@@ -30,32 +30,37 @@ public class PackageSetup implements Runnable {
   @Override
   public void run() {
 
-    if(packageDir.exists() && !correctVersionDownloaded()) {
-      run("rm", "-rf", packageDir.getAbsolutePath());
-    }
+    try {
 
-    if(!packageDir.exists()) {
-      boolean created = packageDir.mkdirs();
-      if(!created) {
-        throw new RuntimeException("Could not create directory at " + packageDir.getAbsolutePath());
+      if (packageDir.exists() && !correctVersionDownloaded()) {
+        run("rm", "-rf", packageDir.getAbsolutePath());
       }
-    }
 
-    String archiveFileName = node.getId().getPackageName() +  "_" + node.getId().getVersionString() + ".tgz";
-    File archiveFile = new File(packageDir.getParentFile(), archiveFileName);
+      if (!packageDir.exists()) {
+        boolean created = packageDir.mkdirs();
+        if (!created) {
+          throw new RuntimeException("Could not create directory at " + packageDir.getAbsolutePath());
+        }
+      }
 
-    if(correctVersionDownloaded()) {
-      LOGGER.info(node.getId() + " already downloaded, skipping.");
-    } else {
-      downloadAndUnpackSources(archiveFile);
-    }
+      String archiveFileName = node.getId().getPackageName() + "_" + node.getId().getVersionString() + ".tgz";
+      File archiveFile = new File(packageDir.getParentFile(), archiveFileName);
 
-    // Update build.gradle
-    File buildFile = new File(packageDir, "build.gradle");
-    try(PrintWriter printWriter = new PrintWriter(buildFile)) {
-      writer.write(node, packageDir, printWriter);
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException("Exception writing build.gradle for " + node.getId(), e);
+      if (correctVersionDownloaded()) {
+        LOGGER.info(node.getId() + " already downloaded, skipping.");
+      } else {
+        downloadAndUnpackSources(archiveFile);
+      }
+
+      // Update build.gradle
+      File buildFile = new File(packageDir, "build.gradle");
+      try (PrintWriter printWriter = new PrintWriter(buildFile)) {
+        writer.write(node, packageDir, printWriter);
+      } catch (FileNotFoundException e) {
+        throw new RuntimeException("Exception writing build.gradle for " + node.getId(), e);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 

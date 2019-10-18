@@ -6,3 +6,4 @@ jenkins/work
 out
 build
 .gradle
+apt.key

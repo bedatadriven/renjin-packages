@@ -5,3 +5,9 @@ dependencies {
     compile project(':client')
     implementation gradleApi()
 }
+
+task('setupPackages', dependsOn: 'classes', type: JavaExec) {
+    main = 'org.renjin.ci.gradle.Main'
+    classpath = sourceSets.main.runtimeClasspath
+    args project.rootProject.projectDir.parentFile
+}

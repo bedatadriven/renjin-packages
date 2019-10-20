@@ -29,7 +29,7 @@ public class PackageSetup {
 
     ExecutorService executorService = Executors.newFixedThreadPool(12);
 
-    PackageIndex packageIndex = new PackageIndex(new File(packageRootDir, "packages.list"));
+    PackageIndex packageIndex = new PackageIndex(packageRootDir);
 
     System.out.println("Packages to build: " + packageIndex.getToBuild().size());
 

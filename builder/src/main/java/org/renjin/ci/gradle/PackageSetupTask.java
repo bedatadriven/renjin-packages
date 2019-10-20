@@ -149,7 +149,8 @@ public class PackageSetupTask implements Runnable {
     writer.println("apply plugin: 'org.renjin.package'");
 
 
-    boolean needsCompilation = description.isNeedsCompilation();
+    boolean blacklisted = packageIndex.getBlacklist().isBlacklisted(id.getPackageName());
+    boolean needsCompilation = description.isNeedsCompilation() && !blacklisted;
 
     if(needsCompilation) {
       writer.println("apply plugin: 'org.renjin.native-sources'");
@@ -173,6 +174,12 @@ public class PackageSetupTask implements Runnable {
     }
 
     writer.println("}");
+
+    if(blacklisted) {
+      writer.println();
+      writer.println("configure.enabled = false");
+      writer.println("testNamespace.enabled = false");
+    }
   }
 
   private boolean hasCplusplusSources(File packageDir) {

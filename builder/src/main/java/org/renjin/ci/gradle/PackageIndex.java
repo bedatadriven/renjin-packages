@@ -17,8 +17,13 @@ public class PackageIndex {
    */
   private Map<String, String> packageNameMap = new HashMap<>();
 
-  public PackageIndex(File file) throws IOException {
-    try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
+  private Blacklist blacklist;
+
+  public PackageIndex(File packageRoot) throws IOException {
+
+    blacklist = new Blacklist(packageRoot);
+
+    try(BufferedReader reader = new BufferedReader(new FileReader(new File(packageRoot, "packages.list")))) {
       String line;
       while( (line = reader.readLine()) != null) {
         if(line.endsWith("*")) {
@@ -44,5 +49,9 @@ public class PackageIndex {
    */
   public String getDependencyString(String packageName) {
     return packageNameMap.get(packageName);
+  }
+
+  public Blacklist getBlacklist() {
+    return blacklist;
   }
 }

@@ -1,18 +1,16 @@
 package org.renjin.ci.gradle;
 
-import org.renjin.ci.gradle.graph.DependencyCache;
-import org.renjin.ci.gradle.graph.PackageGraph;
-import org.renjin.ci.gradle.graph.PackageGraphBuilder;
-import org.renjin.ci.gradle.graph.ReplacedPackageProvider;
+import com.google.api.client.util.Lists;
+import org.renjin.ci.gradle.graph.*;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class Main {
+public class UpdatePackageList {
 
 
   public static void main(String[] args) throws InterruptedException, ExecutionException, IOException {
@@ -29,7 +27,7 @@ public class Main {
 
     DependencyCache dependencyCache = new DependencyCache(packageRootDir, "cran");
 
-    PackageGraphBuilder builder = new PackageGraphBuilder(executorService, dependencyCache, replacedPackages, false, true);
+    PackageGraphBuilder builder = new PackageGraphBuilder(executorService, dependencyCache, replacedPackages);
     builder.add("org.renjin.cran:MASS:7.3-51.4", null);
     builder.add("org.renjin.cran:Matrix:1.2-17");
     builder.add("org.renjin.cran:ggplot2:3.1.1", null);
@@ -41,10 +39,19 @@ public class Main {
 
     System.out.println("Package count: " + graph.getNodes().size());
 
-    Blacklist blacklist = new Blacklist();
-
-    ProjectBuilder projectBuilder = new ProjectBuilder(executorService, packageRootDir, "cran", graph, blacklist, replacedPackages);
-    projectBuilder.setupDirectories();
+    File packageIndexFile = new File(packageRootDir, "packages.list");
+    List<PackageNode> nodes = Lists.newArrayList(graph.getNodes());
+    nodes.sort(Comparator.comparing(PackageNode::getId));
+    try(FileWriter writer = new FileWriter(packageIndexFile)) {
+      for (PackageNode node : nodes) {
+        if(node.isReplaced()) {
+          writer.write(node.getId().getPackageId() + ":" + node.getReplacedVersion() + "*");
+        } else {
+          writer.write(node.getId().toString());
+        }
+        writer.write('\n');
+      }
+    }
 
     executorService.shutdown();
     executorService.awaitTermination(1, TimeUnit.MINUTES);

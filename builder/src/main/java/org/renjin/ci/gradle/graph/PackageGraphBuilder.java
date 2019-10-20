@@ -3,10 +3,7 @@ package org.renjin.ci.gradle.graph;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import org.renjin.ci.RenjinCiClient;
-import org.renjin.ci.model.BuildOutcome;
-import org.renjin.ci.model.PackageVersionId;
-import org.renjin.ci.model.ResolvedDependency;
-import org.renjin.ci.model.ResolvedDependencySet;
+import org.renjin.ci.model.*;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -25,18 +22,13 @@ public class PackageGraphBuilder {
   private final ExecutorService executorService;
   private final DependencyCache dependencyCache;
   private final ReplacedPackageProvider replacedPackages;
-  private boolean rebuildFailedDependencies;
-  private boolean rebuildAllDependencies;
 
-  private final Map<PackageVersionId, PackageNode> nodes = new HashMap<PackageVersionId, PackageNode>();
+  private final Map<PackageId, PackageNode> nodes = new HashMap<>();
 
-
-  public PackageGraphBuilder(ExecutorService executorService, DependencyCache dependencyCache, ReplacedPackageProvider replacedPackages, boolean rebuildFailedDependencies, boolean rebuildAllDependencies) {
+  public PackageGraphBuilder(ExecutorService executorService, DependencyCache dependencyCache, ReplacedPackageProvider replacedPackages) {
     this.executorService = executorService;
     this.dependencyCache = dependencyCache;
     this.replacedPackages = replacedPackages;
-    this.rebuildFailedDependencies = rebuildFailedDependencies;
-    this.rebuildAllDependencies = rebuildAllDependencies;
   }
 
   public void add(String filter) throws InterruptedException {
@@ -103,17 +95,17 @@ public class PackageGraphBuilder {
    */
   private void add(PackageVersionId packageVersionId) {
 
-    Preconditions.checkState(!nodes.containsKey(packageVersionId),
+    Preconditions.checkState(!nodes.containsKey(packageVersionId.getPackageId()),
         "%s has already been added to the graph.", packageVersionId);
 
     PackageNode node = new PackageNode(packageVersionId, resolveDependencies(packageVersionId));
-    nodes.put(node.getId(), node);
+    nodes.put(node.getId().getPackageId(), node);
 
   }
 
   private synchronized PackageNode getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) {
     PackageVersionId pvid = resolvedDependency.getPackageVersionId();
-    PackageNode node = nodes.get(pvid);
+    PackageNode node = nodes.get(pvid.getPackageId());
     if(node == null) {
       if(resolvedDependency.isReplaced() || replacedPackages.isReplaced(pvid)) {
         node = new PackageNode(resolvedDependency.getPackageVersionId(), Futures.immediateFuture(Collections.emptySet()));
@@ -121,21 +113,11 @@ public class PackageGraphBuilder {
       } else {
         node = new PackageNode(pvid, resolveDependencies(resolvedDependency));
       }
-      nodes.put(node.getId(), node);
+      nodes.put(node.getId().getPackageId(), node);
     }
     return node;
   }
 
-
-  private boolean shouldRebuild(ResolvedDependency resolvedDependency) {
-    if(rebuildAllDependencies) {
-      return true;
-    }
-    if(rebuildFailedDependencies) {
-      return resolvedDependency.getBuildOutcome() != BuildOutcome.SUCCESS;
-    }
-    return false;
-  }
 
   private Future<Set<PackageNode>> resolveDependencies(ResolvedDependency resolvedDependency) {
     if(resolvedDependency.isReplaced()) {

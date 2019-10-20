@@ -2,117 +2,80 @@ package org.renjin.ci.gradle;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import org.renjin.ci.gradle.graph.PackageNode;
-import org.renjin.ci.model.PackageDescription;
-import org.renjin.ci.storage.StorageKeys;
+import org.renjin.ci.gradle.graph.ReplacedPackageProvider;
+import org.renjin.ci.model.PackageVersionId;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.logging.Logger;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 
-public class PackageSetup implements Runnable {
+/**
+ * Reads the list of packages to build, downloads their sources, and
+ * writes gradle build files for each.
+ */
+public class PackageSetup {
 
-  private static final Logger LOGGER = Logger.getLogger(PackageSetup.class.getName());
 
-  private final Blacklist blacklist;
-  private final PackageNode node;
-  private final File packageDir;
-  private final BuildFileWriter writer;
+  public static void main(String[] args) throws InterruptedException, ExecutionException, IOException {
 
-  public PackageSetup(Blacklist blacklist, PackageNode node, File packageDir, BuildFileWriter writer) {
-    this.blacklist = blacklist;
-    this.node = node;
-    this.packageDir = packageDir;
-    this.writer = writer;
+    File universeRoot = new File(args[0]);
+
+    System.out.println("Universe root: " + universeRoot.getAbsolutePath());
+    ReplacedPackageProvider replacedPackages = new ReplacedPackageProvider(new File(universeRoot, "replacements"));
+
+    File packageRootDir = new File(universeRoot, "packages");
+
+    ExecutorService executorService = Executors.newFixedThreadPool(12);
+
+    PackageIndex packageIndex = new PackageIndex(new File(packageRootDir, "packages.list"));
+
+    System.out.println("Packages to build: " + packageIndex.getToBuild().size());
+
+    File subDir = new File(packageRootDir, "cran");
+
+    List<Future<?>> tasks = new ArrayList<>();
+    for (PackageVersionId id : packageIndex.getToBuild()) {
+      File packageDir = new File(subDir, id.getPackageName());
+      PackageSetupTask task = new PackageSetupTask(packageIndex, id, packageDir);
+      tasks.add(executorService.submit(task));
+    }
+
+    for (Future<?> task : tasks) {
+      task.get();
+    }
+
+    executorService.shutdown();
+    executorService.awaitTermination(1, TimeUnit.MINUTES);
+
+    updateSettingsFile(packageRootDir, packageIndex, replacedPackages);
   }
 
+  private static void updateSettingsFile(File rootDir, PackageIndex packageIndex, ReplacedPackageProvider replacedPackages) throws IOException {
+    File settingsFile = new File(rootDir, "settings.gradle");
+    List<String> lines = Files.readLines(settingsFile, Charsets.UTF_8);
 
-  @Override
-  public void run() {
-
-    try {
-
-      if (packageDir.exists() && !correctVersionDownloaded()) {
-        run("rm", "-rf", packageDir.getAbsolutePath());
+    StringBuilder updated = new StringBuilder();
+    for (String line : lines) {
+      if(!line.startsWith("include 'cran:") && !line.startsWith("includeBuild '../replacements/")) {
+        updated.append(line).append("\n");
       }
-
-      if (!packageDir.exists()) {
-        boolean created = packageDir.mkdirs();
-        if (!created) {
-          throw new RuntimeException("Could not create directory at " + packageDir.getAbsolutePath());
-        }
-      }
-
-      String archiveFileName = node.getId().getPackageName() + "_" + node.getId().getVersionString() + ".tgz";
-      File archiveFile = new File(packageDir.getParentFile(), archiveFileName);
-
-      if (correctVersionDownloaded()) {
-        LOGGER.info(node.getId() + " already downloaded, skipping.");
-      } else {
-        downloadAndUnpackSources(archiveFile);
-      }
-
-      // Update build.gradle
-      File buildFile = new File(packageDir, "build.gradle");
-      try (PrintWriter printWriter = new PrintWriter(buildFile)) {
-        writer.write(node, packageDir, printWriter);
-      } catch (FileNotFoundException e) {
-        throw new RuntimeException("Exception writing build.gradle for " + node.getId(), e);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
     }
-  }
+    while(updated.length() > 0 && updated.charAt(updated.length() - 1) == '\n') {
+      updated.setLength(updated.length() - 1);
+    }
+    updated.append("\n\n");
 
-  private void downloadAndUnpackSources(File archiveFile) {
-    // Download from GCS
-    run("gsutil", "-q", "cp", getGsUrl(), archiveFile.getAbsolutePath());
+    replacedPackages.appendIncludeBuilds(updated);
 
-    // Unpack into directory
-    run("tar", "-xzf", archiveFile.getAbsolutePath(), "--strip", "1");
-
-    // Clean up zip file
-    archiveFile.delete();
-  }
-
-  private boolean correctVersionDownloaded() {
-
-    File descriptionFile = new File(packageDir, "DESCRIPTION");
-    if(!descriptionFile.exists()) {
-      return false;
+    updated.append("\n\n");
+    for (PackageVersionId packageVersionId : packageIndex.getToBuild()) {
+      updated.append("include 'cran:" + packageVersionId.getPackageName()).append("'\n");
     }
 
-    PackageDescription description;
-    try {
-      description = PackageDescription.fromCharSource(Files.asCharSource(descriptionFile, Charsets.UTF_8));
-    } catch (IOException e) {
-      return false;
-    }
-
-    return node.getId().getVersionString().equals(description.getVersion());
+    Files.write(updated.toString(), settingsFile, Charsets.UTF_8);
   }
 
-  private void run(String... commandLine)  {
-    int status;
 
-    try {
-      status = new ProcessBuilder(commandLine)
-          .inheritIO()
-          .directory(packageDir)
-          .start()
-          .waitFor();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Interrupted while executing: " + Arrays.toString(commandLine));
-    } catch (IOException e) {
-      throw new RuntimeException("IOException while executing: " + Arrays.toString(commandLine), e);
-    }
-
-    if(status != 0) {
-      throw new RuntimeException("Status code " + status + " from executing " + Arrays.toString(commandLine));
-    }
-  }
-
-  private String getGsUrl() {
-    return "gs://" + StorageKeys.PACKAGE_SOURCE_BUCKET + "/" + StorageKeys.packageSource(node.getId());
-  }
 }

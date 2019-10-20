@@ -6,8 +6,14 @@ dependencies {
     implementation gradleApi()
 }
 
+task('updatePackageList', dependsOn: 'classes', type: JavaExec) {
+    main = 'org.renjin.ci.gradle.UpdatePackageList'
+    classpath = sourceSets.main.runtimeClasspath
+    args project.rootProject.projectDir.parentFile
+}
+
 task('setupPackages', dependsOn: 'classes', type: JavaExec) {
-    main = 'org.renjin.ci.gradle.Main'
+    main = 'org.renjin.ci.gradle.PackageSetup'
     classpath = sourceSets.main.runtimeClasspath
     args project.rootProject.projectDir.parentFile
 }

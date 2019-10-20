@@ -2,7 +2,6 @@ package org.renjin.ci.gradle.graph;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.tools.ant.taskdefs.optional.depend.Depend;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.ResolvedDependencySet;
 

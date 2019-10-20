@@ -1,5 +1,6 @@
 package org.renjin.ci.gradle.graph;
 
+import org.renjin.ci.model.PackageId;
 import org.renjin.ci.model.PackageVersionId;
 
 import java.io.Serializable;
@@ -13,9 +14,9 @@ import java.util.Map;
 public class PackageGraph implements Serializable {
 
 
-  private final Map<PackageVersionId, PackageNode> nodes;
+  private final Map<PackageId, PackageNode> nodes;
 
-  public PackageGraph(Map<PackageVersionId, PackageNode> nodes) {
+  public PackageGraph(Map<PackageId, PackageNode> nodes) {
     this.nodes = nodes;
   }
 

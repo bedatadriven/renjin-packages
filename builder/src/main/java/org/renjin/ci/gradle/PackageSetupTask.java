@@ -1,6 +1,8 @@
 package org.renjin.ci.gradle;
 
+import com.google.api.client.util.Lists;
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
 import com.google.common.io.Files;
 import org.renjin.ci.model.CorePackages;
 import org.renjin.ci.model.PackageDependency;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Downloads source and writes build file for an individual package.
@@ -148,7 +151,6 @@ public class PackageSetupTask implements Runnable {
     writer.println();
     writer.println("apply plugin: 'org.renjin.package'");
 
-
     boolean blacklisted = packageIndex.getBlacklist().isBlacklisted(id.getPackageName());
     boolean needsCompilation = description.isNeedsCompilation() && !blacklisted;
 
@@ -164,7 +166,7 @@ public class PackageSetupTask implements Runnable {
     if(needsCompilation) {
       addDependency(writer, description.getLinkingTo(), "link");
     }
-    addDependency(writer, description.getSuggests(), "testRuntime");
+    addDependency(writer, nonBlacklistedSuggests(description), "testRuntime");
 
     if(needsCompilation && hasCplusplusSources(packageDir)) {
       writer.println("  compile 'org.renjin:libstdcxx:4.7.4-b34'");
@@ -180,6 +182,13 @@ public class PackageSetupTask implements Runnable {
       writer.println("configure.enabled = false");
       writer.println("testNamespace.enabled = false");
     }
+  }
+
+  private Iterable<PackageDependency> nonBlacklistedSuggests(PackageDescription description) {
+    return Lists.newArrayList(description.getSuggests())
+      .stream()
+      .filter(d -> !packageIndex.getBlacklist().isBlacklisted(d.getName()))
+      .collect(Collectors.toList());
   }
 
   private boolean hasCplusplusSources(File packageDir) {

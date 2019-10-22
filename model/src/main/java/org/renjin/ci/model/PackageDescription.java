@@ -235,10 +235,9 @@ public class PackageDescription {
 		return getPackageDependencyList("Suggests");
 	}
 
-	public Iterable<PackageDependency> getSystemRequirements() {
-		return getPackageDependencyList("SystemRequirements");
+	public String getSystemRequirements() {
+		return getFirstProperty("SystemRequirements");
 	}
-
 
 	public Iterable<PackageDependency> getPackageDependencyList(String property) {
 		String list = getFirstProperty(property);

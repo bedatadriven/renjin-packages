@@ -3,7 +3,9 @@ package org.renjin.ci.gradle;
 import com.google.api.client.util.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
+import com.google.common.io.LineProcessor;
 import org.renjin.ci.model.CorePackages;
 import org.renjin.ci.model.PackageDependency;
 import org.renjin.ci.model.PackageDescription;
@@ -15,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -156,6 +159,7 @@ public class PackageSetupTask implements Runnable {
 
     if(needsCompilation) {
       writer.println("apply plugin: 'org.renjin.native-sources'");
+      maybeApplyCxxStandard(writer, description);
     }
 
     writer.println();
@@ -177,11 +181,42 @@ public class PackageSetupTask implements Runnable {
 
     writer.println("}");
 
+
     if(blacklisted) {
       writer.println();
       writer.println("configure.enabled = false");
       writer.println("testNamespace.enabled = false");
     }
+  }
+
+  private void maybeApplyCxxStandard(PrintWriter writer, PackageDescription description) {
+
+    String cxxStandard = detectCxxStandard(description);
+    if(!cxxStandard.isEmpty()) {
+      writer.println();
+      writer.println("make.cxxStandard = \"" + cxxStandard + "\"");
+    }
+  }
+
+  private String detectCxxStandard(PackageDescription description) {
+    if(Strings.nullToEmpty(description.getSystemRequirements()).contains("C++11")) {
+      return "C++11";
+    }
+    File makeVars = new File(packageDir, "src/Makevars");
+    if(makeVars.exists()) {
+      List<String> lines;
+      try {
+        lines = Files.readLines(makeVars, Charsets.UTF_8);
+      } catch (IOException e) {
+        throw new RuntimeException("Exception reading " + makeVars.getAbsolutePath(), e);
+      }
+      for (String line : lines) {
+        if(line.matches("^CXX_STD\\s*=\\s*CXX11")) {
+          return "C++11";
+        }
+      }
+    }
+    return "";
   }
 
   private Iterable<PackageDependency> nonBlacklistedSuggests(PackageDescription description) {

@@ -16,7 +16,7 @@ public class DistRepository {
     @Path("renjin-{version}.zip")
     public Response getZipArchive(@PathParam("version") String version) {
         BlobKey blobKey = BlobstoreServiceFactory.getBlobstoreService().createGsBlobKey(
-            "/gs/" + StorageKeys.REPO_BUCKET + "/dist/renjin-" + version + ".zip");
+            "/gs/" + StorageKeys.ARTIFACTS_BUCKET + "/dist/renjin-" + version + ".zip");
 
         return Response.ok()
             .header("X-AppEngine-BlobKey", blobKey.getKeyString())

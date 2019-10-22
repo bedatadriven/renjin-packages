@@ -3,6 +3,8 @@ package org.renjin.ci.gradle.graph;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import org.renjin.ci.RenjinCiClient;
+import org.renjin.ci.gradle.Blacklist;
+import org.renjin.ci.gradle.PackageIndex;
 import org.renjin.ci.model.*;
 
 import java.util.*;
@@ -22,13 +24,18 @@ public class PackageGraphBuilder {
   private final ExecutorService executorService;
   private final DependencyCache dependencyCache;
   private final ReplacedPackageProvider replacedPackages;
+  private final Blacklist blacklist;
 
   private final Map<PackageId, PackageNode> nodes = new HashMap<>();
 
-  public PackageGraphBuilder(ExecutorService executorService, DependencyCache dependencyCache, ReplacedPackageProvider replacedPackages) {
+  public PackageGraphBuilder(ExecutorService executorService,
+                             DependencyCache dependencyCache,
+                             ReplacedPackageProvider replacedPackages,
+                             Blacklist blacklist) {
     this.executorService = executorService;
     this.dependencyCache = dependencyCache;
     this.replacedPackages = replacedPackages;
+    this.blacklist = blacklist;
   }
 
   public void add(String filter) throws InterruptedException {
@@ -103,7 +110,7 @@ public class PackageGraphBuilder {
 
   }
 
-  private synchronized PackageNode getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) {
+  private synchronized DependencyEdge getOrCreateNodeForDependency(ResolvedDependency resolvedDependency) {
     PackageVersionId pvid = resolvedDependency.getPackageVersionId();
     PackageNode node = nodes.get(pvid.getPackageId());
     if(node == null) {
@@ -112,14 +119,15 @@ public class PackageGraphBuilder {
         node.replaced(resolvedDependency.getReplacementVersion());
       } else {
         node = new PackageNode(pvid, resolveDependencies(resolvedDependency));
+        node.setBlacklisted(blacklist.isBlacklisted(pvid.getPackageName()));
       }
       nodes.put(node.getId().getPackageId(), node);
     }
-    return node;
+    return new DependencyEdge(node, resolvedDependency.isOptional());
   }
 
 
-  private Future<Set<PackageNode>> resolveDependencies(ResolvedDependency resolvedDependency) {
+  private Future<Set<DependencyEdge>> resolveDependencies(ResolvedDependency resolvedDependency) {
     if(resolvedDependency.isReplaced()) {
       return Futures.immediateFuture(Collections.emptySet());
     } else {
@@ -127,11 +135,11 @@ public class PackageGraphBuilder {
     }
   }
 
-  private Future<Set<PackageNode>> resolveDependencies(PackageVersionId pvid) {
+  private Future<Set<DependencyEdge>> resolveDependencies(PackageVersionId pvid) {
 
-    return executorService.submit(new Callable<Set<PackageNode>>() {
+    return executorService.submit(new Callable<Set<DependencyEdge>>() {
       @Override
-      public Set<PackageNode> call() {
+      public Set<DependencyEdge> call() {
 
         LOGGER.info("Resolving " + pvid);
 
@@ -150,7 +158,7 @@ public class PackageGraphBuilder {
           }
         }
 
-        Set<PackageNode> dependencies = new HashSet<>();
+        Set<DependencyEdge> dependencies = new HashSet<>();
 
         for (ResolvedDependency resolvedDependency : resolution.getDependencies()) {
           if (resolvedDependency.isVersionResolved()) {
@@ -170,12 +178,40 @@ public class PackageGraphBuilder {
     while(!queue.isEmpty()) {
       PackageNode packageNode = queue.pop();
       if(!resolved.contains(packageNode)) {
-        queue.addAll(packageNode.getDependencies());
+        queue.addAll(packageNode.getDependencyNodes());
         resolved.add(packageNode);
       }
     }
 
+    // Add reverseDependency links
+    for (PackageNode node : nodes.values()) {
+      for (DependencyEdge edge : node.getDependencies()) {
+        if(!edge.isOptional()) {
+          edge.getPackageNode().addReverseDependency(node);
+        }
+      }
+    }
+
+    // Propagate blacklisted flag
+    for (PackageNode node : nodes.values()) {
+      if(node.isBlacklisted()) {
+        propagateBlacklistedStatus(node);
+      }
+    }
+
+    // Remove blacklisted nodes from the graph
+    nodes.values().removeIf(PackageNode::isBlacklisted);
+
     return new PackageGraph(nodes);
+  }
+
+  private void propagateBlacklistedStatus(PackageNode node) {
+    for (PackageNode reverseDependency : node.getReverseDependencies()) {
+      if(!reverseDependency.isBlacklisted()) {
+        reverseDependency.setBlacklisted(true);
+        propagateBlacklistedStatus(reverseDependency);
+      }
+    }
   }
 
 }

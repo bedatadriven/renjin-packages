@@ -27,13 +27,14 @@ public class UpdatePackageList {
 
     DependencyCache dependencyCache = new DependencyCache(packageRootDir, "cran");
 
-    PackageGraphBuilder builder = new PackageGraphBuilder(executorService, dependencyCache, replacedPackages);
+    Blacklist blacklist = new Blacklist(packageRootDir);
+
+    PackageGraphBuilder builder = new PackageGraphBuilder(executorService, dependencyCache, replacedPackages, blacklist);
     builder.add("org.renjin.cran:MASS:7.3-51.4", null);
     builder.add("org.renjin.cran:Matrix:1.2-17");
     builder.add("org.renjin.cran:ggplot2:3.1.1", null);
     builder.add("org.renjin.cran:testthat:2.1.1", null);
     builder.add("org.renjin.cran:data.table:1.12.2", null);
-    builder.add("org.renjin.cran:xgboost:0.82.1", null);
     builder.add("org.renjin.cran:knitr:1.23", null);
     PackageGraph graph = builder.build();
 

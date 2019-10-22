@@ -14,8 +14,14 @@ public class PackageDependency {
 	private String version;
   private String versionRange;
 	private String versionSpec;
+  private final boolean optional;
 
   public PackageDependency(String spec) {
+	  this(spec, false);
+  }
+
+  public PackageDependency(String spec, boolean optional) {
+    this.optional = optional;
     int versionSpecStart = spec.indexOf('(');
     if (versionSpecStart == -1) {
       name = spec;
@@ -80,20 +86,29 @@ public class PackageDependency {
     return (name + "  " + versionRange).trim();
   }
 
+  public boolean isOptional() {
+    return optional;
+  }
 
-	public static Iterable<PackageDependency> parseList(String list) {
-		return Iterables.transform(Arrays.asList(list.trim().split("\\s*,\\s*")), new PackageDependencyParser());
+  public static Iterable<PackageDependency> parseList(String scope, String list) {
+		return Iterables.transform(Arrays.asList(list.trim().split("\\s*,\\s*")),
+      new PackageDependencyParser("Suggests".equals(scope)));
 	}
-
 
 	private static class PackageDependencyParser implements Function<String, PackageDependency> {
 
-		@Override
-		public PackageDependency apply(String arg0) {
-			if(arg0 == null) {
+    private final boolean optional;
+
+    public PackageDependencyParser(boolean optional) {
+      this.optional = optional;
+    }
+
+    @Override
+		public PackageDependency apply(String spec) {
+			if(spec == null) {
 				throw new RuntimeException();
 			}
-			return new PackageDependency(arg0);
+			return new PackageDependency(spec, optional);
 		}
 	}
 }

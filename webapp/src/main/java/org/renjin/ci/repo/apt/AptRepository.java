@@ -15,7 +15,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.time.ZoneOffset;
@@ -169,7 +168,7 @@ public class AptRepository {
   public Response artifact(@PathParam("filename") String filename) {
     AptArtifact artifact = PackageDatabase.ofy().load().key(Key.create(AptArtifact.class, filename)).now();
     BlobKey blobKey = BlobstoreServiceFactory.getBlobstoreService().createGsBlobKey(
-        "/gs/" + StorageKeys.REPO_BUCKET + "/deb/" + artifact.getObjectName());
+        "/gs/" + StorageKeys.ARTIFACTS_BUCKET + "/deb/" + artifact.getObjectName());
 
     return Response.ok()
         .header("X-AppEngine-BlobKey", blobKey.getKeyString())

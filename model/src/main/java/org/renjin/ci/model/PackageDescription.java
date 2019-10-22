@@ -244,7 +244,7 @@ public class PackageDescription {
 		if(Strings.isNullOrEmpty(list)) {
 			return Collections.emptySet();
 		} else {
-			return PackageDependency.parseList(list);
+			return PackageDependency.parseList(property, list);
 		}
 	}
 

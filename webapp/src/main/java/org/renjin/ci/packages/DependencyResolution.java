@@ -79,9 +79,11 @@ public class DependencyResolution {
     }
 
     List<ResolvedDependency> list = new ArrayList<>();
-    for (String packageName : declared.keySet()) {
-      list.add(dependency(packageName, packages.get(packageName).now()));
-    }
+    declared.forEach((packageName, dep) -> {
+      ResolvedDependency resolvedDependency = dependency(packageName, packages.get(packageName).now());
+      resolvedDependency.setOptional(dep.isOptional());
+      list.add(resolvedDependency);
+    });
 
     return new ResolvedDependencySet(list);
   }
@@ -96,7 +98,6 @@ public class DependencyResolution {
       bioc.put(packageName, PackageDatabase.getPackage(new PackageId(PackageId.BIOC_GROUP, packageName)));
     }
 
-    List<ResolvedDependency> list = new ArrayList<>();
     for (String packageName : declared.keySet()) {
       Package biocPackage = bioc.get(packageName).now();
       if(biocPackage != null) {

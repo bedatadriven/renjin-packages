@@ -4,7 +4,6 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.common.collect.Lists;
 import org.renjin.ci.datastore.PackageDatabase;
-import org.renjin.ci.repo.ArtifactResource;
 import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.*;
@@ -49,7 +48,7 @@ public class MavenRepository {
   @Path("3.5-beta/{path:.+}")
   public Response getBetaArtifact(@PathParam("path") String path) {
 
-    String gsPath = "/gs/" + StorageKeys.REPO_BUCKET + "/m2/3.5-beta/" + path;
+    String gsPath = "/gs/" + StorageKeys.ARTIFACTS_BUCKET + "/m2/3.5-beta/" + path;
     BlobKey blobKey = BlobstoreServiceFactory.getBlobstoreService().createGsBlobKey(gsPath);
 
     LOGGER.info("Serving " + gsPath);

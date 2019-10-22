@@ -17,7 +17,7 @@ public class ResolvedDependency {
   private String name;
   
   @JsonProperty
-  private String scope = "compile";
+  private boolean optional;
   
   @JsonProperty
   private PackageVersionId packageVersionId;
@@ -62,13 +62,12 @@ public class ResolvedDependency {
     this.name = name;
   }
 
-
-  public String getScope() {
-    return scope;
+  public boolean isOptional() {
+    return optional;
   }
 
-  public void setScope(String scope) {
-    this.scope = scope;
+  public void setOptional(boolean optional) {
+    this.optional = optional;
   }
 
   public PackageVersionId getPackageVersionId() {

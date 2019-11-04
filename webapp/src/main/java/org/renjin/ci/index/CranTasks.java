@@ -64,6 +64,11 @@ public class CranTasks {
     return Response.ok().build();
   }
 
+  @GET
+  @Path("update")
+  public Response getfetchCranPackage(@QueryParam("packageName") String packageName) throws IOException {
+    return fetchCranPackage(packageName);
+  }
 
   @POST
   @Path("updatePackage")

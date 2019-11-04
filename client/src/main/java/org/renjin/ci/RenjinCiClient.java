@@ -61,8 +61,8 @@ public class RenjinCiClient {
   public static ResolvedDependencySet resolveDependencies(PackageVersionId packageVersionId) {
     return packageVersion(packageVersionId)
         .path("resolveDependencies")
-        .request().get(ResolvedDependencySet.class);
-    
+        .request()
+        .get(ResolvedDependencySet.class);
   }
   
   public static List<PackageVersionId> resolveDependencies(List<PackageDependency> dependencies) {

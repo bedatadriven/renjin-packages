@@ -244,13 +244,18 @@ public class PackageSetupTask implements Runnable {
   private void addDependency(PrintWriter writer, Iterable<PackageDependency> depends, String configuration) {
     for (PackageDependency depend : depends) {
 
-      if(CorePackages.isCorePackage(depend.getName())) {
+      if(depend.getName().equals("R")) {
+        // ignore
+      } else if(CorePackages.isCorePackage(depend.getName())) {
         if(!CorePackages.DEFAULT_PACKAGES.contains(depend.getName()) &&
           !CorePackages.IGNORED_PACKAGES.contains(depend.getName())) {
           writer.println("  " + configuration + " \"org.renjin:" + depend.getName() + ":${renjinVersion}\"");
         }
       } else {
         String dependencyString = packageIndex.getDependencyString(depend.getName());
+        if (dependencyString == null && !configuration.equals("testRuntime")) {
+          throw new RuntimeException(id + " is missing dependency " + depend);
+        }
         if (dependencyString != null) {
           writer.println("  " + configuration + " " + dependencyString);
         }

@@ -34,8 +34,8 @@ public class UpdatePackageList {
     builder.add("org.renjin.cran:Matrix:1.2-17");
     builder.add("org.renjin.cran:ggplot2:3.1.1", null);
     builder.add("org.renjin.cran:testthat:2.1.1", null);
-    builder.add("org.renjin.cran:data.table:1.12.2", null);
     builder.add("org.renjin.cran:knitr:1.23", null);
+    builder.add("org.renjin.cran:bitops:1.0-6", null);
     PackageGraph graph = builder.build();
 
     System.out.println("Package count: " + graph.getNodes().size());

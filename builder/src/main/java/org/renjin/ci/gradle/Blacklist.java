@@ -10,11 +10,20 @@ import java.util.Set;
 
 public class Blacklist {
 
-  private Set<String> set = new HashSet<>();
+  private final Set<String> certified;
+  private final Set<String> blacklist;
 
   public Blacklist(File packageRootDirectory) throws IOException {
 
     File blackListFile = new File(packageRootDirectory, "packages.blacklist");
+    this.blacklist = parsePackageList(blackListFile);
+
+    File certifiedFile = new File(packageRootDirectory, "packages.certified");
+    this.certified = parsePackageList(certifiedFile);
+  }
+
+  public static Set<String> parsePackageList(File blackListFile) throws IOException {
+    Set<String> set = new HashSet<>();
     try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(blackListFile), StandardCharsets.UTF_8))) {
       String line;
       while((line = reader.readLine()) != null) {
@@ -24,6 +33,7 @@ public class Blacklist {
         }
       }
     }
+    return set;
   }
 
   public boolean isBlacklisted(PackageVersionId pvid) {
@@ -31,14 +41,18 @@ public class Blacklist {
   }
 
   public boolean isBlacklisted(PackageId id) {
-    return id.getGroupId().equals(PackageId.CRAN_GROUP) && set.contains(id.getPackageName());
+    return id.getGroupId().equals(PackageId.CRAN_GROUP) && blacklist.contains(id.getPackageName());
   }
 
   public boolean isBlacklisted(String name) {
-    return set.contains(name);
+    return blacklist.contains(name);
   }
 
   public boolean isCompilationDisabled(PackageVersionId id) {
-    return id.getGroupId().equals("org.renjin.cran") && set.contains(id.getPackageName());
+    return id.getGroupId().equals("org.renjin.cran") && blacklist.contains(id.getPackageName());
+  }
+
+  public boolean isCertified(PackageVersionId id) {
+    return certified.contains(id.getPackageName());
   }
 }

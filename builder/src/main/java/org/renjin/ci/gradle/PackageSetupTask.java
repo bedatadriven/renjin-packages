@@ -187,6 +187,11 @@ public class PackageSetupTask implements Runnable {
       writer.println("configure.enabled = false");
       writer.println("testNamespace.enabled = false");
     }
+
+    if(!packageIndex.getBlacklist().isCertified(this.id)) {
+      writer.println();
+      writer.println("testNamespace.ignoreFailures = true;");
+    }
   }
 
   private void maybeApplyCxxStandard(PrintWriter writer, PackageDescription description) {

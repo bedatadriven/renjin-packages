@@ -21,10 +21,10 @@ import org.renjin.ci.pulls.PullRequestResources;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.InstallResource;
 import org.renjin.ci.releases.ReleasesResource;
+import org.renjin.ci.repo.NexusArchiveResource;
 import org.renjin.ci.repo.DistRepository;
 import org.renjin.ci.repo.apt.AptRepository;
 import org.renjin.ci.repo.apt.KeyServer;
-import org.renjin.ci.repo.maven.MavenRepository;
 import org.renjin.ci.source.SourceResources;
 import org.renjin.ci.stats.StatsResources;
 
@@ -67,9 +67,9 @@ public class RenjinCI extends Application {
     
     classes.add(RobotsResource.class);
 
-    classes.add(MavenRepository.class);
     classes.add(AptRepository.class);
     classes.add(DistRepository.class);
+    classes.add(NexusArchiveResource.class);
 
     classes.add(KeyServer.class);
 

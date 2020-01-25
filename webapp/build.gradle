@@ -18,7 +18,7 @@ dependencies {
     compile "org.glassfish.jersey.containers:jersey-container-servlet-core:${jerseyVersion}"
     compile "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
     compile "net.sf.jtidy:jtidy:r938"
-    compile "org.kohsuke:github-api:1.89"
+    compile "org.kohsuke:github-api:1.103"
     compile "org.codehaus.jsr166-mirror:jsr166y:1.7.0"
     compile "org.renjin:renjin-appengine:${renjinVersion}"
     compile "org.apache.commons:commons-compress:1.18"

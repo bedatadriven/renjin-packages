@@ -17,7 +17,6 @@ import org.renjin.ci.repo.apt.AptArtifact;
 import org.renjin.ci.repo.apt.AptDist;
 import org.renjin.ci.repo.apt.AptPackage;
 import org.renjin.ci.repo.apt.PgpKey;
-import org.renjin.ci.repo.maven.MavenArtifact;
 import org.renjin.sexp.ExternalPtr;
 import org.renjin.sexp.ListVector;
 import org.renjin.sexp.NamedValue;
@@ -86,7 +85,6 @@ public class PackageDatabase {
     register(AptDist.class);
     register(AptPackage.class);
 
-    register(MavenArtifact.class);
 
     register(PgpKey.class);
   }

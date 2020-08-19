@@ -17,7 +17,6 @@ import org.renjin.ci.index.WebHooks;
 import org.renjin.ci.packages.PackageListResource;
 import org.renjin.ci.packages.PackageResource;
 import org.renjin.ci.packages.RootResource;
-import org.renjin.ci.pulls.PullRequestResources;
 import org.renjin.ci.qa.QaResources;
 import org.renjin.ci.releases.InstallResource;
 import org.renjin.ci.releases.ReleasesResource;
@@ -72,8 +71,6 @@ public class RenjinCI extends Application {
     classes.add(NexusArchiveResource.class);
 
     classes.add(KeyServer.class);
-
-    classes.add(PullRequestResources.class);
 
     classes.add(SystemRequirementResource.class);
 

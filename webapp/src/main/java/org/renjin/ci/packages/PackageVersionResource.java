@@ -1,6 +1,8 @@
 
 package org.renjin.ci.packages;
 
+import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -11,7 +13,10 @@ import org.renjin.ci.archive.ExamplesExtractor;
 import org.renjin.ci.datastore.*;
 import org.renjin.ci.model.PackageVersionId;
 import org.renjin.ci.model.TestCase;
+import org.renjin.ci.repo.apt.AptArtifact;
+import org.renjin.ci.storage.StorageKeys;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -291,5 +296,18 @@ public class PackageVersionResource {
     }
 
     return csv.toString();
+  }
+
+  @GET
+  @Produces("application/gzip")
+  @Path("source.tar.gz")
+  @NoRobots
+  public Response getSourceArchive() {
+    BlobKey blobKey = BlobstoreServiceFactory.getBlobstoreService().createGsBlobKey(
+      "/gs/" + StorageKeys.PACKAGE_SOURCE_BUCKET + "/" + StorageKeys.packageSource(packageVersionId));
+
+    return Response.ok()
+      .header("X-AppEngine-BlobKey", blobKey.getKeyString())
+      .build();
   }
 }

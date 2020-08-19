@@ -74,11 +74,6 @@ public class PackageDatabase {
 
     register(Artifact.class);
 
-    register(Pull.class);
-    register(PullBuild.class);
-    register(PullPackageBuild.class);
-    register(PullTestResult.class);
-
     register(SystemRequirement.class);
 
     register(AptArtifact.class);
@@ -336,14 +331,6 @@ public class PackageDatabase {
 
   }
 
-  public static QueryResultIterable<PullTestResult> getTestResults(PullBuildId pullBuildId, PackageVersionId packageVersionId) {
-    return ObjectifyService.ofy()
-        .load()
-        .type(PullTestResult.class)
-        .ancestor(PullPackageBuild.key(pullBuildId, packageVersionId))
-        .iterable();
-  }
-
 
   public static List<PackageVersion> getPackageVersions(String groupId, String name) {
     return getPackageVersions(new PackageId(groupId, name));
@@ -543,20 +530,6 @@ public class PackageDatabase {
     return ObjectifyService.ofy().load().key(BenchmarkSummary.key(machineId, benchmarkId));
   }
 
-  public static QueryResultIterable<PullPackageBuild> getPullPackageBuilds(long pullNumber) {
-    return ObjectifyService.ofy()
-        .load()
-        .type(PullPackageBuild.class)
-        .ancestor(Pull.key(pullNumber))
-        .iterable();
-  }
-
-  public static LoadResult<PullPackageBuild> getPullPackageBuild(PullBuildId pullBuildId, PackageVersionId packageVersionId) {
-    return ObjectifyService.ofy()
-        .load()
-        .key(PullPackageBuild.key(pullBuildId, packageVersionId));
-  }
-  
   public static ListVector query(ExternalPtr entityClassPtr, ListVector filters) {
     Class<?> entityClass = (Class<?>) entityClassPtr.getInstance();
     Query<?> query = ObjectifyService.ofy()

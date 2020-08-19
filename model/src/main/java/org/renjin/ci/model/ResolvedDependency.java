@@ -2,6 +2,7 @@ package org.renjin.ci.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(
     isGetterVisibility = JsonAutoDetect.Visibility.NONE, 
     getterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResolvedDependency {
   
   @JsonProperty 
@@ -30,6 +32,9 @@ public class ResolvedDependency {
   
   @JsonProperty
   private BuildOutcome buildOutcome;
+
+  @JsonProperty
+  private String scope;
 
   public ResolvedDependency() {
   }
@@ -128,5 +133,13 @@ public class ResolvedDependency {
 
   public boolean isReplaced() {
     return this.replacementVersion != null;
+  }
+
+  public String getScope() {
+    return scope;
+  }
+
+  public void setScope(String scope) {
+    this.scope = scope;
   }
 }

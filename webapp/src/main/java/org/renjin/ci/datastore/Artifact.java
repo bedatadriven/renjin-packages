@@ -4,8 +4,6 @@ import com.google.appengine.api.datastore.Blob;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Unindex;
-import org.glassfish.hk2.api.Metadata;
 
 /**
  * Maven Artifact

@@ -197,25 +197,6 @@ public class RenjinCiClient {
   }
 
 
-  public static void postResult(final PullBuildId pullBuild, final PackageBuildResult result) {
-    withRetries(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        WebTarget buildResource = client().target(ROOT_URL)
-            .path("pull")
-            .path(Long.toString(pullBuild.getPullNumber()))
-            .path("build")
-            .path(Long.toString(pullBuild.getPullBuildNumber()))
-            .path("packageBuild");
-
-        buildResource.request().post(Entity.entity(result, MediaType.APPLICATION_JSON_TYPE));
-
-        return null;
-      }
-    });
-  }
-
-
   public static void postTestResults(PackageVersionId packageVersionId, List<TestResult> results) {
     WebTarget versionResource = client().target(ROOT_URL)
         .path("package")

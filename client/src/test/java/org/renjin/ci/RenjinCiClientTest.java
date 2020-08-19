@@ -1,5 +1,6 @@
 package org.renjin.ci;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.renjin.ci.model.PackageDependency;
 import org.renjin.ci.model.PackageVersionId;
@@ -13,6 +14,7 @@ import java.util.List;
  */
 public class RenjinCiClientTest {
 
+  @Ignore
   @Test
   public void resolveRandomForest() {
 

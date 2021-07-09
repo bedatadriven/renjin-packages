@@ -326,3 +326,7 @@ div.log.repl a {
     position: absolute;
     left: -9999px;
 }
+
+form label {
+    display: block;
+}

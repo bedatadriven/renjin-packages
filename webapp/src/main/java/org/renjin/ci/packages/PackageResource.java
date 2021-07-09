@@ -42,7 +42,9 @@ public class PackageResource {
   @Produces("text/html")
   public Viewable get() {
     Package packageEntity = loadPackage();
-    if(packageEntity.isReplaced()) {
+    if(packageEntity.isContributed()) {
+      return getContributedPage(packageEntity);
+    } else if(packageEntity.isReplaced()) {
       return getReplacementPage(packageEntity);
     } else {
       return getVersion(packageEntity.getLatestVersion()).getPage(true);
@@ -68,6 +70,16 @@ public class PackageResource {
 
     }
     return new Viewable("/icon.ftl");
+  }
+
+  private Viewable getContributedPage(Package packageEntity) {
+    Map<String, Object> model = new HashMap<>();
+    model.put("package", packageEntity);
+    model.put("projectUrl", packageEntity.getProjectUrl());
+    model.put("latestVersion", packageEntity.getLatestVersion());
+    model.put("contributed", new ContributedPackagePage(packageEntity));
+
+    return new Viewable("/contributedPackage.ftl", model);
   }
 
   private Viewable getReplacementPage(Package packageEntity) {

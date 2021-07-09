@@ -15,6 +15,14 @@ public class Package implements Serializable {
   private String id;
   private String latestVersion;
   private String title;
+
+  /**
+   * "Contributed" packages are renjin-specific and published to Maven Central or
+   * another repository.
+   *
+   */
+  @Index
+  private boolean contributed;
   
   @Index
   private String name;
@@ -48,6 +56,11 @@ public class Package implements Serializable {
   @Unindex
   @IgnoreSave(IfNull.class)
   private String latestReplacementVersion;
+
+  @Unindex
+  private String projectUrl;
+
+
 
 
   public static Key<Package> key(PackageId packageId) {
@@ -175,5 +188,25 @@ public class Package implements Serializable {
 
   public boolean isNeedsCompilation() {
     return needsCompilation;
+  }
+
+  public boolean isContributed() {
+    return contributed;
+  }
+
+  public void setContributed(boolean contributed) {
+    this.contributed = contributed;
+  }
+
+  public void setNeedsCompilation(boolean needsCompilation) {
+    this.needsCompilation = needsCompilation;
+  }
+
+  public String getProjectUrl() {
+    return projectUrl;
+  }
+
+  public void setProjectUrl(String projectUrl) {
+    this.projectUrl = projectUrl;
   }
 }

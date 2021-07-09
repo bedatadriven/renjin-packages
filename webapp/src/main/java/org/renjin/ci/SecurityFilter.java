@@ -25,6 +25,9 @@ public class SecurityFilter implements ContainerRequestFilter {
                 requestContext.getHeaders().containsKey("X-AppEngine-TaskName")) {
             return;
         }
+        if(requestContext.getUriInfo().getPath().equals("packages/contribute")) {
+            return;
+        }
 
         if(!requestContext.getMethod().equalsIgnoreCase("GET")) {
             String token = requestContext.getHeaderString("Authorization");

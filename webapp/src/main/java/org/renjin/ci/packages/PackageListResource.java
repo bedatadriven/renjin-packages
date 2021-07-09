@@ -24,6 +24,7 @@ import org.renjin.ci.storage.StorageKeys;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -309,6 +310,53 @@ public class PackageListResource {
         .location(uriInfo.getBaseUriBuilder().path("package").path("org.renjin.cran").path(packageName).build())
         .build();
   }
+  @GET
+  @Path("/contribute")
+  public Viewable getContributionForm() {
+    return new Viewable("/contribute.ftl", Collections.emptyMap());
+  }
+
+  @POST
+  @Path("/contribute")
+  public Response submitContribution(@Context UriInfo uriInfo,
+                                     @FormParam("groupId") String groupId,
+                                     @FormParam("artifactId") String artifactId,
+                                     @FormParam("latestVersion") String latestVersion,
+                                     @FormParam("projectUrl") String projectUrl,
+                                     @FormParam("title") String title) {
+
+
+    PackageVersionId pvid = new PackageVersionId(groupId, artifactId, latestVersion);
+    Contribution contribution = Contribution.fetchFromMaven(pvid);
+    if(contribution == null) {
+      throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Could not find artifact in maven central").build());
+    }
+
+    Package existingPackage = ObjectifyService.ofy().load().key(Package.key(pvid.getPackageId())).now();
+
+    if(existingPackage != null && !existingPackage.isContributed()) {
+      throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+              .entity("Package " + existingPackage.getPackageId() + " exists but is not contributed.").build());
+    }
+    if(existingPackage == null) {
+      existingPackage = new Package(pvid.getPackageId());
+      existingPackage.setName(pvid.getPackageName());
+      existingPackage.setContributed(true);
+      existingPackage.setLatestVersion(pvid.getVersion());
+    }
+    existingPackage.setProjectUrl(contribution.getUrl());
+    existingPackage.setTitle(contribution.getDescription());
+    if(pvid.compareTo(existingPackage.getLatestVersionId()) > 0) {
+      existingPackage.setLatestVersion(pvid.getVersion());
+    }
+    ObjectifyService.ofy().save().entity(existingPackage).now();
+
+    URI packageUri = uriInfo.getAbsolutePathBuilder()
+            .replacePath(pvid.getPackageId().getPath())
+            .build();
+
+    return Response.seeOther(packageUri).build();
+  }
 
   @GET
   @Path("/resolveDependencySnapshot")
@@ -444,8 +492,14 @@ public class PackageListResource {
       model.put("pageTitle", "Package Search");
       model.put("results", Collections.emptyList());
     } else {
-      Index index = searchService.getIndex(IndexSpec.newBuilder().setName(PackageSearchIndex.INDEX_NAME));
 
+      QueryResultIterable<Package> exactMatches = ObjectifyService.ofy()
+              .load()
+              .type(Package.class)
+              .filter("name", queryString)
+              .iterable();
+
+      Index index = searchService.getIndex(IndexSpec.newBuilder().setName(PackageSearchIndex.INDEX_NAME));
       Query query = Query.newBuilder()
           .setOptions(QueryOptions.newBuilder()
               .setFieldsToReturn(
@@ -457,9 +511,14 @@ public class PackageListResource {
       Results<ScoredDocument> results = index.search(query);
 
       List<SearchResult> resultList = new ArrayList<>();
+      for (Package exactMatch : exactMatches) {
+        resultList.add(new SearchResult(exactMatch));
+      }
+
       for (ScoredDocument scoredDocument : results.getResults()) {
         resultList.add(new SearchResult(scoredDocument));
       }
+
       model.put("pageTitle", String.format("Package Search Results for '%s'", queryString));
       model.put("results", resultList);
       model.put("resultCount", results.getNumberFound());
@@ -469,34 +528,45 @@ public class PackageListResource {
   }
 
   public static class SearchResult {
-    private final ScoredDocument document;
+    private final String groupId;
+    private final String packageName;
+    private final String title;
+    private final String description;
 
     public SearchResult(ScoredDocument document) {
       Preconditions.checkNotNull(document);
-      this.document = document;
+      String[] packageId = document.getId().split(":");
+      this.groupId = packageId[0];
+      this.packageName = packageId[1];
+      this.title = document.getOnlyField(PackageSearchIndex.TITLE_FIELD).getText();
+      if(document.getFieldCount(PackageSearchIndex.DESCRIPTION_FIELD)  > 0) {
+        this.description = document.getFields(PackageSearchIndex.DESCRIPTION_FIELD).iterator().next().getText();
+      } else {
+        this.description = null;
+      }
+    }
+
+    public SearchResult(Package matchingPackage) {
+      this.groupId = matchingPackage.getGroupId();
+      this.packageName = matchingPackage.getName();
+      this.title = matchingPackage.getTitle();
+      this.description = null;
     }
 
     public String getGroupId() {
-      String[] packageId = document.getId().split(":");
-      return packageId[0];
+      return groupId;
     }
 
     public String getPackageName() {
-      String[] packageId = document.getId().split(":");
-      return packageId[1];
+      return packageName;
     }
 
     public String getTitle() {
-      return document.getOnlyField(PackageSearchIndex.TITLE_FIELD).getText();
+      return title;
     }
 
     public String getDescription() {
-      Preconditions.checkNotNull(document, "document");
-      if(document.getFieldCount(PackageSearchIndex.DESCRIPTION_FIELD)  > 0) {
-        return document.getFields(PackageSearchIndex.DESCRIPTION_FIELD).iterator().next().getText();
-      } else {
-        return null;
-      }
+      return description;
     }
 
     public String getUrl() {

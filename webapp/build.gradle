@@ -41,7 +41,7 @@ dependencies {
 appengine {
     deploy {
         projectId = 'renjinci'
-        version = '10'
+        version = '11'
         promote = false
     }
 }

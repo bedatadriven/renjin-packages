@@ -32,8 +32,13 @@ public class BioconductorTasks {
      */
     @GET
     @Path("enqueue")
-    public Response updateBioConductor(@QueryParam("release") String releaseNumber) {
-        
+    public Response updateBioConductor(@QueryParam("release") String releaseNumber,
+                                       @HeaderParam("X-Appengine-Cron") String cron) {
+
+        if(!"true".equals(cron)) {
+            throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).build());
+        }
+
         if(Strings.isNullOrEmpty(releaseNumber)) {
             releaseNumber = "3.7";
         }

@@ -31,7 +31,11 @@ public class CranTasks {
 
   @GET
   @Path("enqueue")
-  public Response updateCran() {
+  public Response updateCran(@HeaderParam("X-Appengine-Cron") String cron) {
+
+    if(!"true".equals(cron)) {
+      throw new WebApplicationException(Response.status(Response.Status.FORBIDDEN).build());
+    }
 
     Queue queue = QueueFactory.getQueue(CRAN_FETCH_QUEUE);
     TaskHandle taskHandle = queue.add(TaskOptions.Builder.withUrl("/tasks/index/cran/fetchUpdates"));
@@ -62,12 +66,6 @@ public class CranTasks {
     }
 
     return Response.ok().build();
-  }
-
-  @GET
-  @Path("update")
-  public Response getfetchCranPackage(@QueryParam("packageName") String packageName) throws IOException {
-    return fetchCranPackage(packageName);
   }
 
   @POST

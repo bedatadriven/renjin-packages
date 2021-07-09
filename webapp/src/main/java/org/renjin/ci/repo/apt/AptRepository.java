@@ -26,7 +26,7 @@ public class AptRepository {
 
   private static final Logger LOGGER = Logger.getLogger(AptRepository.class.getName());
 
-  @GET
+  @POST
   @Path("ingest")
   public Response ingestRelease(@QueryParam("renjinVersion") String renjinVersion) throws IOException, PGPException {
 

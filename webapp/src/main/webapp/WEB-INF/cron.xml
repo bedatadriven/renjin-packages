@@ -4,10 +4,12 @@
     <url>/tasks/index/cran/enqueue</url>
     <description>Fetch new packages nightly</description>
     <schedule>every day 02:00</schedule>
+    <target>packages</target>
   </cron>
   <cron>
     <url>/tasks/index/bioc/enqueue</url>
     <description>Fetch new bioconductor packages nightly</description>
     <schedule>every day 02:00</schedule>
+    <target>packages</target>
   </cron>
 </cronentries>

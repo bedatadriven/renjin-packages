@@ -43,7 +43,7 @@ public class SourceIndexTasks {
   private static final int MAX_SOURCE_SIZE = 90 * 1024;
   public static final String QUEUE_NAME = "source-index";
 
-  @GET
+  @POST
   @Path("enqueueRebuild")
   public Response enqueueRebuild() {
     QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withUrl("/source/index/rebuild"));

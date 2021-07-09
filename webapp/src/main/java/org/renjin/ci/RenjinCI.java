@@ -65,6 +65,7 @@ public class RenjinCI extends Application {
     classes.add(StatsResources.class);
     
     classes.add(RobotsResource.class);
+    classes.add(SecurityFilter.class);
 
     classes.add(AptRepository.class);
     classes.add(DistRepository.class);

@@ -30,19 +30,5 @@ public class IndexTasks {
     return new BioconductorTasks();
   }
 
-  @GET
-  @Path("rebuildSearch")
-  public Response rebuildSearch() {
-    String jobId = Pipelines.applyAll(new PackageSearchIndex.ReIndex());
-    return Pipelines.redirectToStatus(jobId);
-  }
-  
-  @GET
-  @Path("updateGit/{sha}")
-  public Response updateGit(@PathParam("sha") String sha) {
-    String jobId = pipelineService.startNewPipeline(new IndexCommit(), sha);
-    return Pipelines.redirectToStatus(jobId);
-  }
-
 
 }
